@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"github.com/sal/backend/models"
+	"github.com/sal-org/sal-backend/models"
 )
 
 // GetAllCounselors returns all the counselors
-func GetAllCounselors() ([]*Counselor, error) {
-	counselor := &Counselor{
+func GetAllCounselors() ([]*models.Counselor, error) {
+	counselor := &models.Counselor{
 		FirstName: "John",
 		LastName:  "Doe",
 		Mobile:    "23823728372",
@@ -14,5 +14,5 @@ func GetAllCounselors() ([]*Counselor, error) {
 		Address2:  "Suite 3000",
 		Zipcode:   94105}
 
-	return []*Counselor{counselor}, nil
+	return []*models.Counselor{counselor}, nil
 }

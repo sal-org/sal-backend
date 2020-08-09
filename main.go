@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/sal/backend/aws/handlers"
+	"github.com/sal-org/sal-backend/aws/handlers"
 )
 
 func main() {

@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"github.com/sal/backend/models"
+	"github.com/sal-org/sal-backend/models"
 )
 
 // GetAllAppointments returns all the appointments
-func GetAllAppointments() ([]*Appointment, error) {
-	appointment := &Appointment{}
+func GetAllAppointments() ([]*models.Appointment, error) {
+	appointment := &models.Appointment{}
 
-	return []*Appointment{appointment}, nil
+	return []*models.Appointment{appointment}, nil
 }
