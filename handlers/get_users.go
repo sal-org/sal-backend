@@ -5,8 +5,8 @@ import (
 )
 
 // GetAllUsers returns all the users
-func GetAllUsers() ([]*models.User, error) {
-	user := &models.User{
+func GetAllUsers() ([]models.User, error) {
+	user := models.User{
 		FirstName: "Mary",
 		LastName:  "Allen",
 		Mobile:    "23823728372",
@@ -14,5 +14,5 @@ func GetAllUsers() ([]*models.User, error) {
 		Address2:  "Suite 3000",
 		Zipcode:   94105}
 
-	return []*models.User{user}, nil
+	return []models.User{user}, nil
 }

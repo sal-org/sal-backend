@@ -5,8 +5,8 @@ import (
 )
 
 // GetAllCounselors returns all the counselors
-func GetAllCounselors() ([]*models.Counselor, error) {
-	counselor := &models.Counselor{
+func GetAllCounselors() ([]models.Counselor, error) {
+	counselor := models.Counselor{
 		FirstName: "John",
 		LastName:  "Doe",
 		Mobile:    "23823728372",
@@ -14,5 +14,5 @@ func GetAllCounselors() ([]*models.Counselor, error) {
 		Address2:  "Suite 3000",
 		Zipcode:   94105}
 
-	return []*models.Counselor{counselor}, nil
+	return []models.Counselor{counselor}, nil
 }
