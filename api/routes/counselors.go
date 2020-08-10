@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/sal-org/sal-backend/constants"
 	"github.com/sal-org/sal-backend/handlers"
 )
 
@@ -30,6 +31,6 @@ func getAllCounselors(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("content-type", "application/json")
+	w.Header().Add(constants.RequestContentType, constants.JSONResponse)
 	json.NewEncoder(w).Encode(counselors)
 }
