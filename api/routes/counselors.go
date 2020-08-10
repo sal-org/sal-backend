@@ -27,6 +27,7 @@ func getAllCounselors(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	w.Header().Add("content-type", "application/json")

@@ -1,23 +1,24 @@
 package main
 
-// import (
-// 	"fmt"
+import (
+	"context"
 
-// 	runtime "github.com/aws/aws-lambda-go/lambda"
-// 	"github.com/sal-org/sal-backend/aws/handlers"
-// )
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/sal-org/sal-backend/handlers"
+	"github.com/sal-org/sal-backend/models"
+)
 
-// // "github.com/sal-org/sal-backend/aws/handlers"
+// LambdaFunction contains details about the function to be executed
+type LambdaFunction struct {
+	Name string `json:"name"`
+}
+
+// HandleLambdaRequest receives the context and LambdaFunction object to handle the event
+func HandleLambdaRequest(ctx context.Context, name LambdaFunction) ([]models.Counselor, error) {
+	counselors, err := handlers.GetAllCounselors()
+	return counselors, err
+}
 
 func main() {
-	// 	counselors, error := handlers.GetAllCounselors()
-	// 	users, e := handlers.GetAllUsers()
-	// 	appointments, err := handlers.GetAllAppointments()
-
-	// 	fmt.Println(counselors, error)
-	// 	fmt.Println(users, e)
-	// 	fmt.Println(appointments, err)
-
-	// 	// lambda.Start(handlers.GetAllCounselors)
-
+	lambda.Start(HandleLambdaRequest)
 }
