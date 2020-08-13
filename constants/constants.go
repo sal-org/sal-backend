@@ -1,6 +1,6 @@
 package constants
 
-var (
+const (
 	// ErrorMethodNotAllowed string used for unimplemented methods
 	ErrorMethodNotAllowed = "method Not allowed"
 
