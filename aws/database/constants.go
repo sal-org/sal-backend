@@ -1,9 +1,9 @@
 package database
 
 const (
-	region = "us-west-1"
+	region = "us-east-2"
 
-	dynamoDBEndpoint = "https://dynamodb.us-west-1.amazonaws.com"
+	dynamoDBEndpoint = "https://dynamodb.us-east-2.amazonaws.com"
 
 	counselorsTable = "Counselors"
 
