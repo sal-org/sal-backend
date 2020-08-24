@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/sal-org/sal-backend/api/handlers"
 	"github.com/sal-org/sal-backend/constants"
-	"github.com/sal-org/sal-backend/handlers"
 )
 
 // RouteBuilder interface defines the methods to be exposed by an object responsible for an api endpoint

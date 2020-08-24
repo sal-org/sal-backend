@@ -7,7 +7,7 @@ const (
 
 	counselorsTable = "Counselors"
 
-	usersTable = "Users"
+	UsersTable = "Users"
 
 	appoinmentsTable = "Appoinments"
 
