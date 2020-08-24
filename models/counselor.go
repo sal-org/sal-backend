@@ -10,6 +10,7 @@ type Counselor struct {
 	FirstName    string  `json:"firstName" dynamodbav:"firstName"`
 	LastName     string  `json:"lastName" dynamodbav:"lastName"`
 	Mobile       string  `json:"mobile" dynamodbav:"mobile"`
+	Email        string  `json:"email" dynamodbav:"email"`
 	Address1     string  `json:"address1" dynamodbav:"address1"`
 	Address2     string  `json:"address2" dynamodbav:"address2"`
 	Zipcode      int     `json:"zipcode" dynamodbav:"zipcode"`

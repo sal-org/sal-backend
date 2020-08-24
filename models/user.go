@@ -6,8 +6,10 @@ import (
 
 // User will contain all essential details about a user
 type User struct {
+	Identifier   string `json:"id" dynamodbav:"id"`
 	FirstName    string `json:"firstName" dynamodbav:"firstName"`
 	LastName     string `json:"lastName" dynamodbav:"lastName"`
+	Email        string `json:"email" dynamodbav:"email"`
 	Mobile       string `json:"mobile" dynamodbav:"mobile"`
 	Address1     string `json:"address1" dynamodbav:"address1"`
 	Address2     string `json:"address2" dynamodbav:"address2"`
