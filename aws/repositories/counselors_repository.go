@@ -22,7 +22,7 @@ type CounselorsRepository struct {
 }
 
 // FetchAll returns all the counselors from dynamodb
-func (rep *CounselorsRepository) FetchAll() (*[]counselor.Counselor, error) {
+func (rep CounselorsRepository) FetchAll() (*[]counselor.Counselor, error) {
 	// create the api params
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(counselorsTable),
@@ -41,7 +41,7 @@ func (rep *CounselorsRepository) FetchAll() (*[]counselor.Counselor, error) {
 }
 
 // Save method stores the counselor in dynamodb
-func (rep *CounselorsRepository) Save(counselor *counselor.Counselor) error {
+func (rep CounselorsRepository) Save(counselor *counselor.Counselor) error {
 	av, err := dynamodbattribute.MarshalMap(counselor)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (rep *CounselorsRepository) Save(counselor *counselor.Counselor) error {
 }
 
 // CreateCounselor allows application to create a counselor from the gateway request
-func (rep *CounselorsRepository) CreateCounselor(req events.APIGatewayProxyRequest) (*counselor.Counselor, error) {
+func (rep CounselorsRepository) CreateCounselor(req events.APIGatewayProxyRequest) (*counselor.Counselor, error) {
 	var counselor counselor.Counselor
 	if err := json.Unmarshal([]byte(req.Body), &counselor); err != nil {
 		return nil, err

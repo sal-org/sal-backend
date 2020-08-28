@@ -29,7 +29,7 @@ type UsersRepository struct {
 }
 
 // FetchUser returns a user from dynamodb with the given id
-func (rep *UsersRepository) FetchUser(id string) (*user.User, error) {
+func (rep UsersRepository) FetchUser(id string) (*user.User, error) {
 	// create the api params
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(usersTable),
@@ -49,7 +49,7 @@ func (rep *UsersRepository) FetchUser(id string) (*user.User, error) {
 }
 
 // Save method stores the user inside dynamodb
-func (rep *UsersRepository) Save(user *user.User) error {
+func (rep UsersRepository) Save(user *user.User) error {
 	av, err := dynamodbattribute.MarshalMap(user)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (rep *UsersRepository) Save(user *user.User) error {
 }
 
 // CreateUser method creates an user from Cognito request and saves it inside dynamodb
-func (rep *UsersRepository) CreateUser(request events.CognitoEventUserPoolsPostConfirmationRequest) error {
+func (rep UsersRepository) CreateUser(request events.CognitoEventUserPoolsPostConfirmationRequest) error {
 	// ideally email needs to be verified.. that flow needs to be figured out
 	// emailVerified, _ := strconv.ParseBool(request.UserAttributes["email_verified"])
 	// if !emailVerified {
