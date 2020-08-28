@@ -63,7 +63,7 @@ jobs:
         zip_file: user_post_signup.zip
     
     - name: Build User Login Trigger Lambda Function
-      run: GOOS=linux go build -o build/user_auth aws/auth/login/user_auth.go    
+      run: GOOS=linux go build -o user_auth aws/auth/login/user_auth.go    
           
     - name: user auth zip
       uses: montudor/action-zip@v0.1.0
@@ -79,7 +79,7 @@ jobs:
         zip_file: user_auth.zip
 
     - name: Build User Pre Signup Trigger Lambda Function
-      run: GOOS=linux go build -o build/user_pre_signup aws/auth/pre_signup/user_pre_signup.go    
+      run: GOOS=linux go build -o user_pre_signup aws/auth/pre_signup/user_pre_signup.go    
             
     - name: user pre signup zip
       uses: montudor/action-zip@v0.1.0
