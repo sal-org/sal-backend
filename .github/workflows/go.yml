@@ -31,12 +31,12 @@ jobs:
         fi
 
     - name: Build Counselors Lambda
-      run: GOOS=linux go build -o build/counselors aws/lambdas/counselors.go      
+      run: GOOS=linux go build -o counselors aws/lambdas/counselors.go      
       
     - name: zip
       uses: montudor/action-zip@v0.1.0
       with:
-        args: zip -jrm build/counselors.zip build/counselors
+        args: zip -jrm counselors.zip counselors
     - name: default deploy
       uses: appleboy/lambda-action@master
       with:
