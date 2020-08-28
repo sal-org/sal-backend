@@ -36,6 +36,7 @@ func (rep UsersRepository) FetchUser(id string) (*user.User, error) {
 	}
 
 	// read the item
+	// TODO
 	_, err := rep.DB.Scan(params)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err.Error())

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -24,6 +25,7 @@ type AppointmentsRepository struct {
 
 // FetchAll returns all the appoinments for the given counselor
 func (r AppointmentsRepository) FetchAll(counselor *counselor.Counselor) (*[]appointment.Appointment, error) {
+	//TODO
 	return nil, nil
 }
 
@@ -48,10 +50,16 @@ func (r AppointmentsRepository) Save(appointment *appointment.Appointment) error
 
 // Update allows user to change an appoinment
 func (r AppointmentsRepository) Update(appointment *appointment.Appointment) error {
+	//TODO
 	return nil
 }
 
-// CreateAppointment method creates an appoinment between counselor and user for a specified duration and time
+// CreateAppointment allows application to create an appoinement using data from the gateway request
+func (r AppointmentsRepository) CreateAppointment(req events.APIGatewayProxyRequest) (*appointment.Appointment, error) {
+	//TODO
+	return nil, nil
+}
+
 func (r AppointmentsRepository) createAppointment(counselor *counselor.Counselor, user *user.User, duration time.Duration, time time.Time) error {
 	appointment := appointment.Appointment{
 		Counselor: counselor,

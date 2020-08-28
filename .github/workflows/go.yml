@@ -30,7 +30,7 @@ jobs:
             dep ensure
         fi
 
-    - name: Build Counselors Lambda
+    - name: Build Counselors Lambda Function
       run: GOOS=linux go build -o counselors aws/lambdas/counselors.go      
       
     - name: zip
@@ -42,6 +42,56 @@ jobs:
       with:
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-east-1
+        aws_region: {{ secrets.AWS_REGION }}
         function_name: counselors
         zip_file: counselors.zip
+
+    - name: Build User Post Signup Trigger Lambda Function
+      run: GOOS=linux go build -o user_post_signup aws/auth/post_signup/user_post_signup.go    
+        
+    - name: zip
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -jrm user_post_signup.zip user_post_signup
+    - name: default deploy
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: {{ secrets.AWS_REGION }}
+        function_name: user_post_signup
+        zip_file: user_post_signup.zip
+    
+    - name: Build User Login Trigger Lambda Function
+      run: GOOS=linux go build -o build/user_auth aws/auth/login/user_pre_auth.go    
+          
+    - name: zip
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -jrm user_auth.zip user_auth
+    - name: default deploy
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: {{ secrets.AWS_REGION }}
+        function_name: user_auth
+        zip_file: user_auth.zip
+
+    - name: Build User Pre Signup Trigger Lambda Function
+      run: GOOS=linux go build -o build/user_pre_signup aws/auth/pre_signup/user_pre_signup.go    
+            
+    - name: zip
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -jrm user_pre_signup.zip user_pre_signup
+    - name: default deploy
+      uses: appleboy/lambda-action@master
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: {{ secrets.AWS_REGION }}
+          function_name: user_pre_signup
+          zip_file: user_pre_signup.zip
+    
+    
