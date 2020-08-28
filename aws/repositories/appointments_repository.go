@@ -23,12 +23,12 @@ type AppointmentsRepository struct {
 }
 
 // FetchAll returns all the appoinments for the given counselor
-func (r *AppointmentsRepository) FetchAll(counselor *counselor.Counselor) (*[]appointment.Appointment, error) {
+func (r AppointmentsRepository) FetchAll(counselor *counselor.Counselor) (*[]appointment.Appointment, error) {
 	return nil, nil
 }
 
 // Save allows application to store an appoinment in dynamodb
-func (r *AppointmentsRepository) Save(appointment *appointment.Appointment) error {
+func (r AppointmentsRepository) Save(appointment *appointment.Appointment) error {
 	// marshal the Appointment struct into an aws attribute value
 	appoinmentAVMap, err := dynamodbattribute.MarshalMap(appointment)
 	if err != nil {
@@ -47,12 +47,12 @@ func (r *AppointmentsRepository) Save(appointment *appointment.Appointment) erro
 }
 
 // Update allows user to change an appoinment
-func (r *AppointmentsRepository) Update(appointment *appointment.Appointment) error {
+func (r AppointmentsRepository) Update(appointment *appointment.Appointment) error {
 	return nil
 }
 
 // CreateAppointment method creates an appoinment between counselor and user for a specified duration and time
-func (r *AppointmentsRepository) createAppointment(counselor *counselor.Counselor, user *user.User, duration time.Duration, time time.Time) error {
+func (r AppointmentsRepository) createAppointment(counselor *counselor.Counselor, user *user.User, duration time.Duration, time time.Time) error {
 	appointment := appointment.Appointment{
 		Counselor: counselor,
 		Patient:   user,
