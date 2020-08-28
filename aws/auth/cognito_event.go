@@ -1,4 +1,4 @@
-package models
+package auth
 
 // CognitoEvent struct store data received from user pool during pre authentication
 type CognitoEvent struct {

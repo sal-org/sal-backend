@@ -1,4 +1,4 @@
-package models
+package user
 
 import (
 	"fmt"
@@ -21,4 +21,13 @@ type User struct {
 // Stringify returns custom value to be printed
 func (u *User) String() string {
 	return fmt.Sprintf("%v, %v", u.FirstName, u.LastName)
+}
+
+// Repository defines the CRUD functionality for user entity
+type Repository interface {
+	// FetchUser return a User with the given id
+	FetchUser(id string) (*User, error)
+
+	// Save allows to save a user in persistent storage
+	Save(user *User) error
 }

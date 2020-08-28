@@ -1,7 +1,9 @@
-package models
+package feedback
 
 import (
 	"fmt"
+
+	"github.com/sal-org/sal-backend/appointment"
 )
 
 const (
@@ -23,8 +25,8 @@ const (
 
 // Feedback captures information regarding how session went
 type Feedback struct {
-	Appointment Appointment `json:"appoinment" dynamodbav:"appoinment"`
-	Rating      int         `json:"rating" dynamodbav:"rating"`
+	Appointment appointment.Appointment `json:"appoinment" dynamodbav:"appoinment"`
+	Rating      int                     `json:"rating" dynamodbav:"rating"`
 }
 
 // Stringify returns custom value to be printed

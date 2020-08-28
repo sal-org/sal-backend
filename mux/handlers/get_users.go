@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"github.com/sal-org/sal-backend/models"
+	"github.com/sal-org/sal-backend/user"
 )
 
 // GetAllUsers returns all the users
-func GetAllUsers() ([]models.User, error) {
-	user := models.User{
+func GetAllUsers() ([]user.User, error) {
+	user := user.User{
 		FirstName: "Mary",
 		LastName:  "Allen",
 		Mobile:    "23823728372",
@@ -14,5 +14,5 @@ func GetAllUsers() ([]models.User, error) {
 		Address2:  "Suite 3000",
 		Zipcode:   94105}
 
-	return []models.User{user}, nil
+	return []user.User{user}, nil
 }

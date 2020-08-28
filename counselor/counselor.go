@@ -1,4 +1,4 @@
-package models
+package counselor
 
 import (
 	"fmt"
@@ -22,4 +22,13 @@ type Counselor struct {
 // Stringify returns custom value to be printed
 func (c *Counselor) String() string {
 	return fmt.Sprintf("%v, %v", c.FirstName, c.LastName)
+}
+
+// Repository defines the CRUD functionality for counselor entity
+type Repository interface {
+	// FetchAll returns all the counselors registered
+	FetchAll() (*[]Counselor, error)
+
+	// Save allows to save a counselor in persistent storage
+	Save(counselor *Counselor) error
 }
