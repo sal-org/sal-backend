@@ -87,10 +87,10 @@ jobs:
         args: zip -jrm user_pre_signup.zip user_pre_signup
     - name: user pre signup trigger lambds function deploy
       uses: appleboy/lambda-action@master
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: {{ secrets.AWS_REGION }}
-          function_name: user_pre_signup
-          zip_file: user_pre_signup.zip
+      with:
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: {{ secrets.AWS_REGION }}
+        function_name: user_pre_signup
+        zip_file: user_pre_signup.zip
   
