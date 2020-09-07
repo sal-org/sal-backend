@@ -19,13 +19,7 @@ import (
 const (
 	region = "AWS_REGION"
 
-	maxAllowedFileSize = 4 << 20
-
 	userPhotosBucket = "sal-user-photos"
-
-	pngContentType = "image/png"
-
-	jpegContentType = "image/jpeg"
 
 	photosFolder = "photos"
 )
@@ -46,7 +40,7 @@ func HandleUserPhotoRequest(req events.APIGatewayProxyRequest) (*events.APIGatew
 		})
 
 		if err != nil {
-			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String("Internal server error")})
+			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(constants.ErrorInternalServerError)})
 		}
 
 		var uploadReq photoUploadReq
@@ -55,15 +49,11 @@ func HandleUserPhotoRequest(req events.APIGatewayProxyRequest) (*events.APIGatew
 		}
 
 		s3c := s3.New(session)
-		// fileName := fmt.Sprintf("%v/%v", photosFolder, uploadReq.FileName)
-		req, putErr := s3c.PutObjectRequest(&s3.PutObjectInput{
+		fileName := fmt.Sprintf("%v/%v", photosFolder, uploadReq.FileName)
+		req, _ := s3c.PutObjectRequest(&s3.PutObjectInput{
 			Bucket: aws.String(userPhotosBucket),
-			Key:    aws.String(uploadReq.FileName),
+			Key:    aws.String(fileName),
 		})
-
-		if putErr != nil {
-			return utils.GatewayResponse(http.StatusBadRequest, fmt.Sprintf("Unable to create put object req for file %v", uploadReq.FileName))
-		}
 
 		presurl, presignerr := req.Presign(5 * time.Minute)
 		if presignerr != nil {
