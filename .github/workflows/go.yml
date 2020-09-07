@@ -95,7 +95,7 @@ jobs:
         zip_file: user_pre_signup.zip
     
     - name: Build User Photo Upload Lambda Function
-      run: GOOS=linux go build -o build/user_photo_upload aws/lambdas/user_photos/user_photo_upload.go    
+      run: GOOS=linux go build -o user_photo_upload aws/lambdas/user_photos/user_photo_upload.go    
               
     - name: user photo upload zip
       uses: montudor/action-zip@v0.1.0
