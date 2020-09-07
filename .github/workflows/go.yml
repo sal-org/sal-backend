@@ -98,15 +98,15 @@ jobs:
       run: GOOS=linux go build -o build/user_photo_upload aws/lambdas/user_photos/user_photo_upload.go    
               
     - name: user photo upload zip
-        uses: montudor/action-zip@v0.1.0
-        with:
-          args: zip -jrm build/user_photo_upload.zip build/user_photo_upload   
-      - name: user photo upload lambda function deploy
-        uses: appleboy/lambda-action@master
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          function_name: user_photo_upload
-          zip_file: user_photo_upload.zip
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -jrm build/user_photo_upload.zip build/user_photo_upload   
+    - name: user photo upload lambda function deploy
+      uses: appleboy/lambda-action@master
+      with:
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: ${{ secrets.AWS_REGION }}
+        function_name: user_photo_upload
+        zip_file: user_photo_upload.zip
   
