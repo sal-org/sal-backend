@@ -100,7 +100,7 @@ jobs:
     - name: user photo upload zip
       uses: montudor/action-zip@v0.1.0
       with:
-        args: zip -jrm build/user_photo_upload.zip build/user_photo_upload   
+        args: zip -jrm user_photo_upload.zip user_photo_upload   
     - name: user photo upload lambda function deploy
       uses: appleboy/lambda-action@master
       with:
