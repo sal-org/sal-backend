@@ -10,7 +10,7 @@ jobs:
 
   build:
     name: Deploy to AWS Lambda
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-latest
     steps:
 
     - name: Set up Go 1.x
@@ -31,7 +31,7 @@ jobs:
         fi
 
     - name: Build Counselors Lambda Function
-      run: GOOS=linux go build -o counselors aws/lambdas/counselors.go      
+      run:  go build -o counselors aws/lambdas/counselors.go      
       
     - name: counselors zip
       uses: montudor/action-zip@v0.1.0
@@ -47,7 +47,7 @@ jobs:
         zip_file: counselors.zip
 
     - name: Build User Post Signup Trigger Lambda Function
-      run: GOOS=linux go build -o user_post_signup aws/auth/post_signup/user_post_signup.go    
+      run: go build -o user_post_signup aws/auth/post_signup/user_post_signup.go    
         
     - name: user post signup trigger zip
       uses: montudor/action-zip@v0.1.0
@@ -63,7 +63,7 @@ jobs:
         zip_file: user_post_signup.zip
     
     - name: Build User Login Trigger Lambda Function
-      run: GOOS=linux go build -o user_auth aws/auth/login/user_auth.go    
+      run: go build -o user_auth aws/auth/login/user_auth.go    
           
     - name: user auth zip
       uses: montudor/action-zip@v0.1.0
@@ -79,7 +79,7 @@ jobs:
         zip_file: user_auth.zip
 
     - name: Build User Pre Signup Trigger Lambda Function
-      run: GOOS=linux go build -o user_pre_signup aws/auth/pre_signup/user_pre_signup.go    
+      run: go build -o user_pre_signup aws/auth/pre_signup/user_pre_signup.go    
             
     - name: user pre signup zip
       uses: montudor/action-zip@v0.1.0
@@ -95,7 +95,7 @@ jobs:
         zip_file: user_pre_signup.zip
     
     - name: Build User Photo Upload Lambda Function
-      run: GOOS=linux go build -o user_photo_upload aws/lambdas/user_photos/user_photo_upload.go    
+      run: go build -o user_photo_upload aws/lambdas/user_photos/user_photo_upload.go    
               
     - name: user photo upload zip
       uses: montudor/action-zip@v0.1.0
@@ -107,6 +107,6 @@ jobs:
         aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: ${{ secrets.AWS_REGION }}
-        function_name: user_photo_upload
-        zip_file: user_photo_upload.zip
+        function_name: user_photos
+        zip_file: user_photos.zip
   

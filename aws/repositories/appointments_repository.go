@@ -24,7 +24,7 @@ type AppointmentsRepository struct {
 }
 
 // FetchAll returns all the appoinments for the given counselor
-func (r AppointmentsRepository) FetchAll(counselor *counselor.Counselor) (*[]appointment.Appointment, error) {
+func (rep AppointmentsRepository) FetchAll(counselor *counselor.Counselor) (*[]appointment.Appointment, error) {
 	//TODO
 	return nil, nil
 }

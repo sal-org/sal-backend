@@ -11,7 +11,7 @@ import (
 	"github.com/sal-org/sal-backend/models"
 )
 
-// HandlePatientsRequest will handle all users gate api requests
+// HandleUsersRequest will handle all users gate api requests
 func HandleUsersRequest(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":

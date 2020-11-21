@@ -23,8 +23,9 @@ func HandleAppointmentsRequest(req events.APIGatewayProxyRequest) (*events.APIGa
 		}
 
 		repository := repositories.AppointmentsRepository{DB: db}
-		counselors, err := repository.FetchAll(nil)
-		return utils.GatewayResponse(http.StatusOK, counselors)
+		//TO-DO this is work in progress need to add api to get appointments per user/counselor/timeslot
+		appointments, err := repository.FetchAll(nil)
+		return utils.GatewayResponse(http.StatusOK, appointments)
 	case "POST":
 		db, err := database.CreateDB()
 
@@ -33,12 +34,12 @@ func HandleAppointmentsRequest(req events.APIGatewayProxyRequest) (*events.APIGa
 		}
 
 		repository := repositories.AppointmentsRepository{DB: db}
-		counselor, err := repository.CreateAppointment(req)
+		appointment, err := repository.CreateAppointment(req)
 		if err != nil {
 			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
 		}
 
-		return utils.GatewayResponse(http.StatusOK, counselor)
+		return utils.GatewayResponse(http.StatusOK, appointment)
 	default:
 		return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String("Method not allowed")})
 	}
