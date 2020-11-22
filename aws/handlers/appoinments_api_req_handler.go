@@ -3,8 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/sal-org/sal-backend/counselor"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/sal-org/sal-backend/aws/database"
@@ -15,23 +13,34 @@ import (
 
 // HandleAppointmentsRequest will handle all appointment gate api requests
 func HandleAppointmentsRequest(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	db, err := database.CreateDB()
 
-	if err != nil {
-		return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
+	switch req.HTTPMethod {
+	case "GET":
+		db, err := database.CreateDB()
+
+		if err != nil {
+			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
+		}
+
+		repository := repositories.AppointmentsRepository{DB: db}
+		//TO-DO this is work in progress need to add api to get appointments per user/counselor/timeslot
+		appointments, err := repository.FetchAll(nil)
+		return utils.GatewayResponse(http.StatusOK, appointments)
+	case "POST":
+		db, err := database.CreateDB()
+
+		if err != nil {
+			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
+		}
+
+		repository := repositories.AppointmentsRepository{DB: db}
+		appointment, err := repository.CreateAppointment(req)
+		if err != nil {
+			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
+		}
+
+		return utils.GatewayResponse(http.StatusOK, appointment)
+	default:
+		return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String("Method not allowed")})
 	}
-
-	repository := repositories.AppointmentsRepository{DB: db}
-
-	//TODO
-	counselor := counselor.Counselor{
-		Identifier: "random",
-	}
-
-	appointments, err := repository.FetchAll(&counselor)
-	if err != nil {
-		return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
-	}
-
-	return utils.GatewayResponse(http.StatusOK, appointments)
 }
