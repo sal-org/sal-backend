@@ -10,7 +10,7 @@ jobs:
 
   build:
     name: Deploy to AWS Lambda
-    #runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
 
     - name: Set up Go 1.x
@@ -108,5 +108,5 @@ jobs:
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: ${{ secrets.AWS_REGION }}
         function_name: user_photos
-        zip_file: user_photos.zip
+        zip_file: user_photo_upload.zip
   
