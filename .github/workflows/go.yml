@@ -47,7 +47,7 @@ jobs:
         zip_file: counselors.zip
 
     - name: Build Users Lambda Function
-      run:  go build -o users aws/lambdas/users.go      
+      run:  go build -o users aws/lambdas/users/users.go      
       
     - name: users zip
       uses: montudor/action-zip@v0.1.0
@@ -63,7 +63,7 @@ jobs:
         zip_file: users.zip
 
     - name: Build Appointments Lambda Function
-      run:  go build -o appointments aws/lambdas/appointments.go      
+      run:  go build -o appointments aws/lambdas/appointments/appointments.go      
       
     - name: appointments zip
       uses: montudor/action-zip@v0.1.0
