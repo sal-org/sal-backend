@@ -41,6 +41,9 @@ type Repository interface {
 	// FetchAll returns all the appoinments for the given counselor
 	FetchAll(counselor *counselor.Counselor) (*[]Appointment, error)
 
+	// FetchAll returns all the appoinments for the given counselor
+	FetchAllForUser(counselor *user.User) (*[]Appointment, error)
+
 	// Save allows to save an appoinment in persistent storage
 	Save(appointment *Appointment) error
 
