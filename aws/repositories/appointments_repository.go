@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/sal-org/sal-backend/appointment"
-	"github.com/sal-org/sal-backend/counselor"
-	"github.com/sal-org/sal-backend/user"
+	//"github.com/sal-org/sal-backend/counselor"
+	//"github.com/sal-org/sal-backend/user"
 )
 
 const (
@@ -24,9 +24,35 @@ type AppointmentsRepository struct {
 }
 
 // FetchAll returns all the appoinments for the given counselor
-func (rep AppointmentsRepository) FetchAll(counselor *counselor.Counselor) (*[]appointment.Appointment, error) {
-	//TODO
-	return nil, nil
+func (rep AppointmentsRepository) FetchAll(counselorId string, userId string) (*[]appointment.Appointment, error) {
+	// create the api params
+	filt := expression.Name("Counselor").Equal(expression.Value(counselorId))
+	proj := expression.NamesList(expression.Name("Counselor"), expression.Name("User"), expression.Name("Rating"))
+
+	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
+	if err != nil {
+		fmt.Println("Got error building expression:")
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	params := &dynamodb.ScanInput{
+		TableName: aws.String(appointmentsTable),
+		FilterExpression:          expr.Filter(),
+		ProjectionExpression:      expr.Projection(),
+		ExpressionAttributeNames:  expr.Names(),
+        ExpressionAttributeValues: expr.Values(),
+	}
+
+	// read the item
+	result, err := rep.DB.Scan(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	item := new([]appointment.Appointment)
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, item)
+	return item, nil
 }
 
 // Save allows application to store an appoinment in dynamodb
@@ -60,13 +86,13 @@ func (r AppointmentsRepository) CreateAppointment(req events.APIGatewayProxyRequ
 	return nil, nil
 }
 
-func (r AppointmentsRepository) createAppointment(counselor *counselor.Counselor, user *user.User, duration time.Duration, time time.Time) error {
+func (r AppointmentsRepository) createAppointment(counselor_id string, user_id string, duration time.Duration, time time.Time) error {
 	appointment := appointment.Appointment{
-		Counselor: counselor,
-		Patient:   user,
-		Duration:  duration,
-		Time:      time,
-		Status:    appointment.Scheduled,
+		Counselor: counselor_id,
+		User:   user_id,
+		//Duration:  duration,
+		//Time:      time,
+		//Status:    appointment.Scheduled,
 	}
 
 	return r.Save(&appointment)

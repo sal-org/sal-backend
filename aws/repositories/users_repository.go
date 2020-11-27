@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	//"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/sal-org/sal-backend/user"
 )
 
@@ -31,8 +32,10 @@ type UsersRepository struct {
 // FetchUser returns a user from dynamodb with the given id
 func (rep UsersRepository) FetchUser(id string) (*user.User, error) {
 	// create the api params
+	
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(usersTable),
+		
 	}
 
 	// read the item
