@@ -46,38 +46,6 @@ jobs:
         function_name: counselors
         zip_file: counselors.zip
 
-    - name: Build Users Lambda Function
-      run:  go build -o users aws/lambdas/users/users.go      
-      
-    - name: users zip
-      uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -jrm users.zip users
-    - name: users lambda function deploy
-      uses: appleboy/lambda-action@master
-      with:
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: ${{ secrets.AWS_REGION }}
-        function_name: users
-        zip_file: users.zip
-
-    - name: Build Appointments Lambda Function
-      run:  go build -o appointments aws/lambdas/appointments/appointments.go      
-      
-    - name: appointments zip
-      uses: montudor/action-zip@v0.1.0
-      with:
-        args: zip -jrm appointments.zip appointments
-    - name: appointments lambda function deploy
-      uses: appleboy/lambda-action@master
-      with:
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: ${{ secrets.AWS_REGION }}
-        function_name: appointments
-        zip_file: appointments.zip
-
     - name: Build User Post Signup Trigger Lambda Function
       run: go build -o user_post_signup aws/auth/post_signup/user_post_signup.go    
         

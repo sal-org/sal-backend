@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
+	//"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/sal-org/sal-backend/appointment"
 	//"github.com/sal-org/sal-backend/counselor"
 	//"github.com/sal-org/sal-backend/user"
@@ -24,23 +24,23 @@ type AppointmentsRepository struct {
 }
 
 // FetchAll returns all the appoinments for the given counselor
-func (rep AppointmentsRepository) FetchAll(counselorId string, userId string) (*[]appointment.Appointment, error) {
+func (rep AppointmentsRepository) FetchAll(counselorId string) (*[]appointment.Appointment, error) {
 	// create the api params
-	filt := expression.Name("Counselor").Equal(expression.Value(counselorId))
-	proj := expression.NamesList(expression.Name("Counselor"), expression.Name("User"), expression.Name("Rating"))
-
-	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).Build()
-	if err != nil {
-		fmt.Println("Got error building expression:")
-		fmt.Println(err.Error())
-		return nil, err
-	}
+	
 	params := &dynamodb.ScanInput{
 		TableName: aws.String(appointmentsTable),
-		FilterExpression:          expr.Filter(),
-		ProjectionExpression:      expr.Projection(),
-		ExpressionAttributeNames:  expr.Names(),
-        ExpressionAttributeValues: expr.Values(),
+		ExpressionAttributeNames: map[string]*string{
+			"#AT": aws.String("counselor"),
+			"#ST": aws.String("id"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":a": {
+				S: aws.String(counselorId),
+			},
+		},
+		FilterExpression:     aws.String("id = :a"),
+		ProjectionExpression: aws.String("#ST, #AT"),
+		
 	}
 
 	// read the item

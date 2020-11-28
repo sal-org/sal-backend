@@ -25,10 +25,11 @@ const (
 // Appointment will contain all essential details about a appointment
 type Appointment struct {
 	//Duration  time.Duration        `json:"duration" dynamodbav:"duration"`
-	Counselor string `json:"counselor" dynamodbav:"counselor_id"`
-	User   string           `json:"user" dynamodbav:"user_id"`
+	Counselor string `json:"counselor" dynamodbav:"counselor"`
+	User   string           `json:"user" dynamodbav:"user"`
 	//Time      time.Time            `json:"time" dynamodbav:"appointmentTime"`
 	Status    string                  `json:"status" dynamodbav:"status"`
+	Id    string                  `json:"id" dynamodbav:"id"`
 }
 
 // Stringify returns custom value to be printed
@@ -39,7 +40,7 @@ func (a *Appointment) String() string {
 // Repository defines the CRUD functionality for Appoinment entity
 type Repository interface {
 	// FetchAll returns all the appoinments for the given counselor
-	FetchAll(counselorId string, userId string) (*[]Appointment, error)
+	FetchAll(counselorId string) (*[]Appointment, error)
 
 	// Save allows to save an appoinment in persistent storage
 	Save(appointment *Appointment) error
