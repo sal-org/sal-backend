@@ -13,29 +13,26 @@ import (
 )
 
 // HandleAppointmentsRequest will handle all appointment gate api requests
-func HandleAppointments1Request(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+func HandleAppointmentsRequest(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 
 	switch req.HTTPMethod {
 	case "GET":
 		db, err := database.CreateDB()
-		log.Printf("GET: %s", req.HTTPMethod)
 		if err != nil {
 			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
 		}
 
 		repository := repositories.AppointmentsRepository{DB: db}
 		//TO-DO this is work in progress need to add api to get appointments per user/counselor/timeslot
-		counselorId  := req.QueryStringParameters["counselor_id"]
+		counselorId  := req.QueryStringParameters["counselor"]
+		userId  := req.QueryStringParameters["user"]
 		appointments, err := repository.FetchAll(counselorId)
 		if err != nil {
-				return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
+			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
 		}
-		log.Printf("Fetchall: %s ", counselorId)
 		return utils.GatewayResponse(http.StatusOK, appointments)
 		
 	case "POST":
-		log.Printf("POST: %s", req.HTTPMethod)
-
 		db, err := database.CreateDB()
 
 		if err != nil {
@@ -51,6 +48,6 @@ func HandleAppointments1Request(req events.APIGatewayProxyRequest) (*events.APIG
 		return utils.GatewayResponse(http.StatusOK, appointment)
 	
 	default:
-		return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String("Method not allowed")})	
+		return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String("Method not allowed")})
 	}
 }

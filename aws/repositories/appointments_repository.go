@@ -23,8 +23,8 @@ type AppointmentsRepository struct {
 	DB *dynamodb.DynamoDB
 }
 
-// FetchAll returns all the appoinments for the given counselor
-func (rep AppointmentsRepository) FetchAll(counselorId string) (*[]appointment.Appointment, error) {
+// FetchAll returns all the appoinments for the given counselor , user
+func (rep AppointmentsRepository) FetchAll(counselorId string, userId string) (*[]appointment.Appointment, error) {
 	// create the api params
 	
 	params := &dynamodb.ScanInput{
@@ -37,8 +37,11 @@ func (rep AppointmentsRepository) FetchAll(counselorId string) (*[]appointment.A
 			":a": {
 				S: aws.String(counselorId),
 			},
+			":b": {
+				S: aws.String(userId),
+			},
 		},
-		FilterExpression:     aws.String("id = :a"),
+		FilterExpression:     aws.String("(counselor = :a and user = :b)"),
 		ProjectionExpression: aws.String("#ST, #AT"),
 		
 	}

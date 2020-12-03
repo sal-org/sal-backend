@@ -13,5 +13,5 @@ func main() {
 
 // HandleRequest handles the api gateway trigger for patients rest api
 func HandleRequest(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	return handlers.HandleAppointments1Request(req)
+	return handlers.HandleAppointmentsRequest(req)
 }
