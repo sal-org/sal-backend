@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	
 	"github.com/aws/aws-lambda-go/events"
@@ -26,7 +25,7 @@ func HandleAppointmentsRequest(req events.APIGatewayProxyRequest) (*events.APIGa
 		//TO-DO this is work in progress need to add api to get appointments per user/counselor/timeslot
 		counselorId  := req.QueryStringParameters["counselor"]
 		userId  := req.QueryStringParameters["user"]
-		appointments, err := repository.FetchAll(counselorId)
+		appointments, err := repository.FetchAll(counselorId, userId)
 		if err != nil {
 			return utils.GatewayResponse(http.StatusBadRequest, models.ErrorBody{ErrorMsg: aws.String(err.Error())})
 		}

@@ -89,13 +89,13 @@ func (r AppointmentsRepository) CreateAppointment(req events.APIGatewayProxyRequ
 	return nil, nil
 }
 
-func (r AppointmentsRepository) createAppointment(counselor_id string, user_id string, duration time.Duration, time time.Time) error {
+func (r AppointmentsRepository) createAppointment(counselor_id string, user_id string, duration time.Duration, time time.Time, status string) error {
 	appointment := appointment.Appointment{
 		Counselor: counselor_id,
 		User:   user_id,
-		//Duration:  duration,
-		//Time:      time,
-		//Status:    appointment.Scheduled,
+		Duration:  duration,
+		Time:      time,
+		Status:    status,
 	}
 
 	return r.Save(&appointment)
