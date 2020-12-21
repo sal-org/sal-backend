@@ -24,6 +24,8 @@ const (
 
 // Appointment will contain all essential details about a appointment
 type Appointment struct {
+	PrimaryKey string `json:"PrimaryKey" dynamodbav:"PrimaryKey"`
+	SortKey string `json:"SortKey" dynamodbav:"SortKey"`
 	Duration  time.Duration        `json:"duration" dynamodbav:"duration"`
 	Counselor string `json:"counselor" dynamodbav:"counselor"`
 	User   string           `json:"user" dynamodbav:"user"`
