@@ -6,6 +6,8 @@ import (
 
 // Counselor will contain all essential details about a counselor
 type Counselor struct {
+	PrimaryKey string `json:"PrimaryKey" dynamodbav:"PrimaryKey"`
+	SortKey string `json:"SortKey" dynamodbav:"SortKey"`
 	Identifier   string  `json:"id" dynamodbav:"id"`
 	FirstName    string  `json:"firstName" dynamodbav:"firstName"`
 	LastName     string  `json:"lastName" dynamodbav:"lastName"`

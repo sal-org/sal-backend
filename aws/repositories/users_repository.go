@@ -7,11 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/rs/xid"
 	"github.com/sal-org/sal-backend/user"
+	//"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 )
 
 const (
-	usersTable = "Users"
+	doctorsAppointmentsTable = "DoctorsAppointments"
 )
 
 // UsersRepositoryError defines all the errors related to user repository operations
@@ -31,15 +33,24 @@ type UsersRepository struct {
 // FetchUser returns a user from dynamodb with the given id
 func (rep UsersRepository) FetchUser(id string) (*user.User, error) {
 	// create the api params
-	
-	params := &dynamodb.ScanInput{
-		TableName: aws.String(usersTable),
-		
+	//PK is USER#<userid> SK is USER#firstname#lastname
+	primaryKey := "USER#" + id;
+	params := &dynamodb.QueryInput{
+		TableName: aws.String(doctorsAppointmentsTable),
+		KeyConditionExpression: aws.String("PrimaryKey = :pk AND begins_with(SortKey, :sk)"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":pk": {
+				S: aws.String(primaryKey),
+			},
+			":sk": {
+				S: aws.String("USER#"),
+			},
+		},	
 	}
 
 	// read the item
 	// TODO
-	_, err := rep.DB.Scan(params)
+	_, err := rep.DB.Query(params)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err.Error())
 		return nil, err
@@ -60,7 +71,7 @@ func (rep UsersRepository) Save(user *user.User) error {
 
 	input := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(usersTable),
+		TableName: aws.String(doctorsAppointmentsTable),
 	}
 
 	_, err = rep.DB.PutItem(input)
@@ -74,19 +85,20 @@ func (rep UsersRepository) CreateUser(request events.CognitoEventUserPoolsPostCo
 	// if !emailVerified {
 	// 	return &CustomError{ErrorMsg: "user email is not verified"}
 	// }
-
+    id := xid.New()
 	email, ok1 := request.UserAttributes["email"]
-	lastName, ok2 := request.UserAttributes["family_name"]
-	name, ok3 := request.UserAttributes["name"]
-	id, ok4 := request.UserAttributes["sub"]
-
-	if !ok1 || !ok2 || !ok3 || !ok4 {
+	lastName, ok2 := request.UserAttributes["lastName"]
+	name, ok3 := request.UserAttributes["firstName"]
+	
+	if !ok1 || !ok2 || !ok3  {
 		return &UsersRepositoryError{ErrorMsg: "valid user details are not found"}
 	}
 
 	var user user.User
 
-	user.Identifier = id
+	user.PrimaryKey = "USER#" + id.String()
+	user.SortKey = "USER#" + name + "#" +  lastName
+	user.Identifier = id.String()
 	user.FirstName = name
 	user.LastName = lastName
 	user.Email = email

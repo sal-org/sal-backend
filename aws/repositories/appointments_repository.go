@@ -14,10 +14,6 @@ import (
 	//"github.com/sal-org/sal-backend/user"
 )
 
-const (
-	appointmentsTable = "Appointments"
-)
-
 // AppointmentsRepository provides all the repository implementation for appoinment repository interface
 type AppointmentsRepository struct {
 	DB *dynamodb.DynamoDB
@@ -26,28 +22,24 @@ type AppointmentsRepository struct {
 // FetchAll returns all the appoinments for the given counselor , user
 func (rep AppointmentsRepository) FetchAll(counselorId string, userId string) (*[]appointment.Appointment, error) {
 	// create the api params
-	
-	params := &dynamodb.ScanInput{
-		TableName: aws.String(appointmentsTable),
-		ExpressionAttributeNames: map[string]*string{
-			"#AT": aws.String("counselor"),
-			"#ST": aws.String("id"),
-		},
+	//PK APPOINTMENT#<id> SK APPOINTMENT#COUNSELOR#<id>#USER#<id>
+	primaryKey := "APPOINTMENT#";
+	secKey := "APPOINTMENT#COUNSELOR#" + counselorId + "USER#" + userId
+	params := &dynamodb.QueryInput{
+		TableName: aws.String(doctorsAppointmentsTable),
+		KeyConditionExpression: aws.String("begins_with(PrimaryKey , :pk) AND begins_with(SortKey, :sk)"),
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":a": {
-				S: aws.String(counselorId),
+			":pk": {
+				S: aws.String(primaryKey),
 			},
-			":b": {
-				S: aws.String(userId),
+			":sk": {
+				S: aws.String(secKey),
 			},
-		},
-		FilterExpression:     aws.String("(counselor = :a and user = :b)"),
-		ProjectionExpression: aws.String("#ST, #AT"),
-		
+		},	
 	}
 
 	// read the item
-	result, err := rep.DB.Scan(params)
+	result, err := rep.DB.Query(params)
 
 	if err != nil {
 		return nil, err
@@ -69,7 +61,7 @@ func (r AppointmentsRepository) Save(appointment *appointment.Appointment) error
 
 	// create the api params
 	params := &dynamodb.PutItemInput{
-		TableName: aws.String(appointmentsTable),
+		TableName: aws.String(doctorsAppointmentsTable),
 		Item:      appoinmentAVMap,
 	}
 
@@ -90,6 +82,7 @@ func (r AppointmentsRepository) CreateAppointment(req events.APIGatewayProxyRequ
 }
 
 func (r AppointmentsRepository) createAppointment(counselor_id string, user_id string, duration time.Duration, time time.Time, status string) error {
+	//TODO
 	appointment := appointment.Appointment{
 		Counselor: counselor_id,
 		User:   user_id,
