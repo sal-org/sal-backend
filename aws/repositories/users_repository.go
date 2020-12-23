@@ -56,9 +56,6 @@ func (rep UsersRepository) FetchUser(id string) ([]user.User, error) {
 		return nil, err
 	}
 
-	//user := new(user.User)
-	//TODO
-	//err = dynamodbattribute.UnmarshalMap(resp.Items, user)
 	user := []user.User{}
     err = dynamodbattribute.UnmarshalListOfMaps(resp.Items,  &user)
 	return user, err

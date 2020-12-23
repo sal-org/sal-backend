@@ -27,31 +27,28 @@ func (e *CounselorsRepositoryError) Error() string {
 }
 
 // FetchAll returns all the counselors from dynamodb
-func (rep CounselorsRepository) FetchAll() (*[]counselor.Counselor, error) {
+func (rep CounselorsRepository) FetchAll() ([]counselor.Counselor, error) {
 	// create the api params
 	
-	primaryKey := "COUNSELOR#";
-	params := &dynamodb.QueryInput{
+	params := &dynamodb.ScanInput{
 		TableName: aws.String(doctorsAppointmentsTable),
-		KeyConditionExpression: aws.String("begins_with(PrimaryKey , :pk) AND begins_with(SortKey, :sk)"),
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+		FilterExpression: aws.String("begins_with(PrimaryKey ,:pk)"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{		
 			":pk": {
-				S: aws.String(primaryKey),
-			},
-			":sk": {
 				S: aws.String("COUNSELOR#"),
 			},
 		},	
 	}
 	// read the item
-	resp, err := rep.DB.Query(params)
+	resp, err := rep.DB.Scan(params)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err.Error())
 		return nil, err
 	}
 
-	counselors := new([]counselor.Counselor)
-	err = dynamodbattribute.UnmarshalListOfMaps(resp.Items, counselors)
+	counselors := []counselor.Counselor{}
+	fmt.Printf("RESP: %v\n", resp.Items)
+	err = dynamodbattribute.UnmarshalListOfMaps(resp.Items, &counselors)
 	return counselors, err
 }
 
