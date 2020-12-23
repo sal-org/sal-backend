@@ -22,7 +22,8 @@ func HandleUsersRequest(req events.APIGatewayProxyRequest) (*events.APIGatewayPr
 		}
 
 		repository := repositories.UsersRepository{DB: db}
-		users, err := repository.FetchUser("1")
+		userId  := req.QueryStringParameters["user"]
+		users, err := repository.FetchUser(userId)
 		return utils.GatewayResponse(http.StatusOK, users)
 
 	default:

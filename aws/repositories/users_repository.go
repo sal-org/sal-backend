@@ -31,7 +31,7 @@ type UsersRepository struct {
 }
 
 // FetchUser returns a user from dynamodb with the given id
-func (rep UsersRepository) FetchUser(id string) (*user.User, error) {
+func (rep UsersRepository) FetchUser(id string) ([]user.User, error) {
 	// create the api params
 	//PK is USER#<userid> SK is USER#firstname#lastname
 	primaryKey := "USER#" + id;
@@ -50,16 +50,18 @@ func (rep UsersRepository) FetchUser(id string) (*user.User, error) {
 
 	// read the item
 	// TODO
-	_, err := rep.DB.Query(params)
+	resp, err := rep.DB.Query(params)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err.Error())
 		return nil, err
 	}
 
-	user := new(user.User)
+	//user := new(user.User)
 	//TODO
-	// err = dynamodbattribute.UnmarshalMap(resp.Items, user)
-	return user, nil
+	//err = dynamodbattribute.UnmarshalMap(resp.Items, user)
+	user := []user.User{}
+    err = dynamodbattribute.UnmarshalListOfMaps(resp.Items,  &user)
+	return user, err
 }
 
 // Save method stores the user inside dynamodb
