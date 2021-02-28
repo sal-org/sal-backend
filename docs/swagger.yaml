@@ -1,0 +1,364 @@
+basePath: /prod
+definitions:
+  model.CounsellorOrderCreateRequest:
+    properties:
+      client_id:
+        type: string
+      counsellor_id:
+        type: string
+      coupon_code:
+        type: string
+      date:
+        type: string
+      no_session:
+        type: string
+      time:
+        type: string
+    type: object
+  model.CounsellorOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
+  model.ErrorResponse:
+    properties:
+      meta:
+        $ref: '#/definitions/model.Meta'
+    type: object
+  model.ListenerOrderCreateRequest:
+    properties:
+      client_id:
+        type: string
+      date:
+        type: string
+      listener_id:
+        type: string
+      time:
+        type: string
+    type: object
+  model.ListenerOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+    type: object
+  model.Meta:
+    properties:
+      message:
+        type: string
+      message_type:
+        type: string
+      status:
+        type: string
+    type: object
+host: hwmpf9h476.execute-api.ap-south-1.amazonaws.com
+info:
+  contact: {}
+  description: This is a api for SAL client/listener/counsellor APIs
+  title: SAL Backend API
+  version: "1.0"
+paths:
+  /client/counsellor:
+    get:
+      parameters:
+      - description: Counsellor ID to get details
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get counsellor details
+      tags:
+      - Client
+  /client/counsellor/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Create appointment order with client and counsellor
+      tags:
+      - Client
+  /client/counsellor/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Call after payment is completed for counsellor order
+      tags:
+      - Client
+  /client/counsellor/prices:
+    get:
+      parameters:
+      - description: Counsellor ID to get prices
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      - description: Number of sessions to book (1,3,5) - default is 1, if you don't
+          send
+        in: query
+        name: no_session
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get counsellor prices
+      tags:
+      - Client
+  /client/counsellor/slots:
+    get:
+      parameters:
+      - description: Counsellor ID to get slot details
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get counsellor slots
+      tags:
+      - Client
+  /client/listener:
+    get:
+      parameters:
+      - description: Listener ID to get details
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get listener details
+      tags:
+      - Client
+  /client/listener/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ListenerOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Create appointment order with client and listener
+      tags:
+      - Client
+  /client/listener/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ListenerOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Call after payment is completed for listener order
+      tags:
+      - Client
+  /client/listener/slots:
+    get:
+      parameters:
+      - description: Listener ID to get slot details
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get listener slots
+      tags:
+      - Client
+  /client/search:
+    get:
+      parameters:
+      - description: Counsellor(1)/Listener(2) or dont send if both
+        in: query
+        name: type
+        type: string
+      - description: anxiety/anger/stress/depression/relationship/parenting/grief/motivation/life/others
+          - send selected topic id
+        in: query
+        name: topic
+        type: string
+      - description: english/hindi/tamil/telugu/kannada/bengali/malayalam/marathi/gujarati/punjabi
+          - send selected language id
+        in: query
+        name: language
+        type: string
+      - description: Available on date (2020-02-27)
+        in: query
+        name: date
+        type: string
+      - description: Available on time (0-23 slots), in UTC, for the selected date
+        in: query
+        name: time
+        type: string
+      - description: Price range - 100,200 (min,max)
+        in: query
+        name: price
+        type: string
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get counsellor/listener list with search filters
+      tags:
+      - Client
+  /language:
+    get:
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get all available language
+      tags:
+      - Miscellaneous
+  /meta:
+    get:
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get all available topics, languages
+      tags:
+      - Miscellaneous
+  /topic:
+    get:
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Get all available topics
+      tags:
+      - Miscellaneous
+schemes:
+- https
+swagger: "2.0"
