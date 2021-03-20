@@ -2,20 +2,21 @@ package client
 
 import (
 	"net/http"
+	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	_ "salbackend/model" // for error response model
+
 	UTIL "salbackend/util"
 	"strings"
 )
 
 // ListenerProfile godoc
-// @Tags Client
+// @Tags Client Listener
 // @Summary Get listener details
 // @Router /client/listener [get]
 // @Param listener_id query string true "Listener ID to get details"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -57,17 +58,17 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	response["languages"] = languages
 	response["topics"] = topics
 	response["reviews"] = reviews
-	response["media_url"] = CONSTANT.MediaURL
+	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
 // ListenerSlots godoc
-// @Tags Client
+// @Tags Client Listener
 // @Summary Get listener slots
 // @Router /client/listener/slots [get]
 // @Param listener_id query string true "Listener ID to get slot details"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -85,12 +86,12 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListenerOrderCreate godoc
-// @Tags Client
+// @Tags Client Listener
 // @Summary Create appointment order with client and listener
 // @Router /client/listener/order [post]
 // @Param body body model.ListenerOrderCreateRequest true "Request Body"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -110,7 +111,7 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if client id is valid
+	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"client_id": body["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -157,6 +158,7 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["date"] = body["date"]
 	order["time"] = body["time"]
 	order["type"] = CONSTANT.ListenerType
+	order["order_type"] = CONSTANT.OrderAppointmentType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 	// no paid amount and billing
@@ -172,12 +174,12 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListenerOrderPaymentComplete godoc
-// @Tags Client
+// @Tags Client Listener
 // @Summary Call after payment is completed for listener order
 // @Router /client/listener/paymentcomplete [post]
 // @Param body body model.ListenerOrderPaymentCompleteRequest true "Request Body"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -197,7 +199,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get order
+	// get order details
 	order, status, ok := DB.SelectSQL(CONSTANT.OrdersTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -213,9 +215,29 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
+	// check if order is appointment
+	if !strings.EqualFold(order[0]["order_type"], CONSTANT.OrderAppointmentType) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
 	// check if order payment is already captured
 	if !strings.EqualFold(order[0]["status"], CONSTANT.OrderWaiting) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentCapturedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// create appointment between listener and client
+	appointment := map[string]string{}
+	appointment["order_id"] = body["order_id"]
+	appointment["client_id"] = order[0]["client_id"]
+	appointment["counsellor_id"] = order[0]["counsellor_id"]
+	appointment["date"] = order[0]["date"]
+	appointment["time"] = order[0]["time"]
+	appointment["status"] = CONSTANT.AppointmentToBeStarted
+	appointment["created_at"] = UTIL.GetCurrentTime().String()
+	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -223,7 +245,6 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate := map[string]string{}
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
-
 	status, ok = DB.UpdateSQL(CONSTANT.OrdersTable,
 		map[string]string{
 			"order_id": body["order_id"],

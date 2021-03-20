@@ -13,7 +13,7 @@ import (
 // @Summary Get all available language
 // @Router /language [get]
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func ListLanguage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

@@ -2,6 +2,8 @@ package main
 
 import (
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 
 	API "salbackend/api"
@@ -9,8 +11,6 @@ import (
 	DATABASE "salbackend/database"
 
 	_ "salbackend/docs"
-
-	"github.com/akrylysov/algnhsa"
 )
 
 // @title SAL Backend API
@@ -26,9 +26,9 @@ func main() {
 	CONFIG.LoadConfig()
 	DATABASE.ConnectDatabase()
 
-	// ec2 router
-	// fmt.Println(http.ListenAndServe(":5000", &WithCORS{API.LoadRouter()}))
-
-	// lambda router
-	algnhsa.ListenAndServe(&WithCORS{API.LoadRouter()}, nil)
+	if strings.EqualFold(os.Getenv("lambda"), "1") {
+		API.StartServer(true)
+	} else {
+		API.StartServer(false)
+	}
 }

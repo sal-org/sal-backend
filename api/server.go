@@ -1,10 +1,23 @@
-package main
+package api
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/akrylysov/algnhsa"
 	"github.com/gorilla/mux"
 )
+
+// StartServer - start server using mux
+func StartServer(lambda bool) {
+	if lambda {
+		// lambda router
+		algnhsa.ListenAndServe(&WithCORS{LoadRouter()}, nil)
+	} else {
+		// ec2 router
+		fmt.Println(http.ListenAndServe(":5000", &WithCORS{LoadRouter()}))
+	}
+}
 
 func (s *WithCORS) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 

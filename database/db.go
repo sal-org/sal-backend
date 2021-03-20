@@ -8,7 +8,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 
-	// UTIL "salbackend/util"
+	LOGGER "salbackend/logger"
 	"strconv"
 	"strings"
 	"time"
@@ -57,8 +57,8 @@ func generateRandomID(n int) string {
 }
 
 // RowCount - get number of items in database with specified query
-func RowCount(tableName string, where string) int {
-	data, _, _ := SelectProcess("select count(*) as ctn from " + tableName + " where " + where)
+func RowCount(tableName string, where string, args ...interface{}) int {
+	data, _, _ := SelectProcess("select count(*) as ctn from "+tableName+" where "+where, args...)
 	if len(data) == 0 {
 		return 0
 	}
@@ -76,13 +76,13 @@ func CheckIfExists(table string, params map[string]string) bool {
 
 // ExecuteSQL - execute statement with defined values
 func ExecuteSQL(SQLQuery string, params ...interface{}) (sql.Result, error) {
-	// UTIL.Logger("ExecuteSQL", SQLQuery, params)
+	LOGGER.Log("ExecuteSQL", SQLQuery, params)
 	return db.Exec(SQLQuery, params...)
 }
 
 // QueryRowSQL - get single data with defined values
 func QueryRowSQL(SQLQuery string, params ...interface{}) string {
-	// UTIL.Logger("QueryRowSQL", SQLQuery, params)
+	LOGGER.Log("QueryRowSQL", SQLQuery, params)
 	var value string
 	db.QueryRow(SQLQuery, params...).Scan(&value)
 	return value
@@ -118,7 +118,7 @@ func UpdateSQL(tableName string, params map[string]string, body map[string]strin
 		init = true
 	}
 
-	// UTIL.Logger("UpdateSQL", SQLQuery, args)
+	LOGGER.Log("UpdateSQL", SQLQuery, args)
 
 	_, err = db.Exec(SQLQuery, args...)
 	if err != nil {
@@ -146,7 +146,7 @@ func DeleteSQL(tableName string, params ...map[string]string) (string, bool) {
 		args = append(args, val[0])
 		init = true
 	}
-	// UTIL.Logger("DeleteSQL", SQLQuery, args)
+	LOGGER.Log("DeleteSQL", SQLQuery, args)
 
 	_, err = db.Exec(SQLQuery, args...)
 	if err != nil {
@@ -162,7 +162,7 @@ func InsertSQL(tableName string, body map[string]string) (string, bool) {
 		return CONSTANT.StatusCodeBadRequest, false
 	}
 	SQLQuery, args := BuildInsertStatement(tableName, body)
-	// UTIL.Logger("InsertSQL", SQLQuery, args)
+	LOGGER.Log("InsertSQL", SQLQuery, args)
 
 	_, err = db.Exec(SQLQuery, args...)
 	if err != nil {
@@ -219,7 +219,7 @@ func SelectSQL(tableName string, columns []string, params ...map[string]string) 
 
 // SelectProcess - execute raw select statement
 func SelectProcess(SQLQuery string, params ...interface{}) ([]map[string]string, string, bool) {
-	// UTIL.Logger("SelectProcess", SQLQuery, params)
+	LOGGER.Log("SelectProcess", SQLQuery, params)
 
 	rows, err := db.Query(SQLQuery, params...)
 	if err != nil {

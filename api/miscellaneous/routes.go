@@ -12,4 +12,8 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 
 	// meta
 	router.HandleFunc("/meta", ListMeta).Methods("GET")
+
+	// upload
+	router.HandleFunc("/upload", UploadFile).Methods("POST")
+
 }

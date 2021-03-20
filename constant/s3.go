@@ -1,6 +1,14 @@
 package constant
 
-// aws s3 constants
+// s3 folders
 const (
-	MediaURL = "https://sal-test-app.s3.ap-south-1.amazonaws.com/"
+	MiscellaneousS3Path = "miscellaneous"
+	CounsellorS3Path    = "counsellor"
+	ListenerS3Path      = "listener"
+	ClientS3Path        = "client"
+)
+
+// s3 acls
+const (
+	S3PublicRead = "public-read"
 )

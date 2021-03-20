@@ -1,7 +1,0 @@
-# .env file
-
-# database config
-DB_CONFIG=cloudpgrds:cloudpgrds@tcp(cloudpgrds.cpkeeaeohrct.ap-south-1.rds.amazonaws.com:3306)/sal?charset=utf8mb4
-DB_CONNECTION_POOL=20
-LOG=true
-MIGRATE=false

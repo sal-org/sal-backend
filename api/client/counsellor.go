@@ -1,22 +1,25 @@
 package client
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	_ "salbackend/model" // for error response model
+
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
 )
 
 // CounsellorProfile godoc
-// @Tags Client
+// @Tags Client Counsellor
 // @Summary Get counsellor details
 // @Router /client/counsellor [get]
 // @Param counsellor_id query string true "Counsellor ID to get details"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -58,17 +61,17 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	response["languages"] = languages
 	response["topics"] = topics
 	response["reviews"] = reviews
-	response["media_url"] = CONSTANT.MediaURL
+	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
 // CounsellorSlots godoc
-// @Tags Client
+// @Tags Client Counsellor
 // @Summary Get counsellor slots
 // @Router /client/counsellor/slots [get]
 // @Param counsellor_id query string true "Counsellor ID to get slot details"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -85,54 +88,13 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-// CounsellorPrices godoc
-// @Tags Client
-// @Summary Get counsellor prices
-// @Router /client/counsellor/prices [get]
-// @Param counsellor_id query string true "Counsellor ID to get prices"
-// @Param no_session query string false "Number of sessions to book (1,3,5) - default is 1, if you don't send"
-// @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
-func CounsellorPrices(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var response = make(map[string]interface{})
-
-	// get counsellor prices
-	prices, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"price", "price_3", "price_5"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(prices) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	price := prices[0]["price"] // default 1 session price
-	if strings.EqualFold(r.FormValue("no_session"), "3") {
-		price = prices[0]["price_3"]
-	} else if strings.EqualFold(r.FormValue("no_session"), "5") {
-		price = prices[0]["price_5"]
-	}
-
-	if strings.EqualFold(price, "0") { // check if selected sessions price is not free
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorSessionsPriceNotFoundMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	response["billing"] = UTIL.GetBillingDetails(price, "0")
-	response["slots"] = prices
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
-}
-
 // CounsellorOrderCreate godoc
-// @Tags Client
+// @Tags Client Counsellor
 // @Summary Create appointment order with client and counsellor
 // @Router /client/counsellor/order [post]
 // @Param body body model.CounsellorOrderCreateRequest true "Request Body"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -152,8 +114,8 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if client id is valid
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"client_id": body["client_id"]})
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "email", "phone", "status"}, map[string]string{"client_id": body["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -170,7 +132,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"price", "price_3", "price_5", "status"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "price", "price_3", "price_5", "status"}, map[string]string{"counsellor_id": body["counsellor_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -199,6 +161,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["date"] = body["date"]
 	order["time"] = body["time"]
 	order["type"] = CONSTANT.CounsellorType
+	order["order_type"] = CONSTANT.OrderAppointmentType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
@@ -209,12 +172,18 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		price = counsellor[0]["price_5"]
 	}
 
+	// appointment actual price should not be free
+	if strings.EqualFold(price, "0") {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorSessionsPriceNotFoundMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	order["slots_bought"] = body["no_session"]
 	order["actual_amount"] = price
 
 	if len(body["coupon_code"]) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and (client_id = ? or client_id is null) and (counsellor_id = ? or counsellor_id is null) order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["counsellor_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and order_type = "+CONSTANT.OrderAppointmentType+" and (client_id = ? or client_id is null) and (counsellor_id = ? or counsellor_id is null) order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["counsellor_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -222,6 +191,15 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		if len(coupon) == 0 {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponInCorrectMessage, CONSTANT.ShowDialog, response)
 			return
+		}
+		if len(coupon[0]["valid_for_order"]) > 0 {
+			// get number of client counsellor orders
+			noOrders := DB.RowCount(CONSTANT.OrdersTable, " client_id = ? and type = "+CONSTANT.CounsellorType+" and order_type = "+CONSTANT.OrderAppointmentType+" and status > "+CONSTANT.OrderWaiting, body["client_id"])
+			// check if coupon applicable by order count and valid for order
+			if !strings.EqualFold(coupon[0]["valid_for_order"], strconv.Itoa(noOrders+1)) { // add 1 to equal to valid for order value
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponNotApplicableMessage, CONSTANT.ShowDialog, response)
+				return
+			}
 		}
 
 		actualAmount, _ := strconv.ParseFloat(price, 64)
@@ -260,18 +238,21 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	paidAmount, _ := strconv.ParseFloat(billing["paid_amount"], 64)
+	response["payu_payment"] = UTIL.GetPayUPaymentObject(CONFIG.PAYUMerchatKey, CONFIG.PAYUSalt, orderID, "Appointment with "+counsellor[0]["first_name"], client[0]["first_name"], client[0]["last_name"], client[0]["email"], client[0]["phone"], "https://hwmpf9h476.execute-api.ap-south-1.amazonaws.com/prod/client/testpayu", "https://hwmpf9h476.execute-api.ap-south-1.amazonaws.com/prod/client/testpayu", paidAmount)
 	response["billing"] = billing
 	response["order_id"] = orderID
+	response["prices"] = counsellor[0]
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
 // CounsellorOrderPaymentComplete godoc
-// @Tags Client
+// @Tags Client Counsellor
 // @Summary Call after payment is completed for counsellor order
 // @Router /client/counsellor/paymentcomplete [post]
 // @Param body body model.CounsellorOrderPaymentCompleteRequest true "Request Body"
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -291,7 +272,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get order
+	// get order details
 	order, status, ok := DB.SelectSQL(CONSTANT.OrdersTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -304,6 +285,11 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 	// check if order is with counsellor
 	if !strings.EqualFold(order[0]["type"], CONSTANT.CounsellorType) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if order is appointment
+	if !strings.EqualFold(order[0]["order_type"], CONSTANT.OrderAppointmentType) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
@@ -320,10 +306,13 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["payment_id"] = body["payment_id"]
 	invoice["client_id"] = order[0]["client_id"]
 	invoice["counsellor_id"] = order[0]["counsellor_id"]
-	invoice["type"] = CONSTANT.CounsellorType
-	invoice["order_type"] = CONSTANT.OrderAppointmentType
+	invoice["type"] = order[0]["type"]
+	invoice["order_type"] = order[0]["order_type"]
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["discount"] = order[0]["discount"]
+	invoice["coupon_code"] = order[0]["coupon_code"]
+	invoice["coupon_id"] = order[0]["coupon_id"]
 	invoice["paid_amount"] = order[0]["paid_amount"]
 	invoice["status"] = CONSTANT.InvoiceInProgress
 	invoice["created_at"] = UTIL.GetCurrentTime().String()
@@ -334,12 +323,42 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// create appointment slots between counsellor and client
+	appointmentSlots := map[string]string{}
+	appointmentSlots["order_id"] = body["order_id"]
+	appointmentSlots["client_id"] = order[0]["client_id"]
+	appointmentSlots["counsellor_id"] = order[0]["counsellor_id"]
+	appointmentSlots["slots_bought"] = order[0]["slots_bought"]
+	slotsBought, _ := strconv.Atoi(order[0]["slots_bought"])
+	appointmentSlots["slots_remaining"] = strconv.Itoa(slotsBought - 1)
+	appointmentSlots["status"] = CONSTANT.AppointmentSlotsActive
+	appointmentSlots["created_at"] = UTIL.GetCurrentTime().String()
+	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentSlotsTable, CONSTANT.AppointmentSlotDigits, appointmentSlots, "appointment_slot_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// create appointment between counsellor and client
+	appointment := map[string]string{}
+	appointment["order_id"] = body["order_id"]
+	appointment["client_id"] = order[0]["client_id"]
+	appointment["counsellor_id"] = order[0]["counsellor_id"]
+	appointment["date"] = order[0]["date"]
+	appointment["time"] = order[0]["time"]
+	appointment["status"] = CONSTANT.AppointmentToBeStarted
+	appointment["created_at"] = UTIL.GetCurrentTime().String()
+	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// update order with invoice id and change status
 	orderUpdate := map[string]string{}
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 	orderUpdate["invoice_id"] = invoiceID
-
 	status, ok = DB.UpdateSQL(CONSTANT.OrdersTable,
 		map[string]string{
 			"order_id": body["order_id"],
@@ -360,4 +379,23 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+}
+
+// TestPAYU .
+func TestPAYU(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// read request body
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("TestPAYU", err)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	defer r.Body.Close()
+	fmt.Println("TestPAYU", string(b))
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

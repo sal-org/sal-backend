@@ -43,14 +43,15 @@ const (
 	CounsellorNotApproved = "0"
 	CounsellorActive      = "1"
 	CounsellorInactive    = "2"
-	CounsellorBlocked     = "2"
+	CounsellorBlocked     = "3"
 )
 
 // listener status
 const (
-	ListenerActive   = "1"
-	ListenerInactive = "2"
-	ListenerBlocked  = "2"
+	ListenerNotApproved = "0"
+	ListenerActive      = "1"
+	ListenerInactive    = "2"
+	ListenerBlocked     = "3"
 )
 
 // order status
@@ -61,9 +62,14 @@ const (
 
 // appointment status
 const (
-	AppointmentWaiting   = "1"
-	AppointmentStarted   = "2"
-	AppointmentCompleted = "3"
+	AppointmentToBeStarted = "1"
+	AppointmentStarted     = "2"
+	AppointmentCompleted   = "3"
+)
+
+// appointment slots status
+const (
+	AppointmentSlotsActive = "1"
 )
 
 // invoice status
@@ -71,7 +77,7 @@ const (
 	InvoiceInProgress      = "1"
 	InvoiceRefundInitiated = "2"
 	InvoiceRefunded        = "3"
-	InvoiceCompleted       = "3"
+	InvoiceCompleted       = "4"
 )
 
 // coupon types
@@ -80,9 +86,23 @@ const (
 	CouponPercentageType = "2"
 )
 
+// coupon status
+const (
+	CouponInactive = "0"
+	CouponActive   = "1"
+)
+
 // appointment slots types
 const (
 	SlotUnavailable = "0"
 	SlotAvailable   = "1"
 	SlotBooked      = "2"
+)
+
+// event status
+const (
+	EventWaiting     = "0" // payment not done by counsellor,
+	EventToBeStarted = "1"
+	EventStarted     = "2"
+	EventCompleted   = "3"
 )

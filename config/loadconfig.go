@@ -22,4 +22,12 @@ func LoadConfig() {
 	DBConnectionPool, _ = strconv.Atoi(os.Getenv("DB_CONNECTION_POOL"))
 	Log, _ = strconv.ParseBool(os.Getenv("LOG"))
 	Migrate, _ = strconv.ParseBool(os.Getenv("MIGRATE"))
+	PAYUMerchatKey = os.Getenv("PAYU_MERCHANT_KEY")
+	PAYUSalt = os.Getenv("PAYU_SALT")
+	S3Bucket = os.Getenv("S3_BUCKET")
+	MediaURL = os.Getenv("MEDIA_URL")
+	S3AccesKey = os.Getenv("S3_ACCESS_KEY")
+	S3SecretKey = os.Getenv("S3_SECRET_KEY")
+	S3Region = os.Getenv("S3_REGION")
+	JWTSecret = []byte(os.Getenv("JWT_SECRET"))
 }

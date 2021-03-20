@@ -2,7 +2,8 @@ package util
 
 import "net/url"
 
-func extractValuesFromArrayMap(data []map[string]string, key string) []string {
+// ExtractValuesFromArrayMap -
+func ExtractValuesFromArrayMap(data []map[string]string, key string) []string {
 	keys := []string{}
 	for _, object := range data {
 		keys = append(keys, object[key])
@@ -17,4 +18,13 @@ func ConvertQueryParamsToMapString(params url.Values) map[string]string {
 		values[key] = val[0]
 	}
 	return values
+}
+
+// ConvertMapToKeyMap -
+func ConvertMapToKeyMap(data []map[string]string, key string) map[string]map[string]string {
+	result := map[string]map[string]string{}
+	for _, object := range data {
+		result[object[key]] = object
+	}
+	return result
 }

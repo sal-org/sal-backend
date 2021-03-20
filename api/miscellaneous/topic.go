@@ -13,7 +13,7 @@ import (
 // @Summary Get all available topics
 // @Router /topic [get]
 // @Produce json
-// @Failure 400,500 {object} model.ErrorResponse
+// @Success 200
 func ListTopic(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

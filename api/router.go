@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	ClientAPI "salbackend/api/client"
+	CounsellorAPI "salbackend/api/counsellor"
+	ListenerAPI "salbackend/api/listener"
 	MiscellaneousAPI "salbackend/api/miscellaneous"
 
 	"github.com/gorilla/mux"
@@ -21,6 +23,8 @@ func LoadRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	ClientAPI.LoadClientRoutes(router)
+	CounsellorAPI.LoadCounsellorRoutes(router)
+	ListenerAPI.LoadListenerRoutes(router)
 	MiscellaneousAPI.LoadMiscellaneousRoutes(router)
 
 	// Swagger

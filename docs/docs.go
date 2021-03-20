@@ -24,13 +24,252 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/client": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Profile"
+                ],
+                "summary": "Get client profile with email, if signed up already",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email of client - to get details, if signed up already",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Profile"
+                ],
+                "summary": "Update client profile details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID to update details",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ClientProfileUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Profile"
+                ],
+                "summary": "Add client profile after OTP verified to signup",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ClientProfileAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get client appointment details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to get details",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Reschedule an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be rescheduled",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AppointmentRescheduleRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Book an appointment",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AppointmentBookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/past": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get client past appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/slots": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get client appointment slots",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/upcoming": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get client upcoming appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/counsellor": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Counsellor"
                 ],
                 "summary": "Get counsellor details",
                 "parameters": [
@@ -43,17 +282,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -64,7 +294,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Counsellor"
                 ],
                 "summary": "Create appointment order with client and counsellor",
                 "parameters": [
@@ -79,17 +309,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -100,7 +321,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Counsellor"
                 ],
                 "summary": "Call after payment is completed for counsellor order",
                 "parameters": [
@@ -115,57 +336,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/client/counsellor/prices": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client"
-                ],
-                "summary": "Get counsellor prices",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Counsellor ID to get prices",
-                        "name": "counsellor_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Number of sessions to book (1,3,5) - default is 1, if you don't send",
-                        "name": "no_session",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -176,7 +348,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Counsellor"
                 ],
                 "summary": "Get counsellor slots",
                 "parameters": [
@@ -189,17 +361,128 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/event": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Event"
+                ],
+                "summary": "Get event details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID to get details",
+                        "name": "event_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/event/booked": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Event"
+                ],
+                "summary": "Get booked upcoming and past events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/event/order": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Event"
+                ],
+                "summary": "Book a slot in an event",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
+                            "$ref": "#/definitions/model.ClientEventOrderCreateRequest"
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/event/paymentcomplete": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Event"
+                ],
+                "summary": "Call after payment is completed for event order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
+                            "$ref": "#/definitions/model.ClientEventOrderPaymentCompleteRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/events": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Event"
+                ],
+                "summary": "List available events",
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -210,7 +493,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Listener"
                 ],
                 "summary": "Get listener details",
                 "parameters": [
@@ -223,17 +506,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -244,7 +518,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Listener"
                 ],
                 "summary": "Create appointment order with client and listener",
                 "parameters": [
@@ -259,17 +533,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -280,7 +545,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Listener"
                 ],
                 "summary": "Call after payment is completed for listener order",
                 "parameters": [
@@ -295,17 +560,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -316,7 +572,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Listener"
                 ],
                 "summary": "Get listener slots",
                 "parameters": [
@@ -329,17 +585,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -350,7 +597,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Client"
+                    "Client Search"
                 ],
                 "summary": "Get counsellor/listener list with search filters",
                 "parameters": [
@@ -380,7 +627,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "Available on time (0-23 slots), in UTC, for the selected date",
+                        "description": "Available on time (0-23 slots), in IST, for the selected date",
                         "name": "time",
                         "in": "query"
                     },
@@ -389,20 +636,322 @@ var doc = `{
                         "description": "Price range - 100,200 (min,max)",
                         "name": "price",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort price by - 1(asc), 2(desc)",
+                        "name": "price_sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort rating by - 1(asc), 2(desc)",
+                        "name": "rating_sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/sendotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Login"
+                ],
+                "summary": "Send OTP to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number to send OTP - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/verifyotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Login"
+                ],
+                "summary": "Verify OTP sent to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    {
+                        "type": "string",
+                        "description": "OTP entered by client",
+                        "name": "otp",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor": {
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Profile"
+                ],
+                "summary": "Update counsellor profile details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Counsellor ID to update details",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
+                            "$ref": "#/definitions/model.CounsellorProfileUpdateRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Profile"
+                ],
+                "summary": "Add counsellor profile after OTP verified to signup",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CounsellorProfileAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/appointment/past": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "Get counsellor past appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/appointment/upcoming": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "Get counsellor upcoming appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/availability": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Availability"
+                ],
+                "summary": "Get counsellor availability hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Counsellor ID to get availability details",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Availability"
+                ],
+                "summary": "Update counsellor availability hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Counsellor ID to update availability details",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/event/order": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Book a slot in an event",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CounsellorEventOrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/event/paymentcomplete": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Call after payment is completed for event order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CounsellorEventOrderPaymentCompleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/events": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Get upcoming and past counsellor events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -417,17 +966,165 @@ var doc = `{
                 ],
                 "summary": "Get all available language",
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener": {
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Profile"
+                ],
+                "summary": "Update listener profile details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Listener ID to update details",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
+                            "$ref": "#/definitions/model.ListenerProfileUpdateRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Profile"
+                ],
+                "summary": "Add listener profile after OTP verified to signup",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ListenerProfileAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/appointment/past": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Appointment"
+                ],
+                "summary": "Get listener past appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/appointment/upcoming": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Appointment"
+                ],
+                "summary": "Get listener upcoming appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/availability": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Availability"
+                ],
+                "summary": "Get listener availability hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Listener ID to get availability details",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Availability"
+                ],
+                "summary": "Update listener availability hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Listener ID to update availability details",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -442,17 +1139,8 @@ var doc = `{
                 ],
                 "summary": "Get all available topics, languages",
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -467,23 +1155,185 @@ var doc = `{
                 ],
                 "summary": "Get all available topics",
                 "responses": {
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/upload": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Upload files like photos, certificates, aadhar etc",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File to be uploaded",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
                     },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/model.ErrorResponse"
-                        }
+                    {
+                        "type": "string",
+                        "description": "1(counsellor)/2(listener)/3(client)",
+                        "name": "type",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }
         }
     },
     "definitions": {
+        "model.AppointmentBookRequest": {
+            "type": "object",
+            "properties": {
+                "appointment_slot_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.AppointmentRescheduleRequest": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ClientEventOrderCreateRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "coupon_code": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ClientEventOrderPaymentCompleteRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ClientProfileAddRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ClientProfileUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CounsellorEventOrderCreateRequest": {
+            "type": "object",
+            "properties": {
+                "counsellor_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topic_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CounsellorEventOrderPaymentCompleteRequest": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
         "model.CounsellorOrderCreateRequest": {
             "type": "object",
             "properties": {
@@ -521,11 +1371,76 @@ var doc = `{
                 }
             }
         },
-        "model.ErrorResponse": {
+        "model.CounsellorProfileAddRequest": {
             "type": "object",
             "properties": {
-                "meta": {
-                    "$ref": "#/definitions/model.Meta"
+                "aadhar": {
+                    "type": "string"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "education": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "experience": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "language_ids": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "linkedin": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "price_3": {
+                    "type": "string"
+                },
+                "price_5": {
+                    "type": "string"
+                },
+                "resume": {
+                    "type": "string"
+                },
+                "topic_ids": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CounsellorProfileUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
                 }
             }
         },
@@ -554,16 +1469,54 @@ var doc = `{
                 }
             }
         },
-        "model.Meta": {
+        "model.ListenerProfileAddRequest": {
             "type": "object",
             "properties": {
-                "message": {
+                "about": {
                     "type": "string"
                 },
-                "message_type": {
+                "email": {
                     "type": "string"
                 },
-                "status": {
+                "experience": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "language_ids": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "occupation": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "topic_ids": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ListenerProfileUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location": {
                     "type": "string"
                 }
             }

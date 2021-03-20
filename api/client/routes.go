@@ -6,8 +6,23 @@ import "github.com/gorilla/mux"
 func LoadClientRoutes(router *mux.Router) {
 	clientRoutes := router.PathPrefix("/client").Subrouter()
 
-	// search
-	clientRoutes.HandleFunc("/search", ListSearch).Methods("GET")
+	// appointment
+	clientRoutes.HandleFunc("/appointment/upcoming", AppointmentsUpcoming).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/appointment/slots", AppointmentSlotsUnused).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/appointment/past", AppointmentsPast).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/appointment", AppointmentDetail).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/appointment", AppointmentBook).Methods("POST")
+	clientRoutes.HandleFunc("/appointment", AppointmentReschedule).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
 
 	// counsellor
 	clientRoutes.HandleFunc("/counsellor", CounsellorProfile).Queries(
@@ -16,11 +31,28 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/counsellor/slots", CounsellorSlots).Queries(
 		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
-	clientRoutes.HandleFunc("/counsellor/prices", CounsellorPrices).Queries(
-		"counsellor_id", "{counsellor_id}",
-	).Methods("GET")
 	clientRoutes.HandleFunc("/counsellor/order", CounsellorOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/counsellor/paymentcomplete", CounsellorOrderPaymentComplete).Methods("POST")
+
+	// event
+	clientRoutes.HandleFunc("/events", EventsList).Methods("GET")
+	clientRoutes.HandleFunc("/event", EventDetail).Queries(
+		"event_id", "{event_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/event/booked", EventsBooked).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
+	clientRoutes.HandleFunc("/event/paymentcomplete", EventOrderPaymentComplete).Methods("POST")
+
+	// login
+	clientRoutes.HandleFunc("/sendotp", SendOTP).Queries(
+		"phone", "{phone}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/verifyotp", VerifyOTP).Queries(
+		"phone", "{phone}",
+		"otp", "{otp}",
+	).Methods("GET")
 
 	// listener
 	clientRoutes.HandleFunc("/listener", ListenerProfile).Queries(
@@ -34,4 +66,18 @@ func LoadClientRoutes(router *mux.Router) {
 
 	// payment
 	clientRoutes.HandleFunc("/paymentcomplete", CounsellorOrderPaymentComplete).Methods("POST")
+
+	// profile
+	clientRoutes.HandleFunc("", ProfileGet).Queries(
+		"email", "{email}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("", ProfileAdd).Methods("POST")
+	clientRoutes.HandleFunc("", ProfileUpdate).Queries(
+		"client_id", "{client_id}",
+	).Methods("PUT")
+
+	// search
+	clientRoutes.HandleFunc("/search", ListSearch).Methods("GET")
+
+	clientRoutes.HandleFunc("/testpayu", TestPAYU).Methods("POST")
 }

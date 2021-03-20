@@ -1,5 +1,93 @@
 basePath: /prod
 definitions:
+  model.AppointmentBookRequest:
+    properties:
+      appointment_slot_id:
+        type: string
+      date:
+        type: string
+      time:
+        type: string
+    type: object
+  model.AppointmentRescheduleRequest:
+    properties:
+      date:
+        type: string
+      time:
+        type: string
+    type: object
+  model.ClientEventOrderCreateRequest:
+    properties:
+      client_id:
+        type: string
+      coupon_code:
+        type: string
+      date:
+        type: string
+      event_id:
+        type: string
+      time:
+        type: string
+    type: object
+  model.ClientEventOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
+  model.ClientProfileAddRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      location:
+        type: string
+      phone:
+        type: string
+    type: object
+  model.ClientProfileUpdateRequest:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      location:
+        type: string
+    type: object
+  model.CounsellorEventOrderCreateRequest:
+    properties:
+      counsellor_id:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      duration:
+        type: string
+      price:
+        type: string
+      time:
+        type: string
+      title:
+        type: string
+      topic_id:
+        type: string
+    type: object
+  model.CounsellorEventOrderPaymentCompleteRequest:
+    properties:
+      event_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
   model.CounsellorOrderCreateRequest:
     properties:
       client_id:
@@ -24,10 +112,53 @@ definitions:
       payment_method:
         type: string
     type: object
-  model.ErrorResponse:
+  model.CounsellorProfileAddRequest:
     properties:
-      meta:
-        $ref: '#/definitions/model.Meta'
+      aadhar:
+        type: string
+      about:
+        type: string
+      certificate:
+        type: string
+      education:
+        type: string
+      email:
+        type: string
+      experience:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      language_ids:
+        type: string
+      last_name:
+        type: string
+      linkedin:
+        type: string
+      phone:
+        type: string
+      photo:
+        type: string
+      price:
+        type: string
+      price_3:
+        type: string
+      price_5:
+        type: string
+      resume:
+        type: string
+      topic_ids:
+        type: string
+    type: object
+  model.CounsellorProfileUpdateRequest:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      location:
+        type: string
     type: object
   model.ListenerOrderCreateRequest:
     properties:
@@ -45,13 +176,38 @@ definitions:
       order_id:
         type: string
     type: object
-  model.Meta:
+  model.ListenerProfileAddRequest:
     properties:
-      message:
+      about:
         type: string
-      message_type:
+      email:
         type: string
-      status:
+      experience:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      language_ids:
+        type: string
+      last_name:
+        type: string
+      occupation:
+        type: string
+      phone:
+        type: string
+      photo:
+        type: string
+      topic_ids:
+        type: string
+    type: object
+  model.ListenerProfileUpdateRequest:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      location:
         type: string
     type: object
 host: hwmpf9h476.execute-api.ap-south-1.amazonaws.com
@@ -61,6 +217,160 @@ info:
   title: SAL Backend API
   version: "1.0"
 paths:
+  /client:
+    get:
+      parameters:
+      - description: Email of client - to get details, if signed up already
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get client profile with email, if signed up already
+      tags:
+      - Client Profile
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ClientProfileAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Add client profile after OTP verified to signup
+      tags:
+      - Client Profile
+    put:
+      parameters:
+      - description: Client ID to update details
+        in: query
+        name: client_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ClientProfileUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update client profile details
+      tags:
+      - Client Profile
+  /client/appointment:
+    get:
+      parameters:
+      - description: Appointment ID to get details
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get client appointment details
+      tags:
+      - Client Appointment
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AppointmentBookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Book an appointment
+      tags:
+      - Client Appointment
+    put:
+      parameters:
+      - description: Appointment ID to be rescheduled
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AppointmentRescheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Reschedule an appointment
+      tags:
+      - Client Appointment
+  /client/appointment/past:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get client past appointments
+      tags:
+      - Client Appointment
+  /client/appointment/slots:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get client appointment slots
+      tags:
+      - Client Appointment
+  /client/appointment/upcoming:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get client upcoming appointments
+      tags:
+      - Client Appointment
   /client/counsellor:
     get:
       parameters:
@@ -72,17 +382,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get counsellor details
       tags:
-      - Client
+      - Client Counsellor
   /client/counsellor/order:
     post:
       parameters:
@@ -95,17 +399,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Create appointment order with client and counsellor
       tags:
-      - Client
+      - Client Counsellor
   /client/counsellor/paymentcomplete:
     post:
       parameters:
@@ -118,44 +416,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Call after payment is completed for counsellor order
       tags:
-      - Client
-  /client/counsellor/prices:
-    get:
-      parameters:
-      - description: Counsellor ID to get prices
-        in: query
-        name: counsellor_id
-        required: true
-        type: string
-      - description: Number of sessions to book (1,3,5) - default is 1, if you don't
-          send
-        in: query
-        name: no_session
-        type: string
-      produces:
-      - application/json
-      responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-      summary: Get counsellor prices
-      tags:
-      - Client
+      - Client Counsellor
   /client/counsellor/slots:
     get:
       parameters:
@@ -167,17 +432,87 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get counsellor slots
       tags:
-      - Client
+      - Client Counsellor
+  /client/event:
+    get:
+      parameters:
+      - description: Event ID to get details
+        in: query
+        name: event_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get event details
+      tags:
+      - Client Event
+  /client/event/booked:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get booked upcoming and past events
+      tags:
+      - Client Event
+  /client/event/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ClientEventOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Book a slot in an event
+      tags:
+      - Client Event
+  /client/event/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ClientEventOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Call after payment is completed for event order
+      tags:
+      - Client Event
+  /client/events:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: List available events
+      tags:
+      - Client Event
   /client/listener:
     get:
       parameters:
@@ -189,17 +524,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get listener details
       tags:
-      - Client
+      - Client Listener
   /client/listener/order:
     post:
       parameters:
@@ -212,17 +541,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Create appointment order with client and listener
       tags:
-      - Client
+      - Client Listener
   /client/listener/paymentcomplete:
     post:
       parameters:
@@ -235,17 +558,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Call after payment is completed for listener order
       tags:
-      - Client
+      - Client Listener
   /client/listener/slots:
     get:
       parameters:
@@ -257,17 +574,11 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get listener slots
       tags:
-      - Client
+      - Client Listener
   /client/search:
     get:
       parameters:
@@ -289,7 +600,7 @@ paths:
         in: query
         name: date
         type: string
-      - description: Available on time (0-23 slots), in UTC, for the selected date
+      - description: Available on time (0-23 slots), in IST, for the selected date
         in: query
         name: time
         type: string
@@ -297,49 +608,333 @@ paths:
         in: query
         name: price
         type: string
+      - description: Sort price by - 1(asc), 2(desc)
+        in: query
+        name: price_sort
+        type: string
+      - description: Sort rating by - 1(asc), 2(desc)
+        in: query
+        name: rating_sort
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get counsellor/listener list with search filters
       tags:
-      - Client
+      - Client Search
+  /client/sendotp:
+    get:
+      parameters:
+      - description: Phone number to send OTP - send phone number with 91 code
+        in: query
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Send OTP to specified phone
+      tags:
+      - Client Login
+  /client/verifyotp:
+    get:
+      parameters:
+      - description: Phone number OTP has been sent to - send phone number with 91
+          code
+        in: query
+        name: phone
+        required: true
+        type: string
+      - description: OTP entered by client
+        in: query
+        name: otp
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Verify OTP sent to specified phone
+      tags:
+      - Client Login
+  /counsellor:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorProfileAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Add counsellor profile after OTP verified to signup
+      tags:
+      - Counsellor Profile
+    put:
+      parameters:
+      - description: Counsellor ID to update details
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorProfileUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update counsellor profile details
+      tags:
+      - Counsellor Profile
+  /counsellor/appointment/past:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get counsellor past appointments
+      tags:
+      - Counsellor Appointment
+  /counsellor/appointment/upcoming:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get counsellor upcoming appointments
+      tags:
+      - Counsellor Appointment
+  /counsellor/availability:
+    get:
+      parameters:
+      - description: Counsellor ID to get availability details
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get counsellor availability hours
+      tags:
+      - Counsellor Availability
+    put:
+      parameters:
+      - description: Counsellor ID to update availability details
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update counsellor availability hours
+      tags:
+      - Counsellor Availability
+  /counsellor/event/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorEventOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Book a slot in an event
+      tags:
+      - Counsellor Event
+  /counsellor/event/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorEventOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Call after payment is completed for event order
+      tags:
+      - Counsellor Event
+  /counsellor/events:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get upcoming and past counsellor events
+      tags:
+      - Counsellor Event
   /language:
     get:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get all available language
       tags:
       - Miscellaneous
+  /listener:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ListenerProfileAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Add listener profile after OTP verified to signup
+      tags:
+      - Listener Profile
+    put:
+      parameters:
+      - description: Listener ID to update details
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ListenerProfileUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update listener profile details
+      tags:
+      - Listener Profile
+  /listener/appointment/past:
+    get:
+      parameters:
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get listener past appointments
+      tags:
+      - Listener Appointment
+  /listener/appointment/upcoming:
+    get:
+      parameters:
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get listener upcoming appointments
+      tags:
+      - Listener Appointment
+  /listener/availability:
+    get:
+      parameters:
+      - description: Listener ID to get availability details
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get listener availability hours
+      tags:
+      - Listener Availability
+    put:
+      parameters:
+      - description: Listener ID to update availability details
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update listener availability hours
+      tags:
+      - Listener Availability
   /meta:
     get:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get all available topics, languages
       tags:
       - Miscellaneous
@@ -348,15 +943,32 @@ paths:
       produces:
       - application/json
       responses:
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.ErrorResponse'
+        "200":
+          description: ""
       summary: Get all available topics
+      tags:
+      - Miscellaneous
+  /upload:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: File to be uploaded
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 1(counsellor)/2(listener)/3(client)
+        in: formData
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Upload files like photos, certificates, aadhar etc
       tags:
       - Miscellaneous
 schemes:
