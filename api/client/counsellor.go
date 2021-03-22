@@ -93,6 +93,7 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 // @Summary Create appointment order with client and counsellor
 // @Router /client/counsellor/order [post]
 // @Param body body model.CounsellorOrderCreateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {

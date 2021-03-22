@@ -85,6 +85,7 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 // @Summary Get booked upcoming and past events
 // @Router /client/event/booked [get]
 // @Param client_id query string true "Logged in client ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventsBooked(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +116,7 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 // @Summary Book a slot in an event
 // @Router /client/event/order [post]
 // @Param body body model.ClientEventOrderCreateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventOrderCreate(w http.ResponseWriter, r *http.Request) {

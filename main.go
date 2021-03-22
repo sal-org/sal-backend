@@ -19,6 +19,9 @@ import (
 // @schemes https
 // @host hwmpf9h476.execute-api.ap-south-1.amazonaws.com
 // @BasePath /prod
+// @securityDefinitions.apikey JWTAuth
+// @in header
+// @name Authorization
 func main() {
 
 	rand.Seed(time.Now().UnixNano()) // seed for random generator

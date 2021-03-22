@@ -90,6 +90,7 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 // @Summary Create appointment order with client and listener
 // @Router /client/listener/order [post]
 // @Param body body model.ListenerOrderCreateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {

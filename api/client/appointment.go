@@ -17,6 +17,7 @@ import (
 // @Summary Get client upcoming appointments
 // @Router /client/appointment/upcoming [get]
 // @Param client_id query string true "Logged in client ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 // @Summary Get client appointment slots
 // @Router /client/appointment/slots [get]
 // @Param client_id query string true "Logged in client ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
@@ -85,6 +87,7 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 // @Summary Get client past appointments
 // @Router /client/appointment/past [get]
 // @Param client_id query string true "Logged in client ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +122,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 // @Summary Get client appointment details
 // @Router /client/appointment [get]
 // @Param appointment_id query string true "Appointment ID to get details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +159,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 // @Summary Book an appointment
 // @Router /client/appointment [post]
 // @Param body body model.AppointmentBookRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentBook(w http.ResponseWriter, r *http.Request) {
@@ -238,6 +243,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 // @Router /client/appointment [put]
 // @Param appointment_id query string true "Appointment ID to be rescheduled"
 // @Param body body model.AppointmentRescheduleRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
