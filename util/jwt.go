@@ -13,7 +13,7 @@ import (
 
 // CheckIfUserLogin - check if token is valid, not expired and token user id is same as user id given
 func CheckIfUserLogin(auth string, userID string) bool {
-	id, ok, access := parseJWTAccessToken(auth)
+	id, ok, access := ParseJWTAccessToken(auth)
 	if !ok || !access || !strings.EqualFold(id, userID) {
 		return false
 	}
@@ -22,7 +22,7 @@ func CheckIfUserLogin(auth string, userID string) bool {
 
 // GetUserIDFromJWTToken - get user id from token
 func GetUserIDFromJWTToken(token string) string {
-	id, _, _ := parseJWTAccessToken(token)
+	id, _, _ := ParseJWTAccessToken(token)
 	return id
 }
 
@@ -80,7 +80,8 @@ func verifyJWTToken(authorization string) (*jwt.Token, bool) {
 	return token, true
 }
 
-func parseJWTAccessToken(authorization string) (string, bool, bool) {
+// ParseJWTAccessToken - parse jwt token from auth header
+func ParseJWTAccessToken(authorization string) (string, bool, bool) {
 	token, ok := verifyJWTToken(authorization)
 	if !ok {
 		return "", false, false

@@ -28,6 +28,7 @@ const (
 	OrderNotFoundMessage                   = "Order not found"
 	PaymentCapturedMessage                 = "Payment captured. Order created succefully."
 	RescheduleSlotNotAvailableMessage      = "Slot not available in this hour. Reschedule to a different slot"
+	SessionExpiredMessage                  = "Session expired. Login again."
 	SlotCompletelyUsedMessage              = "You have used your slots completely"
 	ValidPhoneRequiredMessage              = "Valid phone number required"
 	VerifyPhoneRequiredMessage             = "Verify phone number wth OTP"

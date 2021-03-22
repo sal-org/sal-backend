@@ -110,3 +110,40 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
+
+// RefreshToken godoc
+// @Tags Client Login
+// @Summary Get new access token with refresh token
+// @Router /client/refresh-token [get]
+// @Param client_id query string true "Logged in client ID"
+// @Produce json
+// @Success 200
+func RefreshToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if refresh token is valid, not expired and token user id is same as user id given
+	id, ok, access := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+	if !ok || access || !strings.EqualFold(id, r.FormValue("client_id")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client id is valid
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": CONSTANT.ClientActive}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// generate new access token
+	accessToken, ok := UTIL.CreateAccessToken(r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["access_token"] = accessToken
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}

@@ -37,6 +37,9 @@ func LoadCounsellorRoutes(router *mux.Router) {
 		"phone", "{phone}",
 		"otp", "{otp}",
 	).Methods("GET")
+	router.Path("/refresh-token").Queries(
+		"counsellor_id", "{counsellor_id}",
+	).HandlerFunc(RefreshToken).Methods("GET")
 
 	// profile
 	counsellorRoutes.HandleFunc("", ProfileGet).Queries(

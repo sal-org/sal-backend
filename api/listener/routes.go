@@ -30,6 +30,9 @@ func LoadListenerRoutes(router *mux.Router) {
 		"phone", "{phone}",
 		"otp", "{otp}",
 	).Methods("GET")
+	router.Path("/refresh-token").Queries(
+		"listener_id", "{listener_id}",
+	).HandlerFunc(RefreshToken).Methods("GET")
 
 	// profile
 	listenerRoutes.HandleFunc("", ProfileGet).Queries(
