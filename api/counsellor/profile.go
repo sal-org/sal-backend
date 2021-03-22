@@ -2,6 +2,7 @@ package counsellor
 
 import (
 	"net/http"
+	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
@@ -9,6 +10,38 @@ import (
 
 	UTIL "salbackend/util"
 )
+
+// ProfileGet godoc
+// @Tags Counsellor Profile
+// @Summary Get counsellor profile with email, if signed up already
+// @Router /counsellor [get]
+// @Param email query string true "Email of counsellor - to get details, if signed up already"
+// @Produce json
+// @Success 200
+func ProfileGet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get counsellor details
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(counsellor) > 0 {
+		// counsellor already signed up
+		// check if counsellor is active
+		if !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		response["counsellor"] = counsellor[0]
+		response["media_url"] = CONFIG.MediaURL
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
 
 // ProfileAdd godoc
 // @Tags Counsellor Profile
@@ -72,15 +105,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// currently deleting if phone number is already present
 	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]})
 
-	// add topics to counsellor
-	for _, topicID := range strings.Split(body["topic_ids"], ",") {
-		DB.InsertSQL(CONSTANT.CounsellorTopicsTable, map[string]string{"counsellor_id": counsellorID, "topic_id": topicID})
-	}
-
-	// add languages to counsellor
-	for _, languageID := range strings.Split(body["language_ids"], ",") {
-		DB.InsertSQL(CONSTANT.CounsellorLanguagesTable, map[string]string{"counsellor_id": counsellorID, "language_id": languageID})
-	}
+	// add languages, topics to counsellor
+	UTIL.AssociateLanguagesAndTopics(body["topic_ids"], body["language_ids"], counsellorID)
 
 	// add to availability - with 0 (not available)
 	for i := 0; i < 7; i++ { // for 7 days of week
@@ -123,6 +149,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["gender"]) > 0 {
 		counsellor["gender"] = body["gender"]
 	}
+	if len(body["photo"]) > 0 {
+		counsellor["photo"] = body["photo"]
+	}
 	if len(body["price"]) > 0 {
 		counsellor["price"] = body["price"]
 	}
@@ -141,6 +170,18 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["about"]) > 0 {
 		counsellor["about"] = body["about"]
 	}
+	if len(body["resume"]) > 0 {
+		counsellor["resume"] = body["resume"]
+	}
+	if len(body["certificate"]) > 0 {
+		counsellor["certificate"] = body["certificate"]
+	}
+	if len(body["aadhar"]) > 0 {
+		counsellor["aadhar"] = body["aadhar"]
+	}
+	if len(body["linkedin"]) > 0 {
+		counsellor["linkedin"] = body["linkedin"]
+	}
 	counsellor["updated_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")}, counsellor)
 	if !ok {
@@ -148,21 +189,8 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body["topic_ids"]) > 0 {
-		// first delete all and add topics to counsellor - to update
-		DB.DeleteSQL(CONSTANT.CounsellorTopicsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
-		for _, topicID := range strings.Split(body["topic_ids"], ",") {
-			DB.InsertSQL(CONSTANT.CounsellorTopicsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "topic_id": topicID})
-		}
-	}
-
-	if len(body["language_ids"]) > 0 {
-		// first delete all and add languages to counsellor - to update
-		DB.DeleteSQL(CONSTANT.CounsellorLanguagesTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
-		for _, languageID := range strings.Split(body["language_ids"], ",") {
-			DB.InsertSQL(CONSTANT.CounsellorLanguagesTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "language_id": languageID})
-		}
-	}
+	// update languages, topics to counsellor
+	UTIL.AssociateLanguagesAndTopics(body["topic_ids"], body["language_ids"], r.FormValue("counsellor_id"))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

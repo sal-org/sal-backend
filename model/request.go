@@ -133,14 +133,33 @@ type ClientProfileUpdateRequest struct {
 
 // CounsellorProfileUpdateRequest .
 type CounsellorProfileUpdateRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Location  string `json:"location"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Gender      string `json:"gender"`
+	Photo       string `json:"photo"`
+	Price       string `json:"price"`
+	Price3      string `json:"price_3"`
+	Price5      string `json:"price_5"`
+	Education   string `json:"education"`
+	Experience  string `json:"experience"`
+	About       string `json:"about"`
+	TopicIDs    string `json:"topic_ids"`
+	LanguageIDs string `json:"language_ids"`
+	Resume      string `json:"resume"`
+	Certificate string `json:"certificate"`
+	Aadhar      string `json:"aadhar"`
+	Linkedin    string `json:"linkedin"`
 }
 
 // ListenerProfileUpdateRequest .
 type ListenerProfileUpdateRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Location  string `json:"location"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Gender      string `json:"gender"`
+	Photo       string `json:"photo"`
+	Occupation  string `json:"occupation"`
+	Experience  string `json:"experience"`
+	About       string `json:"about"`
+	TopicIDs    string `json:"topic_ids"`
+	LanguageIDs string `json:"language_ids"`
 }

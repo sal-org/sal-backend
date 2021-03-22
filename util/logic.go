@@ -2,6 +2,7 @@ package util
 
 import (
 	"strconv"
+	"strings"
 
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -32,4 +33,23 @@ func GetBillingDetails(price, discount string) map[string]string {
 func CheckIfAppointmentSlotAvailable(counsellorID, date, time string) bool {
 	data, _, _ := DB.SelectSQL(CONSTANT.SlotsTable, []string{date}, map[string]string{"counsellor_id": counsellorID, "date": date, time: "1"}) // if the date time data is 1 in database
 	return len(data) > 0
+}
+
+// AssociateLanguagesAndTopics - add/update languages and topics for counsellor/listener
+func AssociateLanguagesAndTopics(topicIDs, languageIDs, id string) {
+	if len(topicIDs) > 0 {
+		// first delete all and add topics to listener - to update
+		DB.DeleteSQL(CONSTANT.CounsellorTopicsTable, map[string]string{"counsellor_id": id})
+		for _, topicID := range strings.Split(topicIDs, ",") {
+			DB.InsertSQL(CONSTANT.CounsellorTopicsTable, map[string]string{"counsellor_id": id, "topic_id": topicID})
+		}
+	}
+
+	if len(languageIDs) > 0 {
+		// first delete all and add languages to listener - to update
+		DB.DeleteSQL(CONSTANT.CounsellorLanguagesTable, map[string]string{"counsellor_id": id})
+		for _, languageID := range strings.Split(languageIDs, ",") {
+			DB.InsertSQL(CONSTANT.CounsellorLanguagesTable, map[string]string{"counsellor_id": id, "language_id": languageID})
+		}
+	}
 }
