@@ -35,6 +35,25 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
+
+		// generate access and refresh token
+		// access token - jwt token with short expiry added in header for authorization
+		// refresh token - jwt token with long expiry to get new access token if expired
+		// if refresh token expired, need to login
+		accessToken, ok := UTIL.CreateAccessToken(client[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		refreshToken, ok := UTIL.CreateRefreshToken(client[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		response["access_token"] = accessToken
+		response["refresh_token"] = refreshToken
+
 		response["client"] = client[0]
 		response["media_url"] = CONFIG.MediaURL
 	}
@@ -135,6 +154,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 // @Router /client [put]
 // @Param client_id query string true "Client ID to update details"
 // @Param body body model.ClientProfileUpdateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
