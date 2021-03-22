@@ -608,13 +608,13 @@ paths:
         in: query
         name: price
         type: string
-      - description: Sort price by - 1(asc), 2(desc)
+      - description: Sort by - 1(price), 2(rating)
         in: query
-        name: price_sort
+        name: sort_by
         type: string
-      - description: Sort rating by - 1(asc), 2(desc)
+      - description: Order by - 1(asc), 2(desc) - should be sent along with sort_by
         in: query
-        name: rating_sort
+        name: order_by
         type: string
       - description: Page number
         in: query

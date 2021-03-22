@@ -21,8 +21,8 @@ import (
 // @Param date query string false "Available on date (2020-02-27)"
 // @Param time query string false "Available on time (0-23 slots), in IST, for the selected date"
 // @Param price query string false "Price range - 100,200 (min,max)"
-// @Param price_sort query string false "Sort price by - 1(asc), 2(desc)"
-// @Param rating_sort query string false "Sort rating by - 1(asc), 2(desc)"
+// @Param sort_by query string false "Sort by - 1(price), 2(rating)"
+// @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
 // @Param page query string false "Page number"
 // @Produce json
 // @Success 200
@@ -93,7 +93,15 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		args = append(args, listenerArgs...)
 	}
 
-	SQLQuery += " order by average_rating desc " // default ordering by rating
+	sortBy := " average_rating " // default ordering by rating
+	orderBy := " desc "
+	if strings.EqualFold(r.FormValue("sort_by"), "1") {
+		sortBy = " price "
+		if strings.EqualFold(r.FormValue("order_by"), "1") {
+			orderBy = " asc "
+		}
+	}
+	SQLQuery += " order by " + sortBy + orderBy
 
 	// get counsellors|listeners
 	counsellors, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.CounsellorsListPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient), args...)

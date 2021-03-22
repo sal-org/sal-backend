@@ -639,14 +639,14 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "Sort price by - 1(asc), 2(desc)",
-                        "name": "price_sort",
+                        "description": "Sort by - 1(price), 2(rating)",
+                        "name": "sort_by",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Sort rating by - 1(asc), 2(desc)",
-                        "name": "rating_sort",
+                        "description": "Order by - 1(asc), 2(desc) - should be sent along with sort_by",
+                        "name": "order_by",
                         "in": "query"
                     },
                     {
