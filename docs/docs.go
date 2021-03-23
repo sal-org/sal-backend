@@ -49,6 +49,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -108,6 +113,11 @@ var doc = `{
         },
         "/client/appointment": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -131,6 +141,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -163,6 +178,11 @@ var doc = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -190,6 +210,11 @@ var doc = `{
         },
         "/client/appointment/past": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -215,6 +240,11 @@ var doc = `{
         },
         "/client/appointment/slots": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -240,6 +270,11 @@ var doc = `{
         },
         "/client/appointment/upcoming": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -290,6 +325,11 @@ var doc = `{
         },
         "/client/counsellor/order": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -394,6 +434,11 @@ var doc = `{
         },
         "/client/event/booked": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -419,6 +464,11 @@ var doc = `{
         },
         "/client/event/order": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -514,6 +564,11 @@ var doc = `{
         },
         "/client/listener/order": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -580,6 +635,36 @@ var doc = `{
                         "type": "string",
                         "description": "Listener ID to get slot details",
                         "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/refresh-token": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Login"
+                ],
+                "summary": "Get new access token with refresh token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
                         "in": "query",
                         "required": true
                     }
@@ -721,6 +806,29 @@ var doc = `{
             }
         },
         "/counsellor": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Profile"
+                ],
+                "summary": "Get counsellor profile with email, if signed up already",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email of counsellor - to get details, if signed up already",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
             "put": {
                 "produces": [
                     "application/json"
@@ -956,6 +1064,88 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/refresh-token": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Login"
+                ],
+                "summary": "Get new access token with refresh token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/sendotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Login"
+                ],
+                "summary": "Send OTP to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number to send OTP - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/verifyotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Login"
+                ],
+                "summary": "Verify OTP sent to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OTP entered by counsellor",
+                        "name": "otp",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/language": {
             "get": {
                 "produces": [
@@ -973,6 +1163,29 @@ var doc = `{
             }
         },
         "/listener": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Profile"
+                ],
+                "summary": "Get listener profile with email, if signed up already",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email of listener - to get details, if signed up already",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
             "put": {
                 "produces": [
                     "application/json"
@@ -1118,6 +1331,88 @@ var doc = `{
                         "type": "string",
                         "description": "Listener ID to update availability details",
                         "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/refresh-token": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Login"
+                ],
+                "summary": "Get new access token with refresh token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/sendotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Login"
+                ],
+                "summary": "Send OTP to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number to send OTP - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/verifyotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Login"
+                ],
+                "summary": "Verify OTP sent to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OTP entered by listener",
+                        "name": "otp",
                         "in": "query",
                         "required": true
                     }
@@ -1433,13 +1728,52 @@ var doc = `{
         "model.CounsellorProfileUpdateRequest": {
             "type": "object",
             "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "education": {
+                    "type": "string"
+                },
+                "experience": {
+                    "type": "string"
+                },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "language_ids": {
                     "type": "string"
                 },
                 "last_name": {
                     "type": "string"
                 },
-                "location": {
+                "linkedin": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "price_3": {
+                    "type": "string"
+                },
+                "price_5": {
+                    "type": "string"
+                },
+                "resume": {
+                    "type": "string"
+                },
+                "topic_ids": {
                     "type": "string"
                 }
             }
@@ -1510,16 +1844,41 @@ var doc = `{
         "model.ListenerProfileUpdateRequest": {
             "type": "object",
             "properties": {
+                "about": {
+                    "type": "string"
+                },
+                "experience": {
+                    "type": "string"
+                },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "language_ids": {
                     "type": "string"
                 },
                 "last_name": {
                     "type": "string"
                 },
-                "location": {
+                "occupation": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "topic_ids": {
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "JWTAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
