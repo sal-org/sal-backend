@@ -22,11 +22,7 @@ definitions:
         type: string
       coupon_code:
         type: string
-      date:
-        type: string
-      event_id:
-        type: string
-      time:
+      event_order_id:
         type: string
     type: object
   model.ClientEventOrderPaymentCompleteRequest:
@@ -81,7 +77,7 @@ definitions:
     type: object
   model.CounsellorEventOrderPaymentCompleteRequest:
     properties:
-      event_id:
+      order_id:
         type: string
       payment_id:
         type: string
@@ -248,7 +244,7 @@ definitions:
       topic_ids:
         type: string
     type: object
-host: hwmpf9h476.execute-api.ap-south-1.amazonaws.com
+host: yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 info:
   contact: {}
   description: This is a api for SAL client/listener/counsellor APIs
@@ -494,9 +490,9 @@ paths:
   /client/event:
     get:
       parameters:
-      - description: Event ID to get details
+      - description: Event order ID to get details
         in: query
-        name: event_id
+        name: order_id
         required: true
         type: string
       produces:

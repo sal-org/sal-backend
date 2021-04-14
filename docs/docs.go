@@ -419,8 +419,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Event ID to get details",
-                        "name": "event_id",
+                        "description": "Event order ID to get details",
+                        "name": "order_id",
                         "in": "query",
                         "required": true
                     }
@@ -1527,13 +1527,7 @@ var doc = `{
                 "coupon_code": {
                     "type": "string"
                 },
-                "date": {
-                    "type": "string"
-                },
-                "event_id": {
-                    "type": "string"
-                },
-                "time": {
+                "event_order_id": {
                     "type": "string"
                 }
             }
@@ -1618,7 +1612,7 @@ var doc = `{
         "model.CounsellorEventOrderPaymentCompleteRequest": {
             "type": "object",
             "properties": {
-                "event_id": {
+                "order_id": {
                     "type": "string"
                 },
                 "payment_id": {
@@ -1895,7 +1889,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "hwmpf9h476.execute-api.ap-south-1.amazonaws.com",
+	Host:        "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
 	BasePath:    "/prod",
 	Schemes:     []string{"https"},
 	Title:       "SAL Backend API",

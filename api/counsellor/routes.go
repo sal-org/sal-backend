@@ -23,7 +23,7 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	).Methods("GET")
 
 	// event
-	counsellorRoutes.HandleFunc("/events", EventsUpcoming).Queries(
+	counsellorRoutes.HandleFunc("/events", EventsList).Queries(
 		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
 	counsellorRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
@@ -37,7 +37,7 @@ func LoadCounsellorRoutes(router *mux.Router) {
 		"phone", "{phone}",
 		"otp", "{otp}",
 	).Methods("GET")
-	router.Path("/refresh-token").Queries(
+	counsellorRoutes.Path("/refresh-token").Queries(
 		"counsellor_id", "{counsellor_id}",
 	).HandlerFunc(RefreshToken).Methods("GET")
 

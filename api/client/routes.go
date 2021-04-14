@@ -37,7 +37,7 @@ func LoadClientRoutes(router *mux.Router) {
 	// event
 	clientRoutes.HandleFunc("/events", EventsList).Methods("GET")
 	clientRoutes.HandleFunc("/event", EventDetail).Queries(
-		"event_id", "{event_id}",
+		"order_id", "{order_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("/event/booked", EventsBooked).Queries(
 		"client_id", "{client_id}",
@@ -53,7 +53,7 @@ func LoadClientRoutes(router *mux.Router) {
 		"phone", "{phone}",
 		"otp", "{otp}",
 	).Methods("GET")
-	router.Path("/refresh-token").Queries(
+	clientRoutes.Path("/refresh-token").Queries(
 		"client_id", "{client_id}",
 	).HandlerFunc(RefreshToken).Methods("GET")
 

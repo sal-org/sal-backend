@@ -45,11 +45,9 @@ type AppointmentBookRequest struct {
 
 // ClientEventOrderCreateRequest .
 type ClientEventOrderCreateRequest struct {
-	ClientID   string `json:"client_id"`
-	EventID    string `json:"event_id"`
-	Date       string `json:"date"`
-	Time       string `json:"time"`
-	CouponCode string `json:"coupon_code"`
+	ClientID     string `json:"client_id"`
+	EventOrderID string `json:"event_order_id"`
+	CouponCode   string `json:"coupon_code"`
 }
 
 // CounsellorEventOrderCreateRequest .
@@ -73,7 +71,7 @@ type ClientEventOrderPaymentCompleteRequest struct {
 
 // CounsellorEventOrderPaymentCompleteRequest .
 type CounsellorEventOrderPaymentCompleteRequest struct {
-	EventID       string `json:"event_id"`
+	OrderID       string `json:"order_id"`
 	PaymentMethod string `json:"payment_method"`
 	PaymentID     string `json:"payment_id"`
 }

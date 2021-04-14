@@ -66,12 +66,12 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	dates := UTIL.ExtractValuesFromArrayMap(availabileDates, "date")
 	// grouping by weekday
 	for _, date := range dates {
-		t, _ := time.Parse(date, "2006-01-02")
+		t, _ := time.Parse("2006-01-02", date)
 		datesByWeekdays[int(t.Weekday())] = append(datesByWeekdays[int(t.Weekday())], date)
 	}
 
 	// update weekday availability to respective dates
-	// will run for 30 days * 24 hours = 720 times - needs to be optimised
+	// will run for 30 days * 24 hours = 720 times - TODO needs to be optimised
 	for _, day := range body { // 7 times
 		weekday, _ := strconv.Atoi(day["weekday"])
 		for _, date := range datesByWeekdays[weekday] { // respective weekday dates i.e., 4-5 times

@@ -22,7 +22,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	if len(r.FormValue("phone")) != 10 {
+	if len(r.FormValue("phone")) < 8 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -132,7 +132,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if client id is valid
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": CONSTANT.ClientActive}) {
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": CONSTANT.ClientActive}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}

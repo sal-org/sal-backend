@@ -9,7 +9,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "hwmpf9h476.execute-api.ap-south-1.amazonaws.com",
+    "host": "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
     "basePath": "/prod",
     "paths": {
         "/client": {
@@ -407,8 +407,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Event ID to get details",
-                        "name": "event_id",
+                        "description": "Event order ID to get details",
+                        "name": "order_id",
                         "in": "query",
                         "required": true
                     }
@@ -1515,13 +1515,7 @@
                 "coupon_code": {
                     "type": "string"
                 },
-                "date": {
-                    "type": "string"
-                },
-                "event_id": {
-                    "type": "string"
-                },
-                "time": {
+                "event_order_id": {
                     "type": "string"
                 }
             }
@@ -1606,7 +1600,7 @@
         "model.CounsellorEventOrderPaymentCompleteRequest": {
             "type": "object",
             "properties": {
-                "event_id": {
+                "order_id": {
                     "type": "string"
                 },
                 "payment_id": {

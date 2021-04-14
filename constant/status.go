@@ -58,6 +58,7 @@ const (
 const (
 	OrderWaiting    = "0"
 	OrderInProgress = "1"
+	OrderCompleted  = "2"
 )
 
 // appointment status

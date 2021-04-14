@@ -88,6 +88,18 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if user already signed up with specified phone
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["phone"]}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if user already signed up with specified email
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// check if phone is verfied by OTP
 	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.VerifyPhoneRequiredMessage, CONSTANT.ShowDialog, response)
@@ -201,7 +213,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["linkedin"]) > 0 {
 		counsellor["linkedin"] = body["linkedin"]
 	}
-	counsellor["updated_at"] = UTIL.GetCurrentTime().String()
+	if len(body["device_id"]) > 0 {
+		counsellor["device_id"] = body["device_id"]
+	}
+	counsellor["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")}, counsellor)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

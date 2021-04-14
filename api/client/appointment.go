@@ -142,7 +142,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrdersTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -292,7 +292,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
 	// get schedule for a day
-	schedule, status, ok := DB.SelectSQL(CONSTANT.SchedulesTable, []string{appointment[0]["time"]}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"], "weekday": strconv.Itoa(int(date.Weekday()))})
+	schedule, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

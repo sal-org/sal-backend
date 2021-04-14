@@ -17,7 +17,7 @@ import (
 // @version 1.0
 // @description This is a api for SAL client/listener/counsellor APIs
 // @schemes https
-// @host hwmpf9h476.execute-api.ap-south-1.amazonaws.com
+// @host yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 // @BasePath /prod
 // @securityDefinitions.apikey JWTAuth
 // @in header

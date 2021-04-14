@@ -97,9 +97,9 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	orderBy := " desc "
 	if strings.EqualFold(r.FormValue("sort_by"), "1") {
 		sortBy = " price "
-		if strings.EqualFold(r.FormValue("order_by"), "1") {
-			orderBy = " asc "
-		}
+	}
+	if strings.EqualFold(r.FormValue("order_by"), "1") {
+		orderBy = " asc "
 	}
 	SQLQuery += " order by " + sortBy + orderBy
 

@@ -9,20 +9,20 @@ import (
 	UTIL "salbackend/util"
 )
 
-// EventsUpcoming godoc
+// EventsList godoc
 // @Tags Counsellor Event
 // @Summary Get upcoming and past counsellor events
 // @Router /counsellor/events [get]
 // @Param counsellor_id query string true "Logged in counsellor ID"
 // @Produce json
 // @Success 200
-func EventsUpcoming(w http.ResponseWriter, r *http.Request) {
+func EventsList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
 	// get upcoming booked events
-	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.EventsTable+" where counsellor_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("counsellor_id"))
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where counsellor_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -30,7 +30,7 @@ func EventsUpcoming(w http.ResponseWriter, r *http.Request) {
 	response["upcoming_events"] = events
 
 	// get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))
-	events, status, ok = DB.SelectProcess("select * from "+CONSTANT.EventsTable+" where counsellor_id = ? and status = "+CONSTANT.EventCompleted+") order by date desc, time desc", r.FormValue("counsellor_id"))
+	events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where counsellor_id = ? and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -82,31 +82,33 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// event object to be inserted
-	event := map[string]string{}
-	event["counsellor_id"] = body["counsellor_id"]
-	event["title"] = body["title"]
-	event["description"] = body["description"]
-	event["topic_id"] = body["topic_id"]
-	event["duration"] = body["duration"]
-	event["price"] = body["price"]
-	event["status"] = CONSTANT.EventWaiting
-	event["created_at"] = UTIL.GetCurrentTime().String()
+	// order object to be inserted
+	order := map[string]string{}
+	order["counsellor_id"] = body["counsellor_id"]
+	order["title"] = body["title"]
+	order["description"] = body["description"]
+	order["topic_id"] = body["topic_id"]
+	order["duration"] = body["duration"]
+	order["price"] = body["price"]
+	order["date"] = body["date"]
+	order["time"] = body["time"]
+	order["status"] = CONSTANT.EventWaiting
+	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	// calculate bill
 	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
-	event["actual_amount"] = billing["actual_amount"]
-	event["tax"] = billing["tax"]
-	event["paid_amount"] = billing["paid_amount"]
+	order["actual_amount"] = billing["actual_amount"]
+	order["tax"] = billing["tax"]
+	order["paid_amount"] = billing["paid_amount"]
 
-	eventID, status, ok := DB.InsertWithUniqueID(CONSTANT.EventsTable, CONSTANT.EventDigits, event, "event_id")
+	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderCounsellorEventTable, CONSTANT.EventDigits, order, "order_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	response["billing"] = billing
-	response["event_id"] = eventID
+	response["order_id"] = orderID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -136,8 +138,8 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get event details
-	order, status, ok := DB.SelectSQL(CONSTANT.EventsTable, []string{"*"}, map[string]string{"event_id": body["event_id"]})
+	// get order details
+	order, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -155,10 +157,11 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create invoice for the order
 	invoice := map[string]string{}
-	invoice["counsellor_id"] = order[0]["counsellor_id"]
-	invoice["order_id"] = body["event_id"]
+	invoice["user_id"] = order[0]["counsellor_id"]
+	invoice["order_id"] = body["order_id"]
 	invoice["payment_method"] = body["payment_method"]
 	invoice["payment_id"] = body["payment_id"]
+	invoice["user_type"] = CONSTANT.CounsellorType
 	invoice["order_type"] = CONSTANT.OrderEventType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
@@ -177,9 +180,9 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["status"] = CONSTANT.EventToBeStarted
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 	orderUpdate["invoice_id"] = invoiceID
-	status, ok = DB.UpdateSQL(CONSTANT.OrdersTable,
+	status, ok = DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable,
 		map[string]string{
-			"event_id": body["event_id"],
+			"order_id": body["order_id"],
 		},
 		orderUpdate,
 	)
