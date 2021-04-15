@@ -6,6 +6,7 @@ import (
 
 	ClientAPI "salbackend/api/client"
 	CounsellorAPI "salbackend/api/counsellor"
+	CronAPI "salbackend/api/cron"
 	ListenerAPI "salbackend/api/listener"
 	MiscellaneousAPI "salbackend/api/miscellaneous"
 
@@ -26,6 +27,7 @@ func LoadRouter() *mux.Router {
 	CounsellorAPI.LoadCounsellorRoutes(router)
 	ListenerAPI.LoadListenerRoutes(router)
 	MiscellaneousAPI.LoadMiscellaneousRoutes(router)
+	CronAPI.LoadCronRoutes(router)
 
 	// Swagger
 	sh := http.StripPrefix("/documentaion/swagger/", http.FileServer(http.Dir("./docs/")))
