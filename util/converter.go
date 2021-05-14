@@ -1,6 +1,9 @@
 package util
 
-import "net/url"
+import (
+	"net/url"
+	"strings"
+)
 
 // ExtractValuesFromArrayMap -
 func ExtractValuesFromArrayMap(data []map[string]string, key string) []string {
@@ -27,4 +30,12 @@ func ConvertMapToKeyMap(data []map[string]string, key string) map[string]map[str
 		result[object[key]] = object
 	}
 	return result
+}
+
+// ReplaceContentInString - bulk replace in string
+func ReplaceContentInString(input string, replace map[string]string) string {
+	for original, updated := range replace {
+		input = strings.ReplaceAll(input, original, updated)
+	}
+	return input
 }

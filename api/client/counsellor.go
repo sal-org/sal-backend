@@ -1,8 +1,7 @@
 package client
 
 import (
-	"fmt"
-	"io/ioutil"
+	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -84,7 +83,74 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response["slots"] = slots
+	// remove dates with no availability
+	filteredSlots := []map[string]string{}
+	for _, slot := range slots {
+		if strings.EqualFold(slot["0"], "1") ||
+			strings.EqualFold(slot["1"], "1") ||
+			strings.EqualFold(slot["2"], "1") ||
+			strings.EqualFold(slot["3"], "1") ||
+			strings.EqualFold(slot["4"], "1") ||
+			strings.EqualFold(slot["5"], "1") ||
+			strings.EqualFold(slot["6"], "1") ||
+			strings.EqualFold(slot["7"], "1") ||
+			strings.EqualFold(slot["8"], "1") ||
+			strings.EqualFold(slot["9"], "1") ||
+			strings.EqualFold(slot["10"], "1") ||
+			strings.EqualFold(slot["11"], "1") ||
+			strings.EqualFold(slot["12"], "1") ||
+			strings.EqualFold(slot["13"], "1") ||
+			strings.EqualFold(slot["14"], "1") ||
+			strings.EqualFold(slot["15"], "1") ||
+			strings.EqualFold(slot["16"], "1") ||
+			strings.EqualFold(slot["17"], "1") ||
+			strings.EqualFold(slot["18"], "1") ||
+			strings.EqualFold(slot["19"], "1") ||
+			strings.EqualFold(slot["20"], "1") ||
+			strings.EqualFold(slot["21"], "1") ||
+			strings.EqualFold(slot["22"], "1") ||
+			strings.EqualFold(slot["23"], "1") ||
+			strings.EqualFold(slot["24"], "1") ||
+			strings.EqualFold(slot["25"], "1") ||
+			strings.EqualFold(slot["26"], "1") ||
+			strings.EqualFold(slot["27"], "1") ||
+			strings.EqualFold(slot["28"], "1") ||
+			strings.EqualFold(slot["29"], "1") ||
+			strings.EqualFold(slot["30"], "1") ||
+			strings.EqualFold(slot["31"], "1") ||
+			strings.EqualFold(slot["32"], "1") ||
+			strings.EqualFold(slot["33"], "1") ||
+			strings.EqualFold(slot["34"], "1") ||
+			strings.EqualFold(slot["35"], "1") ||
+			strings.EqualFold(slot["36"], "1") ||
+			strings.EqualFold(slot["37"], "1") ||
+			strings.EqualFold(slot["38"], "1") ||
+			strings.EqualFold(slot["39"], "1") ||
+			strings.EqualFold(slot["40"], "1") ||
+			strings.EqualFold(slot["41"], "1") ||
+			strings.EqualFold(slot["42"], "1") ||
+			strings.EqualFold(slot["43"], "1") ||
+			strings.EqualFold(slot["44"], "1") ||
+			strings.EqualFold(slot["45"], "1") ||
+			strings.EqualFold(slot["46"], "1") ||
+			strings.EqualFold(slot["47"], "1") {
+
+			filteredSlot := map[string]string{
+				"date": slot["date"],
+			}
+			// show only times with availability
+			for i := 0; i < 24; i++ {
+				if strings.EqualFold(slot[strconv.Itoa(i)], "1") {
+					filteredSlot[strconv.Itoa(i)] = "1"
+				}
+			}
+
+			// TODO - remove expired time for today
+			filteredSlots = append(filteredSlots, filteredSlot)
+		}
+	}
+
+	response["slots"] = filteredSlots
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -232,14 +298,15 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["tax"] = billing["tax"]
 	order["paid_amount"] = billing["paid_amount"]
 
+	amount, _ := strconv.ParseFloat(body["paid_amount"], 64)
+	order["paid_amount_razorpay"] = strconv.FormatFloat(math.Round(amount*100), 'f', 2, 64)
+
 	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderClientAppointmentTable, CONSTANT.OrderDigits, order, "order_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	paidAmount, _ := strconv.ParseFloat(order["paid_amount"], 64)
-	response["payu_payment"] = UTIL.GetPayUPaymentObject(CONFIG.PAYUMerchatKey, CONFIG.PAYUSalt, orderID, "Appointment with "+counsellor[0]["first_name"], client[0]["first_name"], client[0]["last_name"], client[0]["email"], client[0]["phone"], "https://hwmpf9h476.execute-api.ap-south-1.amazonaws.com/prod/client/testpayu", "https://hwmpf9h476.execute-api.ap-south-1.amazonaws.com/prod/client/testpayu", paidAmount)
 	response["billing"] = billing
 	response["order_id"] = orderID
 	response["prices"] = map[string]string{"price": counsellor[0]["price"], "price_3": counsellor[0]["price_3"], "price_5": counsellor[0]["price_5"]}
@@ -293,6 +360,16 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentCapturedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
+	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// capture razorpay payment
+	amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
+	UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
 
 	// create invoice for the order
 	invoice := map[string]string{}
@@ -373,23 +450,4 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-}
-
-// TestPAYU .
-func TestPAYU(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var response = make(map[string]interface{})
-
-	// read request body
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Println("TestPAYU", err)
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	defer r.Body.Close()
-	fmt.Println("TestPAYU", string(b))
-
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

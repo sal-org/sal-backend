@@ -19,7 +19,7 @@ import (
 // @Param topic query string false "anxiety/anger/stress/depression/relationship/parenting/grief/motivation/life/others - send selected topic id"
 // @Param language query string false "english/hindi/tamil/telugu/kannada/bengali/malayalam/marathi/gujarati/punjabi - send selected language id"
 // @Param date query string false "Available on date (2020-02-27)"
-// @Param time query string false "Available on time (0-23 slots), in IST, for the selected date"
+// @Param time query string false "Available on time (0-47 half hour slots), in IST, for the selected date"
 // @Param price query string false "Price range - 100,200 (min,max)"
 // @Param sort_by query string false "Sort by - 1(price), 2(rating)"
 // @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"

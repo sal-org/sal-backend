@@ -71,7 +71,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update weekday availability to respective dates
-	// will run for 30 days * 24 hours = 720 times - TODO needs to be optimised
+	// will run for 30 days * 24 * 2 hours = 1440 times - TODO needs to be optimised
 	for _, day := range body { // 7 times
 		weekday, _ := strconv.Atoi(day["weekday"])
 		for _, date := range datesByWeekdays[weekday] { // respective weekday dates i.e., 4-5 times

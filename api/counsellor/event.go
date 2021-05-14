@@ -1,9 +1,11 @@
 package counsellor
 
 import (
+	"math"
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	"strconv"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -101,6 +103,9 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["tax"] = billing["tax"]
 	order["paid_amount"] = billing["paid_amount"]
 
+	amount, _ := strconv.ParseFloat(body["paid_amount"], 64)
+	order["paid_amount_razorpay"] = strconv.FormatFloat(math.Round(amount*100), 'f', 2, 64)
+
 	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderCounsellorEventTable, CONSTANT.EventDigits, order, "order_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -154,6 +159,16 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentCapturedEventMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
+	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// capture razorpay payment
+	amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
+	UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
 
 	// create invoice for the order
 	invoice := map[string]string{}

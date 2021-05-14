@@ -66,6 +66,7 @@ const (
 	AppointmentToBeStarted = "1"
 	AppointmentStarted     = "2"
 	AppointmentCompleted   = "3"
+	AppointmentCancelled   = "4"
 )
 
 // appointment slots status

@@ -307,6 +307,23 @@ paths:
       tags:
       - Client Profile
   /client/appointment:
+    delete:
+      parameters:
+      - description: Appointment ID to be cancelled
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancel an appointment
+      tags:
+      - Client Appointment
     get:
       parameters:
       - description: Appointment ID to get details

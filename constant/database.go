@@ -16,6 +16,7 @@ const (
 	OrderClientEventTable       = "order_client_events"
 	OrderCounsellorEventTable   = "order_counsellor_events"
 	PhoneOTPVerifiedTable       = "phone_otp_verified"
+	RefundsTable                = "refunds"
 	SchedulesTable              = "schedules"
 	SlotsTable                  = "slots"
 	TopicsTable                 = "topics"
@@ -37,4 +38,5 @@ const (
 	EventDigits           = 7
 	InvoiceDigits         = 8
 	OrderDigits           = 10
+	RefundDigits          = 9
 )

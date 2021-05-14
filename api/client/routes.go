@@ -81,6 +81,4 @@ func LoadClientRoutes(router *mux.Router) {
 
 	// search
 	clientRoutes.HandleFunc("/search", ListSearch).Methods("GET")
-
-	clientRoutes.HandleFunc("/testpayu", TestPAYU).Methods("POST")
 }

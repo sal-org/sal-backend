@@ -83,6 +83,7 @@ type ClientProfileAddRequest struct {
 	Phone     string `json:"phone"`
 	Email     string `json:"email"`
 	Location  string `json:"location"`
+	DeviceID  string `json:"device_id"`
 }
 
 // CounsellorProfileAddRequest .
@@ -105,6 +106,7 @@ type CounsellorProfileAddRequest struct {
 	Certificate string `json:"certificate"`
 	Aadhar      string `json:"aadhar"`
 	Linkedin    string `json:"linkedin"`
+	DeviceID    string `json:"device_id"`
 }
 
 // ListenerProfileAddRequest .
@@ -120,6 +122,7 @@ type ListenerProfileAddRequest struct {
 	About       string `json:"about"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
+	DeviceID    string `json:"device_id"`
 }
 
 // ClientProfileUpdateRequest .
@@ -127,6 +130,7 @@ type ClientProfileUpdateRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Location  string `json:"location"`
+	DeviceID  string `json:"device_id"`
 }
 
 // CounsellorProfileUpdateRequest .
@@ -147,6 +151,7 @@ type CounsellorProfileUpdateRequest struct {
 	Certificate string `json:"certificate"`
 	Aadhar      string `json:"aadhar"`
 	Linkedin    string `json:"linkedin"`
+	DeviceID    string `json:"device_id"`
 }
 
 // ListenerProfileUpdateRequest .
@@ -160,4 +165,5 @@ type ListenerProfileUpdateRequest struct {
 	About       string `json:"about"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
+	DeviceID    string `json:"device_id"`
 }

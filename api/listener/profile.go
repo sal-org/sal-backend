@@ -117,6 +117,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener["occupation"] = body["occupation"]
 	listener["experience"] = body["experience"]
 	listener["about"] = body["about"]
+	listener["device_id"] = body["device_id"]
 	listener["status"] = CONSTANT.ListenerNotApproved
 	listener["created_at"] = UTIL.GetCurrentTime().String()
 	listenerID, status, ok := DB.InsertWithUniqueID(CONSTANT.ListenersTable, CONSTANT.ListenerDigits, listener, "listener_id")

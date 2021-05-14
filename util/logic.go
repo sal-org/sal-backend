@@ -29,7 +29,7 @@ func GetBillingDetails(price, discount string) map[string]string {
 	return billing
 }
 
-// CheckIfAppointmentSlotAvailable - for both counsellor and listener, check if the specfied slot is available - date (2021-01-12), time (0-23 slots in IST)
+// CheckIfAppointmentSlotAvailable - for both counsellor and listener, check if the specfied slot is available - date (2021-01-12), time (0-47 slots in IST)
 func CheckIfAppointmentSlotAvailable(counsellorID, date, time string) bool {
 	data, _, _ := DB.SelectSQL(CONSTANT.SlotsTable, []string{"1"}, map[string]string{"counsellor_id": counsellorID, "date": date, time: "1"}) // if the date time data is 1 in database
 	return len(data) > 0

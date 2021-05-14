@@ -281,7 +281,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-
+	// check if appointment rescheduled times exceeded
+	reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
+	if reschedules >= CONSTANT.MaximumAppointmentReschedule {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantRescheduleMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// TODO check if before 4 hours
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -335,6 +341,163 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+	// update rescheduled times
+	DB.ExecuteSQL("update "+CONSTANT.AppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
+
+	// send notification
+	// get counsellor details
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(counsellor) > 0 {
+		// appointment is for counsellor
+		UTIL.SendNotification(CONSTANT.ClientCounsellorAppointmentRescheduleHeading, UTIL.ReplaceContentInString(CONSTANT.ClientCounsellorAppointmentRescheduleContent, map[string]string{"###date_time###": body["date"] + " & " + body["time"], "###counsellor_name###": counsellor[0]["first_name"]}), UTIL.GetClientNotificationID(appointment[0]["client_id"])) // TODO change date time format
+	} else {
+		// get listener details
+		listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		// check if cousellor is valid
+		if len(listener) > 0 {
+			// appointment is for listener
+			UTIL.SendNotification(CONSTANT.ClientListenerAppointmentRescheduleHeading, UTIL.ReplaceContentInString(CONSTANT.ClientListenerAppointmentRescheduleContent, map[string]string{"###date_time###": body["date"] + " & " + body["time"], "###listener_name###": listener[0]["first_name"]}), UTIL.GetClientNotificationID(appointment[0]["client_id"])) // TODO change date time
+		}
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentCancel godoc
+// @Tags Client Appointment
+// @Summary Cancel an appointment
+// @Router /client/appointment [delete]
+// @Param appointment_id query string true "Appointment ID to be cancelled"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// appointment can cancelled only after min reschedules
+	reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
+	if reschedules < CONSTANT.MaximumAppointmentReschedule {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantCancelMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update counsellor slots
+	// remove previous slot
+	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
+	// get schedule for a day
+	schedule, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(schedule) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update counsellor availability
+	DB.UpdateSQL(CONSTANT.SlotsTable,
+		map[string]string{
+			"counsellor_id": appointment[0]["counsellor_id"],
+			"date":          appointment[0]["date"],
+		},
+		map[string]string{
+			appointment[0]["time"]: schedule[0][appointment[0]["time"]], // update availability to the latest one
+		},
+	)
+
+	// update appointment date and time
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentCancelled,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	// TODO check 4 hours time
+	// refund amount
+	// get invoice details
+	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "refunded_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(invoice) > 0 {
+		// invoice is available => amount is paid, order is not free
+		// get order details
+		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+		amountAfterDiscount := actualAmount - discount
+		if amountAfterDiscount > 0 { // refund only if amount paid
+			// within end of current month
+			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+			refundedAmount, _ := strconv.ParseFloat(invoice[0]["refunded_amount"], 64)
+			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+			cancellationCharges := (amountAfterDiscount / slotsBought) * CONSTANT.ClientAppointmentCancelChargePercentage
+			refundAmount := (paidAmount / slotsBought) - cancellationCharges
+			if refundAmount+refundedAmount <= paidAmount {
+				// refunded amount will be less than paid amount
+				UTIL.RefundRazorpayPayment(invoice[0]["refunded_amount"], refundAmount)
+			}
+		}
+	}
+
+	// send notification
+	// get counsellor details
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(counsellor) == 0 {
+		// get listener details
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "device_id"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###counsellor_name###": counsellor[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

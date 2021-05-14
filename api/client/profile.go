@@ -112,6 +112,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["phone"] = body["phone"]
 	client["email"] = body["email"]
 	client["location"] = body["location"]
+	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")

@@ -124,6 +124,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["certificate"] = body["certificate"]
 	counsellor["aadhar"] = body["aadhar"]
 	counsellor["linkedin"] = body["linkedin"]
+	counsellor["device_id"] = body["device_id"]
 	counsellor["status"] = CONSTANT.CounsellorNotApproved
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
 	counsellorID, status, ok := DB.InsertWithUniqueID(CONSTANT.CounsellorsTable, CONSTANT.CounsellorDigits, counsellor, "counsellor_id")
@@ -145,6 +146,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["counsellor_id"] = counsellorID
+
+	// send notification
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupHeading, CONSTANT.CounsellorAccountSignupContent, body["device_id"])
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
