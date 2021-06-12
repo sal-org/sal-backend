@@ -18,6 +18,13 @@ const (
 	ShowToast  = "2"
 )
 
+// content types
+const (
+	VideoContentType   = "1"
+	AudioContentType   = "2"
+	ArticleContentType = "3"
+)
+
 // appointment or event order
 const (
 	OrderAppointmentType = "1"
@@ -29,6 +36,7 @@ const (
 	CounsellorType = "1"
 	ListenerType   = "2"
 	ClientType     = "3"
+	TherapistType  = "4"
 )
 
 // counsellor status
@@ -52,6 +60,14 @@ const (
 	ListenerActive      = "1"
 	ListenerInactive    = "2"
 	ListenerBlocked     = "3"
+)
+
+// therapist status
+const (
+	TherapistNotApproved = "0"
+	TherapistActive      = "1"
+	TherapistInactive    = "2"
+	TherapistBlocked     = "3"
 )
 
 // order status

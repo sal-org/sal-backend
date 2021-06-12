@@ -15,7 +15,7 @@ import (
 // @Summary Upload files like photos, certificates, aadhar etc
 // @Router /upload [post]
 // @Param file formData file true "File to be uploaded"
-// @Param type formData string true "1(counsellor)/2(listener)/3(client)"
+// @Param type formData string true "1(counsellor)/2(listener)/3(client)/4(therapist)"
 // @Accept multipart/form-data
 // @Produce json
 // @Success 200
@@ -26,14 +26,17 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	s3Path := CONSTANT.MiscellaneousS3Path
 	switch r.FormValue("type") {
-	case "1":
+	case CONSTANT.CounsellorType:
 		s3Path = CONSTANT.CounsellorS3Path
 		break
-	case "2":
+	case CONSTANT.ListenerType:
 		s3Path = CONSTANT.ListenerS3Path
 		break
-	case "3":
+	case CONSTANT.ClientType:
 		s3Path = CONSTANT.ClientS3Path
+		break
+	case CONSTANT.TherapistType:
+		s3Path = CONSTANT.TherapistS3Path
 		break
 	}
 

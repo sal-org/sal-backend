@@ -6,6 +6,7 @@ const (
 	CounsellorS3Path    = "counsellor"
 	ListenerS3Path      = "listener"
 	ClientS3Path        = "client"
+	TherapistS3Path     = "therapist"
 )
 
 // s3 acls

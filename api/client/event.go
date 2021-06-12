@@ -235,8 +235,9 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["tax"] = billing["tax"]
 	order["paid_amount"] = billing["paid_amount"]
 
-	amount, _ := strconv.ParseFloat(body["paid_amount"], 64)
-	order["paid_amount_razorpay"] = strconv.FormatFloat(math.Round(amount*100), 'f', 2, 64)
+	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
+	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
+	response["paid_amount_razorpay"] = order["paid_amount_razorpay"]
 
 	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderClientEventTable, CONSTANT.OrderDigits, order, "order_id")
 	if !ok {

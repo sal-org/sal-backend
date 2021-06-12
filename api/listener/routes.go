@@ -21,6 +21,12 @@ func LoadListenerRoutes(router *mux.Router) {
 	listenerRoutes.HandleFunc("/appointment/past", AppointmentsPast).Queries(
 		"listener_id", "{listener_id}",
 	).Methods("GET")
+	listenerRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("DELETE")
+
+	// home
+	listenerRoutes.HandleFunc("/home", Home).Methods("GET")
 
 	// login
 	listenerRoutes.HandleFunc("/sendotp", SendOTP).Queries(
@@ -43,4 +49,6 @@ func LoadListenerRoutes(router *mux.Router) {
 		"listener_id", "{listener_id}",
 	).Methods("PUT")
 
+	// training
+	listenerRoutes.HandleFunc("/training", Training).Methods("GET")
 }

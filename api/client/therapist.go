@@ -12,58 +12,58 @@ import (
 	"strings"
 )
 
-// CounsellorProfile godoc
-// @Tags Client Counsellor
-// @Summary Get counsellor details
-// @Router /client/counsellor [get]
-// @Param counsellor_id query string true "Counsellor ID to get details"
+// TherapistProfile godoc
+// @Tags Client Therapist
+// @Summary Get therapist details
+// @Router /client/therapist [get]
+// @Param therapist_id query string true "Therapist ID to get details"
 // @Produce json
 // @Success 200
-func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
+func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
-	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about", "slot_type"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
+	// get therapist details
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(counsellor) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+	if len(therapist) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// get counsellor languages
-	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("counsellor_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get counsellor topics
-	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", r.FormValue("counsellor_id"))
+	// get therapist languages
+	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// get last 10 counsellor apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and a.comment is not null and a.comment != '' order by a.modified_at desc limit 10 ", r.FormValue("counsellor_id"))
+	// get therapist topics
+	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get last 10 therapist apppointment reviews
+	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and a.comment is not null and a.comment != '' order by a.modified_at desc limit 10 ", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get counsellor latest content
-	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("counsellor_id"))
+	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	response["counsellor"] = counsellor[0]
+	response["therapist"] = therapist[0]
 	response["languages"] = languages
 	response["topics"] = topics
 	response["reviews"] = reviews
@@ -72,20 +72,20 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-// CounsellorSlots godoc
-// @Tags Client Counsellor
-// @Summary Get counsellor slots
-// @Router /client/counsellor/slots [get]
-// @Param counsellor_id query string true "Counsellor ID to get slot details"
+// TherapistSlots godoc
+// @Tags Client Therapist
+// @Summary Get therapist slots
+// @Router /client/therapist/slots [get]
+// @Param therapist_id query string true "Therapist ID to get slot details"
 // @Produce json
 // @Success 200
-func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
+func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
-	// get counsellor slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"))
+	// get therapist slots
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -96,15 +96,15 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-// CounsellorOrderCreate godoc
-// @Tags Client Counsellor
-// @Summary Create appointment order with client and counsellor
-// @Router /client/counsellor/order [post]
-// @Param body body model.CounsellorOrderCreateRequest true "Request Body"
+// TherapistOrderCreate godoc
+// @Tags Client Therapist
+// @Summary Create appointment order with client and therapist
+// @Router /client/therapist/order [post]
+// @Param body body model.TherapistOrderCreateRequest true "Request Body"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
+func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -117,7 +117,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CounsellorOrderCreateRequiredFields)
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderCreateRequiredFields)
 	if len(fieldCheck) > 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 		return
@@ -140,49 +140,49 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+	// get therapist details
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["therapist_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 	// check if cousellor is valid
-	if len(counsellor) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+	if len(therapist) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if counsellor is active
-	if !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotActiveMessage, CONSTANT.ShowDialog, response)
+	// check if therapist is active
+	if !strings.EqualFold(therapist[0]["status"], CONSTANT.TherapistActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotActiveMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if slots available
-	if !UTIL.CheckIfAppointmentSlotAvailable(body["counsellor_id"], body["date"], body["time"]) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
+	if !UTIL.CheckIfAppointmentSlotAvailable(body["therapist_id"], body["date"], body["time"]) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// order object to be inserted
 	order := map[string]string{}
 	order["client_id"] = body["client_id"]
-	order["counsellor_id"] = body["counsellor_id"]
+	order["counsellor_id"] = body["therapist_id"]
 	order["date"] = body["date"]
 	order["time"] = body["time"]
-	order["type"] = CONSTANT.CounsellorType
+	order["type"] = CONSTANT.TherapistType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
-	price := counsellor[0]["price"] // default 1 session price
+	price := therapist[0]["price"] // default 1 session price
 	if strings.EqualFold(body["no_session"], "3") {
-		price = counsellor[0]["price_3"]
+		price = therapist[0]["price_3"]
 	} else if strings.EqualFold(body["no_session"], "5") {
-		price = counsellor[0]["price_5"]
+		price = therapist[0]["price_5"]
 	}
 
 	// appointment actual price should not be free
 	if len(price) == 0 || strings.EqualFold(price, "0") {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorSessionsPriceNotFoundMessage, CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSessionsPriceNotFoundMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -191,7 +191,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["coupon_code"]) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and (order_type = "+CONSTANT.OrderAppointmentType+" or order_type is null) and (client_id = ? or client_id is null) and (counsellor_id = ? or counsellor_id is null) order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["counsellor_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and (order_type = "+CONSTANT.OrderAppointmentType+" or order_type is null) and (client_id = ? or client_id is null) and (therapist_id = ? or therapist_id is null) order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["therapist_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -252,18 +252,18 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	response["billing"] = billing
 	response["order_id"] = orderID
-	response["prices"] = map[string]string{"price": counsellor[0]["price"], "price_3": counsellor[0]["price_3"], "price_5": counsellor[0]["price_5"]}
+	response["prices"] = map[string]string{"price": therapist[0]["price"], "price_3": therapist[0]["price_3"], "price_5": therapist[0]["price_5"]}
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-// CounsellorOrderPaymentComplete godoc
-// @Tags Client Counsellor
-// @Summary Call after payment is completed for counsellor order
-// @Router /client/counsellor/paymentcomplete [post]
-// @Param body body model.CounsellorOrderPaymentCompleteRequest true "Request Body"
+// TherapistOrderPaymentComplete godoc
+// @Tags Client Therapist
+// @Summary Call after payment is completed for therapist order
+// @Router /client/therapist/paymentcomplete [post]
+// @Param body body model.TherapistOrderPaymentCompleteRequest true "Request Body"
 // @Produce json
 // @Success 200
-func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -276,7 +276,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CounsellorOrderPaymentCompleteRequiredFields)
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderPaymentCompleteRequiredFields)
 	if len(fieldCheck) > 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 		return
@@ -293,8 +293,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.OrderNotFoundMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if order is with counsellor
-	if !strings.EqualFold(order[0]["type"], CONSTANT.CounsellorType) {
+	// check if order is with therapist
+	if !strings.EqualFold(order[0]["type"], CONSTANT.TherapistType) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
@@ -337,7 +337,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create appointment slots between counsellor and client
+	// create appointment slots between therapist and client
 	appointmentSlots := map[string]string{}
 	appointmentSlots["order_id"] = body["order_id"]
 	appointmentSlots["client_id"] = order[0]["client_id"]
@@ -353,7 +353,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create appointment between counsellor and client
+	// create appointment between therapist and client
 	appointment := map[string]string{}
 	appointment["order_id"] = body["order_id"]
 	appointment["client_id"] = order[0]["client_id"]
@@ -380,7 +380,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		orderUpdate,
 	)
 
-	// update counsellor slots
+	// update therapist slots
 	DB.UpdateSQL(CONSTANT.SlotsTable,
 		map[string]string{
 			"counsellor_id": order[0]["counsellor_id"],

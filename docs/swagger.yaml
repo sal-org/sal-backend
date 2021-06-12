@@ -9,6 +9,17 @@ definitions:
       time:
         type: string
     type: object
+  model.AppointmentRatingAdd:
+    properties:
+      appointment_id:
+        type: string
+      client_id:
+        type: string
+      counsellor_id:
+        type: string
+      rating:
+        type: string
+    type: object
   model.AppointmentRescheduleRequest:
     properties:
       date:
@@ -36,9 +47,15 @@ definitions:
     type: object
   model.ClientProfileAddRequest:
     properties:
+      age:
+        type: string
+      device_id:
+        type: string
       email:
         type: string
       first_name:
+        type: string
+      gender:
         type: string
       last_name:
         type: string
@@ -49,7 +66,13 @@ definitions:
     type: object
   model.ClientProfileUpdateRequest:
     properties:
+      age:
+        type: string
+      device_id:
+        type: string
       first_name:
+        type: string
+      gender:
         type: string
       last_name:
         type: string
@@ -116,6 +139,8 @@ definitions:
         type: string
       certificate:
         type: string
+      device_id:
+        type: string
       education:
         type: string
       email:
@@ -154,6 +179,8 @@ definitions:
       about:
         type: string
       certificate:
+        type: string
+      device_id:
         type: string
       education:
         type: string
@@ -202,6 +229,8 @@ definitions:
     properties:
       about:
         type: string
+      device_id:
+        type: string
       email:
         type: string
       experience:
@@ -227,6 +256,8 @@ definitions:
     properties:
       about:
         type: string
+      device_id:
+        type: string
       experience:
         type: string
       first_name:
@@ -240,6 +271,136 @@ definitions:
       occupation:
         type: string
       photo:
+        type: string
+      topic_ids:
+        type: string
+    type: object
+  model.TherapistEventOrderCreateRequest:
+    properties:
+      date:
+        type: string
+      description:
+        type: string
+      duration:
+        type: string
+      price:
+        type: string
+      therapist_id:
+        type: string
+      time:
+        type: string
+      title:
+        type: string
+      topic_id:
+        type: string
+    type: object
+  model.TherapistEventOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
+  model.TherapistOrderCreateRequest:
+    properties:
+      client_id:
+        type: string
+      coupon_code:
+        type: string
+      date:
+        type: string
+      no_session:
+        type: string
+      therapist_id:
+        type: string
+      time:
+        type: string
+    type: object
+  model.TherapistOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
+  model.TherapistProfileAddRequest:
+    properties:
+      aadhar:
+        type: string
+      about:
+        type: string
+      certificate:
+        type: string
+      device_id:
+        type: string
+      education:
+        type: string
+      email:
+        type: string
+      experience:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      language_ids:
+        type: string
+      last_name:
+        type: string
+      linkedin:
+        type: string
+      phone:
+        type: string
+      photo:
+        type: string
+      price:
+        type: string
+      price_3:
+        type: string
+      price_5:
+        type: string
+      resume:
+        type: string
+      topic_ids:
+        type: string
+    type: object
+  model.TherapistProfileUpdateRequest:
+    properties:
+      aadhar:
+        type: string
+      about:
+        type: string
+      certificate:
+        type: string
+      device_id:
+        type: string
+      education:
+        type: string
+      experience:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      language_ids:
+        type: string
+      last_name:
+        type: string
+      linkedin:
+        type: string
+      photo:
+        type: string
+      price:
+        type: string
+      price_3:
+        type: string
+      price_5:
+        type: string
+      resume:
         type: string
       topic_ids:
         type: string
@@ -400,6 +561,23 @@ paths:
       summary: Get client past appointments
       tags:
       - Client Appointment
+  /client/appointment/rate:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AppointmentRatingAdd'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Rate the appointment
+      tags:
+      - Client Appointment
   /client/appointment/slots:
     get:
       parameters:
@@ -436,6 +614,87 @@ paths:
       summary: Get client upcoming appointments
       tags:
       - Client Appointment
+  /client/content:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        type: string
+      - description: Content category ID - false if required all
+        in: query
+        name: category_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get contents
+      tags:
+      - Client Content
+  /client/content/like:
+    delete:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      - description: Content ID to be unliked
+        in: query
+        name: content_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Unlike content
+      tags:
+      - Client Content
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get liked contents
+      tags:
+      - Client Content
+    post:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      - description: Content ID to be liked
+        in: query
+        name: content_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Like content
+      tags:
+      - Client Content
   /client/counsellor:
     get:
       parameters:
@@ -584,6 +843,23 @@ paths:
       summary: List available events
       tags:
       - Client Event
+  /client/home:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get home page content
+      tags:
+      - Client Home
   /client/listener:
     get:
       parameters:
@@ -673,7 +949,7 @@ paths:
   /client/search:
     get:
       parameters:
-      - description: Counsellor(1)/Listener(2) or dont send if both
+      - description: Counsellor(1)/Listener(2)/Therapist(4) or dont send if all
         in: query
         name: type
         type: string
@@ -691,7 +967,8 @@ paths:
         in: query
         name: date
         type: string
-      - description: Available on time (0-23 slots), in IST, for the selected date
+      - description: Available on time (0-47 half hour slots), in IST, for the selected
+          date
         in: query
         name: time
         type: string
@@ -716,7 +993,7 @@ paths:
       responses:
         "200":
           description: ""
-      summary: Get counsellor/listener list with search filters
+      summary: Get counsellor/listener/therapist list with search filters
       tags:
       - Client Search
   /client/sendotp:
@@ -735,6 +1012,74 @@ paths:
       summary: Send OTP to specified phone
       tags:
       - Client Login
+  /client/therapist:
+    get:
+      parameters:
+      - description: Therapist ID to get details
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get therapist details
+      tags:
+      - Client Therapist
+  /client/therapist/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.TherapistOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Create appointment order with client and therapist
+      tags:
+      - Client Therapist
+  /client/therapist/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.TherapistOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Call after payment is completed for therapist order
+      tags:
+      - Client Therapist
+  /client/therapist/slots:
+    get:
+      parameters:
+      - description: Therapist ID to get slot details
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get therapist slots
+      tags:
+      - Client Therapist
   /client/verifyotp:
     get:
       parameters:
@@ -757,6 +1102,16 @@ paths:
       summary: Verify OTP sent to specified phone
       tags:
       - Client Login
+  /content-category:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get all available content categories
+      tags:
+      - Miscellaneous
   /counsellor:
     get:
       parameters:
@@ -810,6 +1165,24 @@ paths:
       summary: Update counsellor profile details
       tags:
       - Counsellor Profile
+  /counsellor/appointment:
+    delete:
+      parameters:
+      - description: Appointment ID to be cancelled
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancel an appointment
+      tags:
+      - Counsellor Appointment
   /counsellor/appointment/past:
     get:
       parameters:
@@ -923,6 +1296,23 @@ paths:
       summary: Get upcoming and past counsellor events
       tags:
       - Counsellor Event
+  /counsellor/home:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get home page content
+      tags:
+      - Counsellor Home
   /counsellor/refresh-token:
     get:
       parameters:
@@ -955,6 +1345,23 @@ paths:
       summary: Send OTP to specified phone
       tags:
       - Counsellor Login
+  /counsellor/training:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get counsellor training content
+      tags:
+      - Counsellor Training
   /counsellor/verifyotp:
     get:
       parameters:
@@ -1040,6 +1447,24 @@ paths:
       summary: Update listener profile details
       tags:
       - Listener Profile
+  /listener/appointment:
+    delete:
+      parameters:
+      - description: Appointment ID to be cancelled
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancel an appointment
+      tags:
+      - Listener Appointment
   /listener/appointment/past:
     get:
       parameters:
@@ -1103,6 +1528,23 @@ paths:
       summary: Update listener availability hours
       tags:
       - Listener Availability
+  /listener/home:
+    get:
+      parameters:
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get home page content
+      tags:
+      - Listener Home
   /listener/refresh-token:
     get:
       parameters:
@@ -1135,6 +1577,23 @@ paths:
       summary: Send OTP to specified phone
       tags:
       - Listener Login
+  /listener/training:
+    get:
+      parameters:
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get listener training content
+      tags:
+      - Listener Training
   /listener/verifyotp:
     get:
       parameters:
@@ -1167,6 +1626,278 @@ paths:
       summary: Get all available topics, languages
       tags:
       - Miscellaneous
+  /therapist:
+    get:
+      parameters:
+      - description: Email of therapist - to get details, if signed up already
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get therapist profile with email, if signed up already
+      tags:
+      - Therapist Profile
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.TherapistProfileAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Add therapist profile after OTP verified to signup
+      tags:
+      - Therapist Profile
+    put:
+      parameters:
+      - description: Therapist ID to update details
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.TherapistProfileUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update therapist profile details
+      tags:
+      - Therapist Profile
+  /therapist/appointment:
+    delete:
+      parameters:
+      - description: Appointment ID to be cancelled
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancel an appointment
+      tags:
+      - Therapist Appointment
+  /therapist/appointment/past:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get therapist past appointments
+      tags:
+      - Therapist Appointment
+  /therapist/appointment/upcoming:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get therapist upcoming appointments
+      tags:
+      - Therapist Appointment
+  /therapist/availability:
+    get:
+      parameters:
+      - description: Therapist ID to get availability details
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get therapist availability hours
+      tags:
+      - Therapist Availability
+    put:
+      parameters:
+      - description: Therapist ID to update availability details
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Update therapist availability hours
+      tags:
+      - Therapist Availability
+  /therapist/event/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.TherapistEventOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Book a slot in an event
+      tags:
+      - Therapist Event
+  /therapist/event/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.TherapistEventOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Call after payment is completed for event order
+      tags:
+      - Therapist Event
+  /therapist/events:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get upcoming and past therapist events
+      tags:
+      - Therapist Event
+  /therapist/home:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get home page content
+      tags:
+      - Therapist Home
+  /therapist/refresh-token:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Get new access token with refresh token
+      tags:
+      - Therapist Login
+  /therapist/sendotp:
+    get:
+      parameters:
+      - description: Phone number to send OTP - send phone number with 91 code
+        in: query
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Send OTP to specified phone
+      tags:
+      - Therapist Login
+  /therapist/training:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get therapist training content
+      tags:
+      - Therapist Training
+  /therapist/verifyotp:
+    get:
+      parameters:
+      - description: Phone number OTP has been sent to - send phone number with 91
+          code
+        in: query
+        name: phone
+        required: true
+        type: string
+      - description: OTP entered by therapist
+        in: query
+        name: otp
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Verify OTP sent to specified phone
+      tags:
+      - Therapist Login
   /topic:
     get:
       produces:
@@ -1187,7 +1918,7 @@ paths:
         name: file
         required: true
         type: file
-      - description: 1(counsellor)/2(listener)/3(client)
+      - description: 1(counsellor)/2(listener)/3(client)/4(therapist)
         in: formData
         name: type
         required: true

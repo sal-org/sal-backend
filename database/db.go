@@ -143,7 +143,7 @@ func DeleteSQL(tableName string, params ...map[string]string) (string, bool) {
 			SQLQuery += " and "
 		}
 		SQLQuery += "`" + key + "` = ? "
-		args = append(args, val[0])
+		args = append(args, val)
 		init = true
 	}
 	LOGGER.Log("DeleteSQL", SQLQuery, args)

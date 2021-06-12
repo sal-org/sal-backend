@@ -111,6 +111,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["last_name"] = body["last_name"]
 	client["phone"] = body["phone"]
 	client["email"] = body["email"]
+	client["age"] = body["age"]
+	client["gender"] = body["gender"]
 	client["location"] = body["location"]
 	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive
@@ -180,6 +182,12 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["location"]) > 0 {
 		client["location"] = body["location"]
+	}
+	if len(body["age"]) > 0 {
+		client["age"] = body["age"]
+	}
+	if len(body["gender"]) > 0 {
+		client["gender"] = body["gender"]
 	}
 	if len(body["device_id"]) > 0 {
 		client["device_id"] = body["device_id"]

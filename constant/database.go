@@ -5,6 +5,9 @@ const (
 	AppointmentsTable           = "appointments"
 	AppointmentSlotsTable       = "appointment_slots"
 	ClientsTable                = "clients"
+	ContentsTable               = "contents"
+	ContentCategoriesTable      = "content_categories"
+	ContentLikesTable           = "content_likes"
 	CouponsTable                = "coupons"
 	CounsellorsTable            = "counsellors"
 	CounsellorLanguagesTable    = "counsellor_languages"
@@ -19,6 +22,7 @@ const (
 	RefundsTable                = "refunds"
 	SchedulesTable              = "schedules"
 	SlotsTable                  = "slots"
+	TherapistsTable             = "therapists"
 	TopicsTable                 = "topics"
 )
 
@@ -33,10 +37,12 @@ const (
 	AppointmentDigits     = 12
 	AppointmentSlotDigits = 11
 	ClientDigits          = 13
+	ContentDigits         = 10
 	CounsellorDigits      = 6
 	ListenerDigits        = 9
 	EventDigits           = 7
 	InvoiceDigits         = 8
 	OrderDigits           = 10
 	RefundDigits          = 9
+	TherapistDigits       = 5
 )

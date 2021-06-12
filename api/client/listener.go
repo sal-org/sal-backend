@@ -5,7 +5,6 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	"strconv"
 
 	UTIL "salbackend/util"
 	"strings"
@@ -24,7 +23,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo"}, map[string]string{"listener_id": r.FormValue("listener_id")})
+	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type"}, map[string]string{"listener_id": r.FormValue("listener_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -55,10 +54,18 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get counsellor latest content
+	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("listener_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	response["listener"] = listener[0]
 	response["languages"] = languages
 	response["topics"] = topics
 	response["reviews"] = reviews
+	response["contents"] = contents
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -82,74 +89,8 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// remove dates with no availability
-	filteredSlots := []map[string]string{}
-	for _, slot := range slots {
-		if strings.EqualFold(slot["0"], "1") ||
-			strings.EqualFold(slot["1"], "1") ||
-			strings.EqualFold(slot["2"], "1") ||
-			strings.EqualFold(slot["3"], "1") ||
-			strings.EqualFold(slot["4"], "1") ||
-			strings.EqualFold(slot["5"], "1") ||
-			strings.EqualFold(slot["6"], "1") ||
-			strings.EqualFold(slot["7"], "1") ||
-			strings.EqualFold(slot["8"], "1") ||
-			strings.EqualFold(slot["9"], "1") ||
-			strings.EqualFold(slot["10"], "1") ||
-			strings.EqualFold(slot["11"], "1") ||
-			strings.EqualFold(slot["12"], "1") ||
-			strings.EqualFold(slot["13"], "1") ||
-			strings.EqualFold(slot["14"], "1") ||
-			strings.EqualFold(slot["15"], "1") ||
-			strings.EqualFold(slot["16"], "1") ||
-			strings.EqualFold(slot["17"], "1") ||
-			strings.EqualFold(slot["18"], "1") ||
-			strings.EqualFold(slot["19"], "1") ||
-			strings.EqualFold(slot["20"], "1") ||
-			strings.EqualFold(slot["21"], "1") ||
-			strings.EqualFold(slot["22"], "1") ||
-			strings.EqualFold(slot["23"], "1") ||
-			strings.EqualFold(slot["24"], "1") ||
-			strings.EqualFold(slot["25"], "1") ||
-			strings.EqualFold(slot["26"], "1") ||
-			strings.EqualFold(slot["27"], "1") ||
-			strings.EqualFold(slot["28"], "1") ||
-			strings.EqualFold(slot["29"], "1") ||
-			strings.EqualFold(slot["30"], "1") ||
-			strings.EqualFold(slot["31"], "1") ||
-			strings.EqualFold(slot["32"], "1") ||
-			strings.EqualFold(slot["33"], "1") ||
-			strings.EqualFold(slot["34"], "1") ||
-			strings.EqualFold(slot["35"], "1") ||
-			strings.EqualFold(slot["36"], "1") ||
-			strings.EqualFold(slot["37"], "1") ||
-			strings.EqualFold(slot["38"], "1") ||
-			strings.EqualFold(slot["39"], "1") ||
-			strings.EqualFold(slot["40"], "1") ||
-			strings.EqualFold(slot["41"], "1") ||
-			strings.EqualFold(slot["42"], "1") ||
-			strings.EqualFold(slot["43"], "1") ||
-			strings.EqualFold(slot["44"], "1") ||
-			strings.EqualFold(slot["45"], "1") ||
-			strings.EqualFold(slot["46"], "1") ||
-			strings.EqualFold(slot["47"], "1") {
-
-			filteredSlot := map[string]string{
-				"date": slot["date"],
-			}
-			// show only times with availability
-			for i := 0; i < 24; i++ {
-				if strings.EqualFold(slot[strconv.Itoa(i)], "1") {
-					filteredSlot[strconv.Itoa(i)] = "1"
-				}
-			}
-
-			// TODO - remove expired time for today
-			filteredSlots = append(filteredSlots, filteredSlot)
-		}
-	}
-
-	response["slots"] = filteredSlots
+	// remove times and dates with no availability
+	response["slots"] = UTIL.FilterAvailableSlots(slots)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

@@ -9,6 +9,7 @@ import (
 	CronAPI "salbackend/api/cron"
 	ListenerAPI "salbackend/api/listener"
 	MiscellaneousAPI "salbackend/api/miscellaneous"
+	TherapistAPI "salbackend/api/therapist"
 
 	"github.com/gorilla/mux"
 )
@@ -26,6 +27,7 @@ func LoadRouter() *mux.Router {
 	ClientAPI.LoadClientRoutes(router)
 	CounsellorAPI.LoadCounsellorRoutes(router)
 	ListenerAPI.LoadListenerRoutes(router)
+	TherapistAPI.LoadTherapistRoutes(router)
 	MiscellaneousAPI.LoadMiscellaneousRoutes(router)
 	CronAPI.LoadCronRoutes(router)
 

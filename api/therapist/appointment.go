@@ -1,4 +1,4 @@
-package listener
+package therapist
 
 import (
 	"net/http"
@@ -13,10 +13,10 @@ import (
 )
 
 // AppointmentsUpcoming godoc
-// @Tags Listener Appointment
-// @Summary Get listener upcoming appointments
-// @Router /listener/appointment/upcoming [get]
-// @Param listener_id query string true "Logged in listener ID"
+// @Tags Therapist Appointment
+// @Summary Get therapist upcoming appointments
+// @Router /therapist/appointment/upcoming [get]
+// @Param therapist_id query string true "Logged in therapist ID"
 // @Produce json
 // @Success 200
 func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+")", r.FormValue("listener_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+")", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -34,7 +34,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 
 	// get client details
-	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, photo, age, gender from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -47,10 +47,10 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 }
 
 // AppointmentsPast godoc
-// @Tags Listener Appointment
-// @Summary Get listener past appointments
-// @Router /listener/appointment/past [get]
-// @Param listener_id query string true "Logged in listener ID"
+// @Tags Therapist Appointment
+// @Summary Get therapist past appointments
+// @Router /therapist/appointment/past [get]
+// @Param therapist_id query string true "Logged in therapist ID"
 // @Produce json
 // @Success 200
 func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +59,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get past completed appointments
-	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("listener_id"), "status": CONSTANT.AppointmentCompleted})
+	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.AppointmentCompleted})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -81,9 +81,9 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 }
 
 // AppointmentCancel godoc
-// @Tags Listener Appointment
+// @Tags Therapist Appointment
 // @Summary Cancel an appointment
-// @Router /listener/appointment [delete]
+// @Router /therapist/appointment [delete]
 // @Param appointment_id query string true "Appointment ID to be cancelled"
 // @Security JWTAuth
 // @Produce json
@@ -110,16 +110,16 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get listener type
-	listenerType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
-	if !strings.EqualFold(listenerType, CONSTANT.ListenerType) {
+	// get therapist type
+	therapistType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	if !strings.EqualFold(therapistType, CONSTANT.TherapistType) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// TODO check 4 hours time
 
-	// update listener slots
+	// update therapist slots
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
 	// get schedule for a day
@@ -133,7 +133,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update listener availability
+	// update therapist availability
 	DB.UpdateSQL(CONSTANT.SlotsTable,
 		map[string]string{
 			"counsellor_id": appointment[0]["counsellor_id"],
@@ -155,6 +155,11 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	// add a slot to appointments
+	DB.ExecuteSQL("update "+CONSTANT.AppointmentSlotsTable+" set slots_remaining = slots_remaining + 1 where order_id = ?", appointment[0]["order_id"])
+
+	// TODO add penalty for therapist for cancelling
+
 	// send notitication accordingly
 
 	// get client details
@@ -164,15 +169,15 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+	// get therapist details
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if len(listener) > 0 {
-		UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###listener_name###": listener[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
+	if len(therapist) > 0 {
+		UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###therapist_name###": therapist[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

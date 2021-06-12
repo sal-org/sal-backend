@@ -32,6 +32,11 @@ const (
 	RescheduleSlotNotAvailableMessage      = "Slot not available in this hour. Reschedule to a different slot"
 	SessionExpiredMessage                  = "Session expired. Login again."
 	SlotCompletelyUsedMessage              = "You have used your slots completely"
+	TherapistAccountDeletedMessage         = "Account blocked or deleted. Please contact our support team"
+	TherapistNotExistMessage               = "Therapist doesn't exist"
+	TherapistNotActiveMessage              = "Therapist is not active"
+	TherapistSessionsPriceNotFoundMessage  = "Sessions price not found"
+	TherapistSlotNotAvailableMessage       = "Therapist not available in this hour. Book a different slot"
 	ValidPhoneRequiredMessage              = "Valid phone number required"
 	VerifyPhoneRequiredMessage             = "Verify phone number wth OTP"
 )

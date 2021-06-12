@@ -266,6 +266,33 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/rate": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Rate the appointment",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AppointmentRatingAdd"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/slots": {
             "get": {
                 "security": [
@@ -315,6 +342,136 @@ var doc = `{
                         "type": "string",
                         "description": "Logged in client ID",
                         "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/content": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Content"
+                ],
+                "summary": "Get contents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content category ID - false if required all",
+                        "name": "category_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/content/like": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Content"
+                ],
+                "summary": "Get liked contents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Content"
+                ],
+                "summary": "Like content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content ID to be liked",
+                        "name": "content_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Content"
+                ],
+                "summary": "Unlike content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content ID to be unliked",
+                        "name": "content_id",
                         "in": "query",
                         "required": true
                     }
@@ -565,6 +722,35 @@ var doc = `{
                 }
             }
         },
+        "/client/home": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Home"
+                ],
+                "summary": "Get home page content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/listener": {
             "get": {
                 "produces": [
@@ -712,11 +898,11 @@ var doc = `{
                 "tags": [
                     "Client Search"
                 ],
-                "summary": "Get counsellor/listener list with search filters",
+                "summary": "Get counsellor/listener/therapist list with search filters",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Counsellor(1)/Listener(2) or dont send if both",
+                        "description": "Counsellor(1)/Listener(2)/Therapist(4) or dont send if all",
                         "name": "type",
                         "in": "query"
                     },
@@ -740,7 +926,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "Available on time (0-23 slots), in IST, for the selected date",
+                        "description": "Available on time (0-47 half hour slots), in IST, for the selected date",
                         "name": "time",
                         "in": "query"
                     },
@@ -801,6 +987,115 @@ var doc = `{
                 }
             }
         },
+        "/client/therapist": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Therapist"
+                ],
+                "summary": "Get therapist details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Therapist ID to get details",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/therapist/order": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Therapist"
+                ],
+                "summary": "Create appointment order with client and therapist",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TherapistOrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/therapist/paymentcomplete": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Therapist"
+                ],
+                "summary": "Call after payment is completed for therapist order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TherapistOrderPaymentCompleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/therapist/slots": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Therapist"
+                ],
+                "summary": "Get therapist slots",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Therapist ID to get slot details",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/verifyotp": {
             "get": {
                 "produces": [
@@ -826,6 +1121,22 @@ var doc = `{
                         "required": true
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/content-category": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get all available content categories",
                 "responses": {
                     "200": {
                         "description": ""
@@ -906,6 +1217,36 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/model.CounsellorProfileAddRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/appointment": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "Cancel an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be cancelled",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1092,6 +1433,35 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/home": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Home"
+                ],
+                "summary": "Get home page content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/refresh-token": {
             "get": {
                 "produces": [
@@ -1133,6 +1503,35 @@ var doc = `{
                         "name": "phone",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/training": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Training"
+                ],
+                "summary": "Get counsellor training content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1272,6 +1671,36 @@ var doc = `{
                 }
             }
         },
+        "/listener/appointment": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Appointment"
+                ],
+                "summary": "Cancel an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be cancelled",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/appointment/past": {
             "get": {
                 "produces": [
@@ -1370,6 +1799,35 @@ var doc = `{
                 }
             }
         },
+        "/listener/home": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Home"
+                ],
+                "summary": "Get home page content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/refresh-token": {
             "get": {
                 "produces": [
@@ -1411,6 +1869,35 @@ var doc = `{
                         "name": "phone",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/training": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Training"
+                ],
+                "summary": "Get listener training content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1468,6 +1955,435 @@ var doc = `{
                 }
             }
         },
+        "/therapist": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Profile"
+                ],
+                "summary": "Get therapist profile with email, if signed up already",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email of therapist - to get details, if signed up already",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Profile"
+                ],
+                "summary": "Update therapist profile details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Therapist ID to update details",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TherapistProfileUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Profile"
+                ],
+                "summary": "Add therapist profile after OTP verified to signup",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TherapistProfileAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/appointment": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Appointment"
+                ],
+                "summary": "Cancel an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be cancelled",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/appointment/past": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Appointment"
+                ],
+                "summary": "Get therapist past appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/appointment/upcoming": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Appointment"
+                ],
+                "summary": "Get therapist upcoming appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/availability": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Availability"
+                ],
+                "summary": "Get therapist availability hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Therapist ID to get availability details",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Availability"
+                ],
+                "summary": "Update therapist availability hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Therapist ID to update availability details",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/event/order": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Book a slot in an event",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TherapistEventOrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/event/paymentcomplete": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Call after payment is completed for event order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.TherapistEventOrderPaymentCompleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/events": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Get upcoming and past therapist events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/home": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Home"
+                ],
+                "summary": "Get home page content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/refresh-token": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Login"
+                ],
+                "summary": "Get new access token with refresh token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/sendotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Login"
+                ],
+                "summary": "Send OTP to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number to send OTP - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/training": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Training"
+                ],
+                "summary": "Get therapist training content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/verifyotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Login"
+                ],
+                "summary": "Verify OTP sent to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OTP entered by therapist",
+                        "name": "otp",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/topic": {
             "get": {
                 "produces": [
@@ -1506,7 +2422,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "1(counsellor)/2(listener)/3(client)",
+                        "description": "1(counsellor)/2(listener)/3(client)/4(therapist)",
                         "name": "type",
                         "in": "formData",
                         "required": true
@@ -1531,6 +2447,23 @@ var doc = `{
                     "type": "string"
                 },
                 "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.AppointmentRatingAdd": {
+            "type": "object",
+            "properties": {
+                "appointment_id": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "counsellor_id": {
+                    "type": "string"
+                },
+                "rating": {
                     "type": "string"
                 }
             }
@@ -1577,10 +2510,19 @@ var doc = `{
         "model.ClientProfileAddRequest": {
             "type": "object",
             "properties": {
+                "age": {
+                    "type": "string"
+                },
+                "device_id": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1597,7 +2539,16 @@ var doc = `{
         "model.ClientProfileUpdateRequest": {
             "type": "object",
             "properties": {
+                "age": {
+                    "type": "string"
+                },
+                "device_id": {
+                    "type": "string"
+                },
                 "first_name": {
+                    "type": "string"
+                },
+                "gender": {
                     "type": "string"
                 },
                 "last_name": {
@@ -1700,6 +2651,9 @@ var doc = `{
                 "certificate": {
                     "type": "string"
                 },
+                "device_id": {
+                    "type": "string"
+                },
                 "education": {
                     "type": "string"
                 },
@@ -1757,6 +2711,9 @@ var doc = `{
                     "type": "string"
                 },
                 "certificate": {
+                    "type": "string"
+                },
+                "device_id": {
                     "type": "string"
                 },
                 "education": {
@@ -1831,6 +2788,9 @@ var doc = `{
                 "about": {
                     "type": "string"
                 },
+                "device_id": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -1869,6 +2829,9 @@ var doc = `{
                 "about": {
                     "type": "string"
                 },
+                "device_id": {
+                    "type": "string"
+                },
                 "experience": {
                     "type": "string"
                 },
@@ -1888,6 +2851,204 @@ var doc = `{
                     "type": "string"
                 },
                 "photo": {
+                    "type": "string"
+                },
+                "topic_ids": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TherapistEventOrderCreateRequest": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "therapist_id": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topic_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TherapistEventOrderPaymentCompleteRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TherapistOrderCreateRequest": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "coupon_code": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "no_session": {
+                    "type": "string"
+                },
+                "therapist_id": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TherapistOrderPaymentCompleteRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TherapistProfileAddRequest": {
+            "type": "object",
+            "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "device_id": {
+                    "type": "string"
+                },
+                "education": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "experience": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "language_ids": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "linkedin": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "price_3": {
+                    "type": "string"
+                },
+                "price_5": {
+                    "type": "string"
+                },
+                "resume": {
+                    "type": "string"
+                },
+                "topic_ids": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TherapistProfileUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "certificate": {
+                    "type": "string"
+                },
+                "device_id": {
+                    "type": "string"
+                },
+                "education": {
+                    "type": "string"
+                },
+                "experience": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "language_ids": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "linkedin": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "price_3": {
+                    "type": "string"
+                },
+                "price_5": {
+                    "type": "string"
+                },
+                "resume": {
                     "type": "string"
                 },
                 "topic_ids": {

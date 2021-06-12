@@ -32,6 +32,18 @@ func ConvertMapToKeyMap(data []map[string]string, key string) map[string]map[str
 	return result
 }
 
+// ConvertArrayMapToKeyMapArray -
+func ConvertArrayMapToKeyMapArray(data []map[string]string, key string) map[string][]map[string]string {
+	result := map[string][]map[string]string{}
+	for _, object := range data {
+		if len(result[object[key]]) == 0 {
+			result[object[key]] = []map[string]string{}
+		}
+		result[object[key]] = append(result[object[key]], object)
+	}
+	return result
+}
+
 // ReplaceContentInString - bulk replace in string
 func ReplaceContentInString(input string, replace map[string]string) string {
 	for original, updated := range replace {

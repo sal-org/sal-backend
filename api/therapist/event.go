@@ -1,4 +1,4 @@
-package counsellor
+package therapist
 
 import (
 	"math"
@@ -12,10 +12,10 @@ import (
 )
 
 // EventsList godoc
-// @Tags Counsellor Event
-// @Summary Get upcoming and past counsellor events
-// @Router /counsellor/events [get]
-// @Param counsellor_id query string true "Logged in counsellor ID"
+// @Tags Therapist Event
+// @Summary Get upcoming and past therapist events
+// @Router /therapist/events [get]
+// @Param therapist_id query string true "Logged in therapist ID"
 // @Produce json
 // @Success 200
 func EventsList(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +24,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming booked events
-	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where counsellor_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("counsellor_id"))
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where therapist_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -32,7 +32,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 	response["upcoming_events"] = events
 
 	// get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))
-	events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where counsellor_id = ? and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("counsellor_id"))
+	events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where therapist_id = ? and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -42,10 +42,10 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 }
 
 // EventOrderCreate godoc
-// @Tags Counsellor Event
+// @Tags Therapist Event
 // @Summary Book a slot in an event
-// @Router /counsellor/event/order [post]
-// @Param body body model.CounsellorEventOrderCreateRequest true "Request Body"
+// @Router /therapist/event/order [post]
+// @Param body body model.TherapistEventOrderCreateRequest true "Request Body"
 // @Produce json
 // @Success 200
 func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
@@ -61,32 +61,32 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CounsellorEventOrderCreateRequiredFields)
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistEventOrderCreateRequiredFields)
 	if len(fieldCheck) > 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"status"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+	// get therapist details
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"status"}, map[string]string{"therapist_id": body["therapist_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 	// check if cousellor is valid
-	if len(counsellor) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+	if len(therapist) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if counsellor is active
-	if !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotActiveMessage, CONSTANT.ShowDialog, response)
+	// check if therapist is active
+	if !strings.EqualFold(therapist[0]["status"], CONSTANT.TherapistActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotActiveMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["counsellor_id"] = body["counsellor_id"]
+	order["therapist_id"] = body["therapist_id"]
 	order["title"] = body["title"]
 	order["description"] = body["description"]
 	order["topic_id"] = body["topic_id"]
@@ -119,10 +119,10 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // EventOrderPaymentComplete godoc
-// @Tags Counsellor Event
+// @Tags Therapist Event
 // @Summary Call after payment is completed for event order
-// @Router /counsellor/event/paymentcomplete [post]
-// @Param body body model.CounsellorEventOrderPaymentCompleteRequest true "Request Body"
+// @Router /therapist/event/paymentcomplete [post]
+// @Param body body model.TherapistEventOrderPaymentCompleteRequest true "Request Body"
 // @Produce json
 // @Success 200
 func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +138,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CounsellorEventOrderPaymentCompleteRequiredFields)
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistEventOrderPaymentCompleteRequiredFields)
 	if len(fieldCheck) > 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 		return
@@ -173,11 +173,11 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create invoice for the order
 	invoice := map[string]string{}
-	invoice["user_id"] = order[0]["counsellor_id"]
+	invoice["user_id"] = order[0]["therapist_id"]
 	invoice["order_id"] = body["order_id"]
 	invoice["payment_method"] = body["payment_method"]
 	invoice["payment_id"] = body["payment_id"]
-	invoice["user_type"] = CONSTANT.CounsellorType
+	invoice["user_type"] = CONSTANT.TherapistType
 	invoice["order_type"] = CONSTANT.OrderEventType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
