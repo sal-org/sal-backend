@@ -44,10 +44,12 @@ func ConvertArrayMapToKeyMapArray(data []map[string]string, key string) map[stri
 	return result
 }
 
-// ReplaceContentInString - bulk replace in string
-func ReplaceContentInString(input string, replace map[string]string) string {
+// ReplaceNotificationContentInString - bulk replace in string
+func ReplaceNotificationContentInString(input string, replace map[string]string) string {
 	for original, updated := range replace {
-		input = strings.ReplaceAll(input, original, updated)
+		if len(updated) > 0 {
+			input = strings.ReplaceAll(input, original, updated)
+		}
 	}
 	return input
 }

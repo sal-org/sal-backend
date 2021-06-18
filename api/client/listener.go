@@ -267,5 +267,37 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	// sent notitifications
+	listenerName := DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", order[0]["counsellor_id"])
+	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+
+	// send appointment booking notification to client
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleClientContent,
+			map[string]string{
+				"###date_time###":       order[0]["date"] + " & " + order[0]["time"],
+				"###counsellor_name###": listenerName,
+			},
+		),
+		UTIL.GetNotificationID(order[0]["client_id"], CONSTANT.ClientType),
+	)
+
+	// send appointment booking notification to listener
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleListenerHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleListenerContent,
+			map[string]string{
+				"###date_time###":   order[0]["date"] + " & " + order[0]["time"],
+				"###client_name###": clientName,
+			},
+		),
+		UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.ListenerType),
+	)
+
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

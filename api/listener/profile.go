@@ -140,6 +140,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	response["listener_id"] = listenerID
 
+	// send account signup notification to listener
+	UTIL.SendNotification(CONSTANT.ListenerAccountSignupListenerHeading, CONSTANT.ListenerAccountSignupListenerContent, body["device_id"])
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

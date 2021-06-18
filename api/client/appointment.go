@@ -242,6 +242,81 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	// send notifications
+	// get counsellor name
+	var counsellorName string
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", body["appointment_slot_id"])
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointmentSlot[0]["counsellor_id"])
+		break
+	case CONSTANT.ListenerType:
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointmentSlot[0]["counsellor_id"])
+		break
+	case CONSTANT.TherapistType:
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointmentSlot[0]["counsellor_id"])
+		break
+	}
+	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointmentSlot[0]["client_id"])
+
+	// send appointment booking notification to client
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleClientContent,
+			map[string]string{
+				"###date_time###":       body["date"] + " & " + body["time"],
+				"###counsellor_name###": counsellorName,
+			},
+		),
+		UTIL.GetNotificationID(appointmentSlot[0]["client_id"], CONSTANT.ClientType),
+	)
+
+	// send appointment booking notification to counsellor
+	// TODO change date time format
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentScheduleCounsellorHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentScheduleCounsellorContent,
+				map[string]string{
+					"###date_time###":   body["date"] + " & " + body["time"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointmentSlot[0]["counsellor_id"], counsellorType),
+		)
+		break
+	case CONSTANT.ListenerType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentScheduleListenerHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentScheduleListenerContent,
+				map[string]string{
+					"###date_time###":   body["date"] + " & " + body["time"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointmentSlot[0]["counsellor_id"], counsellorType),
+		)
+		break
+	case CONSTANT.TherapistType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentScheduleTherapistHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentScheduleTherapistContent,
+				map[string]string{
+					"###date_time###":   body["date"] + " & " + body["time"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointmentSlot[0]["counsellor_id"], counsellorType),
+		)
+		break
+	}
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -352,47 +427,75 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update rescheduled times
 	DB.ExecuteSQL("update "+CONSTANT.AppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
 
-	// send notification
-	// get counsellor type and details
+	// send notifications
+	// get counsellor name
+	var counsellorName string
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
-
-	// send notitication accordingly
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		// get counsellor details
-		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		if len(counsellor) > 0 {
-			UTIL.SendNotification(CONSTANT.ClientCounsellorAppointmentRescheduleHeading, UTIL.ReplaceContentInString(CONSTANT.ClientCounsellorAppointmentRescheduleContent, map[string]string{"###date_time###": body["date"] + " & " + body["time"], "###counsellor_name###": counsellor[0]["first_name"]}), UTIL.GetClientNotificationID(appointment[0]["client_id"])) // TODO change date time format
-		}
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"])
 		break
 	case CONSTANT.ListenerType:
-		// get listener details
-		listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		if len(listener) > 0 {
-			UTIL.SendNotification(CONSTANT.ClientListenerAppointmentRescheduleHeading, UTIL.ReplaceContentInString(CONSTANT.ClientListenerAppointmentRescheduleContent, map[string]string{"###date_time###": body["date"] + " & " + body["time"], "###listener_name###": listener[0]["first_name"]}), UTIL.GetClientNotificationID(appointment[0]["client_id"])) // TODO change date time
-		}
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"])
 		break
 	case CONSTANT.TherapistType:
-		// get therapist details
-		therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
+		break
+	}
+	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"])
 
-		if len(therapist) > 0 {
-			UTIL.SendNotification(CONSTANT.ClientTherapistAppointmentRescheduleHeading, UTIL.ReplaceContentInString(CONSTANT.ClientTherapistAppointmentRescheduleContent, map[string]string{"###date_time###": body["date"] + " & " + body["time"], "###therapist_name###": therapist[0]["first_name"]}), UTIL.GetClientNotificationID(appointment[0]["client_id"])) // TODO change date time
-		}
+	// send appointment reschedule notification to client
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentRescheduleClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleClientContent,
+			map[string]string{
+				"###date_time###":       body["date"] + " & " + body["time"],
+				"###counsellor_name###": counsellorName,
+			},
+		),
+		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+	)
+
+	// send appointment reschedule notification to counsellor
+	// TODO change date time format
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentRescheduleCounsellorContent,
+				map[string]string{
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
+		)
+		break
+	case CONSTANT.ListenerType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentRescheduleListenerHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentRescheduleListenerContent,
+				map[string]string{
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
+		)
+		break
+	case CONSTANT.TherapistType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentRescheduleTherapistHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentRescheduleTherapistContent,
+				map[string]string{
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
+		)
 		break
 	}
 
@@ -505,54 +608,79 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// send notification
-	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "device_id"}, map[string]string{"client_id": appointment[0]["client_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get counsellor type and details
+	// send notifications
+	// get counsellor name
+	var counsellorName string
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
-
-	// send notitication accordingly
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		// get counsellor details
-		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		if len(counsellor) > 0 {
-			UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###counsellor_name###": counsellor[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
-		}
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"])
 		break
 	case CONSTANT.ListenerType:
-		// get listener details
-		listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		if len(listener) > 0 {
-			UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###counsellor_name###": listener[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
-		}
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"])
 		break
 	case CONSTANT.TherapistType:
-		// get therapist details
-		therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
+		break
+	}
+	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"])
 
-		if len(therapist) > 0 {
-			UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###counsellor_name###": therapist[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
-		}
+	// send appointment cancel notification to client
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentCancelClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancelClientContent,
+			map[string]string{
+				"###date_time###":       appointment[0]["date"] + " & " + appointment[0]["time"],
+				"###counsellor_name###": counsellorName,
+				"###client_name###":     clientName,
+			},
+		),
+		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+	)
+
+	// send appointment cancel notification to counsellor
+	// TODO change date time format
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentCancelCounsellorHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentCancelCounsellorContent,
+				map[string]string{
+					"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
+		)
+		break
+	case CONSTANT.ListenerType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentCancelListenerHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentCancelListenerContent,
+				map[string]string{
+					"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
+		)
+		break
+	case CONSTANT.TherapistType:
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentCancelTherapistHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentCancelTherapistContent,
+				map[string]string{
+					"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
+		)
 		break
 	}
 

@@ -147,8 +147,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	response["therapist_id"] = therapistID
 
-	// send notification
-	UTIL.SendNotification(CONSTANT.TherapistAccountSignupHeading, CONSTANT.TherapistAccountSignupContent, body["device_id"])
+	// send account signup notification to therapist
+	UTIL.SendNotification(CONSTANT.TherapistAccountSignupTherapistHeading, CONSTANT.TherapistAccountSignupTherapistContent, body["device_id"])
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

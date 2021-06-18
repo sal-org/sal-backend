@@ -391,6 +391,94 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	// sent notifications
+	therapistName := DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", order[0]["counsellor_id"])
+	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+
+	// send appointment booking notification to client
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleClientContent,
+			map[string]string{
+				"###date_time###":       order[0]["date"] + " & " + order[0]["time"],
+				"###counsellor_name###": therapistName,
+			},
+		),
+		UTIL.GetNotificationID(order[0]["client_id"], CONSTANT.ClientType),
+	)
+
+	// send payment success notification to client
+	UTIL.SendNotification(
+		CONSTANT.ClientPaymentSucessClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientPaymentSucessClientContent,
+			map[string]string{
+				"###paid_amount###": order[0]["paid_amount"],
+				"###client_name###": clientName,
+			},
+		),
+		UTIL.GetNotificationID(order[0]["client_id"], CONSTANT.ClientType),
+	)
+
+	// send appointment booking notification to therapist
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleTherapistHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleTherapistContent,
+			map[string]string{
+				"###date_time###":   order[0]["date"] + " & " + order[0]["time"],
+				"###client_name###": clientName,
+			},
+		),
+		UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.TherapistType),
+	)
+
+	// send payment received notification to therapist
+	switch order[0]["slots_bought"] {
+	case "1":
+		UTIL.SendNotification(
+			CONSTANT.Client1AppointmentBookTherapistHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.Client1AppointmentBookTherapistContent,
+				map[string]string{
+					"###paid_amount###": order[0]["paid_amount"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.TherapistType),
+		)
+		break
+	case "3":
+		UTIL.SendNotification(
+			CONSTANT.Client3AppointmentBookTherapistHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.Client3AppointmentBookTherapistContent,
+				map[string]string{
+					"###paid_amount###": order[0]["paid_amount"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.TherapistType),
+		)
+		break
+	case "5":
+		UTIL.SendNotification(
+			CONSTANT.Client5AppointmentBookTherapistHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.Client5AppointmentBookTherapistContent,
+				map[string]string{
+					"###paid_amount###": order[0]["paid_amount"],
+					"###client_name###": clientName,
+				},
+			),
+			UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.TherapistType),
+		)
+		break
+	}
+
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

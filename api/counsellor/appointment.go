@@ -160,25 +160,19 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 
 	// TODO add penalty for counsellor for cancelling
 
-	// send notitication accordingly
-
-	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "device_id"}, map[string]string{"client_id": appointment[0]["client_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	if len(counsellor) > 0 {
-		UTIL.SendNotification(CONSTANT.ClientAppointmentCancelHeading, UTIL.ReplaceContentInString(CONSTANT.ClientAppointmentCancelContent, map[string]string{"###date_time###": appointment[0]["date"] + " & " + appointment[0]["time"], "###counsellor_name###": counsellor[0]["first_name"], "###client_name###": client[0]["first_name"]}), client[0]["device_id"]) // TODO change date time format
-	}
+	// send appointment cancel notification to client
+	// TODO change date time format
+	UTIL.SendNotification(
+		CONSTANT.CounsellorAppointmentCancelClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentCancelClientContent,
+			map[string]string{
+				"###date_time###":       appointment[0]["date"] + " & " + appointment[0]["time"],
+				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
+			},
+		),
+		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

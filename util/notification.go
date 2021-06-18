@@ -10,11 +10,12 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	MODEL "salbackend/model"
+	"strings"
 )
 
 // SendNotification - send notification using onesignal
 func SendNotification(heading string, content string, notificationID string) {
-	if len(notificationID) == 0 {
+	if len(notificationID) == 0 || strings.Contains(content, "###") { // check if notification id is available and notification variables are replaced
 		return
 	}
 	data := MODEL.OneSignalNotificationData{
@@ -40,17 +41,17 @@ func SendNotification(heading string, content string, notificationID string) {
 	fmt.Println(data, string(body))
 }
 
-// GetClientNotificationID -
-func GetClientNotificationID(clientID string) string {
-	return DB.QueryRowSQL("select device_id from "+CONSTANT.ClientsTable+" where client_id = ?", clientID)
-}
-
-// GetCounsellorNotificationID -
-func GetCounsellorNotificationID(counsellorID string) string {
-	return DB.QueryRowSQL("select device_id from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", counsellorID)
-}
-
-// GetListenerNotificationID -
-func GetListenerNotificationID(listenerID string) string {
-	return DB.QueryRowSQL("select device_id from "+CONSTANT.ListenersTable+" where listener_id = ?", listenerID)
+// GetNotificationID - get notification ID of client/counselors
+func GetNotificationID(id string, idType string) string {
+	switch idType {
+	case CONSTANT.CounsellorType:
+		return DB.QueryRowSQL("select device_id from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", id)
+	case CONSTANT.ListenerType:
+		return DB.QueryRowSQL("select device_id from "+CONSTANT.ListenersTable+" where listener_id = ?", id)
+	case CONSTANT.ClientType:
+		return DB.QueryRowSQL("select device_id from "+CONSTANT.ClientsTable+" where client_id = ?", id)
+	case CONSTANT.TherapistType:
+		return DB.QueryRowSQL("select device_id from "+CONSTANT.TherapistsTable+" where therapist_id = ?", id)
+	}
+	return ""
 }
