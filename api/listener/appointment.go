@@ -17,6 +17,7 @@ import (
 // @Summary Get listener upcoming appointments
 // @Router /listener/appointment/upcoming [get]
 // @Param listener_id query string true "Logged in listener ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 // @Summary Get listener past appointments
 // @Router /listener/appointment/past [get]
 // @Param listener_id query string true "Logged in listener ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +168,121 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"]),
 			},
 		),
-		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentStart godoc
+// @Tags Listener Appointment
+// @Summary Start an appointment
+// @Router /listener/appointment/start [put]
+// @Param appointment_id query string true "Appointment ID to be started"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get listener type
+	listenerType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	if !strings.EqualFold(listenerType, CONSTANT.ListenerType) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status": CONSTANT.AppointmentStarted,
+		},
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentEnd godoc
+// @Tags Listener Appointment
+// @Summary End an appointment
+// @Router /listener/appointment/end [put]
+// @Param appointment_id query string true "Appointment ID to be ended"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get listener type
+	listenerType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	if !strings.EqualFold(listenerType, CONSTANT.ListenerType) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status": CONSTANT.AppointmentCompleted,
+		},
+	)
+
+	// send appointment ended notification and rating to client
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentFeedbackHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentFeedbackContent,
+			map[string]string{
+				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"]),
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

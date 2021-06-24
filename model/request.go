@@ -256,6 +256,22 @@ type TherapistProfileUpdateRequest struct {
 type AppointmentRatingAdd struct {
 	AppointmentID string `json:"appointment_id"`
 	Rating        string `json:"rating"`
+	RatingTypes   string `json:"rating_types"`
+	RatingComment string `json:"rating_comment"`
 	ClientID      string `json:"client_id"`
 	CounsellorID  string `json:"counsellor_id"`
+}
+
+// AssessmentAddRequest .
+type AssessmentAddRequest struct {
+	PersonID     string `json:"person_id"`
+	Name         string `json:"name"`
+	Age          string `json:"age"`
+	Gender       string `json:"gender"`
+	AssessmentID string `json:"assessment_id"`
+	Details      []struct {
+		AssessmentQuestionID       string `json:"assessment_question_id"`
+		AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
+		Score                      string `json:"score"`
+	} `json:"details"`
 }

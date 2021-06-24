@@ -17,6 +17,7 @@ import (
 // @Summary Get counsellor upcoming appointments
 // @Router /counsellor/appointment/upcoming [get]
 // @Param counsellor_id query string true "Logged in counsellor ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 // @Summary Get counsellor past appointments
 // @Router /counsellor/appointment/past [get]
 // @Param counsellor_id query string true "Logged in counsellor ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +160,40 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// add a slot to appointments
 	DB.ExecuteSQL("update "+CONSTANT.AppointmentSlotsTable+" set slots_remaining = slots_remaining + 1 where order_id = ?", appointment[0]["order_id"])
 
-	// TODO add penalty for counsellor for cancelling
+	// add penalty for counsellor for cancelling
+	// add to counsellor payments
+	// get invoice details
+	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(invoice) > 0 {
+		// get order details
+		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+		amountAfterDiscount := actualAmount - discount
+		if amountAfterDiscount > 0 { // add only if amount paid
+			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+			amountFor1Session := amountAfterDiscount / slotsBought // for 1 counselling session
+			cancellationCharges := amountFor1Session * CONSTANT.CounsellorCancellationCharges
+
+			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+				"counsellor_id": appointment[0]["counsellor_id"],
+				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"description":   "Cancellation",
+				"amount":        strconv.FormatFloat(-cancellationCharges, 'f', 2, 64),
+				"status":        CONSTANT.PaymentActive,
+				"created_at":    UTIL.GetCurrentTime().String(),
+			}, "payment_id")
+		}
+	}
 
 	// send appointment cancel notification to client
 	// TODO change date time format
@@ -171,7 +206,156 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
 			},
 		),
-		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentStart godoc
+// @Tags Counsellor Appointment
+// @Summary Start an appointment
+// @Router /counsellor/appointment/start [put]
+// @Param appointment_id query string true "Appointment ID to be started"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor type
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	if !strings.EqualFold(counsellorType, CONSTANT.CounsellorType) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status": CONSTANT.AppointmentStarted,
+		},
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentEnd godoc
+// @Tags Counsellor Appointment
+// @Summary End an appointment
+// @Router /counsellor/appointment/end [put]
+// @Param appointment_id query string true "Appointment ID to be ended"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor type
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	if !strings.EqualFold(counsellorType, CONSTANT.CounsellorType) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status": CONSTANT.AppointmentCompleted,
+		},
+	)
+
+	// add to counsellor payments
+	// get invoice details
+	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(invoice) > 0 {
+		// get order details
+		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+		amountAfterDiscount := actualAmount - discount
+		if amountAfterDiscount > 0 { // add only if amount paid
+			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+			payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
+
+			amountToBePaid := (amountAfterDiscount / slotsBought) * payoutPercentage / 100 // for 1 counselling session
+
+			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+				"counsellor_id": appointment[0]["counsellor_id"],
+				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"description":   "Consultation",
+				"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
+				"status":        CONSTANT.PaymentActive,
+				"created_at":    UTIL.GetCurrentTime().String(),
+			}, "payment_id")
+		}
+	}
+
+	// send appointment ended notification and rating to client
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentFeedbackHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentFeedbackContent,
+			map[string]string{
+				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

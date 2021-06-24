@@ -15,6 +15,7 @@ import (
 // @Summary Get listener details
 // @Router /client/listener [get]
 // @Param listener_id query string true "Listener ID to get details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListenerProfile(w http.ResponseWriter, r *http.Request) {
@@ -75,6 +76,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 // @Summary Get listener slots
 // @Router /client/listener/slots [get]
 // @Param listener_id query string true "Listener ID to get slot details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListenerSlots(w http.ResponseWriter, r *http.Request) {
@@ -187,6 +189,7 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Summary Call after payment is completed for listener order
 // @Router /client/listener/paymentcomplete [post]
 // @Param body body model.ListenerOrderPaymentCompleteRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
@@ -282,21 +285,23 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 				"###counsellor_name###": listenerName,
 			},
 		),
-		UTIL.GetNotificationID(order[0]["client_id"], CONSTANT.ClientType),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	// send appointment booking notification to listener
 	// TODO change date time format
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleListenerHeading,
+		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleListenerContent,
+			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
 				"###date_time###":   order[0]["date"] + " & " + order[0]["time"],
 				"###client_name###": clientName,
 			},
 		),
-		UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.ListenerType),
+		order[0]["counsellor_id"],
+		CONSTANT.ListenerType,
 	)
 
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

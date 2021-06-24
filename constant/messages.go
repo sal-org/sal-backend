@@ -5,6 +5,7 @@ const (
 	ClientAccountDeletedMessage            = "Account blocked or deleted. Please contact our support team"
 	AppointmentNotExistMessage             = "Appointment doesn't exist"
 	AppointmentAlreadyStartedMessage       = "Appointment already started"
+	AppointmentDidntStartedMessage         = "Appointment didn't started"
 	AppointmentCantRescheduleMessage       = "Appointment cannot be rescheduled"
 	AppointmentCantCancelMessage           = "Appointment cannot be cancelled. You can reschedule."
 	ClientNotExistMessage                  = "Client doesn't exist"

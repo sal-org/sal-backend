@@ -270,52 +270,24 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 				"###counsellor_name###": counsellorName,
 			},
 		),
-		UTIL.GetNotificationID(appointmentSlot[0]["client_id"], CONSTANT.ClientType),
+		appointmentSlot[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	// send appointment booking notification to counsellor
 	// TODO change date time format
-	switch counsellorType {
-	case CONSTANT.CounsellorType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentScheduleCounsellorHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentScheduleCounsellorContent,
-				map[string]string{
-					"###date_time###":   body["date"] + " & " + body["time"],
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointmentSlot[0]["counsellor_id"], counsellorType),
-		)
-		break
-	case CONSTANT.ListenerType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentScheduleListenerHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentScheduleListenerContent,
-				map[string]string{
-					"###date_time###":   body["date"] + " & " + body["time"],
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointmentSlot[0]["counsellor_id"], counsellorType),
-		)
-		break
-	case CONSTANT.TherapistType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentScheduleTherapistHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentScheduleTherapistContent,
-				map[string]string{
-					"###date_time###":   body["date"] + " & " + body["time"],
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointmentSlot[0]["counsellor_id"], counsellorType),
-		)
-		break
-	}
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleCounsellorContent,
+			map[string]string{
+				"###date_time###":   body["date"] + " & " + body["time"],
+				"###client_name###": clientName,
+			},
+		),
+		appointmentSlot[0]["counsellor_id"],
+		counsellorType,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -442,7 +414,6 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
 		break
 	}
-	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"])
 
 	// send appointment reschedule notification to client
 	// TODO change date time format
@@ -455,49 +426,21 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 				"###counsellor_name###": counsellorName,
 			},
 		),
-		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	// send appointment reschedule notification to counsellor
 	// TODO change date time format
-	switch counsellorType {
-	case CONSTANT.CounsellorType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentRescheduleCounsellorContent,
-				map[string]string{
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
-		)
-		break
-	case CONSTANT.ListenerType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentRescheduleListenerHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentRescheduleListenerContent,
-				map[string]string{
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
-		)
-		break
-	case CONSTANT.TherapistType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentRescheduleTherapistHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentRescheduleTherapistContent,
-				map[string]string{
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
-		)
-		break
-	}
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleCounsellorContent,
+			map[string]string{},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -637,52 +580,24 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 				"###client_name###":     clientName,
 			},
 		),
-		UTIL.GetNotificationID(appointment[0]["client_id"], CONSTANT.ClientType),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	// send appointment cancel notification to counsellor
 	// TODO change date time format
-	switch counsellorType {
-	case CONSTANT.CounsellorType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentCancelCounsellorHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentCancelCounsellorContent,
-				map[string]string{
-					"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
-		)
-		break
-	case CONSTANT.ListenerType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentCancelListenerHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentCancelListenerContent,
-				map[string]string{
-					"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
-		)
-		break
-	case CONSTANT.TherapistType:
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentCancelTherapistHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentCancelTherapistContent,
-				map[string]string{
-					"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
-					"###client_name###": clientName,
-				},
-			),
-			UTIL.GetNotificationID(appointment[0]["counsellor_id"], counsellorType),
-		)
-		break
-	}
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentCancelCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancelCounsellorContent,
+			map[string]string{
+				"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
+				"###client_name###": clientName,
+			},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -692,6 +607,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 // @Summary Rate the appointment
 // @Router /client/appointment/rate [post]
 // @Param body body model.AppointmentRatingAdd true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
@@ -713,14 +629,14 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if client exista
+	// check if client exists
 	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// update rating to appointment
-	status, ok := DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body["appointment_id"], "client_id": body["client_id"], "counsellor_id": body["counsellor_id"]}, map[string]string{"rating": body["rating"], "modified_at": UTIL.GetCurrentTime().String()})
+	status, ok := DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body["appointment_id"], "client_id": body["client_id"], "counsellor_id": body["counsellor_id"]}, map[string]string{"rating": body["rating"], "rating_types": body["rating_types"], "rating_comment": body["rating_comment"], "modified_at": UTIL.GetCurrentTime().String()})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

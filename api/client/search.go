@@ -24,6 +24,7 @@ import (
 // @Param sort_by query string false "Sort by - 1(price), 2(rating)"
 // @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
 // @Param page query string false "Page number"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListSearch(w http.ResponseWriter, r *http.Request) {

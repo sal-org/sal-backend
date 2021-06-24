@@ -16,6 +16,7 @@ import (
 // @Summary Get upcoming and past counsellor events
 // @Router /counsellor/events [get]
 // @Param counsellor_id query string true "Logged in counsellor ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventsList(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +47,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 // @Summary Book a slot in an event
 // @Router /counsellor/event/order [post]
 // @Param body body model.CounsellorEventOrderCreateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +125,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Summary Call after payment is completed for event order
 // @Router /counsellor/event/paymentcomplete [post]
 // @Param body body model.CounsellorEventOrderPaymentCompleteRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {

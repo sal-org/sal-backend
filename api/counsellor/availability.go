@@ -15,6 +15,7 @@ import (
 // @Summary Get counsellor availability hours
 // @Router /counsellor/availability [get]
 // @Param counsellor_id query string true "Counsellor ID to get availability details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +39,7 @@ func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
 // @Summary Update counsellor availability hours
 // @Router /counsellor/availability [put]
 // @Param counsellor_id query string true "Counsellor ID to update availability details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {

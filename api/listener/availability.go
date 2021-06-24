@@ -15,6 +15,7 @@ import (
 // @Summary Get listener availability hours
 // @Router /listener/availability [get]
 // @Param listener_id query string true "Listener ID to get availability details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +39,7 @@ func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
 // @Summary Update listener availability hours
 // @Router /listener/availability [put]
 // @Param listener_id query string true "Listener ID to update availability details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {

@@ -19,12 +19,40 @@ definitions:
         type: string
       rating:
         type: string
+      rating_comment:
+        type: string
+      rating_types:
+        type: string
     type: object
   model.AppointmentRescheduleRequest:
     properties:
       date:
         type: string
       time:
+        type: string
+    type: object
+  model.AssessmentAddRequest:
+    properties:
+      age:
+        type: string
+      assessment_id:
+        type: string
+      details:
+        items:
+          properties:
+            assessment_question_id:
+              type: string
+            assessment_question_option_id:
+              type: string
+            score:
+              type: string
+          type: object
+        type: array
+      gender:
+        type: string
+      name:
+        type: string
+      person_id:
         type: string
     type: object
   model.ClientEventOrderCreateRequest:
@@ -575,6 +603,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Rate the appointment
       tags:
       - Client Appointment
@@ -614,6 +644,54 @@ paths:
       summary: Get client upcoming appointments
       tags:
       - Client Appointment
+  /client/assessment:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment detail
+      tags:
+      - Client Assessment
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AssessmentAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Add client assessment
+      tags:
+      - Client Assessment
+  /client/assessments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List available assessments
+      tags:
+      - Client Assessment
   /client/content:
     get:
       parameters:
@@ -692,6 +770,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Like content
       tags:
       - Client Content
@@ -708,6 +788,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor details
       tags:
       - Client Counsellor
@@ -744,6 +826,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Call after payment is completed for counsellor order
       tags:
       - Client Counsellor
@@ -760,6 +844,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor slots
       tags:
       - Client Counsellor
@@ -776,6 +862,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get event details
       tags:
       - Client Event
@@ -830,6 +918,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Call after payment is completed for event order
       tags:
       - Client Event
@@ -840,6 +930,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: List available events
       tags:
       - Client Event
@@ -873,6 +965,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get listener details
       tags:
       - Client Listener
@@ -909,6 +1003,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Call after payment is completed for listener order
       tags:
       - Client Listener
@@ -925,9 +1021,33 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get listener slots
       tags:
       - Client Listener
+  /client/notification:
+    get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get notifications for client
+      tags:
+      - Client Notifications
   /client/refresh-token:
     get:
       parameters:
@@ -993,6 +1113,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor/listener/therapist list with search filters
       tags:
       - Client Search
@@ -1025,6 +1147,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get therapist details
       tags:
       - Client Therapist
@@ -1061,6 +1185,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Call after payment is completed for therapist order
       tags:
       - Client Therapist
@@ -1077,6 +1203,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get therapist slots
       tags:
       - Client Therapist
@@ -1109,6 +1237,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get all available content categories
       tags:
       - Miscellaneous
@@ -1162,6 +1292,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update counsellor profile details
       tags:
       - Counsellor Profile
@@ -1183,6 +1315,24 @@ paths:
       summary: Cancel an appointment
       tags:
       - Counsellor Appointment
+  /counsellor/appointment/end:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: End an appointment
+      tags:
+      - Counsellor Appointment
   /counsellor/appointment/past:
     get:
       parameters:
@@ -1196,7 +1346,27 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor past appointments
+      tags:
+      - Counsellor Appointment
+  /counsellor/appointment/start:
+    put:
+      parameters:
+      - description: Appointment ID to be started
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start an appointment
       tags:
       - Counsellor Appointment
   /counsellor/appointment/upcoming:
@@ -1212,9 +1382,59 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor upcoming appointments
       tags:
       - Counsellor Appointment
+  /counsellor/assessment:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment detail
+      tags:
+      - Counsellor Assessment
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AssessmentAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Add counsellor assessment
+      tags:
+      - Counsellor Assessment
+  /counsellor/assessments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List available assessments
+      tags:
+      - Counsellor Assessment
   /counsellor/availability:
     get:
       parameters:
@@ -1228,6 +1448,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor availability hours
       tags:
       - Counsellor Availability
@@ -1243,6 +1465,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update counsellor availability hours
       tags:
       - Counsellor Availability
@@ -1260,6 +1484,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Book a slot in an event
       tags:
       - Counsellor Event
@@ -1277,6 +1503,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Call after payment is completed for event order
       tags:
       - Counsellor Event
@@ -1293,6 +1521,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get upcoming and past counsellor events
       tags:
       - Counsellor Event
@@ -1313,6 +1543,50 @@ paths:
       summary: Get home page content
       tags:
       - Counsellor Home
+  /counsellor/notification:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get notifications for counsellor
+      tags:
+      - Counsellor Notifications
+  /counsellor/payment:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get payments for counsellor
+      tags:
+      - Counsellor Payments
   /counsellor/refresh-token:
     get:
       parameters:
@@ -1326,6 +1600,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get new access token with refresh token
       tags:
       - Counsellor Login
@@ -1391,6 +1667,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get all available language
       tags:
       - Miscellaneous
@@ -1444,6 +1722,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update listener profile details
       tags:
       - Listener Profile
@@ -1465,6 +1745,24 @@ paths:
       summary: Cancel an appointment
       tags:
       - Listener Appointment
+  /listener/appointment/end:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: End an appointment
+      tags:
+      - Listener Appointment
   /listener/appointment/past:
     get:
       parameters:
@@ -1478,7 +1776,27 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get listener past appointments
+      tags:
+      - Listener Appointment
+  /listener/appointment/start:
+    put:
+      parameters:
+      - description: Appointment ID to be started
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start an appointment
       tags:
       - Listener Appointment
   /listener/appointment/upcoming:
@@ -1494,9 +1812,59 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get listener upcoming appointments
       tags:
       - Listener Appointment
+  /listener/assessment:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment detail
+      tags:
+      - Listener Assessment
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AssessmentAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Add listener assessment
+      tags:
+      - Listener Assessment
+  /listener/assessments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List available assessments
+      tags:
+      - Listener Assessment
   /listener/availability:
     get:
       parameters:
@@ -1510,6 +1878,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get listener availability hours
       tags:
       - Listener Availability
@@ -1525,6 +1895,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update listener availability hours
       tags:
       - Listener Availability
@@ -1545,6 +1917,28 @@ paths:
       summary: Get home page content
       tags:
       - Listener Home
+  /listener/notification:
+    get:
+      parameters:
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get notifications for listener
+      tags:
+      - Listener Notifications
   /listener/refresh-token:
     get:
       parameters:
@@ -1558,6 +1952,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get new access token with refresh token
       tags:
       - Listener Login
@@ -1623,7 +2019,21 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get all available topics, languages
+      tags:
+      - Miscellaneous
+  /rating-type:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get ratings types
       tags:
       - Miscellaneous
   /therapist:
@@ -1676,6 +2086,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update therapist profile details
       tags:
       - Therapist Profile
@@ -1697,6 +2109,24 @@ paths:
       summary: Cancel an appointment
       tags:
       - Therapist Appointment
+  /therapist/appointment/end:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: End an appointment
+      tags:
+      - Therapist Appointment
   /therapist/appointment/past:
     get:
       parameters:
@@ -1710,7 +2140,27 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get therapist past appointments
+      tags:
+      - Therapist Appointment
+  /therapist/appointment/start:
+    put:
+      parameters:
+      - description: Appointment ID to be started
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start an appointment
       tags:
       - Therapist Appointment
   /therapist/appointment/upcoming:
@@ -1726,9 +2176,59 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get therapist upcoming appointments
       tags:
       - Therapist Appointment
+  /therapist/assessment:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment detail
+      tags:
+      - Therapist Assessment
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AssessmentAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Add therapist assessment
+      tags:
+      - Therapist Assessment
+  /therapist/assessments:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List available assessments
+      tags:
+      - Therapist Assessment
   /therapist/availability:
     get:
       parameters:
@@ -1742,6 +2242,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get therapist availability hours
       tags:
       - Therapist Availability
@@ -1757,6 +2259,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Update therapist availability hours
       tags:
       - Therapist Availability
@@ -1774,6 +2278,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Book a slot in an event
       tags:
       - Therapist Event
@@ -1791,6 +2297,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Call after payment is completed for event order
       tags:
       - Therapist Event
@@ -1807,6 +2315,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get upcoming and past therapist events
       tags:
       - Therapist Event
@@ -1827,6 +2337,50 @@ paths:
       summary: Get home page content
       tags:
       - Therapist Home
+  /therapist/notification:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get notifications for therapist
+      tags:
+      - Therapist Notifications
+  /therapist/payment:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get payments for counsellor
+      tags:
+      - Therapist Payments
   /therapist/refresh-token:
     get:
       parameters:
@@ -1840,6 +2394,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get new access token with refresh token
       tags:
       - Therapist Login
@@ -1905,6 +2461,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get all available topics
       tags:
       - Miscellaneous
@@ -1928,6 +2486,8 @@ paths:
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Upload files like photos, certificates, aadhar etc
       tags:
       - Miscellaneous

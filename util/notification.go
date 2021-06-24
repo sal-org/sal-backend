@@ -14,10 +14,24 @@ import (
 )
 
 // SendNotification - send notification using onesignal
-func SendNotification(heading string, content string, notificationID string) {
+func SendNotification(heading, content, personID, personType string) {
+
+	// add data to notifications
+	notification := map[string]string{}
+	notification["person_id"] = personID
+	notification["title"] = heading
+	notification["body"] = content
+	notification["status"] = CONSTANT.NotificationActive
+	notification["created_at"] = GetCurrentTime().String()
+	DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, notification, "notification_id")
+
+	// get notification id by person type
+	notificationID := GetNotificationID(personID, personType)
 	if len(notificationID) == 0 || strings.Contains(content, "###") { // check if notification id is available and notification variables are replaced
 		return
 	}
+
+	// sent to onesignal
 	data := MODEL.OneSignalNotificationData{
 		AppID:            CONFIG.OneSignalAppID,
 		Headings:         map[string]string{"en": heading},

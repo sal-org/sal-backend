@@ -268,6 +268,11 @@ var doc = `{
         },
         "/client/appointment/rate": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -353,6 +358,87 @@ var doc = `{
                 }
             }
         },
+        "/client/assessment": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Assessment"
+                ],
+                "summary": "Get assessment detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Assessment"
+                ],
+                "summary": "Add client assessment",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AssessmentAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/assessments": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Assessment"
+                ],
+                "summary": "List available assessments",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/content": {
             "get": {
                 "security": [
@@ -418,6 +504,11 @@ var doc = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -485,6 +576,11 @@ var doc = `{
         },
         "/client/counsellor": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -542,6 +638,11 @@ var doc = `{
         },
         "/client/counsellor/paymentcomplete": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -569,6 +670,11 @@ var doc = `{
         },
         "/client/counsellor/slots": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -594,6 +700,11 @@ var doc = `{
         },
         "/client/event": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -681,6 +792,11 @@ var doc = `{
         },
         "/client/event/paymentcomplete": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -708,6 +824,11 @@ var doc = `{
         },
         "/client/events": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -753,6 +874,11 @@ var doc = `{
         },
         "/client/listener": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -810,6 +936,11 @@ var doc = `{
         },
         "/client/listener/paymentcomplete": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -837,6 +968,11 @@ var doc = `{
         },
         "/client/listener/slots": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -851,6 +987,42 @@ var doc = `{
                         "name": "listener_id",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/notification": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Notifications"
+                ],
+                "summary": "Get notifications for client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -892,6 +1064,11 @@ var doc = `{
         },
         "/client/search": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -989,6 +1166,11 @@ var doc = `{
         },
         "/client/therapist": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1046,6 +1228,11 @@ var doc = `{
         },
         "/client/therapist/paymentcomplete": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1073,6 +1260,11 @@ var doc = `{
         },
         "/client/therapist/slots": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1130,6 +1322,11 @@ var doc = `{
         },
         "/content-category": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1169,6 +1366,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1256,8 +1458,43 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/appointment/end": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "End an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/appointment/past": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1281,8 +1518,43 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/appointment/start": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "Start an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be started",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/appointment/upcoming": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1306,8 +1578,94 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/assessment": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Assessment"
+                ],
+                "summary": "Get assessment detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Assessment"
+                ],
+                "summary": "Add counsellor assessment",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AssessmentAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/assessments": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Assessment"
+                ],
+                "summary": "List available assessments",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/availability": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1331,6 +1689,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1356,6 +1719,11 @@ var doc = `{
         },
         "/counsellor/event/order": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1383,6 +1751,11 @@ var doc = `{
         },
         "/counsellor/event/paymentcomplete": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1410,6 +1783,11 @@ var doc = `{
         },
         "/counsellor/events": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1462,8 +1840,85 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/notification": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Notifications"
+                ],
+                "summary": "Get notifications for counsellor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/payment": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Payments"
+                ],
+                "summary": "Get payments for counsellor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/refresh-token": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1575,6 +2030,11 @@ var doc = `{
         },
         "/language": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1614,6 +2074,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1701,8 +2166,43 @@ var doc = `{
                 }
             }
         },
+        "/listener/appointment/end": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Appointment"
+                ],
+                "summary": "End an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/appointment/past": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1726,8 +2226,43 @@ var doc = `{
                 }
             }
         },
+        "/listener/appointment/start": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Appointment"
+                ],
+                "summary": "Start an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be started",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/appointment/upcoming": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1751,8 +2286,94 @@ var doc = `{
                 }
             }
         },
+        "/listener/assessment": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Assessment"
+                ],
+                "summary": "Get assessment detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Assessment"
+                ],
+                "summary": "Add listener assessment",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AssessmentAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/assessments": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Assessment"
+                ],
+                "summary": "List available assessments",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/availability": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1776,6 +2397,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1828,8 +2454,49 @@ var doc = `{
                 }
             }
         },
+        "/listener/notification": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Notifications"
+                ],
+                "summary": "Get notifications for listener",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/refresh-token": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1941,6 +2608,11 @@ var doc = `{
         },
         "/meta": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1948,6 +2620,27 @@ var doc = `{
                     "Miscellaneous"
                 ],
                 "summary": "Get all available topics, languages",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/rating-type": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get ratings types",
                 "responses": {
                     "200": {
                         "description": ""
@@ -1980,6 +2673,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2067,8 +2765,43 @@ var doc = `{
                 }
             }
         },
+        "/therapist/appointment/end": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Appointment"
+                ],
+                "summary": "End an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/therapist/appointment/past": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2092,8 +2825,43 @@ var doc = `{
                 }
             }
         },
+        "/therapist/appointment/start": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Appointment"
+                ],
+                "summary": "Start an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be started",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/therapist/appointment/upcoming": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2117,8 +2885,94 @@ var doc = `{
                 }
             }
         },
+        "/therapist/assessment": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Assessment"
+                ],
+                "summary": "Get assessment detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Assessment"
+                ],
+                "summary": "Add therapist assessment",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AssessmentAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/assessments": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Assessment"
+                ],
+                "summary": "List available assessments",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/therapist/availability": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2142,6 +2996,11 @@ var doc = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2167,6 +3026,11 @@ var doc = `{
         },
         "/therapist/event/order": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2194,6 +3058,11 @@ var doc = `{
         },
         "/therapist/event/paymentcomplete": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2221,6 +3090,11 @@ var doc = `{
         },
         "/therapist/events": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2273,8 +3147,85 @@ var doc = `{
                 }
             }
         },
+        "/therapist/notification": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Notifications"
+                ],
+                "summary": "Get notifications for therapist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/payment": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Payments"
+                ],
+                "summary": "Get payments for counsellor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/therapist/refresh-token": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2386,6 +3337,11 @@ var doc = `{
         },
         "/topic": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2402,6 +3358,11 @@ var doc = `{
         },
         "/upload": {
             "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -2465,6 +3426,12 @@ var doc = `{
                 },
                 "rating": {
                     "type": "string"
+                },
+                "rating_comment": {
+                    "type": "string"
+                },
+                "rating_types": {
+                    "type": "string"
                 }
             }
         },
@@ -2475,6 +3442,43 @@ var doc = `{
                     "type": "string"
                 },
                 "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.AssessmentAddRequest": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "string"
+                },
+                "assessment_id": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "assessment_question_id": {
+                                "type": "string"
+                            },
+                            "assessment_question_option_id": {
+                                "type": "string"
+                            },
+                            "score": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "person_id": {
                     "type": "string"
                 }
             }

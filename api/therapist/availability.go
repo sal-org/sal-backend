@@ -15,6 +15,7 @@ import (
 // @Summary Get therapist availability hours
 // @Router /therapist/availability [get]
 // @Param therapist_id query string true "Therapist ID to get availability details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +39,7 @@ func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
 // @Summary Update therapist availability hours
 // @Router /therapist/availability [put]
 // @Param therapist_id query string true "Therapist ID to update availability details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {

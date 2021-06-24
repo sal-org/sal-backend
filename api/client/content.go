@@ -117,6 +117,7 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 // @Router /client/content/like [post]
 // @Param client_id query string true "Logged in client ID"
 // @Param content_id query string true "Content ID to be liked"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ContentLikeAdd(w http.ResponseWriter, r *http.Request) {

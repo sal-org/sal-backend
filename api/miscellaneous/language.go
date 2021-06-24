@@ -12,6 +12,7 @@ import (
 // @Tags Miscellaneous
 // @Summary Get all available language
 // @Router /language [get]
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListLanguage(w http.ResponseWriter, r *http.Request) {

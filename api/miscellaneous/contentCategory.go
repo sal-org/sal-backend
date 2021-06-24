@@ -12,6 +12,7 @@ import (
 // @Tags Miscellaneous
 // @Summary Get all available content categories
 // @Router /content-category [get]
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ListContentCategory(w http.ResponseWriter, r *http.Request) {

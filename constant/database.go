@@ -2,28 +2,37 @@ package constant
 
 // database tables
 const (
-	AppointmentsTable           = "appointments"
-	AppointmentSlotsTable       = "appointment_slots"
-	ClientsTable                = "clients"
-	ContentsTable               = "contents"
-	ContentCategoriesTable      = "content_categories"
-	ContentLikesTable           = "content_likes"
-	CouponsTable                = "coupons"
-	CounsellorsTable            = "counsellors"
-	CounsellorLanguagesTable    = "counsellor_languages"
-	CounsellorTopicsTable       = "counsellor_topics"
-	InvoicesTable               = "invoices"
-	LanguagesTable              = "languages"
-	ListenersTable              = "listeners"
-	OrderClientAppointmentTable = "order_client_appointments"
-	OrderClientEventTable       = "order_client_events"
-	OrderCounsellorEventTable   = "order_counsellor_events"
-	PhoneOTPVerifiedTable       = "phone_otp_verified"
-	RefundsTable                = "refunds"
-	SchedulesTable              = "schedules"
-	SlotsTable                  = "slots"
-	TherapistsTable             = "therapists"
-	TopicsTable                 = "topics"
+	AppointmentsTable              = "appointments"
+	AppointmentSlotsTable          = "appointment_slots"
+	AssessmentsTable               = "assessments"
+	AssessmentQuestionsTable       = "assessment_questions"
+	AssessmentQuestionOptionsTable = "assessment_question_options"
+	AssessmentScoresTable          = "assessment_scores"
+	AssessmentResultsTable         = "assessment_results"
+	AssessmentResultDetailsTable   = "assessment_result_details"
+	ClientsTable                   = "clients"
+	ContentsTable                  = "contents"
+	ContentCategoriesTable         = "content_categories"
+	ContentLikesTable              = "content_likes"
+	CouponsTable                   = "coupons"
+	CounsellorsTable               = "counsellors"
+	CounsellorLanguagesTable       = "counsellor_languages"
+	CounsellorTopicsTable          = "counsellor_topics"
+	InvoicesTable                  = "invoices"
+	LanguagesTable                 = "languages"
+	ListenersTable                 = "listeners"
+	NotificationsTable             = "notifications"
+	OrderClientAppointmentTable    = "order_client_appointments"
+	OrderClientEventTable          = "order_client_events"
+	OrderCounsellorEventTable      = "order_counsellor_events"
+	PaymentsTable                  = "payments"
+	PhoneOTPVerifiedTable          = "phone_otp_verified"
+	RatingTypesTable               = "rating_types"
+	RefundsTable                   = "refunds"
+	SchedulesTable                 = "schedules"
+	SlotsTable                     = "slots"
+	TherapistsTable                = "therapists"
+	TopicsTable                    = "topics"
 )
 
 // NumberOfTimesUniqueInserts - number of times insert statement should get executed for unqiue id
@@ -34,15 +43,19 @@ const RandomIDDigits = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 // length of unqiue digits to be generated for each table
 const (
-	AppointmentDigits     = 12
-	AppointmentSlotDigits = 11
-	ClientDigits          = 13
-	ContentDigits         = 10
-	CounsellorDigits      = 6
-	ListenerDigits        = 9
-	EventDigits           = 7
-	InvoiceDigits         = 8
-	OrderDigits           = 10
-	RefundDigits          = 9
-	TherapistDigits       = 5
+	AppointmentDigits       = 12
+	AppointmentSlotDigits   = 11
+	AssessmentResultsDigits = 16
+	ClientDigits            = 13
+	ContentDigits           = 10
+	CounsellorDigits        = 6
+	ListenerDigits          = 9
+	NotificationsDigits     = 15
+	EventDigits             = 7
+	InvoiceDigits           = 8
+	PaymentsDigits          = 10
+	OrderDigits             = 10
+	PaymentDigits           = 10
+	RefundDigits            = 9
+	TherapistDigits         = 5
 )

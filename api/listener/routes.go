@@ -24,6 +24,19 @@ func LoadListenerRoutes(router *mux.Router) {
 	listenerRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+	listenerRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+	listenerRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
+	// assessment
+	listenerRoutes.HandleFunc("/assessments", AssessmentsList).Methods("GET")
+	listenerRoutes.HandleFunc("/assessment", AssessmentDetail).Queries(
+		"assessment_id", "{assessment_id}",
+	).Methods("GET")
+	listenerRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
 
 	// home
 	listenerRoutes.HandleFunc("/home", Home).Methods("GET")
@@ -39,6 +52,11 @@ func LoadListenerRoutes(router *mux.Router) {
 	listenerRoutes.Path("/refresh-token").Queries(
 		"listener_id", "{listener_id}",
 	).HandlerFunc(RefreshToken).Methods("GET")
+
+	// notification
+	listenerRoutes.HandleFunc("/notification", NotificationsGet).Queries(
+		"listener_id", "{listener_id}",
+	).Methods("GET")
 
 	// profile
 	listenerRoutes.HandleFunc("", ProfileGet).Queries(

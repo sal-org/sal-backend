@@ -17,6 +17,7 @@ import (
 // @Param file formData file true "File to be uploaded"
 // @Param type formData string true "1(counsellor)/2(listener)/3(client)/4(therapist)"
 // @Accept multipart/form-data
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func UploadFile(w http.ResponseWriter, r *http.Request) {

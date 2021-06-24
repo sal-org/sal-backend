@@ -16,6 +16,9 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// meta
 	router.HandleFunc("/meta", ListMeta).Methods("GET")
 
+	// rating types
+	router.HandleFunc("/rating-type", ListRatingType).Methods("GET")
+
 	// upload
 	router.HandleFunc("/upload", UploadFile).Methods("POST")
 

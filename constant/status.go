@@ -70,6 +70,19 @@ const (
 	TherapistBlocked     = "3"
 )
 
+// payment status
+const (
+	PaymentValid   = "1"
+	PaymentInvalid = "2"
+)
+
+// notification status
+const (
+	NotificationActive  = "1"
+	NotificationRead    = "2"
+	NotificationDeleted = "2"
+)
+
 // order status
 const (
 	OrderWaiting    = "0"
@@ -123,4 +136,34 @@ const (
 	EventToBeStarted = "1"
 	EventStarted     = "2"
 	EventCompleted   = "3"
+)
+
+// assessment status
+const (
+	AssessmentInactive = "0"
+	AssessmentActive   = "1"
+)
+
+// assessment question status
+const (
+	AssessmentQuestionInactive = "0"
+	AssessmentQuestionActive   = "1"
+)
+
+// assessment question option status
+const (
+	AssessmentQuestionOptionInactive = "0"
+	AssessmentQuestionOptionActive   = "1"
+)
+
+// assessment result status
+const (
+	AssessmentResultInactive = "0"
+	AssessmentResultActive   = "1"
+)
+
+// payment  status
+const (
+	PaymentActive        = "1"
+	PaymentActiveDeleted = "2"
 )

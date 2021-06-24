@@ -148,7 +148,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["counsellor_id"] = counsellorID
 
 	// send account signup notification to counsellor
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, body["device_id"])
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -159,6 +159,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 // @Router /counsellor [put]
 // @Param counsellor_id query string true "Counsellor ID to update details"
 // @Param body body model.CounsellorProfileUpdateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ProfileUpdate(w http.ResponseWriter, r *http.Request) {

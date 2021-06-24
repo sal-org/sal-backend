@@ -116,6 +116,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 // @Summary Get new access token with refresh token
 // @Router /counsellor/refresh-token [get]
 // @Param counsellor_id query string true "Logged in counsellor ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func RefreshToken(w http.ResponseWriter, r *http.Request) {

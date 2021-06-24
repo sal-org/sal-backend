@@ -16,6 +16,7 @@ import (
 // @Summary Get upcoming and past therapist events
 // @Router /therapist/events [get]
 // @Param therapist_id query string true "Logged in therapist ID"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventsList(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +47,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 // @Summary Book a slot in an event
 // @Router /therapist/event/order [post]
 // @Param body body model.TherapistEventOrderCreateRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +125,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Summary Call after payment is completed for event order
 // @Router /therapist/event/paymentcomplete [post]
 // @Param body body model.TherapistEventOrderPaymentCompleteRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {

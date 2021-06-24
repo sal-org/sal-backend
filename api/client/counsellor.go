@@ -17,6 +17,7 @@ import (
 // @Summary Get counsellor details
 // @Router /client/counsellor [get]
 // @Param counsellor_id query string true "Counsellor ID to get details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +78,7 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 // @Summary Get counsellor slots
 // @Router /client/counsellor/slots [get]
 // @Param counsellor_id query string true "Counsellor ID to get slot details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
@@ -261,6 +263,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Summary Call after payment is completed for counsellor order
 // @Router /client/counsellor/paymentcomplete [post]
 // @Param body body model.CounsellorOrderPaymentCompleteRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
@@ -406,7 +409,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 				"###counsellor_name###": counsellorName,
 			},
 		),
-		UTIL.GetNotificationID(order[0]["client_id"], CONSTANT.ClientType),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	// send payment success notification to client
@@ -419,7 +423,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 				"###client_name###": clientName,
 			},
 		),
-		UTIL.GetNotificationID(order[0]["client_id"], CONSTANT.ClientType),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	// send appointment booking notification to counsellor
@@ -433,7 +438,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 				"###client_name###": clientName,
 			},
 		),
-		UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.CounsellorType),
+		order[0]["counsellor_id"],
+		CONSTANT.CounsellorType,
 	)
 
 	// send payment received notification to counsellor
@@ -448,7 +454,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 					"###client_name###": clientName,
 				},
 			),
-			UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.CounsellorType),
+			order[0]["counsellor_id"],
+			CONSTANT.CounsellorType,
 		)
 		break
 	case "3":
@@ -461,7 +468,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 					"###client_name###": clientName,
 				},
 			),
-			UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.CounsellorType),
+			order[0]["counsellor_id"],
+			CONSTANT.CounsellorType,
 		)
 		break
 	case "5":
@@ -474,7 +482,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 					"###client_name###": clientName,
 				},
 			),
-			UTIL.GetNotificationID(order[0]["counsellor_id"], CONSTANT.CounsellorType),
+			order[0]["counsellor_id"],
+			CONSTANT.CounsellorType,
 		)
 		break
 	}

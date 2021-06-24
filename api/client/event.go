@@ -16,6 +16,7 @@ import (
 // @Tags Client Event
 // @Summary List available events
 // @Router /client/events [get]
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventsList(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +39,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 // @Summary Get event details
 // @Router /client/event [get]
 // @Param order_id query string true "Event order ID to get details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventDetail(w http.ResponseWriter, r *http.Request) {
@@ -255,6 +257,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Summary Call after payment is completed for event order
 // @Router /client/event/paymentcomplete [post]
 // @Param body body model.ClientEventOrderPaymentCompleteRequest true "Request Body"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
