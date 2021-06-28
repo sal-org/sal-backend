@@ -37,6 +37,10 @@ func LoadTherapistRoutes(router *mux.Router) {
 		"assessment_id", "{assessment_id}",
 	).Methods("GET")
 	therapistRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
+	therapistRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
+		"assessment_id", "{assessment_id}",
+		"client_id", "{client_id}",
+	).Methods("GET")
 
 	// event
 	therapistRoutes.HandleFunc("/events", EventsList).Queries(

@@ -268,6 +268,7 @@ type AssessmentAddRequest struct {
 	Name         string `json:"name"`
 	Age          string `json:"age"`
 	Gender       string `json:"gender"`
+	Phone        string `json:"phone"`
 	AssessmentID string `json:"assessment_id"`
 	Details      []struct {
 		AssessmentQuestionID       string `json:"assessment_question_id"`

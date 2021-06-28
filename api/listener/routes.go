@@ -37,6 +37,10 @@ func LoadListenerRoutes(router *mux.Router) {
 		"assessment_id", "{assessment_id}",
 	).Methods("GET")
 	listenerRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
+	listenerRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
+		"assessment_id", "{assessment_id}",
+		"client_id", "{client_id}",
+	).Methods("GET")
 
 	// home
 	listenerRoutes.HandleFunc("/home", Home).Methods("GET")
