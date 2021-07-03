@@ -16,6 +16,9 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// meta
 	router.HandleFunc("/meta", ListMeta).Methods("GET")
 
+	// mood
+	router.HandleFunc("/mood", ListMood).Methods("GET")
+
 	// rating types
 	router.HandleFunc("/rating-type", ListRatingType).Methods("GET")
 

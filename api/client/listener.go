@@ -271,18 +271,17 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// sent notitifications
-	listenerName := DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", order[0]["counsellor_id"])
-	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleClientContent,
 			map[string]string{
-				"###date_time###":       order[0]["date"] + " & " + order[0]["time"],
-				"###counsellor_name###": listenerName,
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###counsellor_name###": listener[0]["first_name"],
 			},
 		),
 		order[0]["client_id"],
@@ -290,14 +289,13 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send appointment booking notification to listener
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###date_time###":   order[0]["date"] + " & " + order[0]["time"],
-				"###client_name###": clientName,
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###client_name###": client[0]["first_name"],
 			},
 		),
 		order[0]["counsellor_id"],

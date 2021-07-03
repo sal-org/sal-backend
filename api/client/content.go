@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -152,7 +151,6 @@ func ContentLikeDelete(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	fmt.Println(r.FormValue("content_id"), r.FormValue("client_id"))
 	status, ok := DB.DeleteSQL(CONSTANT.ContentLikesTable, map[string]string{
 		"content_id": r.FormValue("content_id"),
 		"person_id":  r.FormValue("client_id"),

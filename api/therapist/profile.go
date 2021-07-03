@@ -120,12 +120,14 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["education"] = body["education"]
 	therapist["experience"] = body["experience"]
 	therapist["about"] = body["about"]
+	therapist["timezone"] = body["timezone"]
 	therapist["resume"] = body["resume"]
 	therapist["certificate"] = body["certificate"]
 	therapist["aadhar"] = body["aadhar"]
 	therapist["linkedin"] = body["linkedin"]
 	therapist["device_id"] = body["device_id"]
 	therapist["status"] = CONSTANT.TherapistNotApproved
+	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
 	therapist["created_at"] = UTIL.GetCurrentTime().String()
 	therapistID, status, ok := DB.InsertWithUniqueID(CONSTANT.TherapistsTable, CONSTANT.TherapistDigits, therapist, "therapist_id")
 	if !ok {
@@ -221,6 +223,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["device_id"]) > 0 {
 		therapist["device_id"] = body["device_id"]
 	}
+	if len(body["timezone"]) > 0 {
+		therapist["timezone"] = body["timezone"]
+	}
+	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
 	therapist["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("therapist_id")}, therapist)
 	if !ok {

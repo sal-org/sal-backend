@@ -121,6 +121,7 @@ type ClientProfileAddRequest struct {
 	Age       string `json:"age"`
 	Gender    string `json:"gender"`
 	Location  string `json:"location"`
+	Timezone  string `json:"timezone"`
 	DeviceID  string `json:"device_id"`
 }
 
@@ -138,6 +139,7 @@ type CounsellorProfileAddRequest struct {
 	Education   string `json:"education"`
 	Experience  string `json:"experience"`
 	About       string `json:"about"`
+	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
 	Resume      string `json:"resume"`
@@ -158,6 +160,7 @@ type ListenerProfileAddRequest struct {
 	Occupation  string `json:"occupation"`
 	Experience  string `json:"experience"`
 	About       string `json:"about"`
+	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
 	DeviceID    string `json:"device_id"`
@@ -177,6 +180,7 @@ type TherapistProfileAddRequest struct {
 	Education   string `json:"education"`
 	Experience  string `json:"experience"`
 	About       string `json:"about"`
+	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
 	Resume      string `json:"resume"`
@@ -191,6 +195,7 @@ type ClientProfileUpdateRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Location  string `json:"location"`
+	Timezone  string `json:"timezone"`
 	DeviceID  string `json:"device_id"`
 	Age       string `json:"age"`
 	Gender    string `json:"gender"`
@@ -208,6 +213,7 @@ type CounsellorProfileUpdateRequest struct {
 	Education   string `json:"education"`
 	Experience  string `json:"experience"`
 	About       string `json:"about"`
+	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
 	Resume      string `json:"resume"`
@@ -226,6 +232,7 @@ type ListenerProfileUpdateRequest struct {
 	Occupation  string `json:"occupation"`
 	Experience  string `json:"experience"`
 	About       string `json:"about"`
+	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
 	DeviceID    string `json:"device_id"`
@@ -243,6 +250,7 @@ type TherapistProfileUpdateRequest struct {
 	Education   string `json:"education"`
 	Experience  string `json:"experience"`
 	About       string `json:"about"`
+	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
 	LanguageIDs string `json:"language_ids"`
 	Resume      string `json:"resume"`
@@ -275,4 +283,15 @@ type AssessmentAddRequest struct {
 		AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
 		Score                      string `json:"score"`
 	} `json:"details"`
+}
+
+// MoodAddRequest .
+type MoodAddRequest struct {
+	ClientID string `json:"client_id"`
+	Name     string `json:"name"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Phone    string `json:"phone"`
+	MoodID   string `json:"mood_id"`
+	Date     string `json:"date"`
 }

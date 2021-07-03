@@ -26,6 +26,9 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+	clientRoutes.HandleFunc("/appointment", AppointmentBulkCancel).Queries(
+		"appointment_slot_id", "{appointment_slot_id}",
+	).Methods("DELETE")
 	clientRoutes.HandleFunc("/appointment/rate", AppointmentRatingAdd).Methods("POST")
 
 	// assessment
@@ -98,6 +101,13 @@ func LoadClientRoutes(router *mux.Router) {
 	).Methods("GET")
 	clientRoutes.HandleFunc("/listener/order", ListenerOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/listener/paymentcomplete", ListenerOrderPaymentComplete).Methods("POST")
+
+	// mood
+	clientRoutes.HandleFunc("/mood", MoodAdd).Methods("POST")
+	clientRoutes.HandleFunc("/mood/history", MoodHistory).Queries(
+		"client_id", "{client_id}",
+		"dates", "{dates}",
+	).Methods("GET")
 
 	// notification
 	clientRoutes.HandleFunc("/notification", NotificationsGet).Queries(

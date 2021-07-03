@@ -15,6 +15,7 @@ var (
 	ListenerOrderPaymentCompleteRequiredFields        = []string{"order_id"}
 	ClientProfileAddRequiredFields                    = []string{"first_name", "phone", "email"}
 	CounsellorProfileAddRequiredFields                = []string{"first_name", "phone", "email", "price"}
+	MoodAddRequiredFields                             = []string{"mood_id", "date"}
 	ListenerProfileAddRequiredFields                  = []string{"first_name", "phone", "email"}
 	TherapistOrderCreateRequiredFields                = []string{"client_id", "therapist_id", "date", "time", "no_session"}
 	TherapistEventOrderCreateRequiredFields           = []string{"therapist_id", "title", "description", "topic_id", "date", "time", "duration", "price"}

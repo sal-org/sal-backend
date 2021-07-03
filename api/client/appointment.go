@@ -244,30 +244,29 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 
 	// send notifications
 	// get counsellor name
-	var counsellorName string
+	var counsellor []map[string]string
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", body["appointment_slot_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointmentSlot[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone"}, map[string]string{"counsellor_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointmentSlot[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone"}, map[string]string{"listener_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointmentSlot[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone"}, map[string]string{"therapist_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	}
-	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointmentSlot[0]["client_id"])
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": appointmentSlot[0]["client_id"]})
 
 	// send appointment booking notification to client
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleClientContent,
 			map[string]string{
-				"###date_time###":       body["date"] + " & " + body["time"],
-				"###counsellor_name###": counsellorName,
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###counsellor_name###": counsellor[0]["first_name"],
 			},
 		),
 		appointmentSlot[0]["client_id"],
@@ -275,14 +274,13 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send appointment booking notification to counsellor
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###date_time###":   body["date"] + " & " + body["time"],
-				"###client_name###": clientName,
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###client_name###": client[0]["first_name"],
 			},
 		),
 		appointmentSlot[0]["counsellor_id"],
@@ -342,7 +340,11 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantRescheduleMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// TODO check if before 4 hours
+	// check if appointment is alteast after 4 hours
+	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() < 4 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -401,29 +403,29 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 
 	// send notifications
 	// get counsellor name
-	var counsellorName string
+	var counsellor []map[string]string
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 		break
 	}
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// send appointment reschedule notification to client
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentRescheduleClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRescheduleClientContent,
 			map[string]string{
-				"###date_time###":       body["date"] + " & " + body["time"],
-				"###counsellor_name###": counsellorName,
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###counsellor_name###": counsellor[0]["first_name"],
 			},
 		),
 		appointment[0]["client_id"],
@@ -431,7 +433,6 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send appointment reschedule notification to counsellor
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -480,7 +481,6 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantCancelMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// TODO cancelled before 4 hours
 
 	// update counsellor slots
 	// remove previous slot
@@ -518,66 +518,74 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	// TODO check 4 hours time
 	// refund amount
-	// get invoice details
-	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "refunded_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(invoice) > 0 {
-		// invoice is available => amount is paid, order is not free
-		// get order details
-		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// check if appointment is alteast after 4 hours
+	// if below 4 hours, charges are 100% that means dont refund anything
+	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() < 4 {
+		charges := CONSTANT.ClientAppointmentCancellationCharges
+		// get invoice details
+		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
-		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountAfterDiscount := actualAmount - discount
-		if amountAfterDiscount > 0 { // refund only if amount paid
-			// within end of current month
-			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-			refundedAmount, _ := strconv.ParseFloat(invoice[0]["refunded_amount"], 64)
-			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-			cancellationCharges := (amountAfterDiscount / slotsBought) * CONSTANT.ClientAppointmentCancelChargePercentage
-			refundAmount := (paidAmount / slotsBought) - cancellationCharges
-			if refundAmount+refundedAmount <= paidAmount {
-				// refunded amount will be less than paid amount
-				UTIL.RefundRazorpayPayment(invoice[0]["refunded_amount"], refundAmount)
+		if len(invoice) > 0 {
+			// invoice is available => amount is paid, order is not free
+			// get order details
+			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+			amountAfterDiscount := actualAmount - discount
+			if amountAfterDiscount > 0 { // refund only if amount paid
+				paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+				refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+				cancellationCharges := (amountAfterDiscount / slotsBought) * charges
+				refundAmount := (paidAmount / slotsBought) - cancellationCharges // remove from paid amount only, not from amount after discount, as discussed
+				if refundAmount+refundedAmount <= paidAmount {
+					// refunded amount will be less than paid amount
+					DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+						"invoice_id":      invoice[0]["invoice_id"],
+						"refunded_amount": invoice[0]["refunded_amount"],
+						"status":          CONSTANT.RefundInProgress,
+						"created_at":      UTIL.GetCurrentTime().String(),
+					}, "refund_id")
+				}
 			}
 		}
 	}
 
 	// send notifications
 	// get counsellor name
-	var counsellorName string
+	var counsellor []map[string]string
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 		break
+
 	}
-	clientName := DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"])
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// send appointment cancel notification to client
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentCancelClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       appointment[0]["date"] + " & " + appointment[0]["time"],
-				"###counsellor_name###": counsellorName,
-				"###client_name###":     clientName,
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###counsellor_name###": counsellor[0]["first_name"],
+				"###client_name###":     client[0]["first_name"],
 			},
 		),
 		appointment[0]["client_id"],
@@ -585,18 +593,115 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send appointment cancel notification to counsellor
-	// TODO change date time format
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentCancelCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentCancelCounsellorContent,
 			map[string]string{
-				"###date_time###":   appointment[0]["date"] + " & " + appointment[0]["time"],
-				"###client_name###": clientName,
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###client_name###": client[0]["first_name"],
 			},
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentBulkCancel godoc
+// @Tags Client Appointment
+// @Summary Cancel bulk appointments
+// @Router /client/appointment/bulk [delete]
+// @Param appointment_slot_id query string true "Appointment slot ID to be cancelled"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment slots details
+	appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"appointment_slot_id": r.FormValue("appointment_slot_id"), "status": CONSTANT.AppointmentSlotsActive})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment slots is valid
+	if len(appointmentSlots) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentSlotNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if any slots available
+	slotsRemaining, _ := strconv.Atoi(appointmentSlots[0]["slots_remaining"])
+	if slotsRemaining <= 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// refund amount
+	charges := CONSTANT.ClientAppointmentBulkCancellationCharges
+	// get invoice details
+	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointmentSlots[0]["order_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(invoice) > 0 {
+		// invoice is available => amount is paid, order is not free
+		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+		amountAfterDiscount := actualAmount - discount
+		if amountAfterDiscount > 0 { // refund only if amount paid
+			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+			refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+			slotsBought, _ := strconv.Atoi(appointmentSlots[0]["slots_bought"])
+			slotsRemaining, _ = strconv.Atoi(appointmentSlots[0]["slots_remaining"])
+			cancellationCharges := (amountAfterDiscount / float64(slotsBought)) * charges
+			refundAmount := ((paidAmount / float64(slotsBought)) - cancellationCharges) * float64(slotsRemaining) // remove from paid amount only, not from amount after discount, as discussed
+			if refundAmount+refundedAmount <= paidAmount {
+				// refunded amount will be less than paid amount
+				DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+					"invoice_id":      invoice[0]["invoice_id"],
+					"refunded_amount": invoice[0]["refunded_amount"],
+					"status":          CONSTANT.RefundInProgress,
+					"created_at":      UTIL.GetCurrentTime().String(),
+				}, "refund_id")
+			}
+		}
+	}
+
+	// send notifications
+	// get counsellor name
+	var counsellor []map[string]string
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_slot_id = ?)", r.FormValue("appointment_slot_id"))
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointmentSlots[0]["counsellor_id"]})
+		break
+	case CONSTANT.ListenerType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointmentSlots[0]["counsellor_id"]})
+		break
+	case CONSTANT.TherapistType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointmentSlots[0]["counsellor_id"]})
+		break
+	}
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name"}, map[string]string{"client_id": appointmentSlots[0]["client_id"]})
+
+	// send appointment cancel notification to client
+	UTIL.SendNotification(
+		CONSTANT.ClientBulkAppointmentCancelClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientBulkAppointmentCancelClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+				"###client_name###":     client[0]["first_name"],
+			},
+		),
+		appointmentSlots[0]["client_id"],
+		CONSTANT.ClientType,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

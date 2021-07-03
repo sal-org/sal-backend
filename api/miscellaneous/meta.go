@@ -48,9 +48,17 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get moods
+	moods, status, ok := DB.SelectSQL(CONSTANT.MoodsTable, []string{"*"}, map[string]string{})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	response["topics"] = topics
 	response["languages"] = languages
 	response["content_categories"] = contentCategories
 	response["rating_types"] = ratingTypes
+	response["moods"] = moods
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

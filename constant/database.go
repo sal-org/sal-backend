@@ -21,12 +21,15 @@ const (
 	InvoicesTable                  = "invoices"
 	LanguagesTable                 = "languages"
 	ListenersTable                 = "listeners"
+	MoodsTable                     = "moods"
+	MoodResultsTable               = "mood_results"
 	NotificationsTable             = "notifications"
 	OrderClientAppointmentTable    = "order_client_appointments"
 	OrderClientEventTable          = "order_client_events"
 	OrderCounsellorEventTable      = "order_counsellor_events"
 	PaymentsTable                  = "payments"
 	PhoneOTPVerifiedTable          = "phone_otp_verified"
+	QuotesTable                    = "quotes"
 	RatingTypesTable               = "rating_types"
 	RefundsTable                   = "refunds"
 	SchedulesTable                 = "schedules"
@@ -46,6 +49,7 @@ const (
 	AppointmentDigits       = 12
 	AppointmentSlotDigits   = 11
 	AssessmentResultsDigits = 16
+	MoodResultsDigits       = 17
 	ClientDigits            = 13
 	ContentDigits           = 10
 	CounsellorDigits        = 6

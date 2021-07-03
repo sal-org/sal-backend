@@ -80,7 +80,13 @@ const (
 const (
 	NotificationActive  = "1"
 	NotificationRead    = "2"
-	NotificationDeleted = "2"
+	NotificationDeleted = "3"
+)
+
+// notification sent status
+const (
+	NotificationInProgress = "1"
+	NotificationSent       = "2"
 )
 
 // order status
@@ -109,6 +115,12 @@ const (
 	InvoiceRefundInitiated = "2"
 	InvoiceRefunded        = "3"
 	InvoiceCompleted       = "4"
+)
+
+// refund status
+const (
+	RefundInProgress = "1"
+	RefundCompleted  = "4"
 )
 
 // coupon types
@@ -166,4 +178,10 @@ const (
 const (
 	PaymentActive        = "1"
 	PaymentActiveDeleted = "2"
+)
+
+// mood result status
+const (
+	MoodResultInactive = "0"
+	MoodResultActive   = "1"
 )

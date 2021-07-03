@@ -54,6 +54,8 @@ definitions:
         type: string
       person_id:
         type: string
+      phone:
+        type: string
     type: object
   model.ClientEventOrderCreateRequest:
     properties:
@@ -91,6 +93,8 @@ definitions:
         type: string
       phone:
         type: string
+      timezone:
+        type: string
     type: object
   model.ClientProfileUpdateRequest:
     properties:
@@ -105,6 +109,8 @@ definitions:
       last_name:
         type: string
       location:
+        type: string
+      timezone:
         type: string
     type: object
   model.CounsellorEventOrderCreateRequest:
@@ -197,6 +203,8 @@ definitions:
         type: string
       resume:
         type: string
+      timezone:
+        type: string
       topic_ids:
         type: string
     type: object
@@ -233,6 +241,8 @@ definitions:
       price_5:
         type: string
       resume:
+        type: string
+      timezone:
         type: string
       topic_ids:
         type: string
@@ -277,6 +287,8 @@ definitions:
         type: string
       photo:
         type: string
+      timezone:
+        type: string
       topic_ids:
         type: string
     type: object
@@ -300,7 +312,26 @@ definitions:
         type: string
       photo:
         type: string
+      timezone:
+        type: string
       topic_ids:
+        type: string
+    type: object
+  model.MoodAddRequest:
+    properties:
+      age:
+        type: string
+      client_id:
+        type: string
+      date:
+        type: string
+      gender:
+        type: string
+      mood_id:
+        type: string
+      name:
+        type: string
+      phone:
         type: string
     type: object
   model.TherapistEventOrderCreateRequest:
@@ -393,6 +424,8 @@ definitions:
         type: string
       resume:
         type: string
+      timezone:
+        type: string
       topic_ids:
         type: string
     type: object
@@ -429,6 +462,8 @@ definitions:
       price_5:
         type: string
       resume:
+        type: string
+      timezone:
         type: string
       topic_ids:
         type: string
@@ -571,6 +606,24 @@ paths:
       summary: Reschedule an appointment
       tags:
       - Client Appointment
+  /client/appointment/bulk:
+    delete:
+      parameters:
+      - description: Appointment slot ID to be cancelled
+        in: query
+        name: appointment_slot_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancel bulk appointments
+      tags:
+      - Client Appointment
   /client/appointment/past:
     get:
       parameters:
@@ -678,6 +731,29 @@ paths:
       security:
       - JWTAuth: []
       summary: Add client assessment
+      tags:
+      - Client Assessment
+  /client/assessment/history:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment history
       tags:
       - Client Assessment
   /client/assessments:
@@ -1026,6 +1102,48 @@ paths:
       summary: Get listener slots
       tags:
       - Client Listener
+  /client/mood:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.MoodAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Add client mood
+      tags:
+      - Client Mood
+  /client/mood/history:
+    get:
+      parameters:
+      - description: Logged in client ID to get mood history
+        in: query
+        name: client_id
+        required: true
+        type: string
+      - description: Dates to get history - (start,end) - (2021-05-21,2021-06-10)
+        in: query
+        name: dates
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get mood history
+      tags:
+      - Client Mood
   /client/notification:
     get:
       parameters:
@@ -1421,6 +1539,29 @@ paths:
       security:
       - JWTAuth: []
       summary: Add counsellor assessment
+      tags:
+      - Counsellor Assessment
+  /counsellor/assessment/history:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_if
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment history
       tags:
       - Counsellor Assessment
   /counsellor/assessments:
@@ -1853,6 +1994,29 @@ paths:
       summary: Add listener assessment
       tags:
       - Listener Assessment
+  /listener/assessment/history:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment history
+      tags:
+      - Listener Assessment
   /listener/assessments:
     get:
       produces:
@@ -2022,6 +2186,18 @@ paths:
       security:
       - JWTAuth: []
       summary: Get all available topics, languages
+      tags:
+      - Miscellaneous
+  /mood:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get all moods
       tags:
       - Miscellaneous
   /rating-type:
@@ -2215,6 +2391,29 @@ paths:
       security:
       - JWTAuth: []
       summary: Add therapist assessment
+      tags:
+      - Therapist Assessment
+  /therapist/assessment/history:
+    get:
+      parameters:
+      - description: Assessment ID to get details
+        in: query
+        name: assessment_id
+        required: true
+        type: string
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment history
       tags:
       - Therapist Assessment
   /therapist/assessments:

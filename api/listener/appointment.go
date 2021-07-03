@@ -119,8 +119,6 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO check 4 hours time
-
 	// update listener slots
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
@@ -158,14 +156,16 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send appointment cancel notification to client
-	// TODO change date time format
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
+
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       appointment[0]["date"] + " & " + appointment[0]["time"],
-				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"]),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###counsellor_name###": listener[0]["first_name"],
 			},
 		),
 		appointment[0]["client_id"],

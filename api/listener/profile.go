@@ -117,8 +117,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener["occupation"] = body["occupation"]
 	listener["experience"] = body["experience"]
 	listener["about"] = body["about"]
+	listener["timezone"] = body["timezone"]
 	listener["device_id"] = body["device_id"]
 	listener["status"] = CONSTANT.ListenerNotApproved
+	listener["last_login_time"] = UTIL.GetCurrentTime().String()
 	listener["created_at"] = UTIL.GetCurrentTime().String()
 	listenerID, status, ok := DB.InsertWithUniqueID(CONSTANT.ListenersTable, CONSTANT.ListenerDigits, listener, "listener_id")
 	if !ok {
@@ -193,6 +195,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["device_id"]) > 0 {
 		listener["device_id"] = body["device_id"]
 	}
+	if len(body["timezone"]) > 0 {
+		listener["timezone"] = body["timezone"]
+	}
+	listener["last_login_time"] = UTIL.GetCurrentTime().String()
 	listener["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": r.FormValue("listener_id")}, listener)
 	if !ok {

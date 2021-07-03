@@ -1,20 +1,16 @@
 package util
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	MODEL "salbackend/model"
 	"strings"
 )
 
 // SendNotification - send notification using onesignal
 func SendNotification(heading, content, personID, personType string) {
+	if strings.Contains(content, "###") { // check if notification variables are replaced
+		return
+	}
 
 	// add data to notifications
 	notification := map[string]string{}
@@ -22,37 +18,16 @@ func SendNotification(heading, content, personID, personType string) {
 	notification["title"] = heading
 	notification["body"] = content
 	notification["status"] = CONSTANT.NotificationActive
+	notification["onesignal_id"] = GetNotificationID(personID, personType)
+	if len(notification["onesignal_id"]) > 0 {
+		notification["notification_status"] = CONSTANT.NotificationInProgress
+	} else {
+		// set notification sent status as sent if no onesignal id is available
+		notification["notification_status"] = CONSTANT.NotificationSent
+	}
 	notification["created_at"] = GetCurrentTime().String()
 	DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, notification, "notification_id")
 
-	// get notification id by person type
-	notificationID := GetNotificationID(personID, personType)
-	if len(notificationID) == 0 || strings.Contains(content, "###") { // check if notification id is available and notification variables are replaced
-		return
-	}
-
-	// sent to onesignal
-	data := MODEL.OneSignalNotificationData{
-		AppID:            CONFIG.OneSignalAppID,
-		Headings:         map[string]string{"en": heading},
-		Contents:         map[string]string{"en": content},
-		IncludePlayerIDs: []string{notificationID},
-		Data:             map[string]string{},
-	}
-	byteData, _ := json.Marshal(data)
-	resp, err := http.Post("https://onesignal.com/api/v1/notifications", "application/json", bytes.NewBuffer(byteData))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(data, string(body))
 }
 
 // GetNotificationID - get notification ID of client/counselors

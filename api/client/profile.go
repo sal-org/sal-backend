@@ -114,8 +114,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["age"] = body["age"]
 	client["gender"] = body["gender"]
 	client["location"] = body["location"]
+	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive
+	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
 	if !ok {
@@ -192,6 +194,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["device_id"]) > 0 {
 		client["device_id"] = body["device_id"]
 	}
+	if len(body["timezone"]) > 0 {
+		client["timezone"] = body["timezone"]
+	}
+	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, client)
 	if !ok {

@@ -120,12 +120,14 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["education"] = body["education"]
 	counsellor["experience"] = body["experience"]
 	counsellor["about"] = body["about"]
+	counsellor["timezone"] = body["timezone"]
 	counsellor["resume"] = body["resume"]
 	counsellor["certificate"] = body["certificate"]
 	counsellor["aadhar"] = body["aadhar"]
 	counsellor["linkedin"] = body["linkedin"]
 	counsellor["device_id"] = body["device_id"]
 	counsellor["status"] = CONSTANT.CounsellorNotApproved
+	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
 	counsellorID, status, ok := DB.InsertWithUniqueID(CONSTANT.CounsellorsTable, CONSTANT.CounsellorDigits, counsellor, "counsellor_id")
 	if !ok {
@@ -221,6 +223,10 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["device_id"]) > 0 {
 		counsellor["device_id"] = body["device_id"]
 	}
+	if len(body["timezone"]) > 0 {
+		counsellor["timezone"] = body["timezone"]
+	}
+	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")}, counsellor)
 	if !ok {

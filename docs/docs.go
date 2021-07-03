@@ -236,6 +236,36 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/bulk": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Cancel bulk appointments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment slot ID to be cancelled",
+                        "name": "appointment_slot_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/past": {
             "get": {
                 "security": [
@@ -409,6 +439,43 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/model.AssessmentAddRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/assessment/history": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Assessment"
+                ],
+                "summary": "Get assessment history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -985,6 +1052,75 @@ var doc = `{
                         "type": "string",
                         "description": "Listener ID to get slot details",
                         "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/mood": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Mood"
+                ],
+                "summary": "Add client mood",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.MoodAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/mood/history": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Mood"
+                ],
+                "summary": "Get mood history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in client ID to get mood history",
+                        "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Dates to get history - (start,end) - (2021-05-21,2021-06-10)",
+                        "name": "dates",
                         "in": "query",
                         "required": true
                     }
@@ -1629,6 +1765,43 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/model.AssessmentAddRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/assessment/history": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Assessment"
+                ],
+                "summary": "Get assessment history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_if",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2346,6 +2519,43 @@ var doc = `{
                 }
             }
         },
+        "/listener/assessment/history": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Assessment"
+                ],
+                "summary": "Get assessment history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/assessments": {
             "get": {
                 "security": [
@@ -2620,6 +2830,27 @@ var doc = `{
                     "Miscellaneous"
                 ],
                 "summary": "Get all available topics, languages",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/mood": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get all moods",
                 "responses": {
                     "200": {
                         "description": ""
@@ -2936,6 +3167,43 @@ var doc = `{
                         "schema": {
                             "$ref": "#/definitions/model.AssessmentAddRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/assessment/history": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Assessment"
+                ],
+                "summary": "Get assessment history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Assessment ID to get details",
+                        "name": "assessment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3480,6 +3748,9 @@ var doc = `{
                 },
                 "person_id": {
                     "type": "string"
+                },
+                "phone": {
+                    "type": "string"
                 }
             }
         },
@@ -3537,6 +3808,9 @@ var doc = `{
                 },
                 "phone": {
                     "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
                 }
             }
         },
@@ -3559,6 +3833,9 @@ var doc = `{
                     "type": "string"
                 },
                 "location": {
+                    "type": "string"
+                },
+                "timezone": {
                     "type": "string"
                 }
             }
@@ -3700,6 +3977,9 @@ var doc = `{
                 "resume": {
                     "type": "string"
                 },
+                "timezone": {
+                    "type": "string"
+                },
                 "topic_ids": {
                     "type": "string"
                 }
@@ -3754,6 +4034,9 @@ var doc = `{
                     "type": "string"
                 },
                 "resume": {
+                    "type": "string"
+                },
+                "timezone": {
                     "type": "string"
                 },
                 "topic_ids": {
@@ -3822,6 +4105,9 @@ var doc = `{
                 "photo": {
                     "type": "string"
                 },
+                "timezone": {
+                    "type": "string"
+                },
                 "topic_ids": {
                     "type": "string"
                 }
@@ -3857,7 +4143,36 @@ var doc = `{
                 "photo": {
                     "type": "string"
                 },
+                "timezone": {
+                    "type": "string"
+                },
                 "topic_ids": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.MoodAddRequest": {
+            "type": "object",
+            "properties": {
+                "age": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "mood_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3999,6 +4314,9 @@ var doc = `{
                 "resume": {
                     "type": "string"
                 },
+                "timezone": {
+                    "type": "string"
+                },
                 "topic_ids": {
                     "type": "string"
                 }
@@ -4053,6 +4371,9 @@ var doc = `{
                     "type": "string"
                 },
                 "resume": {
+                    "type": "string"
+                },
+                "timezone": {
                     "type": "string"
                 },
                 "topic_ids": {

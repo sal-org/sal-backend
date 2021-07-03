@@ -50,10 +50,18 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get random quote
+	quote, status, ok := DB.SelectProcess("select * from " + CONSTANT.QuotesTable + " order by rand() limit 1")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	response["recommended"] = recommended
 	response["videos"] = videos
 	response["audios"] = audios
 	response["articles"] = articles
+	response["quote"] = quote[0]["quote"]
 	response["media_url"] = CONFIG.MediaURL
 	response["urls"] = CONSTANT.URLs
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
