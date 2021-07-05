@@ -475,12 +475,12 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// appointment can cancelled only after min reschedules
-	reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
-	if reschedules < CONSTANT.MaximumAppointmentReschedule {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantCancelMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// // appointment can cancelled only after min reschedules
+	// reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
+	// if reschedules < CONSTANT.MaximumAppointmentReschedule {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantCancelMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// update counsellor slots
 	// remove previous slot
@@ -521,7 +521,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// refund amount
 	// check if appointment is alteast after 4 hours
 	// if below 4 hours, charges are 100% that means dont refund anything
-	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() < 4 {
+	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() >= 4 {
 		charges := CONSTANT.ClientAppointmentCancellationCharges
 		// get invoice details
 		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
@@ -550,7 +550,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 					// refunded amount will be less than paid amount
 					DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
 						"invoice_id":      invoice[0]["invoice_id"],
-						"refunded_amount": invoice[0]["refunded_amount"],
+						"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
 						"status":          CONSTANT.RefundInProgress,
 						"created_at":      UTIL.GetCurrentTime().String(),
 					}, "refund_id")
@@ -665,7 +665,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 				// refunded amount will be less than paid amount
 				DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
 					"invoice_id":      invoice[0]["invoice_id"],
-					"refunded_amount": invoice[0]["refunded_amount"],
+					"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
 					"status":          CONSTANT.RefundInProgress,
 					"created_at":      UTIL.GetCurrentTime().String(),
 				}, "refund_id")
@@ -673,10 +673,17 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// update slots remaining to 0
+	DB.UpdateSQL(CONSTANT.AppointmentSlotsTable, map[string]string{
+		"appointment_slot_id": r.FormValue("appointment_slot_id"),
+	}, map[string]string{
+		"slots_remaining": "0",
+	})
+
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_slot_id = ?)", r.FormValue("appointment_slot_id"))
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", r.FormValue("appointment_slot_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointmentSlots[0]["counsellor_id"]})
@@ -748,7 +755,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get counsellor type and update their ratings
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ? and client_id = ? and counsellor_id = ?)", body["appointment_id"], body["client_id"], body["counsellor_id"])
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
 
 	switch counsellorType {
 	case CONSTANT.CounsellorType:

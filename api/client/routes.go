@@ -26,7 +26,7 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
-	clientRoutes.HandleFunc("/appointment", AppointmentBulkCancel).Queries(
+	clientRoutes.HandleFunc("/appointment/bulk", AppointmentBulkCancel).Queries(
 		"appointment_slot_id", "{appointment_slot_id}",
 	).Methods("DELETE")
 	clientRoutes.HandleFunc("/appointment/rate", AppointmentRatingAdd).Methods("POST")
