@@ -395,7 +395,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// sent notifications
-	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
+	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
@@ -404,7 +404,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": therapist[0]["first_name"],
 			},
 		),
@@ -432,7 +432,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),
@@ -440,7 +440,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TherapistType,
 	)
 
-	// send payment received notification to therapist
+	// send payment received notification, message to therapist
 	var notificationHeading, notificationContent string
 	switch order[0]["slots_bought"] {
 	case "1":
@@ -465,6 +465,21 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.TherapistType,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+			map[string]string{
+				"###counsellor_name###": therapist[0]["first_name"],
+				"###client_name###":     client[0]["first_name"],
+				"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+				"###time###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		therapist[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	response["invoice_id"] = invoiceID

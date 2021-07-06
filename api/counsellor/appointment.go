@@ -202,7 +202,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": counsellor[0]["first_name"],
 			},
 		),

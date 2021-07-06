@@ -248,13 +248,13 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", body["appointment_slot_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone"}, map[string]string{"counsellor_id": appointmentSlot[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone"}, map[string]string{"listener_id": appointmentSlot[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "timezone"}, map[string]string{"listener_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone"}, map[string]string{"therapist_id": appointmentSlot[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"therapist_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": appointmentSlot[0]["client_id"]})
@@ -265,7 +265,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": counsellor[0]["first_name"],
 			},
 		),
@@ -273,18 +273,33 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 	)
 
-	// send appointment booking notification to counsellor
+	// send appointment booking notification, message to counsellor
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),
 		appointmentSlot[0]["counsellor_id"],
 		counsellorType,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+				"###client_name###":     client[0]["first_name"],
+				"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+				"###time###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -424,7 +439,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRescheduleClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": counsellor[0]["first_name"],
 			},
 		),
@@ -583,7 +598,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": counsellor[0]["first_name"],
 				"###client_name###":     client[0]["first_name"],
 			},
@@ -598,7 +613,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentCancelCounsellorContent,
 			map[string]string{
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),

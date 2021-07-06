@@ -83,6 +83,12 @@ const (
 	NotificationDeleted = "3"
 )
 
+// message status
+const (
+	MessageInProgress = "1"
+	MessageSent       = "2"
+)
+
 // notification sent status
 const (
 	NotificationInProgress = "1"

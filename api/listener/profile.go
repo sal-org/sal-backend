@@ -144,6 +144,17 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	// send account signup notification to listener
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType)
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAccountSignupTextMessage,
+			map[string]string{
+				"###counsellor_name###": body["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		body["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

@@ -3929,6 +3929,18 @@ var doc = `{
                 "about": {
                     "type": "string"
                 },
+                "bank_account_no": {
+                    "type": "string"
+                },
+                "bank_account_type": {
+                    "type": "string"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
                 "certificate": {
                     "type": "string"
                 },
@@ -3950,6 +3962,9 @@ var doc = `{
                 "gender": {
                     "type": "string"
                 },
+                "ifsc": {
+                    "type": "string"
+                },
                 "language_ids": {
                     "type": "string"
                 },
@@ -3957,6 +3972,15 @@ var doc = `{
                     "type": "string"
                 },
                 "linkedin": {
+                    "type": "string"
+                },
+                "pan": {
+                    "type": "string"
+                },
+                "payee_name": {
+                    "type": "string"
+                },
+                "payout_percentage": {
                     "type": "string"
                 },
                 "phone": {
@@ -3994,6 +4018,18 @@ var doc = `{
                 "about": {
                     "type": "string"
                 },
+                "bank_account_no": {
+                    "type": "string"
+                },
+                "bank_account_type": {
+                    "type": "string"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
                 "certificate": {
                     "type": "string"
                 },
@@ -4012,6 +4048,9 @@ var doc = `{
                 "gender": {
                     "type": "string"
                 },
+                "ifsc": {
+                    "type": "string"
+                },
                 "language_ids": {
                     "type": "string"
                 },
@@ -4019,6 +4058,15 @@ var doc = `{
                     "type": "string"
                 },
                 "linkedin": {
+                    "type": "string"
+                },
+                "pan": {
+                    "type": "string"
+                },
+                "payee_name": {
+                    "type": "string"
+                },
+                "payout_percentage": {
                     "type": "string"
                 },
                 "photo": {
@@ -4266,6 +4314,18 @@ var doc = `{
                 "about": {
                     "type": "string"
                 },
+                "bank_account_no": {
+                    "type": "string"
+                },
+                "bank_account_type": {
+                    "type": "string"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
                 "certificate": {
                     "type": "string"
                 },
@@ -4287,6 +4347,9 @@ var doc = `{
                 "gender": {
                     "type": "string"
                 },
+                "ifsc": {
+                    "type": "string"
+                },
                 "language_ids": {
                     "type": "string"
                 },
@@ -4294,6 +4357,15 @@ var doc = `{
                     "type": "string"
                 },
                 "linkedin": {
+                    "type": "string"
+                },
+                "pan": {
+                    "type": "string"
+                },
+                "payee_name": {
+                    "type": "string"
+                },
+                "payout_percentage": {
                     "type": "string"
                 },
                 "phone": {
@@ -4331,6 +4403,18 @@ var doc = `{
                 "about": {
                     "type": "string"
                 },
+                "bank_account_no": {
+                    "type": "string"
+                },
+                "bank_account_type": {
+                    "type": "string"
+                },
+                "bank_name": {
+                    "type": "string"
+                },
+                "branch_name": {
+                    "type": "string"
+                },
                 "certificate": {
                     "type": "string"
                 },
@@ -4349,6 +4433,9 @@ var doc = `{
                 "gender": {
                     "type": "string"
                 },
+                "ifsc": {
+                    "type": "string"
+                },
                 "language_ids": {
                     "type": "string"
                 },
@@ -4356,6 +4443,15 @@ var doc = `{
                     "type": "string"
                 },
                 "linkedin": {
+                    "type": "string"
+                },
+                "pan": {
+                    "type": "string"
+                },
+                "payee_name": {
+                    "type": "string"
+                },
+                "payout_percentage": {
                     "type": "string"
                 },
                 "photo": {

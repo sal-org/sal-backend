@@ -21,6 +21,7 @@ const (
 	InvoicesTable                  = "invoices"
 	LanguagesTable                 = "languages"
 	ListenersTable                 = "listeners"
+	MessagesTable                  = "messages"
 	MoodsTable                     = "moods"
 	MoodResultsTable               = "mood_results"
 	NotificationsTable             = "notifications"
@@ -54,6 +55,7 @@ const (
 	ContentDigits           = 10
 	CounsellorDigits        = 6
 	ListenerDigits          = 9
+	MessagesDigits          = 10
 	NotificationsDigits     = 15
 	EventDigits             = 7
 	InvoiceDigits           = 8

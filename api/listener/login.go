@@ -42,7 +42,23 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 	// currently deleting if phone number is already present
 	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": r.FormValue("phone")})
 
-	// TODO send otp using msg91
+	// send otp
+	otp, ok := UTIL.GenerateOTP(r.FormValue("phone"))
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ListenerOTPTextMessage,
+			map[string]string{
+				"###otp###": otp,
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		r.FormValue("phone"),
+		CONSTANT.InstantSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -60,8 +76,8 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	// TODO check if otp is correct
-	if !strings.EqualFold(r.FormValue("otp"), "4242") {
+	// check if otp is correct
+	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}

@@ -271,7 +271,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// sent notitifications
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
@@ -280,7 +280,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": listener[0]["first_name"],
 			},
 		),
@@ -288,18 +288,33 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 	)
 
-	// send appointment booking notification to listener
+	// send appointment booking notification, message to listener
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.ListenerType,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+			map[string]string{
+				"###counsellor_name###": listener[0]["first_name"],
+				"###client_name###":     client[0]["first_name"],
+				"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+				"###time###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		listener[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

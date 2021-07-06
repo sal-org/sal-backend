@@ -126,6 +126,14 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["aadhar"] = body["aadhar"]
 	therapist["linkedin"] = body["linkedin"]
 	therapist["device_id"] = body["device_id"]
+	therapist["payout_percentage"] = body["payout_percentage"]
+	therapist["payee_name"] = body["payee_name"]
+	therapist["bank_account_no"] = body["bank_account_no"]
+	therapist["ifsc"] = body["ifsc"]
+	therapist["branch_name"] = body["branch_name"]
+	therapist["bank_name"] = body["bank_name"]
+	therapist["bank_account_type"] = body["bank_account_type"]
+	therapist["pan"] = body["pan"]
 	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
 	therapist["created_at"] = UTIL.GetCurrentTime().String()
@@ -149,8 +157,19 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	response["therapist_id"] = therapistID
 
-	// send account signup notification to therapist
+	// send account signup notification, message to therapist
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType)
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAccountSignupTextMessage,
+			map[string]string{
+				"###counsellor_name###": body["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		body["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -226,6 +245,31 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["timezone"]) > 0 {
 		therapist["timezone"] = body["timezone"]
 	}
+	if len(body["timezone"]) > 0 {
+		therapist["timezone"] = body["timezone"]
+	}
+	if len(body["payout_percentage"]) > 0 {
+		therapist["payout_percentage"] = body["payout_percentage"]
+	}
+	if len(body["bank_account_no"]) > 0 {
+		therapist["bank_account_no"] = body["bank_account_no"]
+	}
+	if len(body["ifsc"]) > 0 {
+		therapist["ifsc"] = body["ifsc"]
+	}
+	if len(body["branch_name"]) > 0 {
+		therapist["branch_name"] = body["branch_name"]
+	}
+	if len(body["bank_name"]) > 0 {
+		therapist["bank_name"] = body["bank_name"]
+	}
+	if len(body["bank_account_type"]) > 0 {
+		therapist["bank_account_type"] = body["bank_account_type"]
+	}
+	if len(body["pan"]) > 0 {
+		therapist["pan"] = body["pan"]
+	}
+
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
 	therapist["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("therapist_id")}, therapist)

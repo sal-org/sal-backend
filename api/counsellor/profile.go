@@ -125,6 +125,14 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["certificate"] = body["certificate"]
 	counsellor["aadhar"] = body["aadhar"]
 	counsellor["linkedin"] = body["linkedin"]
+	counsellor["payout_percentage"] = body["payout_percentage"]
+	counsellor["payee_name"] = body["payee_name"]
+	counsellor["bank_account_no"] = body["bank_account_no"]
+	counsellor["ifsc"] = body["ifsc"]
+	counsellor["branch_name"] = body["branch_name"]
+	counsellor["bank_name"] = body["bank_name"]
+	counsellor["bank_account_type"] = body["bank_account_type"]
+	counsellor["pan"] = body["pan"]
 	counsellor["device_id"] = body["device_id"]
 	counsellor["status"] = CONSTANT.CounsellorNotApproved
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
@@ -149,8 +157,19 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	response["counsellor_id"] = counsellorID
 
-	// send account signup notification to counsellor
+	// send account signup notification, message to counsellor
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType)
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAccountSignupTextMessage,
+			map[string]string{
+				"###counsellor_name###": body["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		body["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -226,6 +245,28 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["timezone"]) > 0 {
 		counsellor["timezone"] = body["timezone"]
 	}
+	if len(body["payout_percentage"]) > 0 {
+		counsellor["payout_percentage"] = body["payout_percentage"]
+	}
+	if len(body["bank_account_no"]) > 0 {
+		counsellor["bank_account_no"] = body["bank_account_no"]
+	}
+	if len(body["ifsc"]) > 0 {
+		counsellor["ifsc"] = body["ifsc"]
+	}
+	if len(body["branch_name"]) > 0 {
+		counsellor["branch_name"] = body["branch_name"]
+	}
+	if len(body["bank_name"]) > 0 {
+		counsellor["bank_name"] = body["bank_name"]
+	}
+	if len(body["bank_account_type"]) > 0 {
+		counsellor["bank_account_type"] = body["bank_account_type"]
+	}
+	if len(body["pan"]) > 0 {
+		counsellor["pan"] = body["pan"]
+	}
+
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")}, counsellor)

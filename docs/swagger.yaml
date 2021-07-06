@@ -171,6 +171,14 @@ definitions:
         type: string
       about:
         type: string
+      bank_account_no:
+        type: string
+      bank_account_type:
+        type: string
+      bank_name:
+        type: string
+      branch_name:
+        type: string
       certificate:
         type: string
       device_id:
@@ -185,11 +193,19 @@ definitions:
         type: string
       gender:
         type: string
+      ifsc:
+        type: string
       language_ids:
         type: string
       last_name:
         type: string
       linkedin:
+        type: string
+      pan:
+        type: string
+      payee_name:
+        type: string
+      payout_percentage:
         type: string
       phone:
         type: string
@@ -214,6 +230,14 @@ definitions:
         type: string
       about:
         type: string
+      bank_account_no:
+        type: string
+      bank_account_type:
+        type: string
+      bank_name:
+        type: string
+      branch_name:
+        type: string
       certificate:
         type: string
       device_id:
@@ -226,11 +250,19 @@ definitions:
         type: string
       gender:
         type: string
+      ifsc:
+        type: string
       language_ids:
         type: string
       last_name:
         type: string
       linkedin:
+        type: string
+      pan:
+        type: string
+      payee_name:
+        type: string
+      payout_percentage:
         type: string
       photo:
         type: string
@@ -392,6 +424,14 @@ definitions:
         type: string
       about:
         type: string
+      bank_account_no:
+        type: string
+      bank_account_type:
+        type: string
+      bank_name:
+        type: string
+      branch_name:
+        type: string
       certificate:
         type: string
       device_id:
@@ -406,11 +446,19 @@ definitions:
         type: string
       gender:
         type: string
+      ifsc:
+        type: string
       language_ids:
         type: string
       last_name:
         type: string
       linkedin:
+        type: string
+      pan:
+        type: string
+      payee_name:
+        type: string
+      payout_percentage:
         type: string
       phone:
         type: string
@@ -435,6 +483,14 @@ definitions:
         type: string
       about:
         type: string
+      bank_account_no:
+        type: string
+      bank_account_type:
+        type: string
+      bank_name:
+        type: string
+      branch_name:
+        type: string
       certificate:
         type: string
       device_id:
@@ -447,11 +503,19 @@ definitions:
         type: string
       gender:
         type: string
+      ifsc:
+        type: string
       language_ids:
         type: string
       last_name:
         type: string
       linkedin:
+        type: string
+      pan:
+        type: string
+      payee_name:
+        type: string
+      payout_percentage:
         type: string
       photo:
         type: string

@@ -194,7 +194,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send appointment cancel notification to client
-	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["therapist_id"]})
+	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	UTIL.SendNotification(
@@ -202,7 +202,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###counsellor_name###": therapist[0]["first_name"],
 			},
 		),
