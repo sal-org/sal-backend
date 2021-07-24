@@ -148,7 +148,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if cousellor is valid
+	// check if counsellor is valid
 	if len(counsellor) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
 		return

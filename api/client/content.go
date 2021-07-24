@@ -75,7 +75,7 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get liked content
-	likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where person_id = ? order by created_at desc", r.FormValue("client_id"))
+	likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -83,21 +83,21 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 	contentIDs := UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
 
 	// get latest videos
-	videos, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where content_id in (select content_id from "+CONSTANT.ContentLikesTable+" where person_id = ?) and type = "+CONSTANT.VideoContentType+" and training = 0 and status = 1 order by field(content_id, '"+strings.Join(contentIDs, "','")+"')", r.FormValue("client_id"))
+	videos, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where content_id in (select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ?) and type = "+CONSTANT.VideoContentType+" and training = 0 and status = 1 order by field(content_id, '"+strings.Join(contentIDs, "','")+"')", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get latest audios
-	audios, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where content_id in (select content_id from "+CONSTANT.ContentLikesTable+" where person_id = ?) and type = "+CONSTANT.AudioContentType+" and training = 0 and status = 1 order by field(content_id, '"+strings.Join(contentIDs, "','")+"')", r.FormValue("client_id"))
+	audios, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where content_id in (select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ?) and type = "+CONSTANT.AudioContentType+" and training = 0 and status = 1 order by field(content_id, '"+strings.Join(contentIDs, "','")+"')", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get latest articles
-	articles, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where content_id in (select content_id from "+CONSTANT.ContentLikesTable+" where person_id = ?) and type = "+CONSTANT.ArticleContentType+" and training = 0 and status = 1 order by field(content_id, '"+strings.Join(contentIDs, "','")+"')", r.FormValue("client_id"))
+	articles, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where content_id in (select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ?) and type = "+CONSTANT.ArticleContentType+" and training = 0 and status = 1 order by field(content_id, '"+strings.Join(contentIDs, "','")+"')", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -126,7 +126,7 @@ func ContentLikeAdd(w http.ResponseWriter, r *http.Request) {
 
 	status, ok := DB.InsertSQL(CONSTANT.ContentLikesTable, map[string]string{
 		"content_id": r.FormValue("content_id"),
-		"person_id":  r.FormValue("client_id"),
+		"user_id":    r.FormValue("client_id"),
 		"created_at": UTIL.GetCurrentTime().String(),
 	})
 	if !ok {
@@ -153,7 +153,7 @@ func ContentLikeDelete(w http.ResponseWriter, r *http.Request) {
 
 	status, ok := DB.DeleteSQL(CONSTANT.ContentLikesTable, map[string]string{
 		"content_id": r.FormValue("content_id"),
-		"person_id":  r.FormValue("client_id"),
+		"user_id":    r.FormValue("client_id"),
 	})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

@@ -39,8 +39,19 @@ func LoadListenerRoutes(router *mux.Router) {
 	listenerRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
 	listenerRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
 		"assessment_id", "{assessment_id}",
-		"client_id", "{client_id}",
+		"listener_id", "{listener_id}",
 	).Methods("GET")
+
+	// event
+	listenerRoutes.HandleFunc("/events", EventsList).Methods("GET")
+	listenerRoutes.HandleFunc("/event", EventDetail).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	listenerRoutes.HandleFunc("/event/booked", EventsBooked).Queries(
+		"listener_id", "{listener_id}",
+	).Methods("GET")
+	listenerRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
+	listenerRoutes.HandleFunc("/event/paymentcomplete", EventOrderPaymentComplete).Methods("POST")
 
 	// home
 	listenerRoutes.HandleFunc("/home", Home).Methods("GET")
@@ -65,6 +76,9 @@ func LoadListenerRoutes(router *mux.Router) {
 	// profile
 	listenerRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",
+	).Methods("GET")
+	listenerRoutes.HandleFunc("", ProfileGet).Queries(
+		"listener_id", "{listener_id}",
 	).Methods("GET")
 	listenerRoutes.HandleFunc("", ProfileAdd).Methods("POST")
 	listenerRoutes.HandleFunc("", ProfileUpdate).Queries(

@@ -116,7 +116,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 
 	// add assessment result
 	assessmentResultID, status, ok := DB.InsertWithUniqueID(CONSTANT.AssessmentResultsTable, CONSTANT.AssessmentResultsDigits, map[string]string{
-		"person_id":     body.PersonID,
+		"user_id":       body.UserID,
 		"name":          body.Name,
 		"age":           body.Age,
 		"gender":        body.Gender,
@@ -152,7 +152,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 // @Summary Get assessment history
 // @Router /counsellor/assessment/history [get]
 // @Param assessment_id query string true "Assessment ID to get details"
-// @Param counsellor_if query string true "Logged in counsellor ID"
+// @Param counsellor_id query string true "Logged in counsellor ID"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -162,7 +162,7 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get assessment past results
-	assessmentResults, status, ok := DB.SelectProcess("select final_score, created_at from "+CONSTANT.AssessmentResultsTable+" where person_id = ? and assessment_id = ? and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("counsellor_id"), r.FormValue("assessment_id"))
+	assessmentResults, status, ok := DB.SelectProcess("select final_score, created_at from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and assessment_id = ? and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("counsellor_id"), r.FormValue("assessment_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

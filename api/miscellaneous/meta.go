@@ -60,5 +60,6 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 	response["content_categories"] = contentCategories
 	response["rating_types"] = ratingTypes
 	response["moods"] = moods
+	response["urls"] = CONSTANT.URLs
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

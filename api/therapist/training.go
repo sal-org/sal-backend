@@ -23,7 +23,7 @@ func Training(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get latest training content
-	training, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where training = 0 and status = 1 order by created_at desc limit 20")
+	training, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where training = 1 and status = 1 order by created_at desc limit 20")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

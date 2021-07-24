@@ -15,7 +15,9 @@ import (
 // @Tags Therapist Profile
 // @Summary Get therapist profile with email, if signed up already
 // @Router /therapist [get]
-// @Param email query string true "Email of therapist - to get details, if signed up already"
+// @Param email query string false "Email of therapist - to get details, if signed up already"
+// @Param therapist_id query string false "Therapist ID to update details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ProfileGet(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +26,19 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	params := map[string]string{}
+	if len(r.FormValue("email")) > 0 {
+		params["email"] = r.FormValue("email")
+	}
+	if len(r.FormValue("therapist_id")) > 0 {
+		params["therapist_id"] = r.FormValue("therapist_id")
+	}
+	if len(params) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, params)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

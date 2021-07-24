@@ -846,7 +846,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ClientEventOrderCreateRequest"
+                            "$ref": "#/definitions/model.EventOrderCreateRequest"
                         }
                     }
                 ],
@@ -878,7 +878,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ClientEventOrderPaymentCompleteRequest"
+                            "$ref": "#/definitions/model.EventOrderPaymentCompleteRequest"
                         }
                     }
                 ],
@@ -1479,6 +1479,11 @@ var doc = `{
         },
         "/counsellor": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1491,8 +1496,13 @@ var doc = `{
                         "type": "string",
                         "description": "Email of counsellor - to get details, if signed up already",
                         "name": "email",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Counsellor ID to update details",
+                        "name": "counsellor_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1799,7 +1809,7 @@ var doc = `{
                     {
                         "type": "string",
                         "description": "Logged in counsellor ID",
-                        "name": "counsellor_if",
+                        "name": "counsellor_id",
                         "in": "query",
                         "required": true
                     }
@@ -1890,6 +1900,202 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/event": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Get event details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event order ID to get details",
+                        "name": "order_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Start and stop event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event order ID to update",
+                        "name": "order_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start(2), Stop(3)",
+                        "name": "status",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/event/block": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Get blocked upcoming and past events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/event/block/order": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Block a slot for an event",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventBlockOrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/event/block/paymentcomplete": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Call after payment is completed for event block order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/event/booked": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Event"
+                ],
+                "summary": "Get booked upcoming and past events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/event/order": {
             "post": {
                 "security": [
@@ -1911,7 +2117,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CounsellorEventOrderCreateRequest"
+                            "$ref": "#/definitions/model.EventOrderCreateRequest"
                         }
                     }
                 ],
@@ -1943,7 +2149,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CounsellorEventOrderPaymentCompleteRequest"
+                            "$ref": "#/definitions/model.EventOrderPaymentCompleteRequest"
                         }
                     }
                 ],
@@ -1967,16 +2173,7 @@ var doc = `{
                 "tags": [
                     "Counsellor Event"
                 ],
-                "summary": "Get upcoming and past counsellor events",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Logged in counsellor ID",
-                        "name": "counsellor_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
+                "summary": "List available events",
                 "responses": {
                     "200": {
                         "description": ""
@@ -2224,6 +2421,11 @@ var doc = `{
         },
         "/listener": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2236,8 +2438,13 @@ var doc = `{
                         "type": "string",
                         "description": "Email of listener - to get details, if signed up already",
                         "name": "email",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Listener ID to update details",
+                        "name": "listener_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2635,6 +2842,151 @@ var doc = `{
                 }
             }
         },
+        "/listener/event": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Event"
+                ],
+                "summary": "Get event details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event order ID to get details",
+                        "name": "order_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/event/booked": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Event"
+                ],
+                "summary": "Get booked upcoming and past events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in listener ID",
+                        "name": "listener_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/event/order": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Event"
+                ],
+                "summary": "Book a slot in an event",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventOrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/event/paymentcomplete": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Event"
+                ],
+                "summary": "Call after payment is completed for event order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventOrderPaymentCompleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/listener/events": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Event"
+                ],
+                "summary": "List available events",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/home": {
             "get": {
                 "security": [
@@ -2881,6 +3233,11 @@ var doc = `{
         },
         "/therapist": {
             "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2893,8 +3250,13 @@ var doc = `{
                         "type": "string",
                         "description": "Email of therapist - to get details, if signed up already",
                         "name": "email",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Therapist ID to update details",
+                        "name": "therapist_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3292,6 +3654,202 @@ var doc = `{
                 }
             }
         },
+        "/therapist/event": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Get event details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event order ID to get details",
+                        "name": "order_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Start and stop event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event order ID to update",
+                        "name": "order_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start(2), Stop(3)",
+                        "name": "status",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/event/block": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Get blocked upcoming and past events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/event/block/order": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Block a slot for an event",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventBlockOrderCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/event/block/paymentcomplete": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Call after payment is completed for event block order",
+                "parameters": [
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/therapist/event/booked": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Event"
+                ],
+                "summary": "Get booked upcoming and past events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/therapist/event/order": {
             "post": {
                 "security": [
@@ -3313,7 +3871,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.TherapistEventOrderCreateRequest"
+                            "$ref": "#/definitions/model.EventOrderCreateRequest"
                         }
                     }
                 ],
@@ -3345,7 +3903,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.TherapistEventOrderPaymentCompleteRequest"
+                            "$ref": "#/definitions/model.EventOrderPaymentCompleteRequest"
                         }
                     }
                 ],
@@ -3369,16 +3927,7 @@ var doc = `{
                 "tags": [
                     "Therapist Event"
                 ],
-                "summary": "Get upcoming and past therapist events",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Logged in therapist ID",
-                        "name": "therapist_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
+                "summary": "List available events",
                 "responses": {
                     "200": {
                         "description": ""
@@ -3746,38 +4295,10 @@ var doc = `{
                 "name": {
                     "type": "string"
                 },
-                "person_id": {
-                    "type": "string"
-                },
                 "phone": {
                     "type": "string"
-                }
-            }
-        },
-        "model.ClientEventOrderCreateRequest": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string"
                 },
-                "coupon_code": {
-                    "type": "string"
-                },
-                "event_order_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ClientEventOrderPaymentCompleteRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "string"
-                },
-                "payment_method": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -3836,49 +4357,6 @@ var doc = `{
                     "type": "string"
                 },
                 "timezone": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.CounsellorEventOrderCreateRequest": {
-            "type": "object",
-            "properties": {
-                "counsellor_id": {
-                    "type": "string"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "duration": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "string"
-                },
-                "time": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topic_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.CounsellorEventOrderPaymentCompleteRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "string"
-                },
-                "payment_method": {
                     "type": "string"
                 }
             }
@@ -4092,6 +4570,80 @@ var doc = `{
                 }
             }
         },
+        "model.EventBlockOrderCreateRequest": {
+            "type": "object",
+            "properties": {
+                "counsellor_id": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "string"
+                },
+                "photo": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topic_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventBlockOrderPaymentCompleteRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventOrderCreateRequest": {
+            "type": "object",
+            "properties": {
+                "coupon_code": {
+                    "type": "string"
+                },
+                "event_order_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventOrderPaymentCompleteRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_id": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                }
+            }
+        },
         "model.ListenerOrderCreateRequest": {
             "type": "object",
             "properties": {
@@ -4221,49 +4773,6 @@ var doc = `{
                     "type": "string"
                 },
                 "phone": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.TherapistEventOrderCreateRequest": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "duration": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "string"
-                },
-                "therapist_id": {
-                    "type": "string"
-                },
-                "time": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "topic_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.TherapistEventOrderPaymentCompleteRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "string"
-                },
-                "payment_method": {
                     "type": "string"
                 }
             }

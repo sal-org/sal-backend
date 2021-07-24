@@ -15,7 +15,9 @@ import (
 // @Tags Listener Profile
 // @Summary Get listener profile with email, if signed up already
 // @Router /listener [get]
-// @Param email query string true "Email of listener - to get details, if signed up already"
+// @Param email query string false "Email of listener - to get details, if signed up already"
+// @Param listener_id query string false "Listener ID to update details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ProfileGet(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +26,19 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	params := map[string]string{}
+	if len(r.FormValue("email")) > 0 {
+		params["email"] = r.FormValue("email")
+	}
+	if len(r.FormValue("listener_id")) > 0 {
+		params["listener_id"] = r.FormValue("listener_id")
+	}
+	if len(params) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, params)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

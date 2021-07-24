@@ -15,7 +15,9 @@ import (
 // @Tags Counsellor Profile
 // @Summary Get counsellor profile with email, if signed up already
 // @Router /counsellor [get]
-// @Param email query string true "Email of counsellor - to get details, if signed up already"
+// @Param email query string false "Email of counsellor - to get details, if signed up already"
+// @Param counsellor_id query string false "Counsellor ID to update details"
+// @Security JWTAuth
 // @Produce json
 // @Success 200
 func ProfileGet(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +26,19 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	params := map[string]string{}
+	if len(r.FormValue("email")) > 0 {
+		params["email"] = r.FormValue("email")
+	}
+	if len(r.FormValue("counsellor_id")) > 0 {
+		params["counsellor_id"] = r.FormValue("counsellor_id")
+	}
+	if len(params) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, params)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

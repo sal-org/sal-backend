@@ -60,53 +60,35 @@ type AppointmentBookRequest struct {
 	Time              string `json:"time"`
 }
 
-// ClientEventOrderCreateRequest .
-type ClientEventOrderCreateRequest struct {
-	ClientID     string `json:"client_id"`
+// EventOrderCreateRequest .
+type EventOrderCreateRequest struct {
+	UserID       string `json:"user_id"`
 	EventOrderID string `json:"event_order_id"`
 	CouponCode   string `json:"coupon_code"`
 }
 
-// CounsellorEventOrderCreateRequest .
-type CounsellorEventOrderCreateRequest struct {
+// EventBlockOrderCreateRequest .
+type EventBlockOrderCreateRequest struct {
 	CounsellorID string `json:"counsellor_id"`
 	Title        string `json:"title"`
 	Description  string `json:"description"`
 	TopicID      string `json:"topic_id"`
 	Date         string `json:"date"`
+	Photo        string `json:"photo"`
 	Time         string `json:"time"`
 	Duration     string `json:"duration"`
 	Price        string `json:"price"`
 }
 
-// TherapistEventOrderCreateRequest .
-type TherapistEventOrderCreateRequest struct {
-	TherapistID string `json:"therapist_id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	TopicID     string `json:"topic_id"`
-	Date        string `json:"date"`
-	Time        string `json:"time"`
-	Duration    string `json:"duration"`
-	Price       string `json:"price"`
-}
-
-// ClientEventOrderPaymentCompleteRequest .
-type ClientEventOrderPaymentCompleteRequest struct {
+// EventOrderPaymentCompleteRequest .
+type EventOrderPaymentCompleteRequest struct {
 	OrderID       string `json:"order_id"`
 	PaymentMethod string `json:"payment_method"`
 	PaymentID     string `json:"payment_id"`
 }
 
-// CounsellorEventOrderPaymentCompleteRequest .
-type CounsellorEventOrderPaymentCompleteRequest struct {
-	OrderID       string `json:"order_id"`
-	PaymentMethod string `json:"payment_method"`
-	PaymentID     string `json:"payment_id"`
-}
-
-// TherapistEventOrderPaymentCompleteRequest .
-type TherapistEventOrderPaymentCompleteRequest struct {
+// EventBlockOrderPaymentCompleteRequest .
+type EventBlockOrderPaymentCompleteRequest struct {
 	OrderID       string `json:"order_id"`
 	PaymentMethod string `json:"payment_method"`
 	PaymentID     string `json:"payment_id"`
@@ -304,7 +286,7 @@ type AppointmentRatingAdd struct {
 
 // AssessmentAddRequest .
 type AssessmentAddRequest struct {
-	PersonID     string `json:"person_id"`
+	UserID       string `json:"user_id"`
 	Name         string `json:"name"`
 	Age          string `json:"age"`
 	Gender       string `json:"gender"`

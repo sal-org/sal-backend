@@ -12,6 +12,9 @@ const (
 
 // urls
 var URLs = map[string]string{
-	"about": "https://sal-foundation.com/about-sal",
-	"faq":   "https://sal-foundation.com/about-sal",
+	"privacy": "https://sal-foundation.com/app_pp",
+	"about":   "https://sal-foundation.com/about-sal",
+	"faq":     "https://sal-foundation.com/app_faqs",
+	"info":    "https://sal-foundation.com/about-sal",
+	"tos":     "https://sal-foundation.com/apptos",
 }

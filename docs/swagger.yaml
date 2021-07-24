@@ -52,27 +52,9 @@ definitions:
         type: string
       name:
         type: string
-      person_id:
-        type: string
       phone:
         type: string
-    type: object
-  model.ClientEventOrderCreateRequest:
-    properties:
-      client_id:
-        type: string
-      coupon_code:
-        type: string
-      event_order_id:
-        type: string
-    type: object
-  model.ClientEventOrderPaymentCompleteRequest:
-    properties:
-      order_id:
-        type: string
-      payment_id:
-        type: string
-      payment_method:
+      user_id:
         type: string
     type: object
   model.ClientProfileAddRequest:
@@ -111,34 +93,6 @@ definitions:
       location:
         type: string
       timezone:
-        type: string
-    type: object
-  model.CounsellorEventOrderCreateRequest:
-    properties:
-      counsellor_id:
-        type: string
-      date:
-        type: string
-      description:
-        type: string
-      duration:
-        type: string
-      price:
-        type: string
-      time:
-        type: string
-      title:
-        type: string
-      topic_id:
-        type: string
-    type: object
-  model.CounsellorEventOrderPaymentCompleteRequest:
-    properties:
-      order_id:
-        type: string
-      payment_id:
-        type: string
-      payment_method:
         type: string
     type: object
   model.CounsellorOrderCreateRequest:
@@ -279,6 +233,54 @@ definitions:
       topic_ids:
         type: string
     type: object
+  model.EventBlockOrderCreateRequest:
+    properties:
+      counsellor_id:
+        type: string
+      date:
+        type: string
+      description:
+        type: string
+      duration:
+        type: string
+      photo:
+        type: string
+      price:
+        type: string
+      time:
+        type: string
+      title:
+        type: string
+      topic_id:
+        type: string
+    type: object
+  model.EventBlockOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
+  model.EventOrderCreateRequest:
+    properties:
+      coupon_code:
+        type: string
+      event_order_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.EventOrderPaymentCompleteRequest:
+    properties:
+      order_id:
+        type: string
+      payment_id:
+        type: string
+      payment_method:
+        type: string
+    type: object
   model.ListenerOrderCreateRequest:
     properties:
       client_id:
@@ -364,34 +366,6 @@ definitions:
       name:
         type: string
       phone:
-        type: string
-    type: object
-  model.TherapistEventOrderCreateRequest:
-    properties:
-      date:
-        type: string
-      description:
-        type: string
-      duration:
-        type: string
-      price:
-        type: string
-      therapist_id:
-        type: string
-      time:
-        type: string
-      title:
-        type: string
-      topic_id:
-        type: string
-    type: object
-  model.TherapistEventOrderPaymentCompleteRequest:
-    properties:
-      order_id:
-        type: string
-      payment_id:
-        type: string
-      payment_method:
         type: string
     type: object
   model.TherapistOrderCreateRequest:
@@ -1033,7 +1007,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ClientEventOrderCreateRequest'
+          $ref: '#/definitions/model.EventOrderCreateRequest'
       produces:
       - application/json
       responses:
@@ -1052,7 +1026,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ClientEventOrderPaymentCompleteRequest'
+          $ref: '#/definitions/model.EventOrderPaymentCompleteRequest'
       produces:
       - application/json
       responses:
@@ -1430,13 +1404,18 @@ paths:
       - description: Email of counsellor - to get details, if signed up already
         in: query
         name: email
-        required: true
+        type: string
+      - description: Counsellor ID to update details
+        in: query
+        name: counsellor_id
         type: string
       produces:
       - application/json
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get counsellor profile with email, if signed up already
       tags:
       - Counsellor Profile
@@ -1615,7 +1594,7 @@ paths:
         type: string
       - description: Logged in counsellor ID
         in: query
-        name: counsellor_if
+        name: counsellor_id
         required: true
         type: string
       produces:
@@ -1675,6 +1654,125 @@ paths:
       summary: Update counsellor availability hours
       tags:
       - Counsellor Availability
+  /counsellor/event:
+    get:
+      parameters:
+      - description: Event order ID to get details
+        in: query
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get event details
+      tags:
+      - Counsellor Event
+    put:
+      parameters:
+      - description: Event order ID to update
+        in: query
+        name: order_id
+        required: true
+        type: string
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      - description: Start(2), Stop(3)
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start and stop event
+      tags:
+      - Counsellor Event
+  /counsellor/event/block:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get blocked upcoming and past events
+      tags:
+      - Counsellor Event
+  /counsellor/event/block/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventBlockOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Block a slot for an event
+      tags:
+      - Counsellor Event
+  /counsellor/event/block/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventBlockOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Call after payment is completed for event block order
+      tags:
+      - Counsellor Event
+  /counsellor/event/booked:
+    get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get booked upcoming and past events
+      tags:
+      - Counsellor Event
   /counsellor/event/order:
     post:
       parameters:
@@ -1683,7 +1781,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CounsellorEventOrderCreateRequest'
+          $ref: '#/definitions/model.EventOrderCreateRequest'
       produces:
       - application/json
       responses:
@@ -1702,7 +1800,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CounsellorEventOrderPaymentCompleteRequest'
+          $ref: '#/definitions/model.EventOrderPaymentCompleteRequest'
       produces:
       - application/json
       responses:
@@ -1715,12 +1813,6 @@ paths:
       - Counsellor Event
   /counsellor/events:
     get:
-      parameters:
-      - description: Logged in counsellor ID
-        in: query
-        name: counsellor_id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1728,7 +1820,7 @@ paths:
           description: ""
       security:
       - JWTAuth: []
-      summary: Get upcoming and past counsellor events
+      summary: List available events
       tags:
       - Counsellor Event
   /counsellor/home:
@@ -1883,13 +1975,18 @@ paths:
       - description: Email of listener - to get details, if signed up already
         in: query
         name: email
-        required: true
+        type: string
+      - description: Listener ID to update details
+        in: query
+        name: listener_id
         type: string
       produces:
       - application/json
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get listener profile with email, if signed up already
       tags:
       - Listener Profile
@@ -2128,6 +2225,92 @@ paths:
       summary: Update listener availability hours
       tags:
       - Listener Availability
+  /listener/event:
+    get:
+      parameters:
+      - description: Event order ID to get details
+        in: query
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get event details
+      tags:
+      - Listener Event
+  /listener/event/booked:
+    get:
+      parameters:
+      - description: Logged in listener ID
+        in: query
+        name: listener_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get booked upcoming and past events
+      tags:
+      - Listener Event
+  /listener/event/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Book a slot in an event
+      tags:
+      - Listener Event
+  /listener/event/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Call after payment is completed for event order
+      tags:
+      - Listener Event
+  /listener/events:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: List available events
+      tags:
+      - Listener Event
   /listener/home:
     get:
       parameters:
@@ -2282,13 +2465,18 @@ paths:
       - description: Email of therapist - to get details, if signed up already
         in: query
         name: email
-        required: true
+        type: string
+      - description: Therapist ID to update details
+        in: query
+        name: therapist_id
         type: string
       produces:
       - application/json
       responses:
         "200":
           description: ""
+      security:
+      - JWTAuth: []
       summary: Get therapist profile with email, if signed up already
       tags:
       - Therapist Profile
@@ -2527,6 +2715,125 @@ paths:
       summary: Update therapist availability hours
       tags:
       - Therapist Availability
+  /therapist/event:
+    get:
+      parameters:
+      - description: Event order ID to get details
+        in: query
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get event details
+      tags:
+      - Therapist Event
+    put:
+      parameters:
+      - description: Event order ID to update
+        in: query
+        name: order_id
+        required: true
+        type: string
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      - description: Start(2), Stop(3)
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start and stop event
+      tags:
+      - Therapist Event
+  /therapist/event/block:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get blocked upcoming and past events
+      tags:
+      - Therapist Event
+  /therapist/event/block/order:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventBlockOrderCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Block a slot for an event
+      tags:
+      - Therapist Event
+  /therapist/event/block/paymentcomplete:
+    post:
+      parameters:
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventBlockOrderPaymentCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Call after payment is completed for event block order
+      tags:
+      - Therapist Event
+  /therapist/event/booked:
+    get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get booked upcoming and past events
+      tags:
+      - Therapist Event
   /therapist/event/order:
     post:
       parameters:
@@ -2535,7 +2842,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.TherapistEventOrderCreateRequest'
+          $ref: '#/definitions/model.EventOrderCreateRequest'
       produces:
       - application/json
       responses:
@@ -2554,7 +2861,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.TherapistEventOrderPaymentCompleteRequest'
+          $ref: '#/definitions/model.EventOrderPaymentCompleteRequest'
       produces:
       - application/json
       responses:
@@ -2567,12 +2874,6 @@ paths:
       - Therapist Event
   /therapist/events:
     get:
-      parameters:
-      - description: Logged in therapist ID
-        in: query
-        name: therapist_id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2580,7 +2881,7 @@ paths:
           description: ""
       security:
       - JWTAuth: []
-      summary: Get upcoming and past therapist events
+      summary: List available events
       tags:
       - Therapist Event
   /therapist/home:

@@ -39,15 +39,29 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	counsellorRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
 	counsellorRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
 		"assessment_id", "{assessment_id}",
-		"client_id", "{client_id}",
+		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
 
 	// event
-	counsellorRoutes.HandleFunc("/events", EventsList).Queries(
+	counsellorRoutes.HandleFunc("/events", EventsList).Methods("GET")
+	counsellorRoutes.HandleFunc("/event", EventDetail).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	counsellorRoutes.HandleFunc("/event/booked", EventsBooked).Queries(
 		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
 	counsellorRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
 	counsellorRoutes.HandleFunc("/event/paymentcomplete", EventOrderPaymentComplete).Methods("POST")
+	counsellorRoutes.HandleFunc("/event/block", EventsBlocked).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+	counsellorRoutes.HandleFunc("/event", EventUpdate).Queries(
+		"order_id", "{order_id}",
+		"counsellor_id", "{counsellor_id}",
+		"status", "{status}",
+	).Methods("PUT")
+	counsellorRoutes.HandleFunc("/event/block/order", EventBlockOrderCreate).Methods("POST")
+	counsellorRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
 
 	// home
 	counsellorRoutes.HandleFunc("/home", Home).Methods("GET")
@@ -77,6 +91,9 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	// profile
 	counsellorRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",
+	).Methods("GET")
+	counsellorRoutes.HandleFunc("", ProfileGet).Queries(
+		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
 	counsellorRoutes.HandleFunc("", ProfileAdd).Methods("POST")
 	counsellorRoutes.HandleFunc("", ProfileUpdate).Queries(

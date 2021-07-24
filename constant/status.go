@@ -28,7 +28,8 @@ const (
 // appointment or event order
 const (
 	OrderAppointmentType = "1"
-	OrderEventType       = "2"
+	OrderEventBookType   = "2"
+	OrderEventBlockType  = "3"
 )
 
 // counsellor or listener

@@ -7,18 +7,18 @@ import (
 )
 
 // SendNotification - send notification using onesignal
-func SendNotification(heading, content, personID, personType string) {
+func SendNotification(heading, content, userID, personType string) {
 	if strings.Contains(content, "###") { // check if notification variables are replaced
 		return
 	}
 
 	// add data to notifications
 	notification := map[string]string{}
-	notification["person_id"] = personID
+	notification["user_id"] = userID
 	notification["title"] = heading
 	notification["body"] = content
 	notification["status"] = CONSTANT.NotificationActive
-	notification["onesignal_id"] = GetNotificationID(personID, personType)
+	notification["onesignal_id"] = GetNotificationID(userID, personType)
 	if len(notification["onesignal_id"]) > 0 {
 		notification["notification_status"] = CONSTANT.NotificationInProgress
 	} else {

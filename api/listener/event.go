@@ -1,4 +1,4 @@
-package client
+package listener
 
 import (
 	"math"
@@ -6,16 +6,16 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-
-	UTIL "salbackend/util"
 	"strconv"
 	"strings"
+
+	UTIL "salbackend/util"
 )
 
 // EventsList godoc
-// @Tags Client Event
+// @Tags Listener Event
 // @Summary List available events
-// @Router /client/events [get]
+// @Router /listener/events [get]
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -35,9 +35,9 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 }
 
 // EventDetail godoc
-// @Tags Client Event
+// @Tags Listener Event
 // @Summary Get event details
-// @Router /client/event [get]
+// @Router /listener/event [get]
 // @Param order_id query string true "Event order ID to get details"
 // @Security JWTAuth
 // @Produce json
@@ -90,10 +90,10 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 // EventsBooked godoc
-// @Tags Client Event
+// @Tags Listener Event
 // @Summary Get booked upcoming and past events
-// @Router /client/event/booked [get]
-// @Param client_id query string true "Logged in client ID"
+// @Router /listener/event/booked [get]
+// @Param listener_id query string true "Logged in listener ID"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -103,7 +103,7 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming booked events
-	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("client_id"))
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -111,7 +111,7 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 	response["upcoming_events"] = events
 
 	// get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))
-	events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("client_id"))
+	events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -121,9 +121,9 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 }
 
 // EventOrderCreate godoc
-// @Tags Client Event
+// @Tags Listener Event
 // @Summary Book a slot in an event
-// @Router /client/event/order [post]
+// @Router /listener/event/order [post]
 // @Param body body model.EventOrderCreateRequest true "Request Body"
 // @Security JWTAuth
 // @Produce json
@@ -147,20 +147,20 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["user_id"]})
+	// get listener details
+	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": body["user_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if client is valid
-	if len(client) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+	// check if listener is valid
+	if len(listener) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if client is active
-	if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotAllowedMessage, CONSTANT.ShowDialog, response)
+	// check if listener is active
+	if !strings.EqualFold(listener[0]["status"], CONSTANT.ListenerActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -185,7 +185,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order := map[string]string{}
 	order["user_id"] = body["user_id"]
 	order["event_order_id"] = body["event_order_id"]
-	order["user_type"] = CONSTANT.ClientType
+	order["user_type"] = CONSTANT.ListenerType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
@@ -193,7 +193,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["coupon_code"]) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and (order_type = "+CONSTANT.OrderEventBookType+" or order_type is null) and (client_id = ? or client_id is null) order by created_at desc limit 1", body["coupon_code"], body["user_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and (order_type = "+CONSTANT.OrderEventBookType+" or order_type is null) and (counsellor_id = ? or counsellor_id is null) order by created_at desc limit 1", body["coupon_code"], body["user_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -203,7 +203,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(coupon[0]["valid_for_order"]) > 0 && !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
-			// get total number of client appointment/event orders
+			// get total number of listener appointment/event orders
 			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body["user_id"])
 			// check if coupon applicable by order count and valid for order
 			if !strings.EqualFold(coupon[0]["valid_for_order"], strconv.Itoa(noOrders+1)) { // add 1 to equal to valid for order value
@@ -258,9 +258,9 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // EventOrderPaymentComplete godoc
-// @Tags Client Event
+// @Tags Listener Event
 // @Summary Call after payment is completed for event order
-// @Router /client/event/paymentcomplete [post]
+// @Router /listener/event/paymentcomplete [post]
 // @Param body body model.EventOrderPaymentCompleteRequest true "Request Body"
 // @Security JWTAuth
 // @Produce json
@@ -317,7 +317,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["payment_method"] = body["payment_method"]
 	invoice["payment_id"] = body["payment_id"]
 	invoice["user_id"] = order[0]["user_id"]
-	invoice["user_type"] = CONSTANT.ClientType
+	invoice["user_type"] = CONSTANT.ListenerType
 	invoice["order_type"] = CONSTANT.OrderEventBookType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]

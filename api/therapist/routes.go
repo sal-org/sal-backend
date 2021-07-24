@@ -39,15 +39,29 @@ func LoadTherapistRoutes(router *mux.Router) {
 	therapistRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
 	therapistRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
 		"assessment_id", "{assessment_id}",
-		"client_id", "{client_id}",
+		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
 	// event
-	therapistRoutes.HandleFunc("/events", EventsList).Queries(
+	therapistRoutes.HandleFunc("/events", EventsList).Methods("GET")
+	therapistRoutes.HandleFunc("/event", EventDetail).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event/booked", EventsBooked).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 	therapistRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
 	therapistRoutes.HandleFunc("/event/paymentcomplete", EventOrderPaymentComplete).Methods("POST")
+	therapistRoutes.HandleFunc("/event/block", EventsBlocked).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event", EventUpdate).Queries(
+		"order_id", "{order_id}",
+		"therapist_id", "{therapist_id}",
+		"status", "{status}",
+	).Methods("PUT")
+	therapistRoutes.HandleFunc("/event/block/order", EventBlockOrderCreate).Methods("POST")
+	therapistRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
 
 	// home
 	therapistRoutes.HandleFunc("/home", Home).Methods("GET")
@@ -71,12 +85,15 @@ func LoadTherapistRoutes(router *mux.Router) {
 
 	// payment
 	therapistRoutes.HandleFunc("/payment", PaymentsGet).Queries(
-		"counsellor_id", "{counsellor_id}",
+		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
 	// profile
 	therapistRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("", ProfileGet).Queries(
+		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 	therapistRoutes.HandleFunc("", ProfileAdd).Methods("POST")
 	therapistRoutes.HandleFunc("", ProfileUpdate).Queries(
