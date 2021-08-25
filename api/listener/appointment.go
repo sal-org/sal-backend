@@ -155,9 +155,9 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	// send appointment cancel notification to client
+	// send appointment cancel notification, email to client
 	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
@@ -170,6 +170,18 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+	)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorAppointmentCancelClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentCancelClientBody,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		client[0]["email"],
+		CONSTANT.LaterSendEmailMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

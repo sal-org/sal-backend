@@ -193,7 +193,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["coupon_code"]) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and (order_type = "+CONSTANT.OrderEventBookType+" or order_type is null) and (client_id = ? or client_id is null) order by created_at desc limit 1", body["coupon_code"], body["user_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderEventBookType+" or order_type = 0) and (client_id = ? or client_id = '') order by created_at desc limit 1", body["coupon_code"], body["user_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -202,7 +202,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponInCorrectMessage, CONSTANT.ShowDialog, response)
 			return
 		}
-		if len(coupon[0]["valid_for_order"]) > 0 && !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
+		if !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
 			// get total number of client appointment/event orders
 			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body["user_id"])
 			// check if coupon applicable by order count and valid for order

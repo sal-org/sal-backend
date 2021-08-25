@@ -16,6 +16,15 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// meta
 	router.HandleFunc("/meta", ListMeta).Methods("GET")
 
+	// login
+	router.HandleFunc("/sendotp", SendOTP).Queries(
+		"phone", "{phone}",
+	).Methods("GET")
+	router.HandleFunc("/verifyotp", VerifyOTP).Queries(
+		"phone", "{phone}",
+		"otp", "{otp}",
+	).Methods("GET")
+
 	// mood
 	router.HandleFunc("/mood", ListMood).Methods("GET")
 

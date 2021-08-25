@@ -1902,22 +1902,6 @@ paths:
       summary: Get new access token with refresh token
       tags:
       - Counsellor Login
-  /counsellor/sendotp:
-    get:
-      parameters:
-      - description: Phone number to send OTP - send phone number with 91 code
-        in: query
-        name: phone
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: Send OTP to specified phone
-      tags:
-      - Counsellor Login
   /counsellor/training:
     get:
       parameters:
@@ -1935,28 +1919,6 @@ paths:
       summary: Get counsellor training content
       tags:
       - Counsellor Training
-  /counsellor/verifyotp:
-    get:
-      parameters:
-      - description: Phone number OTP has been sent to - send phone number with 91
-          code
-        in: query
-        name: phone
-        required: true
-        type: string
-      - description: OTP entered by counsellor
-        in: query
-        name: otp
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: Verify OTP sent to specified phone
-      tags:
-      - Counsellor Login
   /language:
     get:
       produces:
@@ -2368,22 +2330,6 @@ paths:
       summary: Get new access token with refresh token
       tags:
       - Listener Login
-  /listener/sendotp:
-    get:
-      parameters:
-      - description: Phone number to send OTP - send phone number with 91 code
-        in: query
-        name: phone
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: Send OTP to specified phone
-      tags:
-      - Listener Login
   /listener/training:
     get:
       parameters:
@@ -2401,28 +2347,6 @@ paths:
       summary: Get listener training content
       tags:
       - Listener Training
-  /listener/verifyotp:
-    get:
-      parameters:
-      - description: Phone number OTP has been sent to - send phone number with 91
-          code
-        in: query
-        name: phone
-        required: true
-        type: string
-      - description: OTP entered by listener
-        in: query
-        name: otp
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: Verify OTP sent to specified phone
-      tags:
-      - Listener Login
   /meta:
     get:
       produces:
@@ -2459,6 +2383,22 @@ paths:
       summary: Get ratings types
       tags:
       - Miscellaneous
+  /sendotp:
+    get:
+      parameters:
+      - description: Phone number to send OTP - send phone number with 91 code
+        in: query
+        name: phone
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Send OTP to specified phone
+      tags:
+      - Counsellor/Listener/Therapist Login
   /therapist:
     get:
       parameters:
@@ -2963,22 +2903,6 @@ paths:
       summary: Get new access token with refresh token
       tags:
       - Therapist Login
-  /therapist/sendotp:
-    get:
-      parameters:
-      - description: Phone number to send OTP - send phone number with 91 code
-        in: query
-        name: phone
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: Send OTP to specified phone
-      tags:
-      - Therapist Login
   /therapist/training:
     get:
       parameters:
@@ -2996,28 +2920,6 @@ paths:
       summary: Get therapist training content
       tags:
       - Therapist Training
-  /therapist/verifyotp:
-    get:
-      parameters:
-      - description: Phone number OTP has been sent to - send phone number with 91
-          code
-        in: query
-        name: phone
-        required: true
-        type: string
-      - description: OTP entered by therapist
-        in: query
-        name: otp
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: Verify OTP sent to specified phone
-      tags:
-      - Therapist Login
   /topic:
     get:
       produces:
@@ -3055,6 +2957,28 @@ paths:
       summary: Upload files like photos, certificates, aadhar etc
       tags:
       - Miscellaneous
+  /verifyotp:
+    get:
+      parameters:
+      - description: Phone number OTP has been sent to - send phone number with 91
+          code
+        in: query
+        name: phone
+        required: true
+        type: string
+      - description: OTP entered by counsellor/listener/therapist
+        in: query
+        name: otp
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Verify OTP sent to specified phone
+      tags:
+      - Counsellor/Listener/Therapist Login
 schemes:
 - https
 securityDefinitions:

@@ -72,7 +72,7 @@ func UploadToS3(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, a
 	fmt.Println(s.Size())
 	defer openedFile.Close()
 
-	fileName := path + "/" + getMD5Hash(savedFileName) + extension
+	fileName := path + "/" + getFileMD5Hash(savedFileName) + extension
 
 	_, err = svc.Upload(&s3manager.UploadInput{
 		Bucket:      aws.String(s3Bucket),

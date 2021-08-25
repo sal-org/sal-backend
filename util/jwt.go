@@ -20,6 +20,15 @@ func CheckIfUserLogin(auth string, userID string) bool {
 	return true
 }
 
+// CheckIfAccessTokenExpired - check if token is valid, not expired
+func CheckIfAccessTokenExpired(auth string) bool {
+	_, ok, access := ParseJWTAccessToken(auth)
+	if !ok || !access {
+		return false
+	}
+	return true
+}
+
 // GetUserIDFromJWTToken - get user id from token
 func GetUserIDFromJWTToken(token string) string {
 	id, _, _ := ParseJWTAccessToken(token)

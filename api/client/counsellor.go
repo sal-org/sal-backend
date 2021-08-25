@@ -51,7 +51,7 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get last 10 counsellor apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and a.comment is not null and a.comment != '' order by a.modified_at desc limit 10 ", r.FormValue("counsellor_id"))
+	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and a.comment != '' order by a.modified_at desc limit 10 ", r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -193,7 +193,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["coupon_code"]) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and end_by > '"+UTIL.GetCurrentTime().String()+"' and (order_type = "+CONSTANT.OrderAppointmentType+" or order_type is null) and (client_id = ? or client_id is null) and (counsellor_id = ? or counsellor_id is null) order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["counsellor_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderAppointmentType+" or order_type = 0) and (client_id = ? or client_id = '') and (counsellor_id = ? or counsellor_id = '') order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["counsellor_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -202,7 +202,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponInCorrectMessage, CONSTANT.ShowDialog, response)
 			return
 		}
-		if len(coupon[0]["valid_for_order"]) > 0 && !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
+		if !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
 			// get total number of client appointment/event orders
 			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body["client_id"])
 			// check if coupon applicable by order count and valid for order
@@ -396,7 +396,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// send notitifications
 	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
@@ -412,7 +412,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 	)
 
-	// send payment success notification to client
+	// send payment success notification, email to client
 	UTIL.SendNotification(
 		CONSTANT.ClientPaymentSucessClientHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -424,6 +424,19 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
+	)
+
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientPaymentSucessClientBody,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+				"###paid_amount###": order[0]["paid_amount"],
+			},
+		),
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	// send appointment booking notification to counsellor

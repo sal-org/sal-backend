@@ -67,13 +67,6 @@ func LoadTherapistRoutes(router *mux.Router) {
 	therapistRoutes.HandleFunc("/home", Home).Methods("GET")
 
 	// login
-	therapistRoutes.HandleFunc("/sendotp", SendOTP).Queries(
-		"phone", "{phone}",
-	).Methods("GET")
-	therapistRoutes.HandleFunc("/verifyotp", VerifyOTP).Queries(
-		"phone", "{phone}",
-		"otp", "{otp}",
-	).Methods("GET")
 	therapistRoutes.Path("/refresh-token").Queries(
 		"therapist_id", "{therapist_id}",
 	).HandlerFunc(RefreshToken).Methods("GET")

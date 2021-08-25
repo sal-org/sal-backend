@@ -2,6 +2,7 @@ package constant
 
 // database tables
 const (
+	AdminsTable                    = "admins"
 	AppointmentsTable              = "appointments"
 	AppointmentSlotsTable          = "appointment_slots"
 	AssessmentsTable               = "assessments"
@@ -18,6 +19,7 @@ const (
 	CounsellorsTable               = "counsellors"
 	CounsellorLanguagesTable       = "counsellor_languages"
 	CounsellorTopicsTable          = "counsellor_topics"
+	EmailsTable                    = "emails"
 	InvoicesTable                  = "invoices"
 	LanguagesTable                 = "languages"
 	ListenersTable                 = "listeners"
@@ -47,6 +49,7 @@ const RandomIDDigits = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 // length of unqiue digits to be generated for each table
 const (
+	AdminDigits             = 4
 	AppointmentDigits       = 12
 	AppointmentSlotDigits   = 11
 	AssessmentResultsDigits = 16
@@ -56,6 +59,7 @@ const (
 	CounsellorDigits        = 6
 	ListenerDigits          = 9
 	MessagesDigits          = 10
+	EmailsDigits            = 13
 	NotificationsDigits     = 15
 	EventDigits             = 7
 	InvoiceDigits           = 8

@@ -2312,31 +2312,6 @@ var doc = `{
                 }
             }
         },
-        "/counsellor/sendotp": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Counsellor Login"
-                ],
-                "summary": "Send OTP to specified phone",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Phone number to send OTP - send phone number with 91 code",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/counsellor/training": {
             "get": {
                 "security": [
@@ -2357,38 +2332,6 @@ var doc = `{
                         "description": "Logged in counsellor ID",
                         "name": "counsellor_id",
                         "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/counsellor/verifyotp": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Counsellor Login"
-                ],
-                "summary": "Verify OTP sent to specified phone",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "OTP entered by counsellor",
-                        "name": "otp",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -3082,31 +3025,6 @@ var doc = `{
                 }
             }
         },
-        "/listener/sendotp": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Listener Login"
-                ],
-                "summary": "Send OTP to specified phone",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Phone number to send OTP - send phone number with 91 code",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/listener/training": {
             "get": {
                 "security": [
@@ -3127,38 +3045,6 @@ var doc = `{
                         "description": "Logged in listener ID",
                         "name": "listener_id",
                         "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/listener/verifyotp": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Listener Login"
-                ],
-                "summary": "Verify OTP sent to specified phone",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "OTP entered by listener",
-                        "name": "otp",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -3224,6 +3110,31 @@ var doc = `{
                     "Miscellaneous"
                 ],
                 "summary": "Get ratings types",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/sendotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor/Listener/Therapist Login"
+                ],
+                "summary": "Send OTP to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number to send OTP - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -4066,31 +3977,6 @@ var doc = `{
                 }
             }
         },
-        "/therapist/sendotp": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Therapist Login"
-                ],
-                "summary": "Send OTP to specified phone",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Phone number to send OTP - send phone number with 91 code",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/therapist/training": {
             "get": {
                 "security": [
@@ -4111,38 +3997,6 @@ var doc = `{
                         "description": "Logged in therapist ID",
                         "name": "therapist_id",
                         "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/therapist/verifyotp": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Therapist Login"
-                ],
-                "summary": "Verify OTP sent to specified phone",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
-                        "name": "phone",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "OTP entered by therapist",
-                        "name": "otp",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4203,6 +4057,38 @@ var doc = `{
                         "description": "1(counsellor)/2(listener)/3(client)/4(therapist)",
                         "name": "type",
                         "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/verifyotp": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor/Listener/Therapist Login"
+                ],
+                "summary": "Verify OTP sent to specified phone",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Phone number OTP has been sent to - send phone number with 91 code",
+                        "name": "phone",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "OTP entered by counsellor/listener/therapist",
+                        "name": "otp",
+                        "in": "query",
                         "required": true
                     }
                 ],

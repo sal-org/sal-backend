@@ -30,4 +30,5 @@ func LoadConfig() {
 	S3SecretKey = os.Getenv("S3_SECRET_KEY")
 	S3Region = os.Getenv("S3_REGION")
 	JWTSecret = []byte(os.Getenv("JWT_SECRET"))
+	FromEmailID = os.Getenv("FROM_EMAIL_ID")
 }

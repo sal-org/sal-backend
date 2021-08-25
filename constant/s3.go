@@ -4,6 +4,7 @@ package constant
 const (
 	MiscellaneousS3Path = "miscellaneous"
 	CounsellorS3Path    = "counsellor"
+	ContentS3Path       = "content"
 	ListenerS3Path      = "listener"
 	ClientS3Path        = "client"
 	TherapistS3Path     = "therapist"

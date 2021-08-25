@@ -103,14 +103,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["phone"]}) {
+	if DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"phone": body["phone"]}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// check if user already signed up with specified email
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -133,7 +127,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener["about"] = body["about"]
 	listener["timezone"] = body["timezone"]
 	listener["device_id"] = body["device_id"]
-	listener["status"] = CONSTANT.ListenerNotApproved
+	listener["status"] = CONSTANT.ListenerActive
 	listener["last_login_time"] = UTIL.GetCurrentTime().String()
 	listener["created_at"] = UTIL.GetCurrentTime().String()
 	listenerID, status, ok := DB.InsertWithUniqueID(CONSTANT.ListenersTable, CONSTANT.ListenerDigits, listener, "listener_id")

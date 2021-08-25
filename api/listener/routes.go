@@ -57,13 +57,6 @@ func LoadListenerRoutes(router *mux.Router) {
 	listenerRoutes.HandleFunc("/home", Home).Methods("GET")
 
 	// login
-	listenerRoutes.HandleFunc("/sendotp", SendOTP).Queries(
-		"phone", "{phone}",
-	).Methods("GET")
-	listenerRoutes.HandleFunc("/verifyotp", VerifyOTP).Queries(
-		"phone", "{phone}",
-		"otp", "{otp}",
-	).Methods("GET")
 	listenerRoutes.Path("/refresh-token").Queries(
 		"listener_id", "{listener_id}",
 	).HandlerFunc(RefreshToken).Methods("GET")

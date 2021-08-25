@@ -103,14 +103,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["phone"]}) {
+	if DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"phone": body["phone"]}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// check if user already signed up with specified email
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -148,7 +142,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["bank_account_type"] = body["bank_account_type"]
 	counsellor["pan"] = body["pan"]
 	counsellor["device_id"] = body["device_id"]
-	counsellor["status"] = CONSTANT.CounsellorNotApproved
+	counsellor["status"] = CONSTANT.CounsellorActive
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
 	counsellorID, status, ok := DB.InsertWithUniqueID(CONSTANT.CounsellorsTable, CONSTANT.CounsellorDigits, counsellor, "counsellor_id")

@@ -2,7 +2,9 @@ package constant
 
 // client messages
 const (
-	ClientAccountDeletedMessage            = "Account blocked or deleted. Please contact our support team"
+	AdminAccountWrongCredentialsMessage    = "Admin account doesn't exist with given credentials. Check your username and password."
+	AdminAccountDeletedMessage             = "Admin account blocked. Please contact super admin"
+	AdminExistsMessage                     = "Admin with specified username already exists"
 	AppointmentNotExistMessage             = "Appointment doesn't exist"
 	AppointmentSlotNotExistMessage         = "Appointment slots doesn't exist"
 	AppointmentSlotNotAvailableMessage     = "Appointment slots not available"
@@ -11,6 +13,7 @@ const (
 	AppointmentCantRescheduleMessage       = "Appointment cannot be rescheduled"
 	AppointmentCantCancelMessage           = "Appointment cannot be cancelled. You can reschedule."
 	AppointmentCancel4HoursMinimumMessage  = "Appointment cannot be cancelled now, as it is in 4 hours."
+	ClientAccountDeletedMessage            = "Account blocked or deleted. Please contact our support team"
 	ClientNotExistMessage                  = "Client doesn't exist"
 	ClientNotAllowedMessage                = "Your account has been blocked. Please contact our support team for further clarification."
 	CounsellorAccountDeletedMessage        = "Account blocked or deleted. Please contact our support team"

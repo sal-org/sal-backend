@@ -62,5 +62,6 @@ func buildMessageURL(text, route, phone string) string {
 
 	u.RawQuery = v.Encode()
 
+	fmt.Println(u.String())
 	return u.String()
 }

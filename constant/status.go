@@ -25,6 +25,12 @@ const (
 	ArticleContentType = "3"
 )
 
+// content status
+const (
+	ContentActive  = "1"
+	ContentDeleted = "2"
+)
+
 // appointment or event order
 const (
 	OrderAppointmentType = "1"
@@ -71,6 +77,12 @@ const (
 	TherapistBlocked     = "3"
 )
 
+// admin status
+const (
+	AdminActive  = "1"
+	AdminBlocked = "2"
+)
+
 // payment status
 const (
 	PaymentValid   = "1"
@@ -82,6 +94,12 @@ const (
 	NotificationActive  = "1"
 	NotificationRead    = "2"
 	NotificationDeleted = "3"
+)
+
+// email status
+const (
+	EmailInProgress = "1"
+	EmailSent       = "2"
 )
 
 // message status
