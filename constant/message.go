@@ -23,5 +23,5 @@ const (
 	CounsellorOTPTextMessage                       = "###otp### is the OTP to register yourself on SAL Mobile App. You are only few steps away from your taking your 1st appointment."
 	ClientOTPTextMessage                           = "Dear Customer, ###otp### is the OTP to register yourself on SAL Mobile App. You can now access self care content and book appointments for your emotional well-being!"
 	ListenerOTPTextMessage                         = "###otp### is the OTP to register yourself on SAL Mobile App. You are only few steps away from your taking your 1st listening session."
-	ClientAppointmentScheduleCounsellorTextMessage = "Hi ###counsellor_name###, you have a new counselling session booked by ###client_name### for ###date### at ###time###. Please visit My sessions in the SAL Mobile app menu for more details."
+	ClientAppointmentScheduleCounsellorTextMessage = "Hi ###counsellor_name###, you have a new counselling session booked by ###client_name### for ###date_time###. Please visit My sessions in the SAL Mobile app menu for more details."
 )

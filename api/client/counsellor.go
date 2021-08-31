@@ -486,8 +486,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###counsellor_name###": counsellor[0]["first_name"],
 				"###client_name###":     client[0]["first_name"],
-				"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-				"###time###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleTimeFormat),
+				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
