@@ -75,7 +75,11 @@ definitions:
         type: string
       phone:
         type: string
+      photo:
+        type: string
       timezone:
+        type: string
+      topic_ids:
         type: string
     type: object
   model.ClientProfileUpdateRequest:
@@ -92,7 +96,11 @@ definitions:
         type: string
       location:
         type: string
+      photo:
+        type: string
       timezone:
+        type: string
+      topic_ids:
         type: string
     type: object
   model.CounsellorOrderCreateRequest:

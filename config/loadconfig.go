@@ -26,9 +26,9 @@ func LoadConfig() {
 	OneSignalAppID = os.Getenv("ONESIGNAL_APP_ID")
 	S3Bucket = os.Getenv("S3_BUCKET")
 	MediaURL = os.Getenv("MEDIA_URL")
-	S3AccesKey = os.Getenv("S3_ACCESS_KEY")
-	S3SecretKey = os.Getenv("S3_SECRET_KEY")
-	S3Region = os.Getenv("S3_REGION")
+	AWSAccesKey = os.Getenv("AWSACCESSKEY")
+	AWSSecretKey = os.Getenv("AWSSECRETKEY")
+	AWSRegion = os.Getenv("AWSREGION")
 	JWTSecret = []byte(os.Getenv("JWT_SECRET"))
 	FromEmailID = os.Getenv("FROM_EMAIL_ID")
 }

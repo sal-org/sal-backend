@@ -82,7 +82,7 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 
 	response["event"] = event[0]
 	response["counsellor"] = counsellor[0]
-	if len(topics[0]) > 0 {
+	if len(topics) > 0 && len(topics[0]) > 0 {
 		response["topic"] = topics[0]["topic"]
 	}
 	response["media_url"] = CONFIG.MediaURL

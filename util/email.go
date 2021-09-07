@@ -46,7 +46,7 @@ func sendSESMail(title, body, email string) {
 
 	// start a new ses session
 	svc := ses.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(CONFIG.S3AccesKey, CONFIG.S3SecretKey, ""),
+		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
 		Region:      aws.String("ap-south-1"),
 	})
 

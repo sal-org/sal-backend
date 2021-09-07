@@ -4216,7 +4216,13 @@ var doc = `{
                 "phone": {
                     "type": "string"
                 },
+                "photo": {
+                    "type": "string"
+                },
                 "timezone": {
+                    "type": "string"
+                },
+                "topic_ids": {
                     "type": "string"
                 }
             }
@@ -4242,7 +4248,13 @@ var doc = `{
                 "location": {
                     "type": "string"
                 },
+                "photo": {
+                    "type": "string"
+                },
                 "timezone": {
+                    "type": "string"
+                },
+                "topic_ids": {
                     "type": "string"
                 }
             }

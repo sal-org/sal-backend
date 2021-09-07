@@ -53,7 +53,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	if file != nil {
 		defer file.Close()
 
-		name, uploaded := UTIL.UploadToS3(CONFIG.S3Bucket, s3Path, CONFIG.S3AccesKey, CONFIG.S3SecretKey, CONFIG.S3Region, filepath.Ext(handler.Filename), CONSTANT.S3PublicRead, file)
+		name, uploaded := UTIL.UploadToS3(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(handler.Filename), CONSTANT.S3PublicRead, file)
 		if !uploaded {
 			fmt.Println("UploadFile", err)
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)

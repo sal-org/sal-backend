@@ -101,6 +101,8 @@ type ClientProfileAddRequest struct {
 	Phone     string `json:"phone"`
 	Email     string `json:"email"`
 	Age       string `json:"age"`
+	Photo     string `json:"photo"`
+	TopicIDs  string `json:"topic_ids"`
 	Gender    string `json:"gender"`
 	Location  string `json:"location"`
 	Timezone  string `json:"timezone"`
@@ -196,6 +198,8 @@ type ClientProfileUpdateRequest struct {
 	Timezone  string `json:"timezone"`
 	DeviceID  string `json:"device_id"`
 	Age       string `json:"age"`
+	Photo     string `json:"photo"`
+	TopicIDs  string `json:"topic_ids"`
 	Gender    string `json:"gender"`
 }
 
