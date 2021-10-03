@@ -1239,12 +1239,6 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "Available on time (0-47 half hour slots), in IST, for the selected date",
-                        "name": "time",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
                         "description": "Price range - 100,200 (min,max)",
                         "name": "price",
                         "in": "query"
@@ -4192,7 +4186,7 @@ var doc = `{
         "model.ClientProfileAddRequest": {
             "type": "object",
             "properties": {
-                "age": {
+                "date_of_birth": {
                     "type": "string"
                 },
                 "device_id": {
@@ -4230,7 +4224,7 @@ var doc = `{
         "model.ClientProfileUpdateRequest": {
             "type": "object",
             "properties": {
-                "age": {
+                "date_of_birth": {
                     "type": "string"
                 },
                 "device_id": {
@@ -4668,6 +4662,9 @@ var doc = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "notes": {
                     "type": "string"
                 },
                 "phone": {

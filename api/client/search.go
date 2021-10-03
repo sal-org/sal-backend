@@ -19,7 +19,6 @@ import (
 // @Param topic query string false "anxiety/anger/stress/depression/relationship/parenting/grief/motivation/life/others - send selected topic id"
 // @Param language query string false "english/hindi/tamil/telugu/kannada/bengali/malayalam/marathi/gujarati/punjabi - send selected language id"
 // @Param date query string false "Available on date (2020-02-27)"
-// @Param time query string false "Available on time (0-47 half hour slots), in IST, for the selected date"
 // @Param price query string false "Price range - 100,200 (min,max)"
 // @Param sort_by query string false "Sort by - 1(price), 2(rating)"
 // @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
@@ -50,11 +49,11 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		wheres = append(wheres, " counsellor_id in (select counsellor_id from "+CONSTANT.CounsellorLanguagesTable+" where language_id = ?) ")
 		counsellorArgs = append(counsellorArgs, r.FormValue("language"))
 	}
-	if len(r.FormValue("date")) > 0 { // get counsellors available in specified date time
-		wheres = append(wheres, " counsellor_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and `"+r.FormValue("time")+"` = "+CONSTANT.SlotAvailable+") ")
+	if len(r.FormValue("date")) > 0 { // get counsellors available in specified date
+		wheres = append(wheres, " counsellor_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and available = 1) ")
 		counsellorArgs = append(counsellorArgs, r.FormValue("date"))
 	}
-	if len(r.FormValue("price")) > 0 { // get counsellors available in specified date time
+	if len(r.FormValue("price")) > 0 { // get counsellors available in specified price range
 		prices := strings.Split(r.FormValue("price"), ",") // min,max price range
 		wheres = append(wheres, " price >= ? and price <= ? ")
 		counsellorArgs = append(counsellorArgs, prices[0], prices[1])
@@ -74,8 +73,8 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		wheres = append(wheres, " listener_id in (select counsellor_id from "+CONSTANT.CounsellorLanguagesTable+" where language_id = ?) ")
 		listenerArgs = append(listenerArgs, r.FormValue("language"))
 	}
-	if len(r.FormValue("date")) > 0 { // get listeners available in specified date time
-		wheres = append(wheres, " listener_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and `"+r.FormValue("time")+"` = "+CONSTANT.SlotAvailable+") ")
+	if len(r.FormValue("date")) > 0 { // get listeners available in specified date
+		wheres = append(wheres, " listener_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and available = 1) ")
 		listenerArgs = append(listenerArgs, r.FormValue("date"))
 	}
 	wheres = append(wheres, " status = "+CONSTANT.ListenerActive+" ") // only active listeners
@@ -93,11 +92,11 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		wheres = append(wheres, " therapist_id in (select counsellor_id from "+CONSTANT.CounsellorLanguagesTable+" where language_id = ?) ")
 		therapistArgs = append(therapistArgs, r.FormValue("language"))
 	}
-	if len(r.FormValue("date")) > 0 { // get therapists available in specified date time
-		wheres = append(wheres, " therapist_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and `"+r.FormValue("time")+"` = "+CONSTANT.SlotAvailable+") ")
+	if len(r.FormValue("date")) > 0 { // get therapists available in specified date
+		wheres = append(wheres, " therapist_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and available = 1) ")
 		therapistArgs = append(therapistArgs, r.FormValue("date"))
 	}
-	if len(r.FormValue("price")) > 0 { // get therapists available in specified date time
+	if len(r.FormValue("price")) > 0 { // get therapists available in specified price range
 		prices := strings.Split(r.FormValue("price"), ",") // min,max price range
 		wheres = append(wheres, " price >= ? and price <= ? ")
 		therapistArgs = append(therapistArgs, prices[0], prices[1])

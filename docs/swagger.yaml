@@ -59,7 +59,7 @@ definitions:
     type: object
   model.ClientProfileAddRequest:
     properties:
-      age:
+      date_of_birth:
         type: string
       device_id:
         type: string
@@ -84,7 +84,7 @@ definitions:
     type: object
   model.ClientProfileUpdateRequest:
     properties:
-      age:
+      date_of_birth:
         type: string
       device_id:
         type: string
@@ -372,6 +372,8 @@ definitions:
       mood_id:
         type: string
       name:
+        type: string
+      notes:
         type: string
       phone:
         type: string
@@ -1250,11 +1252,6 @@ paths:
       - description: Available on date (2020-02-27)
         in: query
         name: date
-        type: string
-      - description: Available on time (0-47 half hour slots), in IST, for the selected
-          date
-        in: query
-        name: time
         type: string
       - description: Price range - 100,200 (min,max)
         in: query

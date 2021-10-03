@@ -34,8 +34,8 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	// get counsellor ids to get details
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
-	// get counsellor/listener details
-	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	// get counsellor/listener/therapist details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, photo, " + CONSTANT.TherapistType + " as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -69,7 +69,7 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	// get counsellor ids to get details
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "counsellor_id")
 
-	// get counsellor/listener details
+	// get counsellor/listener/therapist details
 	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, photo, " + CONSTANT.TherapistType + " as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -104,8 +104,8 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	// get counsellor ids to get details
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
-	// get counsellor/listener details
-	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	// get counsellor/listener/therapist details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, photo, " + CONSTANT.TherapistType + " as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -368,16 +368,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update counsellor slots
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
-	// get schedule for a day
-	schedule, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// get schedules for a weekday
+	schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(schedule) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// sometimes there will be no schedules. situation will be automatically taken care of below
 
 	// update counsellor availability
 	DB.UpdateSQL(CONSTANT.SlotsTable,
@@ -386,7 +383,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			"date":          appointment[0]["date"],
 		},
 		map[string]string{
-			appointment[0]["time"]: schedule[0][appointment[0]["time"]], // update availability to the latest one
+			appointment[0]["time"]: UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"]), // update availability to the latest one
 		},
 	)
 
@@ -499,16 +496,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// update counsellor slots
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
-	// get schedule for a day
-	schedule, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// get schedules for a weekday
+	schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(schedule) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// sometimes there will be no schedules. situation will be automatically taken care of below
 
 	// update counsellor availability
 	DB.UpdateSQL(CONSTANT.SlotsTable,
@@ -517,7 +511,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"date":          appointment[0]["date"],
 		},
 		map[string]string{
-			appointment[0]["time"]: schedule[0][appointment[0]["time"]], // update availability to the latest one
+			appointment[0]["time"]: UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"]), // update availability to the latest one
 		},
 	)
 
@@ -564,6 +558,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 					// refunded amount will be less than paid amount
 					DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
 						"invoice_id":      invoice[0]["invoice_id"],
+						"payment_id":      invoice[0]["payment_id"],
 						"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
 						"status":          CONSTANT.RefundInProgress,
 						"created_at":      UTIL.GetCurrentTime().String(),
@@ -691,6 +686,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 				// refunded amount will be less than paid amount
 				DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
 					"invoice_id":      invoice[0]["invoice_id"],
+					"payment_id":      invoice[0]["payment_id"],
 					"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
 					"status":          CONSTANT.RefundInProgress,
 					"created_at":      UTIL.GetCurrentTime().String(),

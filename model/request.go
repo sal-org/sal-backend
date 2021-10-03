@@ -96,17 +96,17 @@ type EventBlockOrderPaymentCompleteRequest struct {
 
 // ClientProfileAddRequest .
 type ClientProfileAddRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
-	Age       string `json:"age"`
-	Photo     string `json:"photo"`
-	TopicIDs  string `json:"topic_ids"`
-	Gender    string `json:"gender"`
-	Location  string `json:"location"`
-	Timezone  string `json:"timezone"`
-	DeviceID  string `json:"device_id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Phone       string `json:"phone"`
+	Email       string `json:"email"`
+	DateOfBirth string `json:"date_of_birth"`
+	Photo       string `json:"photo"`
+	TopicIDs    string `json:"topic_ids"`
+	Gender      string `json:"gender"`
+	Location    string `json:"location"`
+	Timezone    string `json:"timezone"`
+	DeviceID    string `json:"device_id"`
 }
 
 // CounsellorProfileAddRequest .
@@ -192,15 +192,15 @@ type TherapistProfileAddRequest struct {
 
 // ClientProfileUpdateRequest .
 type ClientProfileUpdateRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Location  string `json:"location"`
-	Timezone  string `json:"timezone"`
-	DeviceID  string `json:"device_id"`
-	Age       string `json:"age"`
-	Photo     string `json:"photo"`
-	TopicIDs  string `json:"topic_ids"`
-	Gender    string `json:"gender"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Location    string `json:"location"`
+	Timezone    string `json:"timezone"`
+	DeviceID    string `json:"device_id"`
+	DateOfBirth string `json:"date_of_birth"`
+	Photo       string `json:"photo"`
+	TopicIDs    string `json:"topic_ids"`
+	Gender      string `json:"gender"`
 }
 
 // CounsellorProfileUpdateRequest .
@@ -312,4 +312,5 @@ type MoodAddRequest struct {
 	Phone    string `json:"phone"`
 	MoodID   string `json:"mood_id"`
 	Date     string `json:"date"`
+	Notes    string `json:"notes"`
 }

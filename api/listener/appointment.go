@@ -122,16 +122,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// update listener slots
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
-	// get schedule for a day
-	schedule, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// get schedules for a weekday
+	schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(schedule) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// sometimes there will be no schedules. situation will be automatically taken care of below
 
 	// update listener availability
 	DB.UpdateSQL(CONSTANT.SlotsTable,
@@ -140,7 +137,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"date":          appointment[0]["date"],
 		},
 		map[string]string{
-			appointment[0]["time"]: schedule[0][appointment[0]["time"]], // update availability to the latest one
+			appointment[0]["time"]: UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"]), // update availability to the latest one
 		},
 	)
 

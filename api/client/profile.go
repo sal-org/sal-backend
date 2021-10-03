@@ -111,7 +111,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["last_name"] = body["last_name"]
 	client["phone"] = body["phone"]
 	client["email"] = body["email"]
-	client["age"] = body["age"]
+	client["date_of_birth"] = body["date_of_birth"]
 	client["photo"] = body["photo"]
 	client["topic_ids"] = body["topic_ids"]
 	client["gender"] = body["gender"]
@@ -187,8 +187,8 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["location"]) > 0 {
 		client["location"] = body["location"]
 	}
-	if len(body["age"]) > 0 {
-		client["age"] = body["age"]
+	if len(body["date_of_birth"]) > 0 {
+		client["date_of_birth"] = body["date_of_birth"]
 	}
 	if len(body["photo"]) > 0 {
 		client["photo"] = body["photo"]

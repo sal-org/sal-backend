@@ -246,7 +246,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
 	response["paid_amount_razorpay"] = order["paid_amount_razorpay"]
 
-	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderEventTable, CONSTANT.OrderDigits, order, "order_id")
+	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderEventTable, CONSTANT.OrderEventDigits, order, "order_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

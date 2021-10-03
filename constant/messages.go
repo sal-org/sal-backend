@@ -34,6 +34,7 @@ const (
 	ListenerNotExistMessage                = "Listener doesn't exist"
 	ListenerNotActiveMessage               = "Listener is not active"
 	ListenerSlotNotAvailableMessage        = "Listener not available in this hour. Book a different slot"
+	MoodAlreadyAddedMessage                = "Mood already added"
 	OrderNotFoundMessage                   = "Order not found"
 	PaymentCapturedMessage                 = "Payment captured. Order created succefully."
 	Reschedule4HoursMinimumMessage         = "Reschedule not avaible now, as appointment is in 4 hours."

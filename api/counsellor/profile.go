@@ -5,7 +5,6 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	"strconv"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -158,9 +157,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// add languages, topics to counsellor
 	UTIL.AssociateLanguagesAndTopics(body["topic_ids"], body["language_ids"], counsellorID)
 
-	// add to availability - with 0 (not available)
-	for i := 0; i < 7; i++ { // for 7 days of week
-		DB.InsertSQL(CONSTANT.SchedulesTable, map[string]string{"counsellor_id": counsellorID, "weekday": strconv.Itoa(i)})
+	// not available for next 30 days. change here when you change in add new slot cron
+	for i := 0; i < 30; i++ {
+		DB.InsertSQL(CONSTANT.SlotsTable, map[string]string{"counsellor_id": counsellorID, "date": UTIL.GetCurrentTime().AddDate(0, 0, i).Format("2006-01-02")})
 	}
 
 	response["counsellor_id"] = counsellorID

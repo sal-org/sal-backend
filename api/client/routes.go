@@ -114,9 +114,6 @@ func LoadClientRoutes(router *mux.Router) {
 		"client_id", "{client_id}",
 	).Methods("GET")
 
-	// payment
-	clientRoutes.HandleFunc("/paymentcomplete", CounsellorOrderPaymentComplete).Methods("POST")
-
 	// profile
 	clientRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",

@@ -65,6 +65,7 @@ const (
 	InvoiceDigits           = 8
 	PaymentsDigits          = 10
 	OrderDigits             = 10
+	OrderEventDigits        = 11
 	PaymentDigits           = 10
 	RefundDigits            = 9
 	TherapistDigits         = 5

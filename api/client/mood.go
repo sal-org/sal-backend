@@ -44,12 +44,13 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		"gender":     body["gender"],
 		"phone":      body["phone"],
 		"mood_id":    body["mood_id"],
+		"notes":      body["notes"],
 		"date":       body["date"],
 		"status":     CONSTANT.MoodResultActive,
 		"created_at": UTIL.GetCurrentTime().UTC().String(),
 	}, "mood_result_id")
 	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, status, CONSTANT.MoodAlreadyAddedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -78,7 +79,7 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get mood past results
-	moodResults, status, ok := DB.SelectProcess("select mood_id, `date` from "+CONSTANT.MoodResultsTable+" where client_id = ? and status = "+CONSTANT.MoodResultActive+" and `date` >= ? and `date` <= ? order by `date` asc", r.FormValue("client_id"), dates[0], dates[1])
+	moodResults, status, ok := DB.SelectProcess("select mood_id, `date`, notes from "+CONSTANT.MoodResultsTable+" where client_id = ? and status = "+CONSTANT.MoodResultActive+" and `date` >= ? and `date` <= ? order by `date` asc", r.FormValue("client_id"), dates[0], dates[1])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
