@@ -42,20 +42,6 @@ func LoadClientRoutes(router *mux.Router) {
 		"client_id", "{client_id}",
 	).Methods("GET")
 
-	// content
-	clientRoutes.HandleFunc("/content", Content).Methods("GET")
-	clientRoutes.HandleFunc("/content/like", ContentLikeGet).Queries(
-		"client_id", "{client_id}",
-	).Methods("GET")
-	clientRoutes.HandleFunc("/content/like", ContentLikeAdd).Queries(
-		"client_id", "{client_id}",
-		"content_id", "{content_id}",
-	).Methods("POST")
-	clientRoutes.HandleFunc("/content/like", ContentLikeDelete).Queries(
-		"client_id", "{client_id}",
-		"content_id", "{content_id}",
-	).Methods("DELETE")
-
 	// counsellor
 	clientRoutes.HandleFunc("/counsellor", CounsellorProfile).Queries(
 		"counsellor_id", "{counsellor_id}",

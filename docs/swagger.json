@@ -487,137 +487,11 @@
                     "Client Assessment"
                 ],
                 "summary": "List available assessments",
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/client/content": {
-            "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client Content"
-                ],
-                "summary": "Get contents",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Logged in client ID",
                         "name": "client_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Content category ID - false if required all",
-                        "name": "category_id",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/client/content/like": {
-            "get": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client Content"
-                ],
-                "summary": "Get liked contents",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Logged in client ID",
-                        "name": "client_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client Content"
-                ],
-                "summary": "Like content",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Logged in client ID",
-                        "name": "client_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Content ID to be liked",
-                        "name": "content_id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Client Content"
-                ],
-                "summary": "Unlike content",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Logged in client ID",
-                        "name": "client_id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Content ID to be unliked",
-                        "name": "content_id",
                         "in": "query",
                         "required": true
                     }
@@ -1438,6 +1312,41 @@
                 }
             }
         },
+        "/content": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Content"
+                ],
+                "summary": "Get contents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content category ID - false if required all",
+                        "name": "category_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/content-category": {
             "get": {
                 "security": [
@@ -1452,6 +1361,106 @@
                     "Miscellaneous"
                 ],
                 "summary": "Get all available content categories",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/content/like": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Content"
+                ],
+                "summary": "Get liked contents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Content"
+                ],
+                "summary": "Like content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content ID to be liked",
+                        "name": "content_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Content"
+                ],
+                "summary": "Unlike content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content ID to be unliked",
+                        "name": "content_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -1817,6 +1826,15 @@
                     "Counsellor Assessment"
                 ],
                 "summary": "List available assessments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -2702,6 +2720,15 @@
                     "Listener Assessment"
                 ],
                 "summary": "List available assessments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in counsellor ID",
+                        "name": "counsellor_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -3482,6 +3509,15 @@
                     "Therapist Assessment"
                 ],
                 "summary": "List available assessments",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapist ID",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""

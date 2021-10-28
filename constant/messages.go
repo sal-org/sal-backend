@@ -16,6 +16,7 @@ const (
 	ClientAccountDeletedMessage            = "Account blocked or deleted. Please contact our support team"
 	ClientNotExistMessage                  = "Client doesn't exist"
 	ClientNotAllowedMessage                = "Your account has been blocked. Please contact our support team for further clarification."
+	ContentAlreadyLikedMessage             = "Content already liked"
 	CounsellorAccountDeletedMessage        = "Account blocked or deleted. Please contact our support team"
 	CounsellorNotExistMessage              = "Counsellor doesn't exist"
 	CounsellorNotActiveMessage             = "Counsellor is not active"

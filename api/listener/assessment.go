@@ -8,6 +8,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
+	"strings"
 
 	MODEL "salbackend/model"
 	UTIL "salbackend/util"
@@ -17,6 +18,7 @@ import (
 // @Tags Listener Assessment
 // @Summary List available assessments
 // @Router /listener/assessments [get]
+// @Param counsellor_id query string true "Logged in counsellor ID"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -32,6 +34,14 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get assessment latest result
+	assessmentResults, status, ok := DB.SelectProcess("select final_score, assessment_id from "+CONSTANT.AssessmentResultsTable+" where id in (select max(id) from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and status = "+CONSTANT.AssessmentResultActive+" group by assessment_id)", r.FormValue("counsellor_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
 	response["assessments"] = assessments
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -162,12 +172,46 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get assessment past results
-	assessmentResults, status, ok := DB.SelectProcess("select final_score, created_at from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and assessment_id = ? and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("listener_id"), r.FormValue("assessment_id"))
+	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and assessment_id = ? and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("listener_id"), r.FormValue("assessment_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get assessment details
+	assessment, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", r.FormValue("assessment_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get assessments questions
+	assessmentQuestions, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? order by `order`", r.FormValue("assessment_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get assessments options
+	assessmentOptions, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentQuestionOptionsTable+" where assessment_id = ? order by `order`", r.FormValue("assessment_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	assessmentResultIDs := UTIL.ExtractValuesFromArrayMap(assessmentResults, "assessment_result_id")
+
+	// get assessments result details
+	assessmentResultDetails, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultDetailsTable + " where assessment_result_id in ('" + strings.Join(assessmentResultIDs, "','") + "') order by created_at desc")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	response["assessment_results"] = assessmentResults
+	response["assessment_result_details"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResultDetails, "assessment_result_id")
+	response["assessment"] = assessment
+	response["assessment_questions"] = assessmentQuestions
+	response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

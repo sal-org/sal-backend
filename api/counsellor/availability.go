@@ -71,7 +71,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// get all dates for counsellor and group by weekday
 	datesByWeekdays := map[int][]string{}
-	availabileDates, status, ok := DB.SelectProcess("select date from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` > now()", r.FormValue("counsellor_id"))
+	availabileDates, status, ok := DB.SelectProcess("select date from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` >= ?", r.FormValue("counsellor_id"), UTIL.GetCurrentTime().AddDate(0, 0, -1).String())
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

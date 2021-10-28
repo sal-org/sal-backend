@@ -2,6 +2,7 @@ package miscellaneous
 
 import (
 	"net/http"
+	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	_ "salbackend/model"
@@ -55,11 +56,13 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response["event_images"] = CONSTANT.EventImages
 	response["topics"] = topics
 	response["languages"] = languages
 	response["content_categories"] = contentCategories
 	response["rating_types"] = ratingTypes
 	response["moods"] = moods
 	response["urls"] = CONSTANT.URLs
+	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

@@ -227,7 +227,8 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status": CONSTANT.AppointmentStarted,
+			"status":     CONSTANT.AppointmentStarted,
+			"started_at": UTIL.GetCurrentTime().String(),
 		},
 	)
 
@@ -277,7 +278,8 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status": CONSTANT.AppointmentCompleted,
+			"status":   CONSTANT.AppointmentCompleted,
+			"ended_at": UTIL.GetCurrentTime().String(),
 		},
 	)
 

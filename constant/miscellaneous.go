@@ -18,3 +18,13 @@ var URLs = map[string]string{
 	"info":    "https://sal-foundation.com/about-sal",
 	"tos":     "http://salapp.sal-foundation.com/app_tos/",
 }
+
+// default images used for events
+var EventImages = []string{
+	"event/event_image_1.png",
+	"event/event_image_2.png",
+	"event/event_image_3.png",
+	"event/event_image_4.png",
+	"event/event_image_5.png",
+	"event/event_image_6.png",
+}

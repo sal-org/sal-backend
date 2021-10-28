@@ -806,6 +806,12 @@ paths:
       - Client Assessment
   /client/assessments:
     get:
+      parameters:
+      - description: Logged in client ID
+        in: query
+        name: client_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -816,89 +822,6 @@ paths:
       summary: List available assessments
       tags:
       - Client Assessment
-  /client/content:
-    get:
-      parameters:
-      - description: Logged in client ID
-        in: query
-        name: client_id
-        type: string
-      - description: Content category ID - false if required all
-        in: query
-        name: category_id
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Get contents
-      tags:
-      - Client Content
-  /client/content/like:
-    delete:
-      parameters:
-      - description: Logged in client ID
-        in: query
-        name: client_id
-        required: true
-        type: string
-      - description: Content ID to be unliked
-        in: query
-        name: content_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Unlike content
-      tags:
-      - Client Content
-    get:
-      parameters:
-      - description: Logged in client ID
-        in: query
-        name: client_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Get liked contents
-      tags:
-      - Client Content
-    post:
-      parameters:
-      - description: Logged in client ID
-        in: query
-        name: client_id
-        required: true
-        type: string
-      - description: Content ID to be liked
-        in: query
-        name: content_id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Like content
-      tags:
-      - Client Content
   /client/counsellor:
     get:
       parameters:
@@ -1391,6 +1314,27 @@ paths:
       summary: Verify OTP sent to specified phone
       tags:
       - Client Login
+  /content:
+    get:
+      parameters:
+      - description: Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)
+        in: query
+        name: user_id
+        type: string
+      - description: Content category ID - false if required all
+        in: query
+        name: category_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get contents
+      tags:
+      - Content
   /content-category:
     get:
       produces:
@@ -1403,6 +1347,68 @@ paths:
       summary: Get all available content categories
       tags:
       - Miscellaneous
+  /content/like:
+    delete:
+      parameters:
+      - description: Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Content ID to be unliked
+        in: query
+        name: content_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Unlike content
+      tags:
+      - Content
+    get:
+      parameters:
+      - description: Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get liked contents
+      tags:
+      - Content
+    post:
+      parameters:
+      - description: Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Content ID to be liked
+        in: query
+        name: content_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Like content
+      tags:
+      - Content
   /counsellor:
     get:
       parameters:
@@ -1614,6 +1620,12 @@ paths:
       - Counsellor Assessment
   /counsellor/assessments:
     get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2147,6 +2159,12 @@ paths:
       - Listener Assessment
   /listener/assessments:
     get:
+      parameters:
+      - description: Logged in counsellor ID
+        in: query
+        name: counsellor_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2615,6 +2633,12 @@ paths:
       - Therapist Assessment
   /therapist/assessments:
     get:
+      parameters:
+      - description: Logged in therapist ID
+        in: query
+        name: therapist_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
