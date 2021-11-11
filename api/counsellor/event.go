@@ -237,10 +237,12 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// calculate bill
 	billing := UTIL.GetBillingDetails(price, order["discount"])
-	order["actual_amount"] = billing["actual_amount"]
+	order["paid_amount"] = billing["paid_amount"]
 	order["discount"] = billing["discount"]
 	order["tax"] = billing["tax"]
-	order["paid_amount"] = billing["paid_amount"]
+	order["actual_amount"] = billing["actual_amount"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
 	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
@@ -321,6 +323,8 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["order_type"] = CONSTANT.OrderEventBookType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["discount"] = order[0]["discount"]
 	invoice["coupon_code"] = order[0]["coupon_code"]
 	invoice["coupon_id"] = order[0]["coupon_id"]
@@ -462,6 +466,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["counsellor_id"] = body["counsellor_id"]
 	order["title"] = body["title"]
 	order["description"] = body["description"]
+	order["type"] = CONSTANT.CounsellorType
 	order["topic_id"] = body["topic_id"]
 	order["duration"] = body["duration"]
 	order["price"] = body["price"]
@@ -472,7 +477,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	// calculate bill
-	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
+	/*billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
 	order["actual_amount"] = billing["actual_amount"]
 	order["tax"] = billing["tax"]
 	order["paid_amount"] = billing["paid_amount"]
@@ -491,6 +496,8 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	response["order_id"] = orderID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
+
+
 
 // EventBlockOrderPaymentComplete godoc
 // @Tags Counsellor Event
@@ -581,3 +588,4 @@ func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }
+*/

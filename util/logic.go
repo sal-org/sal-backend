@@ -12,19 +12,22 @@ import (
 func GetBillingDetails(price, discount string) map[string]string {
 	billing := map[string]string{}
 
-	actualAmount, _ := strconv.ParseFloat(price, 64)
+	paidAmount, _ := strconv.ParseFloat(price, 64)
 	discountAmount, _ := strconv.ParseFloat(discount, 64)
-	actualAmount -= discountAmount
-	if actualAmount < 0 { // if amount becomes negative after discount
-		actualAmount = 0
+	paidAmount -= discountAmount
+	if paidAmount < 0 { // if amount becomes negative after discount
+		paidAmount = 0
 	}
-	tax := actualAmount * CONSTANT.GSTPercent
-	paidAmount := actualAmount + tax
+	tax := (float64(paidAmount) / float64((100 + CONSTANT.GSTPercent))) * float64(CONSTANT.GSTPercent)
+	actualAmount := paidAmount - tax
+	cgst, sgst := tax/2, tax/2
 
-	billing["actual_amount"] = price
+	billing["paid_amount"] = price
 	billing["discount"] = discount
 	billing["tax"] = strconv.FormatFloat(tax, 'f', 2, 64)
-	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 2, 64)
+	billing["actual_amount"] = strconv.FormatFloat(actualAmount, 'f', 2, 64)
+	billing["cgst"] = strconv.FormatFloat(cgst, 'f', 2, 64)
+	billing["sgst"] = strconv.FormatFloat(sgst, 'f', 2, 64)
 
 	return billing
 }
