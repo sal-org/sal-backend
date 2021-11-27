@@ -545,9 +545,9 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-			amountAfterDiscount := actualAmount - discount
+			amountAfterDiscount := paidAmount - discount
 			if amountAfterDiscount > 0 { // refund only if amount paid
 				paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 				refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
@@ -672,9 +672,9 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(invoice) > 0 {
 		// invoice is available => amount is paid, order is not free
-		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountAfterDiscount := actualAmount - discount
+		amountAfterDiscount := paidAmount - discount
 		if amountAfterDiscount > 0 { // refund only if amount paid
 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 			refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)

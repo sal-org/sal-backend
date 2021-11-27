@@ -240,6 +240,8 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["actual_amount"] = billing["actual_amount"]
 	order["discount"] = billing["discount"]
 	order["tax"] = billing["tax"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 	order["paid_amount"] = billing["paid_amount"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
@@ -321,6 +323,8 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["order_type"] = CONSTANT.OrderEventBookType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["discount"] = order[0]["discount"]
 	invoice["coupon_code"] = order[0]["coupon_code"]
 	invoice["coupon_id"] = order[0]["coupon_id"]

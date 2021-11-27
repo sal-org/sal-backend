@@ -262,15 +262,6 @@ definitions:
       topic_id:
         type: string
     type: object
-  model.EventBlockOrderPaymentCompleteRequest:
-    properties:
-      order_id:
-        type: string
-      payment_id:
-        type: string
-      payment_method:
-        type: string
-    type: object
   model.EventOrderCreateRequest:
     properties:
       coupon_code:
@@ -1753,25 +1744,6 @@ paths:
       summary: Block a slot for an event
       tags:
       - Counsellor Event
-  /counsellor/event/block/paymentcomplete:
-    post:
-      parameters:
-      - description: Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/model.EventBlockOrderPaymentCompleteRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Call after payment is completed for event block order
-      tags:
-      - Counsellor Event
   /counsellor/event/booked:
     get:
       parameters:
@@ -2764,25 +2736,6 @@ paths:
       security:
       - JWTAuth: []
       summary: Block a slot for an event
-      tags:
-      - Therapist Event
-  /therapist/event/block/paymentcomplete:
-    post:
-      parameters:
-      - description: Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/model.EventBlockOrderPaymentCompleteRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Call after payment is completed for event block order
       tags:
       - Therapist Event
   /therapist/event/booked:

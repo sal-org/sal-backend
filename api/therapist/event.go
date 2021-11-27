@@ -477,9 +477,11 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	// calculate bill
-	/*billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
+	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
 	order["actual_amount"] = billing["actual_amount"]
 	order["tax"] = billing["tax"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 	order["paid_amount"] = billing["paid_amount"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
@@ -505,7 +507,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+/*func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -561,6 +563,8 @@ func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["order_type"] = CONSTANT.OrderEventBlockType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["paid_amount"] = order[0]["paid_amount"]
 	invoice["status"] = CONSTANT.InvoiceInProgress
 	invoice["created_at"] = UTIL.GetCurrentTime().String()

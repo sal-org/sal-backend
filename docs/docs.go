@@ -2045,38 +2045,6 @@ var doc = `{
                 }
             }
         },
-        "/counsellor/event/block/paymentcomplete": {
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Counsellor Event"
-                ],
-                "summary": "Call after payment is completed for event block order",
-                "parameters": [
-                    {
-                        "description": "Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/counsellor/event/booked": {
             "get": {
                 "security": [
@@ -3728,38 +3696,6 @@ var doc = `{
                 }
             }
         },
-        "/therapist/event/block/paymentcomplete": {
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Therapist Event"
-                ],
-                "summary": "Call after payment is completed for event block order",
-                "parameters": [
-                    {
-                        "description": "Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/therapist/event/booked": {
             "get": {
                 "security": [
@@ -4529,20 +4465,6 @@ var doc = `{
                 }
             }
         },
-        "model.EventBlockOrderPaymentCompleteRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "string"
-                },
-                "payment_method": {
-                    "type": "string"
-                }
-            }
-        },
         "model.EventOrderCreateRequest": {
             "type": "object",
             "properties": {
@@ -4977,5 +4899,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

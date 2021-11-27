@@ -19,7 +19,7 @@ func GetBillingDetails(price, discount string) map[string]string {
 		paidAmount = 0
 	}
 	tax := (float64(paidAmount) / float64((100 + CONSTANT.GSTPercent))) * float64(CONSTANT.GSTPercent)
-	actualAmount := paidAmount - tax
+	actualAmount := float64(paidAmount) - tax
 	cgst, sgst := tax/2, tax/2
 
 	billing["paid_amount"] = price

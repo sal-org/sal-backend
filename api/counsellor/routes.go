@@ -61,7 +61,7 @@ func LoadCounsellorRoutes(router *mux.Router) {
 		"status", "{status}",
 	).Methods("PUT")
 	counsellorRoutes.HandleFunc("/event/block/order", EventBlockOrderCreate).Methods("POST")
-	counsellorRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
+	//counsellorRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
 
 	// home
 	counsellorRoutes.HandleFunc("/home", Home).Methods("GET")

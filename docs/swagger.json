@@ -2034,38 +2034,6 @@
                 }
             }
         },
-        "/counsellor/event/block/paymentcomplete": {
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Counsellor Event"
-                ],
-                "summary": "Call after payment is completed for event block order",
-                "parameters": [
-                    {
-                        "description": "Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/counsellor/event/booked": {
             "get": {
                 "security": [
@@ -3717,38 +3685,6 @@
                 }
             }
         },
-        "/therapist/event/block/paymentcomplete": {
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Therapist Event"
-                ],
-                "summary": "Call after payment is completed for event block order",
-                "parameters": [
-                    {
-                        "description": "Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/therapist/event/booked": {
             "get": {
                 "security": [
@@ -4514,20 +4450,6 @@
                     "type": "string"
                 },
                 "topic_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.EventBlockOrderPaymentCompleteRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "string"
-                },
-                "payment_method": {
                     "type": "string"
                 }
             }

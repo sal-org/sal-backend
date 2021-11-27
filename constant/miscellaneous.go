@@ -2,12 +2,12 @@ package constant
 
 // miscellaneous constants
 const (
-	GSTPercent                               = 18    // 18% GST Write as 18 Only
-	EventPrice                               = "100" // INR - amount to be paid by counsellor to create event
-	MaximumAppointmentReschedule             = 2     // maximum number of times appointment can be rescheduled
-	CounsellorCancellationCharges            = 0.10  // 10% of appointment amount is cancellation charges, if counsellor/therapist cancels appointment anytime
-	ClientAppointmentCancellationCharges     = 0.20  // 15% of appointment amount is cancellation charges, if client cancels appointment before 4 hours
-	ClientAppointmentBulkCancellationCharges = 0.20  // 15% of unused appointment amount is cancellation charges, if client cancels unused appointments
+	GSTPercent                               = 18   // 18% GST Write as 18 Only
+	EventPrice                               = "0"  // INR - amount to be paid by counsellor to create event
+	MaximumAppointmentReschedule             = 2    // maximum number of times appointment can be rescheduled
+	CounsellorCancellationCharges            = 0.10 // 10% of appointment amount is cancellation charges, if counsellor/therapist cancels appointment anytime
+	ClientAppointmentCancellationCharges     = 0.20 // 15% of appointment amount is cancellation charges, if client cancels appointment before 4 hours
+	ClientAppointmentBulkCancellationCharges = 0.20 // 15% of unused appointment amount is cancellation charges, if client cancels unused appointments
 )
 
 // urls

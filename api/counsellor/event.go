@@ -477,9 +477,11 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	// calculate bill
-	/*billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
+	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
 	order["actual_amount"] = billing["actual_amount"]
 	order["tax"] = billing["tax"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 	order["paid_amount"] = billing["paid_amount"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
@@ -497,8 +499,6 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-
-
 // EventBlockOrderPaymentComplete godoc
 // @Tags Counsellor Event
 // @Summary Call after payment is completed for event block order
@@ -507,7 +507,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+/*func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -587,5 +587,4 @@ func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-}
-*/
+}*/
