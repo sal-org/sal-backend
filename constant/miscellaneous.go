@@ -28,3 +28,7 @@ var EventImages = []string{
 	"event/event_image_5.png",
 	"event/event_image_6.png",
 }
+
+const (
+	EventDuration = "60" // Event duration 60 mins
+)

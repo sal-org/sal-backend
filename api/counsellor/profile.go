@@ -122,6 +122,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["photo"] = body["photo"]
 	counsellor["email"] = body["email"]
 	counsellor["price"] = body["price"]
+	counsellor["multiple_sessions"] = body["multiple_sessions"]
 	counsellor["price_3"] = body["price_3"]
 	counsellor["price_5"] = body["price_5"]
 	counsellor["education"] = body["education"]
@@ -175,7 +176,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		body["phone"],
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendTextMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -218,6 +219,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["price"]) > 0 {
 		counsellor["price"] = body["price"]
+	}
+	if len(body["multiple_sessions"]) > 0 {
+		counsellor["multiple_sessions"] = body["multiple_sessions"]
 	}
 	if len(body["price_3"]) > 0 {
 		counsellor["price_3"] = body["price_3"]

@@ -22,7 +22,7 @@ func GetBillingDetails(price, discount string) map[string]string {
 	actualAmount := float64(paidAmount) - tax
 	cgst, sgst := tax/2, tax/2
 
-	billing["paid_amount"] = price
+	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 2, 64)
 	billing["discount"] = discount
 	billing["tax"] = strconv.FormatFloat(tax, 'f', 2, 64)
 	billing["actual_amount"] = strconv.FormatFloat(actualAmount, 'f', 2, 64)
@@ -75,7 +75,9 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 				filteredSlot[strconv.Itoa(i)] = "1"
 			}
 		}
+
 		if len(filteredSlot) > 0 { // atleast 1 slot is available
+			//filteredSlot["date"] = slot["date"]
 			filteredSlot["date"] = slot["date"]
 			filteredSlots = append(filteredSlots, filteredSlot)
 		}

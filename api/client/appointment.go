@@ -76,6 +76,14 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
+	invoice, status, ok := DB.SelectProcess("select order_id as id, payment_id, user_type  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["order_detils"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointment_slots"] = appointmentSlots
 	response["media_url"] = CONFIG.MediaURL

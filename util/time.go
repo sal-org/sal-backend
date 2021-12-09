@@ -130,3 +130,43 @@ func GetTimeFromTimeSlot(timeSlot string) string {
 	}
 	return "00:00:00"
 }
+
+/*func BuildDateTimeMintues(date string, time string, mintues string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", date+" "+time+":"+GetTimeFromMintuesSlot(mintues))
+	return t
+}
+
+func GetTimeFromMintuesSlot(mintues string) string {
+	slot, _ := strconv.Atoi(mintues)
+	switch slot {
+	case 00:
+		return "00:00"
+	case 05:
+		return "05:00"
+	case 10:
+		return "10:00"
+	case 15:
+		return "15:00"
+	case 20:
+		return "20:00"
+	case 25:
+		return "25:00"
+	case 30:
+		return "30:00"
+	case 35:
+		return "35:00"
+	case 40:
+		return "40:00"
+	case 45:
+		return "45:00"
+	case 50:
+		return "50:00"
+	case 55:
+		return "55:00"
+	case 60:
+		return "60:00"
+	}
+	return "00:00"
+
+}
+*/

@@ -122,6 +122,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["photo"] = body["photo"]
 	therapist["email"] = body["email"]
 	therapist["price"] = body["price"]
+	therapist["multiple_sessions"] = body["multiple_sessions"]
 	therapist["price_3"] = body["price_3"]
 	therapist["price_5"] = body["price_5"]
 	therapist["education"] = body["education"]
@@ -218,6 +219,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["price"]) > 0 {
 		therapist["price"] = body["price"]
+	}
+	if len(body["multiple_sessions"]) > 0 {
+		therapist["multiple_sessions"] = body["multiple_sessions"]
 	}
 	if len(body["price_3"]) > 0 {
 		therapist["price_3"] = body["price_3"]

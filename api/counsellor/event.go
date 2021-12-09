@@ -257,6 +257,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	response["billing"] = billing
 	response["order_id"] = orderID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }
 
 // EventOrderPaymentComplete godoc
@@ -348,6 +349,25 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			"order_id": body["order_id"],
 		},
 		orderUpdate,
+	)
+
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "duration"}, map[string]string{"counsellor_id": order[0]["event_order_id"]})
+	//counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"timezone"}, map[string]string{"counsellor_id": order[0]["user_id"]})
+
+	// send appointment booking notification to client
+	UTIL.SendNotification(
+		CONSTANT.ClientEventPaymentSucessClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientEventPaymentSucessClientContent,
+			map[string]string{
+				"###cafe_name":    orderdetails[0]["title"],
+				"###paid_amount":  order[0]["paid_amount"],
+				"###date_time###": UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+			},
+		),
+		order[0]["user_id"],
+		CONSTANT.CounsellorType,
 	)
 
 	response["invoice_id"] = invoiceID
@@ -468,11 +488,11 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["description"] = body["description"]
 	order["type"] = CONSTANT.CounsellorType
 	order["topic_id"] = body["topic_id"]
-	order["duration"] = body["duration"]
 	order["price"] = body["price"]
 	order["photo"] = body["photo"]
 	order["date"] = body["date"]
 	order["time"] = body["time"]
+	order["duration"] = CONSTANT.EventDuration
 	order["status"] = CONSTANT.EventWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
@@ -497,6 +517,17 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	response["billing"] = billing
 	response["order_id"] = orderID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	// Send Email to check event is correct or not to SAL Team
+	/*orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title","decription","photo","topic_id","date","time", "duration","price"}, map[string]string{"order_id": orderID})
+	body := GetHTMLTemplate(orderdetails)
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		body,
+		"tiwarisomprakash.2000@gmail.com",
+		CONSTANT.InstantSendEmailMessage,
+	)*/
+
 }
 
 // EventBlockOrderPaymentComplete godoc

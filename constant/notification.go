@@ -11,6 +11,7 @@ const (
 	CounsellorAppointmentCancelClientHeading = "Appointment Cancellation"
 	ClientPaymentSucessClientHeading         = "Payment Confirmation"
 	ClientAppointmentFeedbackHeading         = "Feedback/Ratings"
+	ClientEventPaymentSucessClientHeading    = "Cafe booked successfully!"
 
 	// counsellor
 	CounsellorAccountSignupCounsellorHeading     = "Successfully Completed"
@@ -32,6 +33,7 @@ const (
 	CounsellorAppointmentCancelClientContent = "Your scheduled session with ###counsellor_name### for ###date_time### has been cancelled by your counselor due to personal emergency. You may reschedule your appointment within the next 7 days or request for a session credit refund"
 	ClientPaymentSucessClientContent         = "Hi ###client_name###. Payment of Rs. ###paid_amount### for your consultation booking has been Successful/Received. Manage your account anytime, anywhere from your phone. Click to view your Transaction ID #  and receipt"
 	ClientAppointmentFeedbackContent         = "Please rate your session with ###counsellor_name### to help us constantly improve our services"
+	ClientEventPaymentSucessClientContent    = "SAL Cafe ###cafe_name### has been booked successfully for Rs. ###paid_amount### on ###date### & ###time###."
 
 	// counsellor
 	CounsellorAccountSignupCounsellorContent     = "Thank you for creating your account and your profile. We'll let you know when your profile is approved"

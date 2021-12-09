@@ -76,7 +76,6 @@ type EventBlockOrderCreateRequest struct {
 	Date         string `json:"date"`
 	Photo        string `json:"photo"`
 	Time         string `json:"time"`
-	Duration     string `json:"duration"`
 	Price        string `json:"price"`
 }
 
@@ -118,6 +117,7 @@ type CounsellorProfileAddRequest struct {
 	Photo             string `json:"photo"`
 	Email             string `json:"email"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`
@@ -167,6 +167,7 @@ type TherapistProfileAddRequest struct {
 	Photo             string `json:"photo"`
 	Email             string `json:"email"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`

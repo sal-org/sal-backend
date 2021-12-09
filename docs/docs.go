@@ -4315,6 +4315,9 @@ var doc = `{
                 "linkedin": {
                     "type": "string"
                 },
+                "multiple_sessions": {
+                    "type": "string"
+                },
                 "pan": {
                     "type": "string"
                 },
@@ -4443,9 +4446,6 @@ var doc = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
-                },
-                "duration": {
                     "type": "string"
                 },
                 "photo": {
@@ -4718,6 +4718,9 @@ var doc = `{
                     "type": "string"
                 },
                 "linkedin": {
+                    "type": "string"
+                },
+                "multiple_sessions": {
                     "type": "string"
                 },
                 "pan": {
