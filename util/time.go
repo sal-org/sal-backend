@@ -168,5 +168,4 @@ func GetTimeFromMintuesSlot(mintues string) string {
 	}
 	return "00:00"
 
-}
-*/
+}*/

@@ -6,10 +6,9 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	UTIL "salbackend/util"
 	"strconv"
 	"strings"
-
-	UTIL "salbackend/util"
 )
 
 // EventsList godoc
@@ -351,7 +350,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		orderUpdate,
 	)
 
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "duration"}, map[string]string{"counsellor_id": order[0]["event_order_id"]})
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "date"}, map[string]string{"counsellor_id": order[0]["event_order_id"]})
 	//counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"timezone"}, map[string]string{"counsellor_id": order[0]["user_id"]})
 
@@ -361,9 +360,9 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientEventPaymentSucessClientContent,
 			map[string]string{
-				"###cafe_name":    orderdetails[0]["title"],
-				"###paid_amount":  order[0]["paid_amount"],
-				"###date_time###": UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###cafe_name###":   orderdetails[0]["title"],
+				"###paid_amount###": order[0]["paid_amount"],
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		order[0]["user_id"],
@@ -514,19 +513,40 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Send Email to check event is correct or not to SAL Team
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "type", "title", "description", "photo", "topic_id", "date", "time", "duration", "price"}, map[string]string{"order_id": orderID})
+	emailbody := UTIL.GetHTMLTemplateForEvent(orderdetails)
+
+	UTIL.SendEmail(
+		CONSTANT.NewEventWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.ShivamEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+	/*UTIL.SendEmail(
+		CONSTANT.NewEventWaitingForApprovalTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.NewEventWaitingForApprovalBody,
+			map[string]string{
+				"###counsellor_id###": orderdetails[0]["counsellor_id"],
+				"###type###":          orderdetails[0]["type"],
+				"###title###":         orderdetails[0]["title"],
+				"###description###":   orderdetails[0]["description"],
+				"###photo###":         orderdetails[0]["photo"],
+				"###topic_id###":      orderdetails[0]["topic_id"],
+				"###date###":          orderdetails[0]["date"],
+				"###time###":          orderdetails[0]["time"],
+				"###duration###":      orderdetails[0]["duration"],
+				"###price###":         orderdetails[0]["price"],
+			},
+		),
+		CONSTANT.ShivamEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)*/
+
 	response["billing"] = billing
 	response["order_id"] = orderID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
-
-	// Send Email to check event is correct or not to SAL Team
-	/*orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title","decription","photo","topic_id","date","time", "duration","price"}, map[string]string{"order_id": orderID})
-	body := GetHTMLTemplate(orderdetails)
-	UTIL.SendEmail(
-		CONSTANT.ClientPaymentSucessClientTitle,
-		body,
-		"tiwarisomprakash.2000@gmail.com",
-		CONSTANT.InstantSendEmailMessage,
-	)*/
 
 }
 

@@ -349,7 +349,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 		orderUpdate,
 	)
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "duration"}, map[string]string{"counsellor_id": order[0]["event_order_id"]})
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "date", "time"}, map[string]string{"counsellor_id": order[0]["event_order_id"]})
 	//counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": order[0]["user_id"]})
 
@@ -359,9 +359,9 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientEventPaymentSucessClientContent,
 			map[string]string{
-				"###cafe_name":    orderdetails[0]["title"],
-				"###paid_amount":  order[0]["paid_amount"],
-				"###date_time###": UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###cafe_name###":   orderdetails[0]["title"],
+				"###paid_amount###": order[0]["paid_amount"],
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		order[0]["user_id"],

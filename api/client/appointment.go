@@ -77,13 +77,13 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
-	invoice, status, ok := DB.SelectProcess("select order_id as id, payment_id, user_type  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
+	invoice, status, ok := DB.SelectProcess("select order_id as id, payment_id, user_type, paid_amount, created_at, payment_method  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	response["order_detils"] = UTIL.ConvertMapToKeyMap(invoice, "id")
+	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointment_slots"] = appointmentSlots
 	response["media_url"] = CONFIG.MediaURL
@@ -163,6 +163,14 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
+	invoice, status, ok := DB.SelectProcess("select order_id as id, payment_id, user_type, paid_amount, created_at, payment_method  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["appointment"] = appointment[0]
 	response["appointment_slots"] = appointmentSlots[0]
 	response["order"] = order[0]

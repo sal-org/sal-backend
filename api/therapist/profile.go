@@ -179,6 +179,16 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
+	counsellorbody := UTIL.GetHTMLTemplateForCounsellor(orderdetails)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		counsellorbody,
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
