@@ -514,36 +514,39 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//body := HTMLDATA.GetHTMLTemplate(orderdetails)
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "type", "title", "description", "photo", "topic_id", "date", "time", "duration", "price"}, map[string]string{"order_id": orderID})
-	emailbody := UTIL.GetHTMLTemplateForEvent(orderdetails)
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "title", "description", "photo", "topic_id", "date", "time", "duration", "price"}, map[string]string{"order_id": orderID})
+	counsellordetails, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name"}, map[string]string{"therapist_id": orderdetails[0]["counsellor_id"]})
+	topic_name, _, _ := DB.SelectSQL(CONSTANT.TopicsTable, []string{"topic"}, map[string]string{"id": orderdetails[0]["topic_id"]})
+	/*emailbody := UTIL.GetHTMLTemplateForEvent(orderdetails)
 
 	UTIL.SendEmail(
 		CONSTANT.NewEventWaitingForApprovalTitle,
 		emailbody,
 		CONSTANT.SameerEmailID,
 		CONSTANT.InstantSendEmailMessage,
-	)
+	)*/
 
-	/*UTIL.SendEmail(
+	UTIL.SendEmail(
 		CONSTANT.NewEventWaitingForApprovalTitle,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.NewEventWaitingForApprovalBody,
+			CONSTANT.EventWaitingForApprovalBody,
 			map[string]string{
-				"###counsellor_id###": orderdetails[0]["counsellor_id"],
-				"###type###":          orderdetails[0]["type"],
-				"###title###":         orderdetails[0]["title"],
-				"###description###":   orderdetails[0]["description"],
-				"###photo###":         orderdetails[0]["photo"],
-				"###topic_id###":      orderdetails[0]["topic_id"],
-				"###date###":          orderdetails[0]["date"],
-				"###time###":          orderdetails[0]["time"],
-				"###duration###":      orderdetails[0]["duration"],
-				"###price###":         orderdetails[0]["price"],
+				"###First_name###":  counsellordetails[0]["first_name"],
+				"###Last_name###":   counsellordetails[0]["last_name"],
+				"###type###":        "Therapists",
+				"###title###":       orderdetails[0]["title"],
+				"###description###": orderdetails[0]["description"],
+				"###photo###":       orderdetails[0]["photo"],
+				"###topic_id###":    topic_name[0]["topic"],
+				"###date###":        orderdetails[0]["date"],
+				"###time###":        orderdetails[0]["time"],
+				"###duration###":    orderdetails[0]["duration"],
+				"###price###":       orderdetails[0]["price"],
 			},
 		),
-		CONSTANT.ShivamEmailID,
+		CONSTANT.SameerEmailID,
 		CONSTANT.InstantSendEmailMessage,
-	)*/
+	)
 
 	response["billing"] = billing
 	response["order_id"] = orderID

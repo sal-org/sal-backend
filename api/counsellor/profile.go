@@ -181,19 +181,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Counsellor details Send with SAL Team
 	orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
-	counsellorbody := UTIL.GetHTMLTemplateForCounsellor(orderdetails)
 
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-		counsellorbody,
-		CONSTANT.AnandEmailID,
-		CONSTANT.InstantSendEmailMessage,
-	)
-
-	/*UTIL.SendEmail(
-		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.CounsellorProfileWaitingForApprovalBody,
+			CONSTANT.CounsellorProfileHtml,
 			map[string]string{
 				"###first_name###":  orderdetails[0]["first_name"],
 				"###last_name###":   orderdetails[0]["last_name"],
@@ -211,9 +203,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 				"###status###":      orderdetails[0]["status"],
 			},
 		),
-		CONSTANT.ShivamEmailID,
+		CONSTANT.AnandEmailID,
 		CONSTANT.InstantSendEmailMessage,
-	)*/
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

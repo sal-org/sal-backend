@@ -179,12 +179,39 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
+	/*orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
 	counsellorbody := UTIL.GetHTMLTemplateForCounsellor(orderdetails)
 
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		counsellorbody,
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)*/
+
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorProfileHtml,
+			map[string]string{
+				"###first_name###":  orderdetails[0]["first_name"],
+				"###last_name###":   orderdetails[0]["last_name"],
+				"###gender###":      orderdetails[0]["gender"],
+				"###phone###":       orderdetails[0]["phone"],
+				"###photo###":       orderdetails[0]["photo"],
+				"###email###":       orderdetails[0]["email"],
+				"###education###":   orderdetails[0]["education"],
+				"###experience###":  orderdetails[0]["experience"],
+				"###about###":       orderdetails[0]["about"],
+				"###resume###":      orderdetails[0]["resume"],
+				"###certificate###": orderdetails[0]["certificate"],
+				"###aadhar###":      orderdetails[0]["aadhar"],
+				"###linkedin###":    orderdetails[0]["linkedin"],
+				"###status###":      orderdetails[0]["status"],
+			},
+		),
 		CONSTANT.AnandEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)
