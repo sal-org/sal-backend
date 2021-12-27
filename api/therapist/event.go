@@ -350,9 +350,10 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		orderUpdate,
 	)
 
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "date"}, map[string]string{"counsellor_id": order[0]["event_order_id"]})
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "date", "price"}, map[string]string{"order_id": order[0]["event_order_id"]})
 	//counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"therapist_id": order[0]["user_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"timezone", "email"}, map[string]string{"therapist_id": order[0]["user_id"]})
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
@@ -367,6 +368,29 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["user_id"],
 		CONSTANT.TherapistType,
+	)
+
+	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
+
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.SendAReceiptForClient,
+			map[string]string{
+				"###Date###":         receiptdata,
+				"###ReceiptNo###":    invoiceforemail[0]["id"],
+				"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
+				"###SPrice###":       orderdetails[0]["price"],
+				"###Qty###":          CONSTANT.SalCafeQty,
+				"###Total###":        orderdetails[0]["price"],
+				"###SessionsType###": CONSTANT.SalCafeTypeForReceipt,
+				"###TPrice###":       orderdetails[0]["price"],
+				"###Discount###":     invoiceforemail[0]["discount"],
+				"###TotalP###":       invoiceforemail[0]["paid_amount"],
+			},
+		),
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	response["invoice_id"] = invoiceID
@@ -533,15 +557,15 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###First_name###":  counsellordetails[0]["first_name"],
 				"###Last_name###":   counsellordetails[0]["last_name"],
-				"###type###":        "Therapists",
-				"###title###":       orderdetails[0]["title"],
-				"###description###": orderdetails[0]["description"],
-				"###photo###":       orderdetails[0]["photo"],
-				"###topic_id###":    topic_name[0]["topic"],
-				"###date###":        orderdetails[0]["date"],
-				"###time###":        orderdetails[0]["time"],
-				"###duration###":    orderdetails[0]["duration"],
-				"###price###":       orderdetails[0]["price"],
+				"###Type###":        "Therapists",
+				"###Title###":       orderdetails[0]["title"],
+				"###Description###": orderdetails[0]["description"],
+				"###Photo###":       orderdetails[0]["photo"],
+				"###Topic_id###":    topic_name[0]["topic"],
+				"###Date###":        orderdetails[0]["date"],
+				"###Time###":        orderdetails[0]["time"],
+				"###Duration###":    orderdetails[0]["duration"],
+				"###Price###":       orderdetails[0]["price"],
 			},
 		),
 		CONSTANT.SameerEmailID,

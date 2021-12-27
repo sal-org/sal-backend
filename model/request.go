@@ -211,6 +211,7 @@ type CounsellorProfileUpdateRequest struct {
 	Gender            string `json:"gender"`
 	Photo             string `json:"photo"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`
@@ -256,6 +257,7 @@ type TherapistProfileUpdateRequest struct {
 	Gender            string `json:"gender"`
 	Photo             string `json:"photo"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`

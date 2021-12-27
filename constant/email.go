@@ -28,15 +28,21 @@ const (
 	ClientPaymentSucessClientBody         = "Hi ###client_name###, successful payment of Rs. ###paid_amount### has been received for your consultation booking. Manage your account anytime, anywhere from your SAL Mobile app on your phone. Click to view your Transaction ID #  and receipt"
 )
 
+// Event Approval For Sal Team to Send a Email
+
 const (
 	NewEventWaitingForApprovalTitle = "New SAL Cafe Event has been Created!"
 )
 
-const (
-	NewEventWaitingForApprovalBody = "New Event , Counsellor Id : ###counsellor_id### , Type 1 means Counsellor or Type 2 means Therapists ###type###, Event Title : ###title###, Event Description : ###description###, Photo : ###photo###, Topic id : ###topic_id### , Date : ###date### , Time : ###time### , Duration : ###duration### , Event Price : ###price###"
-)
+// Same as Profile Approval SAL Team to Send A Email
 
 const (
 	CounsellorProfileWaitingForApprovalTitle = "New Profile Of Counsellor has been Created!"
-	CounsellorProfileWaitingForApprovalBody  = "Counsellor Name is : ###first_name### ###last_name### , Gender : ###gender### , Phone Number : ###phone### , Photo : ###photo### , Email-Id : ###email### , Education : ###education### , Experience : ###experience### , About : ###about### , Resume : ###resume### , Ceritificate : ###certificate### , Aadhar : ###aadhar### , Linkedin : ###linkedin### , Status : ###status###"
+)
+
+// For Receipt type
+const (
+	AppointmentSessionsTypeForReceipt = "Counselling Sessions"
+	SalCafeTypeForReceipt             = "SAL Café"
+	SalCafeQty                        = "01"
 )

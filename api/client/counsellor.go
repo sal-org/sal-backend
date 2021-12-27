@@ -399,7 +399,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send notitifications
-	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
+	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
@@ -430,13 +430,52 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 	)
 
-	UTIL.SendEmail(
+	/*UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientPaymentSucessClientBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
 				"###paid_amount###": order[0]["paid_amount"],
+			},
+		),
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)*/
+
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+
+	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
+
+	var sprice, tprice string
+
+	switch order[0]["slots_bought"] {
+	case "1":
+		sprice = counsellor[0]["price"]
+		tprice = counsellor[0]["price"]
+	case "3":
+		sprice = counsellor[0]["multiple_sessions"]
+		tprice = counsellor[0]["price_3"]
+	case "5":
+		sprice = counsellor[0]["multiple_sessions"]
+		tprice = counsellor[0]["price_5"]
+	}
+
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.SendAReceiptForClient,
+			map[string]string{
+				"###Date###":         receiptdata,
+				"###ReceiptNo###":    invoiceforemail[0]["id"],
+				"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
+				"###SPrice###":       sprice,
+				"###Qty###":          order[0]["slots_bought"],
+				"###Total###":        tprice,
+				"###SessionsType###": CONSTANT.AppointmentSessionsTypeForReceipt,
+				"###TPrice###":       tprice,
+				"###Discount###":     invoiceforemail[0]["discount"],
+				"###TotalP###":       invoiceforemail[0]["paid_amount"],
 			},
 		),
 		client[0]["email"],
