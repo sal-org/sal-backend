@@ -317,3 +317,48 @@ type MoodAddRequest struct {
 	Date     string `json:"date"`
 	Notes    string `json:"notes"`
 }
+
+type EmailDataForEvent struct {
+	First_Name  string
+	Last_Name   string
+	Type        string
+	Title       string
+	Description string
+	Photo       string
+	Topic_Name  string
+	Date        string
+	Time        string
+	Duration    string
+	Price       string
+}
+
+type EmailDataForCounsellorProfile struct {
+	First_Name  string
+	Last_Name   string
+	Gender      string
+	Type        string
+	Phone       string
+	Email       string
+	Photo       string
+	Education   string
+	Experience  string
+	About       string
+	Resume      string
+	Certificate string
+	Aadhar      string
+	Linkedin    string
+	Status      string
+}
+
+type EmailDataForPaymentReceipt struct {
+	Date         string
+	ReceiptNo    string
+	ReferenceNo  string
+	SPrice       string
+	Qty          string
+	Total        string
+	SessionsType string
+	TPrice       string
+	Discount     string
+	TotalP       string
+}

@@ -265,6 +265,36 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get invoice download Receipt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in invoice ID",
+                        "name": "invoice_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/past": {
             "get": {
                 "security": [
@@ -4847,6 +4877,13 @@ var doc = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "JWTAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
@@ -4862,9 +4899,9 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "",
-	BasePath:    "",
-	Schemes:     []string{},
+	Host:        "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
+	BasePath:    "/prod",
+	Schemes:     []string{"https"},
 	Title:       "SAL Backend API",
 	Description: "This is a api for SAL client/listener/counsellor APIs",
 }

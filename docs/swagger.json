@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "This is a api for SAL client/listener/counsellor APIs",
@@ -6,6 +9,8 @@
         "contact": {},
         "version": "1.0"
     },
+    "host": "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
+    "basePath": "/prod",
     "paths": {
         "/client": {
             "get": {
@@ -238,6 +243,36 @@
                         "type": "string",
                         "description": "Appointment slot ID to be cancelled",
                         "name": "appointment_slot_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get invoice download Receipt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in invoice ID",
+                        "name": "invoice_id",
                         "in": "query",
                         "required": true
                     }
@@ -4830,6 +4865,13 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "JWTAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

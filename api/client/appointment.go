@@ -1,11 +1,13 @@
 package client
 
 import (
+	"fmt"
 	"net/http"
+	"path/filepath"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
@@ -807,5 +809,145 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// DownloadReceipt godoc
+// @Tags Client Appointment
+// @Summary Get invoice download Receipt
+// @Router /client/appointment/download [get]
+// @Param invoice_id query string true "Logged in invoice ID"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	var fileName string
+
+	invoice, status, ok := DB.SelectProcess("select * from "+CONSTANT.InvoicesTable+" where invoice_id = ? ", r.FormValue("invoice_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if DB.CheckIfExists(CONSTANT.ReceiptTable, map[string]string{"invoice_id": invoice[0]["invoice_id"]}) {
+
+		receipt, _, _ := DB.SelectSQL(CONSTANT.ReceiptTable, []string{"*"}, map[string]string{"invoice_id": invoice[0]["invoice_id"]})
+		fileName = receipt[0]["pdf"]
+	} else {
+
+		receiptdata := UTIL.BuildDate(invoice[0]["created_at"])
+
+		order, _, _ := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought", "counsellor_id", "type"}, map[string]string{"order_id": invoice[0]["order_id"]})
+
+		var sprice, tprice, discount, paid_amount string
+
+		paid_Amount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+
+		discount_value, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+
+		slots_bought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+		actual_Amount := paid_Amount + discount_value
+
+		price := actual_Amount / slots_bought
+
+		sprice = strconv.FormatFloat(price, 'f', 2, 64)
+
+		tprice = strconv.FormatFloat(actual_Amount, 'f', 2, 64)
+
+		discount = strconv.FormatFloat(discount_value, 'f', 2, 64)
+
+		paid_amount = strconv.FormatFloat(paid_Amount, 'f', 2, 64)
+
+		// This is issue because counsellor anytime update yours profile
+
+		/*if order[0]["type"] == CONSTANT.CounsellorType {
+
+			counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
+
+			switch order[0]["slots_bought"] {
+			case "1":
+				sprice = counsellor[0]["price"]
+				tprice = counsellor[0]["price"]
+			case "3":
+				sprice = counsellor[0]["multiple_sessions"]
+				tprice = counsellor[0]["price_3"]
+			case "5":
+				sprice = counsellor[0]["multiple_sessions"]
+				tprice = counsellor[0]["price_5"]
+			}
+		}
+
+		if order[0]["type"] == CONSTANT.TherapistType {
+
+			counsellor, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
+
+			switch order[0]["slots_bought"] {
+			case "1":
+				sprice = counsellor[0]["price"]
+				tprice = counsellor[0]["price"]
+			case "3":
+				sprice = counsellor[0]["multiple_sessions"]
+				tprice = counsellor[0]["price_3"]
+			case "5":
+				sprice = counsellor[0]["multiple_sessions"]
+				tprice = counsellor[0]["price_5"]
+			}
+		}*/
+
+		data := Model.EmailDataForPaymentReceipt{
+			Date:         receiptdata,
+			ReceiptNo:    invoice[0]["id"],
+			ReferenceNo:  invoice[0]["payment_id"],
+			SPrice:       sprice,
+			Qty:          order[0]["slots_bought"],
+			Total:        tprice,
+			SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+			TPrice:       tprice,
+			Discount:     discount,
+			TotalP:       paid_amount,
+		}
+
+		filePath := "htmlfile/PdfReceipt.html"
+
+		emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filePath)
+		if !ok {
+			fmt.Println("html body not create ")
+		}
+
+		created, ok := UTIL.GeneratePdf(emailbody, "pdffile/example1.pdf") // name created,
+
+		if !ok {
+			fmt.Println("Pdf is not created")
+		}
+
+		s3Path := "receipt"
+		filename := "example1.pdf"
+
+		name, uploaded := UTIL.UploadToS3File(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(filename), CONSTANT.S3PublicRead, created)
+		if !uploaded {
+			fmt.Println("UploadFile")
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		fileName = name
+
+		receipt := map[string]string{}
+
+		receipt["invoice_id"] = invoice[0]["invoice_id"]
+		receipt["pdf"] = fileName
+
+		_, status, ok := DB.InsertWithUniqueID(CONSTANT.ReceiptTable, CONSTANT.ReceiptDigits, receipt, "receipt_id")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+	response["file"] = fileName
+	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

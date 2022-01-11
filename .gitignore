@@ -2,3 +2,5 @@ tmp/*
 main
 *.zip
 .test-env
+wkhtmltopdf
+*.sql

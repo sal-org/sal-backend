@@ -31,6 +31,10 @@ func LoadClientRoutes(router *mux.Router) {
 	).Methods("DELETE")
 	clientRoutes.HandleFunc("/appointment/rate", AppointmentRatingAdd).Methods("POST")
 
+	clientRoutes.HandleFunc("/appointment/download", DownloadReceipt).Queries(
+		"invoice_id", "{invoice_id}",
+	).Methods("GET")
+
 	// assessment
 	clientRoutes.HandleFunc("/assessments", AssessmentsList).Methods("GET")
 	clientRoutes.HandleFunc("/assessment", AssessmentDetail).Queries(

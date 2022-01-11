@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"math/rand"
@@ -45,9 +46,76 @@ func saveToDisk(file multipart.File, extension string) (string, bool) {
 	return fileName, true
 }
 
+func saveToDiskFile(file []byte, extension string) (string, bool) {
+	LOGGER.Log("Saving to disk...")
+
+	newfile := bytes.NewReader(file)
+
+	fileName := "/tmp/" + generateRandomID(10) + extension
+
+	f, err := os.Create(fileName)
+	if err != nil {
+		fmt.Println("saveToDisk", err)
+		return "", false
+	}
+	defer f.Close()
+	_, err = io.Copy(f, newfile)
+	if err != nil {
+		fmt.Println("saveToDisk", err)
+		return "", false
+	}
+
+	return fileName, true
+}
+
 func UploadToS3(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, acl string, file multipart.File) (string, bool) {
 
 	savedFileName, saved := saveToDisk(file, extension)
+	if !saved {
+		return "", false
+	}
+	fmt.Println(savedFileName)
+
+	conf := aws.Config{
+		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+		Region:      aws.String(s3Region),
+	}
+	sess := session.New(&conf)
+
+	svc := s3manager.NewUploader(sess)
+
+	LOGGER.Log("Uploading file to S3...")
+
+	openedFile, err := os.Open(savedFileName)
+	if err != nil {
+		fmt.Println("uploadToS3", err)
+		return "", false
+	}
+	s, _ := openedFile.Stat()
+	fmt.Println(s.Size())
+	defer openedFile.Close()
+
+	fileName := path + "/" + getFileMD5Hash(savedFileName) + extension
+
+	_, err = svc.Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(s3Bucket),
+		Key:         aws.String(fileName),
+		Body:        openedFile,
+		ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
+		ACL:         aws.String(acl),
+	})
+
+	os.Remove(savedFileName)
+	if err != nil {
+		fmt.Println("uploadToS3 "+path, err)
+		return "", false
+	}
+	return fileName, true
+}
+
+func UploadToS3File(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, acl string, file []byte) (string, bool) {
+
+	savedFileName, saved := saveToDiskFile(file, extension)
 	if !saved {
 		return "", false
 	}

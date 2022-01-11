@@ -1,12 +1,13 @@
 package client
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
@@ -447,9 +448,27 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
 
-	var sprice, tprice string
+	var sprice, tprice, discount, paid_amount string
 
-	switch order[0]["slots_bought"] {
+	paid_Amount, _ := strconv.ParseFloat(invoiceforemail[0]["paid_amount"], 64)
+
+	discount_value, _ := strconv.ParseFloat(invoiceforemail[0]["discount"], 64)
+
+	slots_bought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+	actual_Amount := paid_Amount + discount_value
+
+	price := actual_Amount / slots_bought
+
+	sprice = strconv.FormatFloat(price, 'f', 2, 64)
+
+	tprice = strconv.FormatFloat(actual_Amount, 'f', 2, 64)
+
+	discount = strconv.FormatFloat(discount_value, 'f', 2, 64)
+
+	paid_amount = strconv.FormatFloat(paid_Amount, 'f', 2, 64)
+
+	/*switch order[0]["slots_bought"] {
 	case "1":
 		sprice = counsellor[0]["price"]
 		tprice = counsellor[0]["price"]
@@ -459,9 +478,38 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	case "5":
 		sprice = counsellor[0]["multiple_sessions"]
 		tprice = counsellor[0]["price_5"]
+	}*/
+
+	data := Model.EmailDataForPaymentReceipt{
+		Date:         receiptdata,
+		ReceiptNo:    invoiceforemail[0]["id"],
+		ReferenceNo:  invoiceforemail[0]["payment_id"],
+		SPrice:       sprice,
+		Qty:          order[0]["slots_bought"],
+		Total:        tprice,
+		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:       tprice,
+		Discount:     discount,
+		TotalP:       paid_amount,
+	}
+
+	filepath := "htmlfile/Recipt.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	if !ok {
+		fmt.Println("html body not create ")
 	}
 
 	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientHeading,
+		emailbody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Email Send using string format
+
+	/*UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.SendAReceiptForClient,
@@ -480,7 +528,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
-	)
+	)*/
 
 	// send appointment booking notification to counsellor
 	UTIL.SendNotification(

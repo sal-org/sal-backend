@@ -1,12 +1,13 @@
 package client
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
@@ -25,7 +26,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming events
-	events, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderCounsellorEventTable + " where status = " + CONSTANT.EventToBeStarted + " order by date asc, time asc")
+	events, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderCounsellorEventTable + " where status = " + CONSTANT.EventToBeStarted + " order by date desc, time desc")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -372,7 +373,34 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
 
+	data := Model.EmailDataForPaymentReceipt{
+		Date:         receiptdata,
+		ReceiptNo:    invoiceforemail[0]["id"],
+		ReferenceNo:  invoiceforemail[0]["payment_id"],
+		SPrice:       orderdetails[0]["price"],
+		Qty:          CONSTANT.SalCafeQty,
+		Total:        orderdetails[0]["price"],
+		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:       orderdetails[0]["price"],
+		Discount:     invoiceforemail[0]["discount"],
+		TotalP:       invoiceforemail[0]["paid_amount"],
+	}
+
+	filepath := "htmlfile/Recipt.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	if !ok {
+		fmt.Println("html body not create ")
+	}
+
 	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		emailbody,
+		CONSTANT.ShivamEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.SendAReceiptForClient,
@@ -391,7 +419,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		client[0]["email"], //client[0]["email"]
 		CONSTANT.InstantSendEmailMessage,
-	)
+	)*/
 
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

@@ -1,3 +1,4 @@
+basePath: /prod
 definitions:
   model.AppointmentBookRequest:
     properties:
@@ -512,6 +513,7 @@ definitions:
       topic_ids:
         type: string
     type: object
+host: yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 info:
   contact: {}
   description: This is a api for SAL client/listener/counsellor APIs
@@ -665,6 +667,24 @@ paths:
       security:
       - JWTAuth: []
       summary: Cancel bulk appointments
+      tags:
+      - Client Appointment
+  /client/appointment/download:
+    get:
+      parameters:
+      - description: Logged in invoice ID
+        in: query
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get invoice download Receipt
       tags:
       - Client Appointment
   /client/appointment/past:
@@ -2965,4 +2985,11 @@ paths:
       summary: Verify OTP sent to specified phone
       tags:
       - Counsellor/Listener/Therapist Login
+schemes:
+- https
+securityDefinitions:
+  JWTAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

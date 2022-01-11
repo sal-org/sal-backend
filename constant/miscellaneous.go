@@ -12,11 +12,11 @@ const (
 
 // urls
 var URLs = map[string]string{
-	"privacy": "http://salapp.sal-foundation.com/app_pp",
+	"privacy": "https://salapp.sal-foundation.com/app_pp/",
 	"about":   "https://sal-foundation.com/about-sal",
-	"faq":     "http://salapp.sal-foundation.com/app_faqs/",
+	"faq":     "https://salapp.sal-foundation.com/app_faqs/",
 	"info":    "https://sal-foundation.com/about-sal",
-	"tos":     "http://salapp.sal-foundation.com/app_tos/",
+	"tos":     "https://salapp.sal-foundation.com/app_tos/",
 }
 
 // default images used for events

@@ -39,6 +39,7 @@ const (
 	SlotsTable                     = "slots"
 	TherapistsTable                = "therapists"
 	TopicsTable                    = "topics"
+	ReceiptTable                   = "receipts"
 )
 
 // NumberOfTimesUniqueInserts - number of times insert statement should get executed for unqiue id
@@ -63,6 +64,7 @@ const (
 	NotificationsDigits     = 15
 	EventDigits             = 7
 	InvoiceDigits           = 8
+	ReceiptDigits           = 10
 	PaymentsDigits          = 10
 	OrderDigits             = 10
 	OrderEventDigits        = 11

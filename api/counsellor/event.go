@@ -1,11 +1,13 @@
 package counsellor
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
@@ -372,7 +374,34 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
 
+	data := Model.EmailDataForPaymentReceipt{
+		Date:         receiptdata,
+		ReceiptNo:    invoiceforemail[0]["id"],
+		ReferenceNo:  invoiceforemail[0]["payment_id"],
+		SPrice:       orderdetails[0]["price"],
+		Qty:          CONSTANT.SalCafeQty,
+		Total:        orderdetails[0]["price"],
+		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:       orderdetails[0]["price"],
+		Discount:     invoiceforemail[0]["discount"],
+		TotalP:       invoiceforemail[0]["paid_amount"],
+	}
+
+	filepath := "htmlfile/Recipt.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	if !ok {
+		fmt.Println("html body not create ")
+	}
+
 	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		emailbody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.SendAReceiptForClient,
@@ -391,7 +420,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
-	)
+	)*/
 
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -542,7 +571,34 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	counsellordetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
 	topic_name, _, _ := DB.SelectSQL(CONSTANT.TopicsTable, []string{"topic"}, map[string]string{"id": orderdetails[0]["topic_id"]})
 
+	data := Model.EmailDataForEvent{
+		First_Name:  counsellordetails[0]["first_name"],
+		Last_Name:   counsellordetails[0]["last_name"],
+		Title:       orderdetails[0]["title"],
+		Type:        "Counsellor",
+		Description: orderdetails[0]["description"],
+		Photo:       orderdetails[0]["photo"],
+		Topic_Name:  topic_name[0]["topic"],
+		Date:        orderdetails[0]["date"],
+		Time:        orderdetails[0]["time"],
+		Duration:    orderdetails[0]["duration"],
+		Price:       orderdetails[0]["price"],
+	}
+
+	filepath := "htmlfile/Event.html"
+
+	emailbody := UTIL.GetHTMLTemplateForEvent(data, filepath)
+
 	UTIL.SendEmail(
+		CONSTANT.NewEventWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.SameerEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Email send with string replace with dynamic value in html format
+
+	/*UTIL.SendEmail(
 		CONSTANT.NewEventWaitingForApprovalTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.EventWaitingForApprovalBody,
@@ -562,7 +618,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.SameerEmailID,
 		CONSTANT.InstantSendEmailMessage,
-	)
+	)*/
 
 	response["billing"] = billing
 	response["order_id"] = orderID

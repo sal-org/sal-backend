@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -191,7 +192,36 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	orderdetails, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
 
+	data := Model.EmailDataForCounsellorProfile{
+		First_Name:  orderdetails[0]["first_name"],
+		Last_Name:   orderdetails[0]["last_name"],
+		Gender:      orderdetails[0]["gender"],
+		Type:        "Counsellor",
+		Phone:       orderdetails[0]["phone"],
+		Photo:       orderdetails[0]["photo"],
+		Email:       orderdetails[0]["email"],
+		Education:   orderdetails[0]["date"],
+		Experience:  orderdetails[0]["time"],
+		About:       orderdetails[0]["duration"],
+		Resume:      orderdetails[0]["price"],
+		Certificate: orderdetails[0]["certificate"],
+		Aadhar:      orderdetails[0]["aadhar"],
+		Linkedin:    orderdetails[0]["linkedin"],
+		Status:      orderdetails[0]["status"],
+	}
+
+	filepath := "htmlfile/CounsellorProfile.html"
+
+	emailbody := UTIL.GetHTMLTemplateForProfile(data, filepath)
+
 	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorProfileHtml,
@@ -214,7 +244,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.AnandEmailID,
 		CONSTANT.InstantSendEmailMessage,
-	)
+	)*/
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
