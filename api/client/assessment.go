@@ -161,7 +161,6 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 // @Tags Client Assessment
 // @Summary Get assessment history
 // @Router /client/assessment/history [get]
-// @Param assessment_id query string true "Assessment ID to get details"
 // @Param client_id query string true "Logged in client ID"
 // @Security JWTAuth
 // @Produce json
@@ -171,15 +170,18 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	var results []string
+
 	// get assessment past results
-	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and assessment_id = ? and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("client_id"), r.FormValue("assessment_id"))
+	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ?  and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
+	// add swagger tag when you get assessment deatils  @Param assessment_id query string true "Assessment ID to get details"
 	// get assessment details
-	assessment, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", r.FormValue("assessment_id"))
+	/*assessment, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", r.FormValue("assessment_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -197,21 +199,37 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
-	}
+	}*/
 
 	assessmentResultIDs := UTIL.ExtractValuesFromArrayMap(assessmentResults, "assessment_result_id")
 
-	// get assessments result details
-	assessmentResultDetails, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultDetailsTable + " where assessment_result_id in ('" + strings.Join(assessmentResultIDs, "','") + "') order by created_at desc")
+	assessmentIDs := UTIL.ExtractValuesFromArrayMap(assessmentResults, "assessment_id")
+
+	assessmentDetails, status, ok := DB.SelectProcess("select assessment_id , title from " + CONSTANT.AssessmentsTable + " where assessment_id in ('" + strings.Join(assessmentIDs, "','") + "') order by created_at desc")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
+	// get assessments result details
+	/*assessmentResultDetails, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultDetailsTable + " where assessment_result_id in ('" + strings.Join(assessmentResultIDs, "','") + "') order by created_at desc")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}*/
+
+	for i, _ := range assessmentResultIDs {
+		result := DB.QueryRowSQL("select result from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? and min <= ? and max >=  ? ", assessmentResults[i]["assessment_id"], assessmentResults[i]["final_score"], assessmentResults[i]["final_score"])
+
+		results = append(results, result)
+	}
+
 	response["assessment_results"] = assessmentResults
-	response["assessment_result_details"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResultDetails, "assessment_result_id")
-	response["assessment"] = assessment
-	response["assessment_questions"] = assessmentQuestions
-	response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
+	//response["assessment_result_details"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResultDetails, "assessment_result_id")
+	response["result"] = results
+	response["assessment"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentDetails, "assessment_id")
+	//response["assessment"] = assessment
+	//response["assessment_questions"] = assessmentQuestions
+	//response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

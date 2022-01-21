@@ -22,6 +22,12 @@ func BuildDate(date string) string {
 	return a
 }
 
+func BuildOnlyDate(date string) string {
+	t, _ := time.Parse("2006-01-02", date)
+	a := t.Format("02-Jan-2006")
+	return a
+}
+
 // ConvertToPersonTimezone - convert UTC to person timezone
 func ConvertTimezone(date time.Time, timezone string) time.Time {
 	timezoneMinutes, _ := strconv.Atoi(timezone)

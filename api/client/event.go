@@ -386,7 +386,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		TotalP:       invoiceforemail[0]["paid_amount"],
 	}
 
-	filepath := "htmlfile/Recipt.html"
+	filepath := "htmlfile/index.html"
 
 	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
 	if !ok {
@@ -396,7 +396,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientTitle,
 		emailbody,
-		CONSTANT.ShivamEmailID,
+		client[0]["email"], //
 		CONSTANT.InstantSendEmailMessage,
 	)
 

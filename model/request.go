@@ -362,3 +362,7 @@ type EmailDataForPaymentReceipt struct {
 	Discount     string
 	TotalP       string
 }
+
+type CancellationUpdateRequest struct {
+	CancellationReason string `json:"cancellation_reason"`
+}

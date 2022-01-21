@@ -3,6 +3,7 @@ module salbackend
 go 1.15
 
 require (
+	github.com/AgoraIO-Community/go-tokenbuilder v1.0.0
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.2
 	github.com/akrylysov/algnhsa v0.12.1
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751

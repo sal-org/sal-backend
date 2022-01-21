@@ -1,3 +1,5 @@
+github.com/AgoraIO-Community/go-tokenbuilder v1.0.0 h1:R6L8a5u+p1qGpY5lNyQ19vRyDzIwhhqQnRlg9AAbqmA=
+github.com/AgoraIO-Community/go-tokenbuilder v1.0.0/go.mod h1:xqPdaiFG00M1hNN/CCYh8j+NTmkiJsQtqYdf4YAlncA=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=

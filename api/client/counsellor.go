@@ -493,7 +493,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		TotalP:       paid_amount,
 	}
 
-	filepath := "htmlfile/Recipt.html"
+	filepath := "htmlfile/index.html"
 
 	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
 	if !ok {
@@ -571,6 +571,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.CounsellorType,
 	)
 
+	// send messsage to counsellor for Appointment Confirmation
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
@@ -582,6 +583,42 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
+
+	timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
+
+	// send messsage to client for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###client_name###":     client[0]["first_name"],
+				"###counsellor_name###": counsellor[0]["first_name"],
+				"###date###":            dateFormat,
+				"###time###":            timeFormat,
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// Send to Payment SMS to client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientPaymentConfirmationTextMeassge,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+				"###amount###":      invoiceforemail[0]["paid_amount"],
+				"###bought###":      order[0]["slots_bought"],
+				"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
 		CONSTANT.LaterSendTextMessage,
 	)
 

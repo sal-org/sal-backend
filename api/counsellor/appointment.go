@@ -219,6 +219,18 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendEmailMessage,
 	)
 
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentCancellationToClientTextMessage,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

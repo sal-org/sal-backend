@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	CONFIG "salbackend/config"
@@ -472,6 +473,34 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 	)
 
+	// Send to Client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleClientTextMeassge,
+			map[string]string{
+				"###client_name###":     client[0]["first_name"],
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// send to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleClientToCounsellorTextMeassge,
+			map[string]string{
+				"###client_name###":     client[0]["first_name"],
+				"###counsellor_name###": "navigatelink", // app link
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -645,6 +674,33 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 	)
 
+	// Client Cancel the Appointment to send text message to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationTextMessage,
+			map[string]string{
+				"###client_name###":     client[0]["first_name"],
+				"###slot_bought###":     "1",
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -718,6 +774,8 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		"appointment_slot_id": r.FormValue("appointment_slot_id"),
 	}, map[string]string{
 		"slots_remaining": "0",
+		"status":          CONSTANT.AppointmentCancelled,
+		"modified_at":     UTIL.GetCurrentTime().String(),
 	})
 
 	// send notifications
@@ -749,6 +807,33 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointmentSlots[0]["client_id"],
 		CONSTANT.ClientType,
+	)
+
+	// Client Cancel the Appointment to send text message to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationTextMessage,
+			map[string]string{
+				"###client_name###":     client[0]["first_name"],
+				"###slot_bought###":     appointmentSlots[0]["slots_remaining"],
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -950,4 +1035,153 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 	response["file"] = fileName
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// Cancellation Reason godoc
+// @Tags Client Appointment
+// @Summary Cancellation Region client
+// @Router /client/appointment/cancellationreason [put]
+// @Param appointment_id query string true "Appointment ID, Appointment Slot ID to Cancellation Reason"
+// @Param sessions query string true "Single Sessions(2), Multiple Sessions(3)"
+// @Param body body model.CancellationUpdateRequest true "Request Body"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func CancellationReason(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CancellationUpdateRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if strings.EqualFold(r.FormValue("sessions"), CONSTANT.EventStarted) {
+		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status, ok := DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	} else {
+
+		exists := DB.CheckIfExists(CONSTANT.AppointmentSlotsTable, map[string]string{"appointment_slot_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		status, ok := DB.UpdateSQL(CONSTANT.AppointmentSlotsTable, map[string]string{"appointment_slot_id": r.FormValue("appointment_id")}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// Generate Agora Token godoc
+// @Tags Client Appointment
+// @Summary Get Agora Token
+// @Router /client/appointment/agoratoken [get]
+// @Param appointment_id query string true "Appointment ID or Order ID is equal to Channel Name"
+// @Param session query string true "Individual(1), Cafe(2)"
+// @Param type query string true "Publisher(1), Subscriber(2)"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
+
+	var response = make(map[string]interface{})
+
+	var roleStr, agora_token, uidStr string
+	if r.FormValue("session") == "1" {
+		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		channelName := r.FormValue("appointment_id")
+		if r.FormValue("type") == "1" {
+			roleStr = CONSTANT.RolePublisher
+		} else if r.FormValue("type") == "2" {
+			roleStr = CONSTANT.RoleSubscriber
+		} else {
+			roleStr = "attended"
+		}
+
+		uidStr = generateRandomID()
+		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestamp := currentTimestamp + expireTimeInSeconds
+
+		token, err := UTIL.GenerateAgoraRTCToken(channelName, roleStr, uidStr, expireTimestamp)
+		if err != nil {
+			UTIL.SetReponse(w, "", "", CONSTANT.ShowDialog, response)
+			return
+		}
+		agora_token = token
+	} else if r.FormValue("session") == "2" {
+		exists := DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		channelName := r.FormValue("appointment_id")
+		if r.FormValue("type") == "1" {
+			roleStr = CONSTANT.RolePublisher
+		} else if r.FormValue("type") == "2" {
+			roleStr = CONSTANT.RoleSubscriber
+		} else {
+			roleStr = "attended"
+		}
+
+		uidStr := generateRandomID()
+		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestamp := currentTimestamp + expireTimeInSeconds
+
+		token, err := UTIL.GenerateAgoraRTCToken(channelName, roleStr, uidStr, expireTimestamp)
+		if err != nil {
+			UTIL.SetReponse(w, "", "", CONSTANT.ShowDialog, response)
+			return
+		}
+		agora_token = token
+	}
+
+	response["token"] = agora_token
+	response["UID"] = uidStr
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func generateRandomID() string {
+	const randomIDdigits = "123456789"
+	b := make([]byte, 6)
+	for i := range b {
+		b[i] = randomIDdigits[rand.Intn(len(randomIDdigits))]
+	}
+	return string(b)
 }

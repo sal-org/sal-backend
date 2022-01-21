@@ -235,6 +235,50 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/agoratoken": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get Agora Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID or Order ID is equal to Channel Name",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Individual(1), Cafe(2)",
+                        "name": "session",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Publisher(1), Subscriber(2)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/bulk": {
             "delete": {
                 "security": [
@@ -256,6 +300,52 @@ var doc = `{
                         "name": "appointment_slot_id",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/cancellationreason": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Cancellation Region client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID, Appointment Slot ID to Cancellation Reason",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Single Sessions(2), Multiple Sessions(3)",
+                        "name": "sessions",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CancellationUpdateRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -492,13 +582,6 @@ var doc = `{
                 ],
                 "summary": "Get assessment history",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Assessment ID to get details",
-                        "name": "assessment_id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Logged in client ID",
@@ -4180,6 +4263,14 @@ var doc = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CancellationUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "cancellation_reason": {
                     "type": "string"
                 }
             }

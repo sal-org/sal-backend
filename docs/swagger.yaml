@@ -57,6 +57,11 @@ definitions:
       user_id:
         type: string
     type: object
+  model.CancellationUpdateRequest:
+    properties:
+      cancellation_reason:
+        type: string
+    type: object
   model.ClientProfileAddRequest:
     properties:
       date_of_birth:
@@ -651,6 +656,34 @@ paths:
       summary: Reschedule an appointment
       tags:
       - Client Appointment
+  /client/appointment/agoratoken:
+    get:
+      parameters:
+      - description: Appointment ID or Order ID is equal to Channel Name
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Individual(1), Cafe(2)
+        in: query
+        name: session
+        required: true
+        type: string
+      - description: Publisher(1), Subscriber(2)
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get Agora Token
+      tags:
+      - Client Appointment
   /client/appointment/bulk:
     delete:
       parameters:
@@ -667,6 +700,35 @@ paths:
       security:
       - JWTAuth: []
       summary: Cancel bulk appointments
+      tags:
+      - Client Appointment
+  /client/appointment/cancellationreason:
+    put:
+      parameters:
+      - description: Appointment ID, Appointment Slot ID to Cancellation Reason
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Single Sessions(2), Multiple Sessions(3)
+        in: query
+        name: sessions
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CancellationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancellation Region client
       tags:
       - Client Appointment
   /client/appointment/download:
@@ -799,11 +861,6 @@ paths:
   /client/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in client ID
         in: query
         name: client_id
