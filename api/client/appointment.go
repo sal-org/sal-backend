@@ -437,16 +437,16 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 		break
 	}
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// send appointment reschedule notification to client
 	UTIL.SendNotification(
@@ -483,7 +483,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
+		client[0]["phone"],
 		CONSTANT.LaterSendTextMessage,
 	)
 
@@ -621,17 +621,17 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone", "phone"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone", "phone"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone", "phone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 		break
 
 	}
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// send appointment cancel notification, email to client
 	UTIL.SendNotification(
@@ -697,7 +697,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
+		client[0]["phone"],
 		CONSTANT.LaterSendTextMessage,
 	)
 
@@ -784,16 +784,16 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", r.FormValue("appointment_slot_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointmentSlots[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone"}, map[string]string{"counsellor_id": appointmentSlots[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointmentSlots[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone"}, map[string]string{"listener_id": appointmentSlots[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointmentSlots[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone"}, map[string]string{"therapist_id": appointmentSlots[0]["counsellor_id"]})
 		break
 	}
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name"}, map[string]string{"client_id": appointmentSlots[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone"}, map[string]string{"client_id": appointmentSlots[0]["client_id"]})
 
 	// send appointment cancel notification to client
 	UTIL.SendNotification(
@@ -832,7 +832,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
+		client[0]["phone"],
 		CONSTANT.LaterSendTextMessage,
 	)
 
@@ -1184,4 +1184,105 @@ func generateRandomID() string {
 		b[i] = randomIDdigits[rand.Intn(len(randomIDdigits))]
 	}
 	return string(b)
+}
+
+// AppointmentStart godoc
+// @Tags Client Appointment
+// @Summary Start an appointment
+// @Router /client/appointment/start [put]
+// @Param appointment_id query string true "Appointment ID to be started"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":            CONSTANT.AppointmentStarted,
+			"client_started_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AppointmentEnd godoc
+// @Tags Client Appointment
+// @Summary End an appointment
+// @Router /client/appointment/end [put]
+// @Param appointment_id query string true "Appointment ID to be ended"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":          CONSTANT.AppointmentCompleted,
+			"client_ended_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	// send appointment ended notification and rating to client
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentFeedbackHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentFeedbackContent,
+			map[string]string{
+				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

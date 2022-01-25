@@ -401,7 +401,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// send notitifications
 	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": order[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
@@ -583,7 +583,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
@@ -603,7 +603,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	// Send to Payment SMS to client
@@ -619,7 +619,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	response["invoice_id"] = invoiceID

@@ -385,6 +385,36 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/end": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "End an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/past": {
             "get": {
                 "security": [
@@ -466,6 +496,36 @@ var doc = `{
                         "type": "string",
                         "description": "Logged in client ID",
                         "name": "client_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/start": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Start an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be started",
+                        "name": "appointment_id",
                         "in": "query",
                         "required": true
                     }

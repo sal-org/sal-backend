@@ -749,6 +749,24 @@ paths:
       summary: Get invoice download Receipt
       tags:
       - Client Appointment
+  /client/appointment/end:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: End an appointment
+      tags:
+      - Client Appointment
   /client/appointment/past:
     get:
       parameters:
@@ -802,6 +820,24 @@ paths:
       security:
       - JWTAuth: []
       summary: Get client appointment slots
+      tags:
+      - Client Appointment
+  /client/appointment/start:
+    put:
+      parameters:
+      - description: Appointment ID to be started
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start an appointment
       tags:
       - Client Appointment
   /client/appointment/upcoming:
