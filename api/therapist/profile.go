@@ -81,8 +81,8 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
-		response["languages"] = languages[0]
-		response["topics"] = topics[0]
+		response["languages"] = languages
+		response["topics"] = topics
 		response["therapist"] = therapist[0]
 		response["media_url"] = CONFIG.MediaURL
 	}
