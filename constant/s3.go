@@ -5,6 +5,7 @@ const (
 	MiscellaneousS3Path = "miscellaneous"
 	CounsellorS3Path    = "counsellor"
 	ContentS3Path       = "content"
+	EventS3Path         = "event"
 	ListenerS3Path      = "listener"
 	ClientS3Path        = "client"
 	TherapistS3Path     = "therapist"

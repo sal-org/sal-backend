@@ -87,3 +87,56 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
+
+func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// refund amount
+	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(invoice) > 0 {
+		// invoice is available => amount is paid, order is not free
+		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+		refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+		refundAmount, _ := strconv.ParseFloat(r.FormValue("refund_amount"), 64)
+		if refundAmount <= 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Cant refund less than 0 amount", CONSTANT.ShowDialog, response)
+			return
+		}
+		if refundAmount+refundedAmount <= paidAmount {
+			// refunded amount will be less than paid amount
+			DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+				"invoice_id":      invoice[0]["invoice_id"],
+				"payment_id":      invoice[0]["payment_id"],
+				"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
+				"status":          CONSTANT.RefundInProgress,
+				"created_at":      UTIL.GetCurrentTime().String(),
+			}, "refund_id")
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, strconv.FormatFloat(refundedAmount, 'f', 2, 64)+" has already been refunded from "+invoice[0]["paid_amount"]+". So, "+r.FormValue("refund_amount")+" cant be refunded.", CONSTANT.ShowDialog, response)
+			return
+		}
+	} else {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "No invoice found", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
+}
