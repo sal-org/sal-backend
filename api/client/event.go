@@ -11,6 +11,7 @@ import (
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // EventsList godoc
@@ -352,11 +353,11 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "user_id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "date", "time", "price"}, map[string]string{"order_id": order[0]["event_order_id"]})
-	//counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "title", "date", "time", "price"}, map[string]string{"order_id": order[0]["event_order_id"]})
+	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone", "email"}, map[string]string{"client_id": order[0]["user_id"]})
 
-	// send appointment booking notification to client
+	// send event booking notification to client
 	UTIL.SendNotification(
 		CONSTANT.ClientEventPaymentSucessClientHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -369,6 +370,23 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["user_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		order[0]["event_order_id"],
+	)
+
+	// send event reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientEventReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientEventRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		order[0]["user_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]).Add(-15*time.Minute).String(),
+		order[0]["event_order_id"],
 	)
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])

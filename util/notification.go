@@ -6,8 +6,13 @@ import (
 	"strings"
 )
 
+func RemoveNotification(tagID, userID string) {
+	// delete any previous notifications, if any
+	DB.DeleteSQL(CONSTANT.NotificationsTable, map[string]string{"tag_id": tagID, "user_id": userID})
+}
+
 // SendNotification - send notification using onesignal
-func SendNotification(heading, content, userID, personType string) {
+func SendNotification(heading, content, userID, personType, sendAt, tagID string) {
 	if strings.Contains(content, "###") { // check if notification variables are replaced
 		return
 	}
@@ -17,6 +22,8 @@ func SendNotification(heading, content, userID, personType string) {
 	notification["user_id"] = userID
 	notification["title"] = heading
 	notification["body"] = content
+	notification["send_at"] = sendAt
+	notification["tag_id"] = tagID
 	notification["status"] = CONSTANT.NotificationActive
 	notification["onesignal_id"] = GetNotificationID(userID, personType)
 	if len(notification["onesignal_id"]) > 0 {

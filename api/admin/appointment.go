@@ -54,6 +54,23 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+	// get counsellor, client ids to get details
+	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+	// get client details
+	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get total number of appointments
 	appointmentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.AppointmentsTable+where, queryArgs...)
@@ -63,6 +80,8 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["appointments"] = appointments
+	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments_count"] = appointmentsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(appointmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 

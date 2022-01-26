@@ -9,6 +9,12 @@ func LoadAdminRoutes(router *mux.Router) {
 	// content
 	adminRoutes.HandleFunc("/appointment", AppointmentGet).Methods("GET")
 
+	// client
+	adminRoutes.HandleFunc("/client", ClientGet).Methods("GET")
+	adminRoutes.HandleFunc("/client", ClientUpdate).Queries(
+		"client_id", "{client_id}",
+	).Methods("PUT")
+
 	// content
 	adminRoutes.HandleFunc("/content", ContentGet).Methods("GET")
 	adminRoutes.HandleFunc("/content", ContentAdd).Methods("POST")
@@ -17,6 +23,12 @@ func LoadAdminRoutes(router *mux.Router) {
 	).Methods("PUT")
 	router.HandleFunc("/content/upload", UploadContentFile).Methods("POST")
 
+	// counsellor
+	adminRoutes.HandleFunc("/counsellor", CounsellorGet).Methods("GET")
+	adminRoutes.HandleFunc("/counsellor", CounsellorUpdate).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("PUT")
+
 	// coupon
 	adminRoutes.HandleFunc("/coupon", CouponGet).Methods("GET")
 	adminRoutes.HandleFunc("/coupon", CouponAdd).Methods("POST")
@@ -24,9 +36,19 @@ func LoadAdminRoutes(router *mux.Router) {
 		"id", "{id}",
 	).Methods("PUT")
 
+	// listener
+	adminRoutes.HandleFunc("/listener", ListenerGet).Methods("GET")
+	adminRoutes.HandleFunc("/listener", ListenerUpdate).Queries(
+		"listener_id", "{listener_id}",
+	).Methods("PUT")
+
 	// login
 	adminRoutes.HandleFunc("/login", Login).Methods("GET")
 	adminRoutes.HandleFunc("/refresh-token", RefreshToken).Methods("GET")
+
+	// notification
+	adminRoutes.HandleFunc("/notification", NotificationGet).Methods("GET")
+	adminRoutes.HandleFunc("/notification", NotificationAdd).Methods("POST")
 
 	// quote
 	adminRoutes.HandleFunc("/quote", QuoteGet).Methods("GET")
@@ -40,4 +62,9 @@ func LoadAdminRoutes(router *mux.Router) {
 		"id", "{id}",
 	).Methods("GET")
 
+	// therapist
+	adminRoutes.HandleFunc("/therapist", TherapistGet).Methods("GET")
+	adminRoutes.HandleFunc("/therapist", TherapistUpdate).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("PUT")
 }

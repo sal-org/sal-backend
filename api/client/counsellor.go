@@ -11,6 +11,7 @@ import (
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // CounsellorProfile godoc
@@ -370,7 +371,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	appointment["time"] = order[0]["time"]
 	appointment["status"] = CONSTANT.AppointmentToBeStarted
 	appointment["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	appointmentID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -415,6 +416,23 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	// send payment success notification, email to client
@@ -429,6 +447,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		invoiceID,
 	)
 
 	/*UTIL.SendEmail(
@@ -542,6 +562,23 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.CounsellorType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		order[0]["counsellor_id"],
+		CONSTANT.CounsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	// send payment received notification, message to counsellor
@@ -569,6 +606,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.CounsellorType,
+		UTIL.GetCurrentTime().String(),
+		invoiceID,
 	)
 
 	// send messsage to counsellor for Appointment Confirmation

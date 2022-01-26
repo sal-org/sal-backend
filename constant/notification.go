@@ -4,6 +4,8 @@ package constant
 // notification headings
 const (
 	// client
+	ClientAppointmentReminderClientHeading   = "Appointment Reminder"
+	ClientEventReminderClientHeading         = "Event Reminder"
 	ClientAppointmentScheduleClientHeading   = "Appointment Confirmation"
 	ClientAppointmentRescheduleClientHeading = "Appointment Reschedule Success"
 	ClientAppointmentCancelClientHeading     = "Booking Cancellation"
@@ -14,6 +16,7 @@ const (
 	ClientEventPaymentSucessClientHeading    = "Cafe booked successfully!"
 
 	// counsellor
+	ClientAppointmentReminderCounsellorHeading   = "Appointment Reminder"
 	CounsellorAccountSignupCounsellorHeading     = "Successfully Completed"
 	ClientAppointmentScheduleCounsellorHeading   = "Appointment Booking"
 	ClientAppointmentRescheduleCounsellorHeading = "Appointment Reschedule"
@@ -26,6 +29,8 @@ const (
 // notification contents
 const (
 	// client
+	ClientAppointmentRemiderClientContent    = "Appointment for one to one chat with ###counsellor_name### starts in 15 min. Please check your internet connectivity and get ready for the video call"
+	ClientEventRemiderClientContent          = "Event with ###counsellor_name### starts in 15 min. Please check your internet connectivity and get ready."
 	ClientAppointmentScheduleClientContent   = "Appointment for one to one chat with ###counsellor_name### confirmed for ###date_time###"
 	ClientAppointmentRescheduleClientContent = "Hello, your appointment ###date_time### has been rescheduled successfully with ###counsellor_name###. Please view 'My sessions' in Menu for more details"
 	ClientAppointmentCancelClientContent     = "Hi ###client_name###. You have now cancelled your scheduled session on ###date_time### with ###counsellor_name###"
@@ -36,6 +41,7 @@ const (
 	ClientEventPaymentSucessClientContent    = "SAL Cafe ###cafe_name### has been booked successfully for Rs. ###paid_amount### on ###date### & ###time###."
 
 	// counsellor
+	ClientAppointmentReminderCounsellorContent   = "You have a counselling session to ###client_name### starts in 15 min. Please check your internet connectivity"
 	CounsellorAccountSignupCounsellorContent     = "Thank you for creating your account and your profile. We'll let you know when your profile is approved"
 	ClientAppointmentScheduleCounsellorContent   = "You have a new counselling session booked by ###client_name### for ###date_time###. Check 'My sessions' for details."
 	ClientAppointmentRescheduleCounsellorContent = "Your client has rescheduled a current booking. Please click here and view the change under 'My Sessions'"
