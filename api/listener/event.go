@@ -353,10 +353,10 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
 	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "date", "price"}, map[string]string{"order_id": order[0]["event_order_id"]})
-	//counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
+	// counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"timezone", "email"}, map[string]string{"listener_id": order[0]["user_id"]})
 
-	// send appointment booking notification to client
+	// send appointment booking notification to listener
 	UTIL.SendNotification(
 		CONSTANT.ClientEventPaymentSucessClientHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -369,6 +369,8 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["user_id"],
 		CONSTANT.ListenerType,
+		UTIL.GetCurrentTime().String(),
+		order[0]["event_order_id"],
 	)
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])

@@ -241,7 +241,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	appointment["time"] = body["time"]
 	appointment["status"] = CONSTANT.AppointmentToBeStarted
 	appointment["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	appointmentID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -290,6 +290,23 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		),
 		appointmentSlot[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		appointmentSlot[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	// send appointment booking notification, message to counsellor
@@ -304,6 +321,23 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		),
 		appointmentSlot[0]["counsellor_id"],
 		counsellorType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		appointmentSlot[0]["counsellor_id"],
+		counsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	UTIL.SendMessage(
@@ -448,6 +482,9 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+
 	// send appointment reschedule notification to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentRescheduleClientHeading,
@@ -460,7 +497,27 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
+
+	// send appointment reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		r.FormValue("appointment_id"),
+	)
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
 
 	// send appointment reschedule notification to counsellor
 	UTIL.SendNotification(
@@ -471,6 +528,23 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
+	)
+
+	// send appointment reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		r.FormValue("appointment_id"),
 	)
 
 	// Send to Client
@@ -633,6 +707,9 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+
 	// send appointment cancel notification, email to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentCancelClientHeading,
@@ -646,6 +723,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SendEmail(
@@ -660,6 +739,9 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
 	// send appointment cancel notification to counsellor
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentCancelCounsellorHeading,
@@ -672,6 +754,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	// Client Cancel the Appointment to send text message to counsellor
@@ -807,6 +891,8 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointmentSlots[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_slot_id"),
 	)
 
 	// Client Cancel the Appointment to send text message to counsellor
@@ -1282,6 +1368,8 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

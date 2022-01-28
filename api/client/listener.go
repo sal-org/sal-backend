@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	"time"
 
 	UTIL "salbackend/util"
 	"strings"
@@ -242,7 +243,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	appointment["time"] = order[0]["time"]
 	appointment["status"] = CONSTANT.AppointmentToBeStarted
 	appointment["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	appointmentID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -286,6 +287,23 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": listener[0]["first_name"],
+			},
+		),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	// send appointment booking notification, message to listener
@@ -300,6 +318,23 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.ListenerType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to listener before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		order[0]["counsellor_id"],
+		CONSTANT.ListenerType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	UTIL.SendMessage(

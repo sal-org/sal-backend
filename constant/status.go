@@ -210,3 +210,9 @@ const (
 	MoodResultInactive = "0"
 	MoodResultActive   = "1"
 )
+
+// bulk notification type
+const (
+	BulkNotificationAll      = "1"
+	BulkNotificationSpecific = "2"
+)

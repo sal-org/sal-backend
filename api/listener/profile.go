@@ -165,7 +165,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["listener_id"] = listenerID
 
 	// send account signup notification to listener
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), listenerID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,

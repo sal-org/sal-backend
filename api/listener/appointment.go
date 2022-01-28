@@ -156,6 +156,10 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -167,6 +171,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SendEmail(
@@ -294,6 +300,8 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

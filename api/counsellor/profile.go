@@ -180,7 +180,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["counsellor_id"] = counsellorID
 
 	// send account signup notification, message to counsellor
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), counsellorID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,

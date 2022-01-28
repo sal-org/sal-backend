@@ -181,7 +181,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["therapist_id"] = therapistID
 
 	// send account signup notification, message to therapist
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), therapistID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,

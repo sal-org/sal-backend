@@ -27,6 +27,7 @@ const (
 	MoodsTable                     = "moods"
 	MoodResultsTable               = "mood_results"
 	NotificationsTable             = "notifications"
+	NotificationsBulkTable         = "notifications_bulk"
 	OrderClientAppointmentTable    = "order_client_appointments"
 	OrderEventTable                = "order_events"
 	OrderCounsellorEventTable      = "order_counsellor_events"
