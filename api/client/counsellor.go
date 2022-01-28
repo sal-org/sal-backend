@@ -497,7 +497,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
 	if !ok {
-		fmt.Println("html body not create ")
+		fmt.Println("html body not create")
 	}
 
 	UTIL.SendEmail(
