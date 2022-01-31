@@ -1194,6 +1194,9 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	var roleStr, agora_token, uidStr string
+
+	uidStr = generateRandomID()
+
 	if r.FormValue("session") == "1" {
 		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
 		if !exists {
@@ -1210,7 +1213,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 			roleStr = "attended"
 		}
 
-		uidStr = generateRandomID()
+		//uidStr = generateRandomID()
 		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
 		expireTimeInSeconds := uint32(7200)
 		// Get current timestamp.
@@ -1240,7 +1243,6 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 			roleStr = "attended"
 		}
 
-		uidStr := generateRandomID()
 		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
 		expireTimeInSeconds := uint32(7200)
 		// Get current timestamp.

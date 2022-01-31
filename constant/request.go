@@ -25,4 +25,5 @@ var (
 	TherapistOrderPaymentCompleteRequiredFields  = []string{"order_id", "payment_method", "payment_id"}
 	TherapistProfileAddRequiredFields            = []string{"first_name", "phone", "price"}
 	CancellationUpdateRequiredFields             = []string{"cancellation_reason"}
+	CounsellorCommentFields                      = []string{"commentforclient", "attachments"}
 )

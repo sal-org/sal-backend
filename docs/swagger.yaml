@@ -108,6 +108,13 @@ definitions:
       topic_ids:
         type: string
     type: object
+  model.CounsellorCommentRequest:
+    properties:
+      attachments:
+        type: string
+      commentforclient:
+        type: string
+    type: object
   model.CounsellorOrderCreateRequest:
     properties:
       client_id:
@@ -1593,6 +1600,30 @@ paths:
       security:
       - JWTAuth: []
       summary: Cancel an appointment
+      tags:
+      - Counsellor Appointment
+  /counsellor/appointment/comment:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Comment an appointment
       tags:
       - Counsellor Appointment
   /counsellor/appointment/end:

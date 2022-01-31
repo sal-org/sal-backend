@@ -1779,6 +1779,45 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/appointment/comment": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "Comment an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CounsellorCommentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/appointment/end": {
             "put": {
                 "security": [
@@ -4405,6 +4444,17 @@ var doc = `{
                 }
             }
         },
+        "model.CounsellorCommentRequest": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string"
+                },
+                "commentforclient": {
+                    "type": "string"
+                }
+            }
+        },
         "model.CounsellorOrderCreateRequest": {
             "type": "object",
             "properties": {
@@ -5089,5 +5139,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

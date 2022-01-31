@@ -55,6 +55,17 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if counsellor[0]["price"] == "0" || counsellor[0]["multiple_sessions"] == "0" {
+		UTIL.SetReponse(w, status, "Please update your price per sessions in 'My Profile' first.", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	for _, day := range body {
 		if strings.EqualFold(day["status"], "0") {
 			// delete schedule

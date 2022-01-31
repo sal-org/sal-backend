@@ -366,3 +366,8 @@ type EmailDataForPaymentReceipt struct {
 type CancellationUpdateRequest struct {
 	CancellationReason string `json:"cancellation_reason"`
 }
+
+type CounsellorCommentRequest struct {
+	CommentForClient string `json:"commentforclient"`
+	Attachment       string `json:"attachments"`
+}

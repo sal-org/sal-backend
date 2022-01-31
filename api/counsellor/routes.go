@@ -30,6 +30,9 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	counsellorRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("PUT")
+	counsellorRoutes.HandleFunc("/appointment/comment", CounsellorComment).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
 
 	// assessment
 	counsellorRoutes.HandleFunc("/assessments", AssessmentsList).Methods("GET")
