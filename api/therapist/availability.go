@@ -55,7 +55,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": r.FormValue("therapists_id")})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
