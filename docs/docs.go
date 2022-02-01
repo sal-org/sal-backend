@@ -1291,7 +1291,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "Sort by - 1(price), 2(rating)",
+                        "description": "Sort by - 1(price), 2(rating), 3(age_group)",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -4755,16 +4755,19 @@ var doc = `{
         "model.ListenerProfileAddRequest": {
             "type": "object",
             "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
                 "about": {
+                    "type": "string"
+                },
+                "age_group": {
                     "type": "string"
                 },
                 "device_id": {
                     "type": "string"
                 },
                 "email": {
-                    "type": "string"
-                },
-                "experience": {
                     "type": "string"
                 },
                 "first_name": {
@@ -4799,13 +4802,16 @@ var doc = `{
         "model.ListenerProfileUpdateRequest": {
             "type": "object",
             "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
                 "about": {
                     "type": "string"
                 },
-                "device_id": {
+                "age_group": {
                     "type": "string"
                 },
-                "experience": {
+                "device_id": {
                     "type": "string"
                 },
                 "first_name": {

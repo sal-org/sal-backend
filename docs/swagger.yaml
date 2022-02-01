@@ -312,13 +312,15 @@ definitions:
     type: object
   model.ListenerProfileAddRequest:
     properties:
+      aadhar:
+        type: string
       about:
+        type: string
+      age_group:
         type: string
       device_id:
         type: string
       email:
-        type: string
-      experience:
         type: string
       first_name:
         type: string
@@ -341,11 +343,13 @@ definitions:
     type: object
   model.ListenerProfileUpdateRequest:
     properties:
+      aadhar:
+        type: string
       about:
         type: string
-      device_id:
+      age_group:
         type: string
-      experience:
+      device_id:
         type: string
       first_name:
         type: string
@@ -1295,7 +1299,7 @@ paths:
         in: query
         name: price
         type: string
-      - description: Sort by - 1(price), 2(rating)
+      - description: Sort by - 1(price), 2(rating), 3(age_group)
         in: query
         name: sort_by
         type: string

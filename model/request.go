@@ -146,11 +146,12 @@ type ListenerProfileAddRequest struct {
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
 	Gender      string `json:"gender"`
+	AgeGroup    string `json:"age_group"`
 	Phone       string `json:"phone"`
 	Photo       string `json:"photo"`
 	Email       string `json:"email"`
 	Occupation  string `json:"occupation"`
-	Experience  string `json:"experience"`
+	Aadhar      string `json:"aadhar"`
 	About       string `json:"about"`
 	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
@@ -240,9 +241,10 @@ type ListenerProfileUpdateRequest struct {
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
 	Gender      string `json:"gender"`
+	AgeGroup    string `json:"age_group"`
 	Photo       string `json:"photo"`
 	Occupation  string `json:"occupation"`
-	Experience  string `json:"experience"`
+	Aadhar      string `json:"aadhar"`
 	About       string `json:"about"`
 	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`

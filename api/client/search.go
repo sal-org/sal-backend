@@ -20,7 +20,7 @@ import (
 // @Param language query string false "english/hindi/tamil/telugu/kannada/bengali/malayalam/marathi/gujarati/punjabi - send selected language id"
 // @Param date query string false "Available on date (2020-02-27)"
 // @Param price query string false "Price range - 100,200 (min,max)"
-// @Param sort_by query string false "Sort by - 1(price), 2(rating)"
+// @Param sort_by query string false "Sort by - 1(price), 2(rating), 3(age_group)"
 // @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
 // @Param page query string false "Page number"
 // @Security JWTAuth
@@ -62,7 +62,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build listener query
-	listenerSQLQuery = "select listener_id as id, first_name, last_name, total_rating, average_rating, photo, 0 as price, '' as education, '' as experience, '' as about, " + CONSTANT.ListenerType + " as type, slot_type from " + CONSTANT.ListenersTable
+	listenerSQLQuery = "select listener_id as id, first_name, last_name, total_rating, average_rating, photo, 0 as price, '' as education, '' as age_group, '' as about, " + CONSTANT.ListenerType + " as type, slot_type from " + CONSTANT.ListenersTable
 
 	wheres = []string{}
 	if len(r.FormValue("topic")) > 0 { // get listeners with specified topic
@@ -77,6 +77,10 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		wheres = append(wheres, " listener_id in (select counsellor_id from "+CONSTANT.SlotsTable+" where date = ? and available = 1) ")
 		listenerArgs = append(listenerArgs, r.FormValue("date"))
 	}
+	/*if len(r.FormValue("age_group")) > 0 {
+		wheres = append(wheres, " listener_id in (select listener_id from "+CONSTANT.ListenersTable+" where age_group = ?) ")
+		listenerArgs = append(listenerArgs, r.FormValue("age_group"))
+	}*/
 	wheres = append(wheres, " status = "+CONSTANT.ListenerActive+" ") // only active listeners
 	listenerSQLQuery += " where " + strings.Join(wheres, " and ")
 
@@ -129,6 +133,9 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	orderBy := " desc "
 	if strings.EqualFold(r.FormValue("sort_by"), "1") {
 		sortBy = " price "
+	}
+	if strings.EqualFold(r.FormValue("sort_by"), "3") {
+		sortBy = " age_group "
 	}
 	if strings.EqualFold(r.FormValue("order_by"), "1") {
 		orderBy = " asc "
