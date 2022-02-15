@@ -54,9 +54,10 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	// get counsellor, client ids to get details
+	// get counsellor, client, order ids to get details
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+	orderIDs := UTIL.ExtractValuesFromArrayMap(appointments, "order_id")
 
 	// get client details
 	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
@@ -72,6 +73,22 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get order details
+	orders, status, ok := DB.SelectProcess("select order_id, paid_amount, slots_bought, invoice_id from " + CONSTANT.OrderClientAppointmentTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// get invoice ids to get refund details
+	invoiceIDs := UTIL.ExtractValuesFromArrayMap(orders, "invoice_id")
+
+	// get refund details
+	refunds, status, ok := DB.SelectProcess("select invoice_id, sum(refunded_amount) as total_refunded_amount from " + CONSTANT.RefundsTable + " where invoice_id in ('" + strings.Join(invoiceIDs, "','") + "') group by invoice_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get total number of appointments
 	appointmentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.AppointmentsTable+where, queryArgs...)
 	if !ok {
@@ -82,6 +99,8 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 	response["appointments"] = appointments
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
+	response["orders"] = UTIL.ConvertMapToKeyMap(orders, "order_id")
+	response["refunds"] = UTIL.ConvertMapToKeyMap(refunds, "invoice_id")
 	response["appointments_count"] = appointmentsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(appointmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
@@ -137,6 +156,17 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "No invoice found", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// update appointment status to refunded
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentRefunded,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
 }

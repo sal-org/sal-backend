@@ -9,6 +9,7 @@ import (
 	DB "salbackend/database"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "salbackend/model"
 	UTIL "salbackend/util"
@@ -136,6 +137,27 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	counsellorType := CONSTANT.CounsellorType
+	if len(DB.QueryRowSQL("select device_id from "+CONSTANT.TherapistsTable+" where therapist_id = ?", body["counsellor_id"])) > 0 {
+		counsellorType = CONSTANT.TherapistType
+	}
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("order_id"), body["counsellor_id"])
+
+	// send event reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.CounsellorEventReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorEventReminderCounsellorContent,
+			map[string]string{},
+		),
+		body["counsellor_id"],
+		counsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		r.FormValue("order_id"),
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
