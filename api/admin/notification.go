@@ -33,6 +33,11 @@ func NotificationGet(w http.ResponseWriter, r *http.Request) {
 				wheres = append(wheres, " type = ? ")
 				queryArgs = append(queryArgs, val[0])
 			}
+		case "notification_type":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " notification_type = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		case "user_type":
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " user_type = ? ")
@@ -83,6 +88,7 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 	notification["body"] = body["body"]
 	notification["user_ids"] = body["user_ids"]
 	notification["type"] = body["type"]
+	notification["notification_type"] = body["notification_type"]
 	notification["user_type"] = body["user_type"]
 	notification["status"] = "1"
 	notification["created_by"] = body["created_by"]

@@ -17,6 +17,7 @@ const (
 
 	// counsellor
 	ClientAppointmentReminderCounsellorHeading   = "Appointment Reminder"
+	CounsellorEventReminderCounsellorHeading     = "Event Reminder"
 	CounsellorAccountSignupCounsellorHeading     = "Successfully Completed"
 	ClientAppointmentScheduleCounsellorHeading   = "Appointment Booking"
 	ClientAppointmentRescheduleCounsellorHeading = "Appointment Reschedule"
@@ -42,6 +43,7 @@ const (
 
 	// counsellor
 	ClientAppointmentReminderCounsellorContent   = "You have a counselling session to ###client_name### starts in 15 min. Please check your internet connectivity"
+	CounsellorEventReminderCounsellorContent     = "Your event will start in 15 min. Please check your internet connectivity and get ready."
 	CounsellorAccountSignupCounsellorContent     = "Thank you for creating your account and your profile. We'll let you know when your profile is approved"
 	ClientAppointmentScheduleCounsellorContent   = "You have a new counselling session booked by ###client_name### for ###date_time###. Check 'My sessions' for details."
 	ClientAppointmentRescheduleCounsellorContent = "Your client has rescheduled a current booking. Please click here and view the change under 'My Sessions'"
