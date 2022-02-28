@@ -627,6 +627,36 @@ var doc = `{
                 }
             }
         },
+        "/client/assessment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Assessment"
+                ],
+                "summary": "Get assessment download",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in Assessment Result ID",
+                        "name": "assessment_result_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/assessment/history": {
             "get": {
                 "security": [
@@ -1287,6 +1317,12 @@ var doc = `{
                         "type": "string",
                         "description": "Price range - 100,200 (min,max)",
                         "name": "price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Experience range - 0,30 (min,max)",
+                        "name": "experience",
                         "in": "query"
                     },
                     {

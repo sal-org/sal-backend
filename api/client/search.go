@@ -20,6 +20,7 @@ import (
 // @Param language query string false "english/hindi/tamil/telugu/kannada/bengali/malayalam/marathi/gujarati/punjabi - send selected language id"
 // @Param date query string false "Available on date (2020-02-27)"
 // @Param price query string false "Price range - 100,200 (min,max)"
+// @Param experience query string false "Experience range - 0,30 (min,max)"
 // @Param sort_by query string false "Sort by - 1(price), 2(rating), 3(age_group)"
 // @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
 // @Param page query string false "Page number"
@@ -57,6 +58,12 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		prices := strings.Split(r.FormValue("price"), ",") // min,max price range
 		wheres = append(wheres, " price >= ? and price <= ? ")
 		counsellorArgs = append(counsellorArgs, prices[0], prices[1])
+	}
+	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
+		// Param experience query string false "Experience range - 0,30 (min,max)"
+		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
+		wheres = append(wheres, " experience >= ? and experience <= ? ")
+		counsellorArgs = append(counsellorArgs, experiences[0], experiences[1])
 	}
 	wheres = append(wheres, " status = "+CONSTANT.CounsellorActive+" ") // only active counsellors
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
@@ -104,6 +111,11 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		prices := strings.Split(r.FormValue("price"), ",") // min,max price range
 		wheres = append(wheres, " price >= ? and price <= ? ")
 		therapistArgs = append(therapistArgs, prices[0], prices[1])
+	}
+	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
+		prices := strings.Split(r.FormValue("experience"), ",") // min,max price range
+		wheres = append(wheres, " experience >= ? and experience <= ? ")
+		therapistArgs = append(counsellorArgs, prices[0], prices[1])
 	}
 	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" ") // only active therapists
 	therapistSQLQuery += " where " + strings.Join(wheres, " and ")

@@ -3,6 +3,7 @@ package util
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -66,7 +67,7 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 		startSlot := 0
 		if strings.EqualFold(GetCurrentTime().Format("2006-01-02"), slot["date"]) {
 			// use from next hour and multiply by 2 to get 30 min slots
-			startSlot = (GetCurrentTime().Hour() + 1) * 2 // use next slot for removing expired time for today
+			startSlot = (GetCurrentTime().Add(330*time.Minute).Hour() + 1) * 2 // use next slot for removing expired time for today
 		}
 
 		for i := startSlot; i < 48; i++ { // 48 - 30 min slots

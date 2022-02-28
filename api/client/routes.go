@@ -59,6 +59,9 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
+	clientRoutes.HandleFunc("/assessment/download", AssessmentDownload).Queries(
+		"assessment_result_id", "{assessment_result_id}",
+	).Methods("GET")
 
 	// counsellor
 	clientRoutes.HandleFunc("/counsellor", CounsellorProfile).Queries(

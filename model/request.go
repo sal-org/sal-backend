@@ -373,3 +373,21 @@ type CounsellorCommentRequest struct {
 	CommentForClient string `json:"commentforclient"`
 	Attachment       string `json:"attachments"`
 }
+
+type AssessmentDownloadAIS struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+}

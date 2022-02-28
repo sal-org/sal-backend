@@ -905,6 +905,24 @@ paths:
       summary: Add client assessment
       tags:
       - Client Assessment
+  /client/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Client Assessment
   /client/assessment/history:
     get:
       parameters:
@@ -1298,6 +1316,10 @@ paths:
       - description: Price range - 100,200 (min,max)
         in: query
         name: price
+        type: string
+      - description: Experience range - 0,30 (min,max)
+        in: query
+        name: experience
         type: string
       - description: Sort by - 1(price), 2(rating), 3(age_group)
         in: query

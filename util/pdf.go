@@ -84,6 +84,30 @@ func GetHTMLTemplateForReceipt(data Model.EmailDataForPaymentReceipt, filepath s
 	return templateBuffer.String(), true
 }
 
+func GetHTMLTemplateForAssessmentAIS(data Model.AssessmentDownloadAIS, filepath string) (string, bool) {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+
+	if err != nil {
+		fmt.Println("file is not read")
+		return "", false
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		fmt.Println("Data not pass in html")
+		return "", false
+	}
+
+	return templateBuffer.String(), true
+}
+
 func GeneratePdf(htmlfile, filepath string) ([]byte, bool) { // ([]byte
 	pdfg, err := wkhtml.NewPDFGenerator()
 	if err != nil {

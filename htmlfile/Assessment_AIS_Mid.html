@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Receipt Page</title>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+        <style>
+            body{
+				min-width:300px;        /* Suppose you want minimum width of 1000px */
+				width: auto !important;  /* Firefox will set width as auto */
+				width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+				
+			}
+
+            @media screen and (max-width:355px) {
+				.footer-items{
+					flex-direction: column;
+					align-items: center;
+					justify-content: center;
+				}
+			}
+        </style>
+    </head>
+    <body>
+        <div style="padding: 2%;">
+            <div style="float: right;">
+                <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/SAL-standalone+logo.png" alt="SAL TAg" height="140px" width="140px"/>
+            </div>
+            <div style="text-align: center;padding-top: 65px;">
+                <h3>WORKPLACE STRESS SURVEY <br>by AIS</h3>
+            </div>
+            <div>
+                <p>The AIS Workplace Stress Survey was developed in 1998 by The American Institute of Stress to serve as a simple screening measure to determine the need for further investigation with more comprehensive assessments.</p>
+            </div>
+            <div>
+                <p>To begin to manage your stress you must first identify your personal triggers.Thinking about your current job, how often does each of the following statements describe how you feel?  Enter a number from the sliding scale below, which best describes you.</p>
+            </div>
+            <div>
+                <table style="width:100%;border: 1px solid black;">
+                    <tr>
+                      <th colspan="4" style="background-color: rgb(158, 158, 243);">Strongly disagree</th>
+                      <th colspan="3" style="background-color: rgb(158, 158, 243);">Agree somewhat</th>
+                      <th colspan="3" style="background-color: rgb(158, 158, 243);">Strongly agree</th>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">1</td>
+                      <td style="text-align: center;">2</td>
+                      <td style="text-align: center;">3</td>
+                      <td style="text-align: center;">4</td>
+                      <td style="text-align: center;">5</td>
+                      <td style="text-align: center;">6</td>
+                      <td style="text-align: center;">7</td>
+                      <td style="text-align: center;">8</td>
+                      <td style="text-align: center;">9</td>
+                      <td style="text-align: center;">10</td>
+                    </tr>
+                  </table>
+            </div><br/><br/>
+            <div>
+                <p style="font-weight: bold;">Name: {{.Name}} <span style="float: right; font-weight: bold;">Date: {{.Date}}</span></p>
+            </div>
+            <div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <p style="font-weight: bold;">Age: {{.Age}}</p>
+                </div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <p style="font-weight: bold;">Gender: {{.Gender}}</p>
+                </div>
+                <div style="display: table-cell;width: 33.33%;float: right;">
+                    <p style="font-weight: bold;">Your Total Score is:  {{.Score}}</p>
+                </div><br/><br/><br/>
+            </div><br/><br/>
+            <div>
+                <p style="font-weight: bold;text-align: center;">ASSESSMENT RESULT</p>
+            </div>
+            <div style="padding: 2%;">
+                <table style="width:100% ; text-align: left;">
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">1. I can’t honestly say what I really think or get things off my chest at work.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer1}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">2. My job has a lot of responsibility, but I don’t have very much authority.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer2}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">3. I could usually do a much better job if I were given more time.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer3}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">4. I seldom receive adequate acknowledgement or appreciation when my work is really good.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer4}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">5. In general, I am not particularly proud or satisfied with my job.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer5}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">6. I have the impression that I am repeatedly picked on or discriminated against at work.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer6}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">7. I feel my workplace environment is not very pleasant or safe.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer7}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">8. My job often interferes with my family and social obligations, or personal needs.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer8}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">9. I tend to have frequent arguments with superiors, co-workers or customers.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer9}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">10. Most of the time I feel I have very little control over my life at work.</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer10}}</td>
+                    </tr>
+                </table>
+            </div><hr>
+            <div>
+                <p style="font-weight: bold;">Therapist Inference:</p>
+                <p>Some things about your job is likely to be pretty stressful, but probably not much more than most people experience and you are able to cope with.</p>
+                <p>This score indicates moderate levels of stress experienced by you at work. Research has shown that we need a moderate level of stress to enable us to perform better. While you may be able to use this stress as a motivator for positive and productive change, there could be times where you might feel the effects of stress impacting your wellbeing. Stress management is a lifestyle, not a single event.</p>
+                <p>We recommend you to use stress-management techniques. Taking steps to manage stress now will help to prevent physical, psychological and emotional issues. You can also work along with our SAL therapists, to identify your key stressors and then devise a plan to address them.</p>
+            </div><br/><hr><br/>
+            <div>
+                <div>
+                    <u style="font-weight: bold;">INTERPRETATION</u>
+                </div><br/>
+                <table style="border-collapse: collapse;">
+                    <tr>
+                        <th style="border: 1px solid black;text-align: left; background-color: yellow;">SCORE</th>
+                        <th style="border: 1px solid black;text-align: left; background-color: yellow;">INTERPRETATION</th>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black;text-align: left;">10-30</td>
+                        <td style="border: 1px solid black;text-align: left;">You can handle stress at work well</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black;text-align: left;">40-60</td>
+                        <td style="border: 1px solid black;text-align: left;">You can handle stress at work moderately well</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid black;text-align: left;">70-100</td>
+                        <td style="border: 1px solid black;text-align: left;">You are encountering problems that need to be resolved</td>
+                    </tr>
+                </table>
+            </div><hr/>
+            <p>Disclaimer: The scores on the self-assessment do not reflect any particular diagnosis or course of treatment. They are meant as a tool to help assess your level of stress. If you have any further concerns about your current wellbeing, you may contact us and talk confidentially to one of our specialists.</p>
+            <div>
+                <h4>Stress Management Tips</h4>
+                <p><span style="font-weight: bold;">1. Re-balance Work and Home.</span> All work and no play? If you’re spending too much time at the office, intentionally put more dates in your calendar to enjoy time for fun, either alone or with others.</p>
+                <p><span style="font-weight: bold;">2. Build in Regular Exercise.</span> Moving your body on a regular basis balances the nervous system and increases blood circulation, helping to flush out stress hormones. Even a daily 20-minute walk makes a difference.</p>
+                <p><span style="font-weight: bold;">3. Eat Well and Limit Alcohol and Stimulants.</span>Alcohol, nicotine and caffeine may temporarily relieve stress but have negative health impacts and can make stress worse in the long run. Well-nourished bodies cope better, so start with a good breakfast, add more fruits and vegetables, avoid processed foods and sugar, and drink more water.</p>
+                <p><span style="font-weight: bold;">4. Connect with Supportive People.</span>Talking face to face with another person releases hormones that reduce stress. Lean on those good listeners in your life.</p>
+                <p><span style="font-weight: bold;">5. Carve out Hobby Time.</span>Do you enjoy gardening, reading, listening to music or some other creative pursuit? Engage in activities that bring you pleasure and joy; research shows that reduces stress by almost half and lowers your heart rate, too.</p>
+                <p><span style="font-weight: bold;">6. Practice Meditation, Stress Reduction or Yoga.</span>Relaxation techniques activate a state of restfulness that counterbalances your body’s fight-or-flight hormones. Consider joining mindfulness inducing exercise classes teaching Yoga, body balance, meditation, laughing clubs and many other courses to learn effective, lasting tools.</p>
+                <p><span style="font-weight: bold;">7. Get adequate Sleep.</span>If you sleep too little or too much, there might be psychosomatic issues. So 7-8 hours on an average are good for physical and emotional well-being.</p>
+                <p><span style="font-weight: bold;">8. Bond with Your Pet.</span>Clinical studies show that spending even a short time with a companion animal can cut anxiety levels almost in half.</p>
+                <p><span style="font-weight: bold;">9. Take a Vacation.</span>Getting away from it all can reset your stress tolerance by increasing your mental and emotional outlook, which makes you a happier, more productive person upon return. Leave your cell phone and laptop at home.</p>
+                <p><span style="font-weight: bold;">10. See a Counsellor, Coach or Therapist.</span>If negative thoughts overwhelm your ability to make positive changes, it’s time to seek professional help. Make an appointment today with your SAL therapist because your health and life are worth it.</p>
+            </div>
+            <div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/sal-tagline.png" alt="SAL Tag" width="150px" height="150px"/>
+                  </div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+				    <h4>Salubrium Private Limited <br>Website: www.sal-foundation.com</h4>
+				    <button type="button" style="background-color: blue;color: white; height: 35px;width: 170px;">BOOK APPOINTMENT</button>
+			    </div>
+			    <div style="display: table-cell;width: 33.33%;float: left;">
+				    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/SMicons.jpg" alt="Social mediun Logo" width="60px" height="60px"/>
+			    </div>
+            </div>
+        </div>
+    </body>
+</html>

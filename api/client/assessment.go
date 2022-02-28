@@ -2,8 +2,10 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -232,4 +234,82 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	//response["assessment_questions"] = assessmentQuestions
 	//response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AssessmentDownload godoc
+// @Tags Client Assessment
+// @Summary Get assessment download
+// @Router /client/assessment/download [get]
+// @Param assessment_result_id query string true "Logged in Assessment Result ID"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	var fileName string
+
+	assessment_result, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where assessment_result_id = ? ", r.FormValue("assessment_result_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	assessment_result_details, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultDetailsTable+" where assessment_result_id = ? ", r.FormValue("assessment_result_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	assessment_data := MODEL.AssessmentDownloadAIS{
+		Name:     assessment_result[0]["name"],
+		Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+		Age:      assessment_result[0]["age"],
+		Gender:   assessment_result[0]["gender"],
+		Score:    assessment_result[0]["final_score"],
+		Answer1:  assessment_result_details[0]["score"],
+		Answer2:  assessment_result_details[1]["score"],
+		Answer3:  assessment_result_details[2]["score"],
+		Answer4:  assessment_result_details[3]["score"],
+		Answer5:  assessment_result_details[4]["score"],
+		Answer6:  assessment_result_details[5]["score"],
+		Answer7:  assessment_result_details[6]["score"],
+		Answer8:  assessment_result_details[7]["score"],
+		Answer9:  assessment_result_details[8]["score"],
+		Answer10: assessment_result_details[9]["score"],
+	}
+
+	filePath := "htmlfile/assessment1.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForAssessmentAIS(assessment_data, filePath)
+	if !ok {
+		fmt.Println("html body not create ")
+	}
+
+	created, ok := UTIL.GeneratePdf(emailbody, "pdffile/assessment1.pdf") // name created,
+
+	if !ok {
+		fmt.Println("Pdf is not created")
+	}
+
+	s3Path := "assessment"
+	filename := "example1.pdf"
+
+	name, uploaded := UTIL.UploadToS3File(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(filename), CONSTANT.S3PublicRead, created)
+	if !uploaded {
+		fmt.Println("UploadFile")
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	fileName = name
+
+	//receipt := map[string]string{}
+
+	response["invoice_id"] = assessment_result[0]["assessment_result_id"]
+	response["pdf"] = fileName
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }
