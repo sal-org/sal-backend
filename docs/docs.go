@@ -5120,13 +5120,6 @@ var doc = `{
                 }
             }
         }
-    },
-    "securityDefinitions": {
-        "JWTAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
     }
 }`
 
@@ -5142,9 +5135,9 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
-	BasePath:    "/prod",
-	Schemes:     []string{"https"},
+	Host:        "",
+	BasePath:    "",
+	Schemes:     []string{},
 	Title:       "SAL Backend API",
 	Description: "This is a api for SAL client/listener/counsellor APIs",
 }
@@ -5181,5 +5174,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

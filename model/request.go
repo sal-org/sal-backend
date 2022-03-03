@@ -391,3 +391,97 @@ type AssessmentDownloadAIS struct {
 	Answer9  string `json:"answer9"`
 	Answer10 string `json:"answer10"`
 }
+
+type AssessmentDownloadGAD7Model struct {
+	Name    string `json:"name"`
+	Date    string `json:"date"`
+	Age     string `json:"age"`
+	Gender  string `json:"gender"`
+	Score   string `json:"score"`
+	Answer1 string `json:"answer1"`
+	Answer2 string `json:"answer2"`
+	Answer3 string `json:"answer3"`
+	Answer4 string `json:"answer4"`
+	Answer5 string `json:"answer5"`
+	Answer6 string `json:"answer6"`
+	Answer7 string `json:"answer7"`
+}
+
+type AssessmentDownloadSRSModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+	Answer11 string `json:"answer11"`
+	Answer12 string `json:"answer12"`
+	Answer13 string `json:"answer13"`
+	Answer14 string `json:"answer14"`
+	Answer15 string `json:"answer15"`
+	Answer16 string `json:"answer16"`
+	Answer17 string `json:"answer17"`
+	Answer18 string `json:"answer18"`
+	Answer19 string `json:"answer19"`
+	Answer20 string `json:"answer20"`
+	Answer21 string `json:"answer21"`
+}
+
+type AssessmentDownloadBDIModel struct {
+	Name       string `json:"name"`
+	Date       string `json:"date"`
+	Age        string `json:"age"`
+	Gender     string `json:"gender"`
+	Score      string `json:"score"`
+	Answer1    string `json:"answer1"`
+	Answer2    string `json:"answer2"`
+	Answer3    string `json:"answer3"`
+	Answer4    string `json:"answer4"`
+	Answer5    string `json:"answer5"`
+	Answer6    string `json:"answer6"`
+	Answer7    string `json:"answer7"`
+	Answer8    string `json:"answer8"`
+	Answer9    string `json:"answer9"`
+	Answer10   string `json:"answer10"`
+	Answer11   string `json:"answer11"`
+	Answer12   string `json:"answer12"`
+	Answer13   string `json:"answer13"`
+	Answer14   string `json:"answer14"`
+	Answer15   string `json:"answer15"`
+	Answer16   string `json:"answer16"`
+	Answer17   string `json:"answer17"`
+	Answer18   string `json:"answer18"`
+	Answer19   string `json:"answer19"`
+	Answer20   string `json:"answer20"`
+	Answer21   string `json:"answer21"`
+	Response1  string `json:"response1"`
+	Response2  string `json:"response2"`
+	Response3  string `json:"response3"`
+	Response4  string `json:"response4"`
+	Response5  string `json:"response5"`
+	Response6  string `json:"response6"`
+	Response7  string `json:"response7"`
+	Response8  string `json:"response8"`
+	Response9  string `json:"response9"`
+	Response10 string `json:"response10"`
+	Response11 string `json:"response11"`
+	Response12 string `json:"response12"`
+	Response13 string `json:"response13"`
+	Response14 string `json:"response14"`
+	Response15 string `json:"response15"`
+	Response16 string `json:"response16"`
+	Response17 string `json:"response17"`
+	Response18 string `json:"response18"`
+	Response19 string `json:"response19"`
+	Response20 string `json:"response20"`
+	Response21 string `json:"response21"`
+}

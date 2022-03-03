@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Receipt Page</title>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+        <style>
+            body{
+				min-width:300px;        /* Suppose you want minimum width of 1000px */
+				width: auto !important;  /* Firefox will set width as auto */
+				width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+				
+			}
+        </style>
+    </head>
+    <body>
+        <div style="padding: 2%;">
+            <div style="float: right;">
+                <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/SAL-standalone+logo.png" alt="SAL TAg" height="140px" width="140px"/>
+            </div>
+            <div style="text-align: center;padding-top: 65px;">
+                <h3>THE GENERAL ANXIETY DISORDER-7 <br>(GAD-7)</h3>
+            </div>
+            <div>
+                <p>The GAD-7 was developed by Drs. Robert L. Spitzer, Janet B.W. Williams, Kurt Kroenke and colleagues, with an educational grant from Pfizer Inc.</p>
+            </div><br><hr>
+            <div>
+                <p style="text-align: center;">GAD-7 is a seven-item instrument that is used to screen for anxiety or to measure its severity.</p>
+            </div>
+            <div>
+                <p style="font-weight: bold;">Name: {{.Name}} </p>
+                <p style="font-weight: bold;">Age: {{.Age}}</p>
+                <p style="font-weight: bold;">Gender: {{.Gender}}</p>
+            </div><br>
+            <div>
+                <table style="width:100% ;border-collapse: collapse;">
+                    <tr>
+                        <th colspan="1" style="border: 1px solid black;">Not At All</th>
+                        <th colspan="1" style="border: 1px solid black;">Several Days</th>
+                        <th colspan="1" style="border: 1px solid black;">More Than Half the Days</th>
+                        <th colspan="1" style="border: 1px solid black;">Nearly Every Day</th>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;border: 1px solid black;">0</td>
+                        <td style="text-align: center;border: 1px solid black;">1</td>
+                        <td style="text-align: center;border: 1px solid black;">2</td>
+                        <td style="text-align: center;border: 1px solid black;">3</td>
+                    </tr>
+                </table>
+            </div><hr>
+            <div>
+                <div style="display: table-cell;width: 50%;float: left;">
+                    <p style="font-weight: bold;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
+                </div>
+                <div style="display: table-cell;width: 50%;float: left;text-align: center;">
+				    <p style="font-weight: bold;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
+			    </div>
+            </div><hr>
+            <div>
+                <p style="font-weight: bold;text-align: center;">ASSESSMENT RESULT</p>
+                <p style="font-weight: bold;text-align: center;">Over the last two weeks, how often have you been bothered by the following problems?</p>
+            </div>
+            <div style="padding: 2%;">
+                <table style="width:100% ; text-align: left;">
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">1. Feeling nervous, anxious, or on edge</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer1}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">2. Not being able to stop or control worrying</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer2}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">3. Worrying too much about different things</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer3}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">4. Trouble relaxing</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer4}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">5. Being so restless that it is hard to sit still</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer5}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">6. Becoming easily annoyed or irritable</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer6}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">7. Feeling afraid, as if something awful might happen</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer7}}</td>
+                    </tr>
+                </table>
+            </div><hr>
+            <div>
+                <p style="font-weight: bold;">Therapist Inference:</p>
+                <p>Your score indicates moderate anxiety. At this level of anxiety, you're likely to focus exclusively on the stressful
+                    situation directly in front of you and ignore other tasks.</p>
+                <p>Although moderate anxiety symptoms are disruptive, people with moderate anxiety may have success in
+                    managing their anxiety with the help of a doctor or self-help strategies. Taking steps will help to prevent physical,
+                    psychological and emotional issues. You can also work along with our SAL counsellors for guidance on areas
+                    where there is scope of improvement.</p>
+            </div><br/><hr><br/>
+            <div>
+                <h4>Scoring</h4>
+                <p>The GAD-7 score is calculated by assigning scores of 0, 1, 2, and 3, to the response categories of “not at all,”
+                    “several days,” “more than half the days,” and “nearly every day,” respectively, and then adding together the
+                    scores for the seven questions. Each item asks the individual to rate the severity of his or her symptoms over
+                    the past two weeks. GAD-7 total score for the seven items ranges from 0 to 21. A score of 8 or greater represents
+                    a reasonable cut-point for identifying probable cases of generalized anxiety disorder; further diagnostic
+                    assessment is warranted to determine the presence and type of anxiety disorder.</p>
+                <div style="width: 50%;border: 2px solid rgb(80, 80, 235);">
+                    <h4 style="padding-left: 15px;">Score Interpretation:</h4>
+                    <table style="width: 50%;padding-left: 70px;">
+                        <tr>
+                           <td>00-04:</td>
+                           <td>Minimal Anxiety</td> 
+                        </tr>
+                        <tr>
+                            <td>05-09:</td>
+                            <td>Mild Anxiety</td>
+                        </tr>
+                        <tr>
+                            <td>10-14:</td>
+                            <td>Moderate Anxiety</td> 
+                        </tr>
+                        <tr>
+                            <td>15-21:</td>
+                            <td>Severe Anxiety</td> 
+                        </tr>
+
+                    </table>
+                </div><br>
+                <h4 style="text-align: center;">Tips to control or lessen your Anxiety:</h4>
+                <ul>
+                    <li><span style="font-weight: bold;">Learn about your disorder.</span>The more you know, the better prepared you will be to manage symptoms and
+                        roadblocks along the way. Don’t be afraid to ask your therapist any questions you might have. Remember,
+                        you are a key part of your health care team.</li>
+                    <li><span style="font-weight: bold;">Stick to your treatment plan.</span>Suddenly stopping your meds can cause unpleasant side effects and can even
+                        trigger anxiety symptoms.</li>
+                    <li><span style="font-weight: bold;">Cut down on foods and drinks that have caffeine,</span>such as coffee, tea, cola, energy drinks,
+                            and chocolate. Caffeine is a mood-altering drug, and it may make symptoms of anxiety disorders worse.</li>
+                    <li><span style="font-weight: bold;">Don’t use alcohol and recreational street drugs.</span>Substance abuse increases your risk of anxiety disorders.</li>
+                    <li><span style="font-weight: bold;">Eat right and exercise.</span>Brisk aerobic exercises like jogging help release brain chemicals that cutstress and
+                        improve your mood.</li>
+                    <li><span style="font-weight: bold;">Get better sleep.</span>Sleep problems and anxiety disorder often go hand in hand. Make getting good rest a
+                        priority. Follow a relaxing bedtime routine.</li>
+                    <li><span style="font-weight: bold;">Learn to relax.</span>Stress management is an important part of your anxiety disorder treatment plan. Things like
+                        meditation, or mindfulness, can help you unwind after a stressful day and may make your treatment work
+                        better.</li>
+                    <li><span style="font-weight: bold;">Keep a journal.</span>Writing down your thoughts before the day is down may help you relax so you’re not tossing
+                        and turning with anxious thoughts all night.</li>
+                    <li><span style="font-weight: bold;">Manage your negative thoughts.</span>Thinking positive thoughts instead of worrisome ones can help reduce
+                        anxiety. This can be challenging if you have certain types of anxiety, however. Cognitive behavioural therapy
+                        can teach you how to redirect your thoughts.</li>
+                    <li><span style="font-weight: bold;">Get together with friends.</span>Whether it’s in person, on the phone, or the computer, social connections help
+                        people thrive and stay healthy. People who have a close group of friends that support and chat with them
+                        have lower levels of social anxiety.</li>
+                    
+                    <li><span style="font-weight: bold;">Seek support.</span>Some people find it helpful and uplifting to talk to others who are experiencing the same
+                        symptoms and emotions. Many benefits can result from finding a therapist, counsellor, or other to help
+                        at times. Take appointment today with your SAL therapist because your health and life are worth it.</li>      
+                </ul>  
+            </div><hr>
+            <div>
+                <p>Disclaimer: The scores on the self-assessment do not reflect any particular diagnosis or course of treatment. They
+                    are meant as a tool to help assess your level of anxiety. If you have any further concerns about your current
+                    wellbeing, you may contact us and talk confidentially to one of our specialists.</p><br/>
+            </div>
+            <div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/sal-tagline.png" alt="SAL Tag" width="150px" height="150px"/>
+                </div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+				    <h4>Salubrium Private Limited <br>Website: www.sal-foundation.com</h4>
+				    <button type="button" style="background-color: blue;color: white; height: 40px;width: 200px;border-radius: 10%;font-weight: bold;">BOOK APPOINTMENT</button>
+			    </div>
+			    <div style="display: table-cell;width: 33.33%;float: left;">
+				    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/SMicons.jpg" alt="Social mediun Logo" width="60px" height="60px"/>
+			    </div>
+            </div>
+        </div>
+    </body>
+</html>

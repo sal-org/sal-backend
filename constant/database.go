@@ -41,6 +41,7 @@ const (
 	TherapistsTable                = "therapists"
 	TopicsTable                    = "topics"
 	ReceiptTable                   = "receipts"
+	AssessmentPdfTable             = "assessment_pdf"
 )
 
 // NumberOfTimesUniqueInserts - number of times insert statement should get executed for unqiue id
