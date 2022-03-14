@@ -153,7 +153,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status":      CONSTANT.AppointmentCancelled,
+			"status":      CONSTANT.AppointmentCounsellorCancelled,
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
