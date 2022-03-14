@@ -123,11 +123,12 @@ const (
 
 // appointment status
 const (
-	AppointmentToBeStarted = "1"
-	AppointmentStarted     = "2"
-	AppointmentCompleted   = "3"
-	AppointmentCancelled   = "4"
-	AppointmentRefunded    = "5"
+	AppointmentToBeStarted         = "1"
+	AppointmentStarted             = "2"
+	AppointmentCompleted           = "3"
+	AppointmentUserCancelled       = "4"
+	AppointmentCounsellorCancelled = "5"
+	AppointmentAdminCancelled      = "6"
 )
 
 // appointment slots status

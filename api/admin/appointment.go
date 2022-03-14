@@ -2,6 +2,7 @@ package admin
 
 import (
 	"net/http"
+	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
@@ -40,6 +41,11 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 		case "counsellor_id":
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " counsellor_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "appointment_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " appointment_id = ? ")
 				queryArgs = append(queryArgs, val[0])
 			}
 		}
@@ -103,6 +109,7 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 	response["refunds"] = UTIL.ConvertMapToKeyMap(refunds, "invoice_id")
 	response["appointments_count"] = appointmentsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(appointmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
+	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -163,7 +170,7 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status":      CONSTANT.AppointmentRefunded,
+			"status":      CONSTANT.AppointmentAdminCancelled,
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)

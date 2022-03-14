@@ -642,7 +642,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status":      CONSTANT.AppointmentCancelled,
+			"status":      CONSTANT.AppointmentUserCancelled,
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
@@ -858,7 +858,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		"appointment_slot_id": r.FormValue("appointment_slot_id"),
 	}, map[string]string{
 		"slots_remaining": "0",
-		"status":          CONSTANT.AppointmentCancelled,
+		"status":          CONSTANT.AppointmentUserCancelled,
 		"modified_at":     UTIL.GetCurrentTime().String(),
 	})
 
