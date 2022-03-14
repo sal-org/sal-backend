@@ -401,7 +401,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send notitifications
-	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
+	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5", "email"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
@@ -658,6 +658,42 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Appointment Booked target Client
+	client_data := Model.ClientAppointmentConfirmation{
+		First_Name:      client[0]["first_name"],
+		Counsellor_Name: counsellor[0]["first_name"],
+		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	}
+
+	filepath_text := "htmlfile/Client_Appointment_Book.html"
+
+	emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
+
+	UTIL.SendEmail(
+		"Appointment Booked",
+		emailBody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Appointment Booked target Counsellor
+	counsellor_data := Model.ClientAppointmentConfirmation{
+		First_Name:      counsellor[0]["first_name"],
+		Counsellor_Name: client[0]["first_name"],
+		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	}
+
+	filepath2 := "htmlfile/Counsellor_Client_Booking_Confirmation.html"
+
+	emailBody1 := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(counsellor_data, filepath2)
+
+	UTIL.SendEmail(
+		"Appointment Booked",
+		emailBody1,
+		counsellor[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
 

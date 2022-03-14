@@ -1,3 +1,4 @@
+basePath: /prod
 definitions:
   model.AppointmentBookRequest:
     properties:
@@ -528,6 +529,7 @@ definitions:
       topic_ids:
         type: string
     type: object
+host: yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 info:
   contact: {}
   description: This is a api for SAL client/listener/counsellor APIs
@@ -3133,4 +3135,11 @@ paths:
       summary: Verify OTP sent to specified phone
       tags:
       - Counsellor/Listener/Therapist Login
+schemes:
+- https
+securityDefinitions:
+  JWTAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

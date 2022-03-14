@@ -485,3 +485,13 @@ type AssessmentDownloadBDIModel struct {
 	Response20 string `json:"response20"`
 	Response21 string `json:"response21"`
 }
+
+type CounsellorProfileSendEmailTextMessage struct {
+	First_Name string `json:"first_name"`
+}
+
+type ClientAppointmentConfirmation struct {
+	First_Name      string `json:"first_name"`
+	Counsellor_Name string `json:"counsellor_name"`
+	Date_Time       string `json:"date_time"`
+}

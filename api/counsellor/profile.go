@@ -194,24 +194,39 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Counsellor details Send with SAL Team
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
+	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
+
+	counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
+		First_Name: counsellor_details[0]["first_name"],
+	}
+
+	filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailBody,
+		counsellor_details[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	data := Model.EmailDataForCounsellorProfile{
-		First_Name:  orderdetails[0]["first_name"],
-		Last_Name:   orderdetails[0]["last_name"],
-		Gender:      orderdetails[0]["gender"],
+		First_Name:  counsellor_details[0]["first_name"],
+		Last_Name:   counsellor_details[0]["last_name"],
+		Gender:      counsellor_details[0]["gender"],
 		Type:        "Counsellor",
-		Phone:       orderdetails[0]["phone"],
-		Photo:       orderdetails[0]["photo"],
-		Email:       orderdetails[0]["email"],
-		Education:   orderdetails[0]["education"],
-		Experience:  orderdetails[0]["experience"],
-		About:       orderdetails[0]["about"],
-		Resume:      orderdetails[0]["resume"],
-		Certificate: orderdetails[0]["certificate"],
-		Aadhar:      orderdetails[0]["aadhar"],
-		Linkedin:    orderdetails[0]["linkedin"],
-		Status:      orderdetails[0]["status"],
+		Phone:       counsellor_details[0]["phone"],
+		Photo:       counsellor_details[0]["photo"],
+		Email:       counsellor_details[0]["email"],
+		Education:   counsellor_details[0]["education"],
+		Experience:  counsellor_details[0]["experience"],
+		About:       counsellor_details[0]["about"],
+		Resume:      counsellor_details[0]["resume"],
+		Certificate: counsellor_details[0]["certificate"],
+		Aadhar:      counsellor_details[0]["aadhar"],
+		Linkedin:    counsellor_details[0]["linkedin"],
+		Status:      counsellor_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -230,7 +245,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorProfileHtml,
 			map[string]string{
-				"###First_Name###":  orderdetails[0]["first_name"],
+				"###First_Name###":  counsellor[0]["first_name"],
 				"###Last_Name###":   orderdetails[0]["last_name"],
 				"###Gender###":      orderdetails[0]["gender"],
 				"###Phone###":       orderdetails[0]["phone"],

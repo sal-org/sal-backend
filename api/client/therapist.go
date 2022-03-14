@@ -681,6 +681,42 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
+	// Appointment Booked target Client
+	client_data := Model.ClientAppointmentConfirmation{
+		First_Name:      client[0]["first_name"],
+		Counsellor_Name: therapist[0]["first_name"],
+		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	}
+
+	filepath_text := "htmlfile/Client_Appointment_Book.html"
+
+	emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
+
+	UTIL.SendEmail(
+		"Appointment Booked",
+		emailBody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Appointment Booked target Counsellor
+	counsellor_data := Model.ClientAppointmentConfirmation{
+		First_Name:      therapist[0]["first_name"],
+		Counsellor_Name: client[0]["first_name"],
+		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	}
+
+	filepath2 := "htmlfile/Counsellor_Client_Booking_Confirmation.html"
+
+	emailBody1 := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(counsellor_data, filepath2)
+
+	UTIL.SendEmail(
+		"Appointment Booked",
+		emailBody1,
+		therapist[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

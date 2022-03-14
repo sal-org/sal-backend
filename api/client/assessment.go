@@ -255,7 +255,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 	if DB.CheckIfExists(CONSTANT.AssessmentPdfTable, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")}) {
 
-		receipt, _, _ := DB.SelectSQL(CONSTANT.ReceiptTable, []string{"*"}, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")})
+		receipt, _, _ := DB.SelectSQL(CONSTANT.AssessmentPdfTable, []string{"*"}, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")})
 		fileName = receipt[0]["pdf"]
 	} else {
 
