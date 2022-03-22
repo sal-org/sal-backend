@@ -474,13 +474,13 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	if strings.EqualFold(r.FormValue("status"), CONSTANT.EventStarted) {
-		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventToBeStarted}, map[string]string{"status": CONSTANT.EventStarted, "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventToBeStarted}, map[string]string{"status": CONSTANT.EventStarted, "started_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 	} else {
-		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventStarted}, map[string]string{"status": CONSTANT.EventCompleted, "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventStarted}, map[string]string{"status": CONSTANT.EventCompleted, "ended_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
