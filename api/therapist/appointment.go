@@ -270,11 +270,6 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
 
 	// get therapist type
 	therapistType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
@@ -319,11 +314,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	// check if appointment is valid
 	if len(appointment) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 

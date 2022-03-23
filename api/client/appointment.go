@@ -1298,11 +1298,6 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
 
 	// update appointment as started
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
@@ -1340,11 +1335,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	// check if appointment is valid
 	if len(appointment) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
