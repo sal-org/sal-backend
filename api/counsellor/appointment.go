@@ -408,12 +408,6 @@ func CounsellorComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CounsellorCommentFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
-	}
-
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
