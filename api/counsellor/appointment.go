@@ -419,11 +419,20 @@ func CounsellorComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, ok = DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, map[string]string{"commentforclient": body["commentforclient"], "attachments": body["attachments"]})
+	counsellor := map[string]string{}
+	if len(body["commentforclient"]) > 0 {
+		counsellor["commentforclient"] = body["commentforclient"]
+	}
+	if len(body["attachments"]) > 0 {
+		counsellor["attachments"] = body["attachments"]
+	}
+
+	status, ok = DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, counsellor)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 
 }
