@@ -77,8 +77,8 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		response["languages"] = languages[0]
-		response["topics"] = topics[0]
+		response["languages"] = languages
+		response["topics"] = topics
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
