@@ -8,6 +8,7 @@ const (
 	CounsellorCancellationCharges            = 0.10 // 10% of appointment amount is cancellation charges, if counsellor/therapist cancels appointment anytime
 	ClientAppointmentCancellationCharges     = 0.20 // 15% of appointment amount is cancellation charges, if client cancels appointment before 4 hours
 	ClientAppointmentBulkCancellationCharges = 0.20 // 15% of unused appointment amount is cancellation charges, if client cancels unused appointments
+	CounsellorPayoutPercentage               = 50   // 50% Pay the Counsellor for 1 counselling session
 )
 
 // urls

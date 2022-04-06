@@ -22,6 +22,11 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// categories of content
 	router.HandleFunc("/content-category", ListContentCategory).Methods("GET")
 
+	// counsellor content
+	router.HandleFunc("/counsellor-content", ListCounsellorContent).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
 	// topic
 	router.HandleFunc("/topic", ListTopic).Methods("GET")
 

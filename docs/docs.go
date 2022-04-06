@@ -1785,6 +1785,36 @@ var doc = `{
                 }
             }
         },
+        "/counsellor-content": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get contents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapists ID (counsellor_id/therapist_id)",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/appointment": {
             "delete": {
                 "security": [

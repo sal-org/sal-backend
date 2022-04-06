@@ -1610,6 +1610,24 @@ paths:
       summary: Update counsellor profile details
       tags:
       - Counsellor Profile
+  /counsellor-content:
+    get:
+      parameters:
+      - description: Logged in therapists ID (counsellor_id/therapist_id)
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get contents
+      tags:
+      - Miscellaneous
   /counsellor/appointment:
     delete:
       parameters:

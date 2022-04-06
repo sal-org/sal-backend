@@ -349,15 +349,16 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountAfterDiscount := actualAmount - discount
+		amountAfterDiscount := paidAmount + discount
 		if amountAfterDiscount > 0 { // add only if amount paid
 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
 
-			payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"]), 64)
+			// these come from database
+			// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"]), 64)
 
-			amountToBePaid := (amountAfterDiscount / slotsBought) * payoutPercentage / 100 // for 1 counselling session
+			amountToBePaid := (amountAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
 
 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
 				"counsellor_id": appointment[0]["counsellor_id"],
