@@ -16,7 +16,7 @@ var (
 	ListenerOrderCreateRequiredFields            = []string{"client_id", "listener_id", "date", "time"}
 	CounsellorOrderPaymentCompleteRequiredFields = []string{"order_id", "payment_method", "payment_id"}
 	ListenerOrderPaymentCompleteRequiredFields   = []string{"order_id"}
-	ClientProfileAddRequiredFields               = []string{"first_name", "phone", "email"}
+	ClientProfileAddRequiredFields               = []string{"phone", "email"}
 	CounsellorProfileAddRequiredFields           = []string{"first_name", "phone", "price"}
 	MoodAddRequiredFields                        = []string{"mood_id", "date"}
 	ListenerProfileAddRequiredFields             = []string{"first_name", "phone"}
