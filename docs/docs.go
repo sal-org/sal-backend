@@ -4418,6 +4418,9 @@ var doc = `{
                         }
                     }
                 },
+                "feedback": {
+                    "type": "string"
+                },
                 "gender": {
                     "type": "string"
                 },

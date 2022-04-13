@@ -301,6 +301,7 @@ type AssessmentAddRequest struct {
 	Gender       string `json:"gender"`
 	Phone        string `json:"phone"`
 	AssessmentID string `json:"assessment_id"`
+	Feedback     string `json:"feedback"`
 	Details      []struct {
 		AssessmentQuestionID       string `json:"assessment_question_id"`
 		AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
