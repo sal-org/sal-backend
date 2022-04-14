@@ -16,7 +16,7 @@ var URLs = map[string]string{
 	"privacy": "https://salapp.sal-foundation.com/app_pp/",
 	"about":   "https://sal-foundation.com/about-sal",
 	"faq":     "https://salapp.sal-foundation.com/app_faqs/",
-	"info":    "https://sal-foundation.com/about-sal",
+	"info":    "https://salapp.sal-foundation.com/info/",
 	"tos":     "https://salapp.sal-foundation.com/app_tos/",
 }
 
