@@ -132,6 +132,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 		"gender":        body.Gender,
 		"phone":         body.Phone,
 		"assessment_id": body.AssessmentID,
+		"feedback":      body.Feedback,
 		"final_score":   strconv.Itoa(finalScore),
 		"status":        CONSTANT.AssessmentResultActive,
 		"created_at":    UTIL.GetCurrentTime().UTC().String(),

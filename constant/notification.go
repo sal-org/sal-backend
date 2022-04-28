@@ -44,7 +44,7 @@ const (
 	// counsellor
 	ClientAppointmentReminderCounsellorContent   = "You have a counselling session to ###client_name### starts in 15 min. Please check your internet connectivity"
 	CounsellorEventReminderCounsellorContent     = "Your event will start in 15 min. Please check your internet connectivity and get ready."
-	CounsellorAccountSignupCounsellorContent     = "Thank you for creating your account and your profile. We'll let you know when your profile is approved"
+	CounsellorAccountSignupCounsellorContent     = "Thank you for creating your account and your profile. We'll let you know when your profile is approved https://sal-prod.s3.ap-south-1.amazonaws.com/receipt/596e03f5a09e574610e38714bb5f9b05.pdf"
 	ClientAppointmentScheduleCounsellorContent   = "You have a new counselling session booked by ###client_name### for ###date_time###. Check 'My sessions' for details."
 	ClientAppointmentRescheduleCounsellorContent = "Your client has rescheduled a current booking. Please click here and view the change under 'My Sessions'"
 	ClientAppointmentCancelCounsellorContent     = "Your scheduled session with ###client_name### for ###date_time### has been cancelled by the client"

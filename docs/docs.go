@@ -1558,6 +1558,12 @@ var doc = `{
                         "description": "Content category ID - false if required all",
                         "name": "category_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content mood ID - false if required all",
+                        "name": "mood_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {

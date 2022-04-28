@@ -406,6 +406,7 @@ type AssessmentDownloadGAD7Model struct {
 	Answer5 string `json:"answer5"`
 	Answer6 string `json:"answer6"`
 	Answer7 string `json:"answer7"`
+	Answer8 string `json:"answer8"`
 }
 
 type AssessmentDownloadSRSModel struct {

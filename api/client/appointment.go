@@ -1109,8 +1109,10 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 
 		receipt := map[string]string{}
 
+		receipt["client_id"] = order[0]["client_id"]
 		receipt["invoice_id"] = invoice[0]["invoice_id"]
 		receipt["pdf"] = fileName
+		receipt["created_at"] = UTIL.GetCurrentTime().String()
 
 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.ReceiptTable, CONSTANT.ReceiptDigits, receipt, "receipt_id")
 		if !ok {

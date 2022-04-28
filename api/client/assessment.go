@@ -536,6 +536,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 				Answer5: assessment_result_details[4]["score"],
 				Answer6: assessment_result_details[5]["score"],
 				Answer7: assessment_result_details[6]["score"],
+				Answer8: assessment_result[0]["feedback"],
 			}
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
@@ -564,8 +565,10 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 		assessment_pdf := map[string]string{}
 
+		assessment_pdf["user_id"] = assessment_result[0]["user_id"]
 		assessment_pdf["assessment_result_id"] = assessment_result[0]["assessment_result_id"]
 		assessment_pdf["pdf"] = fileName
+		assessment_pdf["created_at"] = UTIL.GetCurrentTime().String()
 
 		_, status, ok = DB.InsertWithUniqueID(CONSTANT.AssessmentPdfTable, CONSTANT.ReceiptDigits, assessment_pdf, "assessment_pdf_id")
 

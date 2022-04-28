@@ -1468,6 +1468,10 @@ paths:
         in: query
         name: category_id
         type: string
+      - description: Content mood ID - false if required all
+        in: query
+        name: mood_id
+        type: string
       produces:
       - application/json
       responses:

@@ -17,6 +17,7 @@ import (
 // @Router /content [get]
 // @Param user_id query string false "Logged in user ID (client_id/counsellor_id/listener_id/therapist_id)"
 // @Param category_id query string false "Content category ID - false if required all"
+// @Param mood_id query string false "Content mood ID - false if required all"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -26,6 +27,7 @@ func Content(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	var categoryFilter string
+	var moodFilter string
 	if len(r.FormValue("category_id")) > 0 {
 		id, _ := strconv.Atoi(r.FormValue("category_id"))
 		if id > 0 {
@@ -33,22 +35,29 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if len(r.FormValue("mood_id")) > 0 {
+		id, _ := strconv.Atoi(r.FormValue("mood_id"))
+		if id > 0 {
+			moodFilter = " and mood_id = " + r.FormValue("mood_id")
+		}
+	}
+
 	// get latest videos
-	videos, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + " and training = 0 and status = 1 order by created_at desc limit 20")
+	videos, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit 20")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get latest audios
-	audios, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + " and training = 0 and status = 1 order by created_at desc limit 20")
+	audios, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit 20")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get latest articles
-	articles, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + " and training = 0 and status = 1 order by created_at desc limit 20")
+	articles, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit 20")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
