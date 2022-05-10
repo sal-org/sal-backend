@@ -18,21 +18,16 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired("Bearer " + r.FormValue("access_token")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
 	startBy, _ := time.Parse("2006-01-02", r.FormValue("start_by"))
 	endBy, _ := time.Parse("2006-01-02", r.FormValue("end_by"))
 
-	writer := csv.NewWriter(w)
+	heading := []string{}
+	data := [][]string{}
 
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		writer.Write([]string{"Appointment ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time", "Status"})
+		heading = []string{"Appointment ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time", "Status"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -60,7 +55,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
 
 		for _, appointment := range appointments {
-			writer.Write([]string{
+			data = append(data, []string{
 				appointment["appointment_id"],
 				appointment["client_id"],
 				clientsMap[appointment["client_id"]]["first_name"],
@@ -72,7 +67,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "2": // sales report
-		writer.Write([]string{"User ID", "User Name", "User Type", "Total Individual Sessions amount", "Total SAL Cafe sessions amount", "Net Amount Received", "Cancellation Amount", "No Show Amount"})
+		heading = []string{"User ID", "User Name", "User Type", "Total Individual Sessions amount", "Total SAL Cafe sessions amount", "Net Amount Received", "Refund Amount", "Cancellation Amount", "No Show Amount"}
 		invoices, status, ok := DB.SelectProcess("select user_id, sum(CASE WHEN order_type = " + CONSTANT.OrderAppointmentType + " THEN paid_amount ELSE 0 END) as total_session_amount, sum(CASE WHEN order_type = " + CONSTANT.OrderEventBookType + " THEN paid_amount ELSE 0 END) as total_event_amount from " + CONSTANT.InvoicesTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' group by user_id")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -81,7 +76,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		// get user ids to get details
 		userIDs := UTIL.ExtractValuesFromArrayMap(invoices, "user_id")
 
-		refunds, status, ok := DB.SelectProcess("select user_id, sum(CASE WHEN type = " + CONSTANT.RefundCancellationType + " THEN refunded_amount ELSE 0 END) as total_cancel_refund_amount, sum(CASE WHEN type = " + CONSTANT.RefundNoShowType + " THEN refunded_amount ELSE 0 END) as total_no_show_refund_amount from (select r.refunded_amount, r.type, i.user_id from " + CONSTANT.RefundsTable + " r left join " + CONSTANT.InvoicesTable + " i on r.invoice_id = i.invoice_id where r.created_at > '" + startBy.UTC().String() + "' and r.created_at < '" + endBy.UTC().String() + "') as a group by user_id")
+		refunds, status, ok := DB.SelectProcess("select user_id, sum(refunded_amount) as total_refund_amount, sum(CASE WHEN type = " + CONSTANT.RefundCancellationType + " THEN refunded_amount ELSE 0 END) as total_cancel_refund_amount, sum(CASE WHEN type = " + CONSTANT.RefundNoShowType + " THEN refunded_amount ELSE 0 END) as total_no_show_refund_amount from (select r.refunded_amount, r.type, i.user_id from " + CONSTANT.RefundsTable + " r left join " + CONSTANT.InvoicesTable + " i on r.invoice_id = i.invoice_id where r.created_at > '" + startBy.UTC().String() + "' and r.created_at < '" + endBy.UTC().String() + "') as a group by user_id")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -100,19 +95,20 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		refundsMap := UTIL.ConvertMapToKeyMap(refunds, "user_id")
 
 		for _, user := range users {
-			writer.Write([]string{
+			data = append(data, []string{
 				user["id"],
 				user["first_name"],
 				user["type"],
 				invoicesMap[user["id"]]["total_session_amount"],
 				invoicesMap[user["id"]]["total_event_amount"],
 				strconv.FormatFloat(getInt(invoicesMap[user["id"]]["total_session_amount"])+getInt(invoicesMap[user["id"]]["total_event_amount"]), 'f', 2, 64),
+				refundsMap[user["id"]]["total_refund_amount"],
 				refundsMap[user["id"]]["total_cancel_refund_amount"],
 				refundsMap[user["id"]]["total_no_show_refund_amount"],
 			})
 		}
 	case "3": // booking report
-		writer.Write([]string{"Booking ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time of Session Booking", "Total Sessions Bought", "Session Remaining", "Bulk Cancel (4 - cancel)"})
+		heading = []string{"Booking ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time of Session Booking", "Total Sessions Bought", "Session Remaining", "Bulk Cancel (4 - cancel)"}
 		bookings, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentSlotsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -140,7 +136,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
 
 		for _, booking := range bookings {
-			writer.Write([]string{
+			data = append(data, []string{
 				booking["order_id"],
 				booking["client_id"],
 				clientsMap[booking["client_id"]]["first_name"],
@@ -154,7 +150,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "4": // sal cafe report
-		writer.Write([]string{"Booking ID", "Client ID", "Client Name", "Client Email", "Client Mobile", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time of Booking", "Paid Amount"})
+		heading = []string{"Booking ID", "Client ID", "Client Name", "Client Email", "Client Mobile", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Topic", "Date & Time of Booking", "Paid Amount"}
 		bookings, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderEventTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' and status = " + CONSTANT.OrderInProgress + " order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -180,11 +176,19 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// get topics
+		topics, status, ok := DB.SelectProcess("select * from " + CONSTANT.TopicsTable)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
 		usersMap := UTIL.ConvertMapToKeyMap(users, "id")
 		eventsMap := UTIL.ConvertMapToKeyMap(events, "order_id")
+		topicsMap := UTIL.ConvertMapToKeyMap(topics, "id")
 
 		for _, booking := range bookings {
-			writer.Write([]string{
+			data = append(data, []string{
 				booking["order_id"],
 				booking["user_id"],
 				usersMap[booking["user_id"]]["first_name"],
@@ -193,12 +197,13 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				eventsMap[booking["event_order_id"]]["counsellor_id"],
 				usersMap[eventsMap[booking["event_order_id"]]["counsellor_id"]]["first_name"],
 				usersMap[eventsMap[booking["event_order_id"]]["counsellor_id"]]["type"],
+				topicsMap[eventsMap[booking["event_order_id"]]["topic_id"]]["topic"],
 				UTIL.ConvertTimezone(UTIL.ConvertToTime(booking["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat),
 				booking["paid_amount"],
 			})
 		}
 	case "5": // finance report
-		writer.Write([]string{"Invoice ID", "User ID", "User Type", "User Name", "User Email", "User Mobile", "Date & Time of Booking", "Paid Amount", "CGST Amount", "SGST Amount", "Total Tax Amount"})
+		heading = []string{"Invoice ID", "User ID", "User Type", "User Name", "User Email", "User Mobile", "Date & Time of Booking", "Paid Amount", "CGST Amount", "SGST Amount", "Total Tax Amount"}
 		invoices, status, ok := DB.SelectProcess("select * from " + CONSTANT.InvoicesTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -217,7 +222,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		usersMap := UTIL.ConvertMapToKeyMap(users, "id")
 
 		for _, invoice := range invoices {
-			writer.Write([]string{
+			data = append(data, []string{
 				invoice["invoice_id"],
 				invoice["user_id"],
 				usersMap[invoice["user_id"]]["type"],
@@ -232,7 +237,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "6": // payout report
-		writer.Write([]string{"Counsellor ID", "Counsellor Name", "Counsellor Type", "Heading", "Description", "Date & Time of Session", "Amount to be paid", "Beneficiary Name", "Bank Name", "Account Type", "IFSC Code", "Bank A/c Number"})
+		heading = []string{"Counsellor ID", "Counsellor Name", "Counsellor Type", "Heading", "Description", "Date & Time of Session", "Amount to be paid", "Beneficiary Name", "Bank Name", "Account Type", "IFSC Code", "Bank A/c Number"}
 		payments, status, ok := DB.SelectProcess("select * from " + CONSTANT.PaymentsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "'")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -252,7 +257,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
 
 		for _, payment := range payments {
-			writer.Write([]string{
+			data = append(data, []string{
 				payment["counsellor_id"],
 				counsellorsMap[payment["counsellor_id"]]["first_name"],
 				counsellorsMap[payment["counsellor_id"]]["type"],
@@ -268,23 +273,34 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "7": // promo code report
-		writer.Write([]string{"Promo Code", "No. of times used", "Promo code used in amt.", "Amount Received"})
+		heading = []string{"Promo Code", "Description", "No. of times used", "Promo code used in amt.", "Amount Received"}
 		invoices, status, ok := DB.SelectProcess("select coupon_code, count(*) as ctn, sum(discount) as used_amount, sum(paid_amount) as paid_amount from " + CONSTANT.InvoicesTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' and coupon_code != '' group by coupon_code")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
+		// get coupon codes to get details
+		couponCodes := UTIL.ExtractValuesFromArrayMap(invoices, "coupon_code")
+
+		coupons, status, ok := DB.SelectProcess("select * from " + CONSTANT.CouponsTable + " where coupon_code in ('" + strings.Join(couponCodes, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		couponsMap := UTIL.ConvertMapToKeyMap(coupons, "coupon_code")
+
 		for _, invoice := range invoices {
-			writer.Write([]string{
+			data = append(data, []string{
 				invoice["coupon_code"],
+				couponsMap[invoice["coupon_code"]]["description"],
 				invoice["ctn"],
 				invoice["used_amount"],
 				invoice["paid_amount"],
 			})
 		}
 	case "8": // push notification report
-		writer.Write([]string{"Notification Type", "Date", "Times"})
+		heading = []string{"Notification Type", "Date", "Times"}
 		notifications, status, ok := DB.SelectProcess("select date(created_at) as date, CASE WHEN notification_type = 1 THEN 'Promo' WHEN notification_type = 2 THEN 'Content' WHEN notification_type = 3 THEN 'Event' WHEN notification_type = 4 THEN 'Other' ELSE 'Nothing' END as notification_type, count(*) as ctn from " + CONSTANT.NotificationsBulkTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' group by date(created_at), notification_type")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -292,7 +308,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, notification := range notifications {
-			writer.Write([]string{
+			data = append(data, []string{
 				notification["date"],
 				notification["notification_type"],
 				notification["ctn"],
@@ -300,7 +316,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 	case "10": // onboarding report
 
-		writer.Write([]string{"First Name", "Last Name", "Gender", "Email", "Phone", "Type", "Created At"})
+		heading = []string{"First Name", "Last Name", "Gender", "Email", "Phone", "Type", "Created At"}
 		counsellors, status, ok := DB.SelectProcess("(select first_name, last_name, gender, email, phone, 'Counsellor' as `type`, created_at from " + CONSTANT.CounsellorsTable + " where status = " + CONSTANT.CounsellorActive + " and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "') union (select first_name, last_name, gender, email, phone, 'Listener' as `type`, created_at from " + CONSTANT.ListenersTable + " where status = " + CONSTANT.ListenerActive + " and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "') union (select first_name, last_name, gender, email, phone, 'Therapist' as `type`, created_at from " + CONSTANT.TherapistsTable + " where status = " + CONSTANT.TherapistActive + " and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -308,12 +324,28 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, counsellor := range counsellors {
-			writer.Write([]string{counsellor["first_name"], counsellor["last_name"], counsellor["gender"], counsellor["email"], counsellor["phone"], counsellor["type"], UTIL.ConvertTimezone(UTIL.ConvertToTime(counsellor["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
+			data = append(data, []string{counsellor["first_name"], counsellor["last_name"], counsellor["gender"], counsellor["email"], counsellor["phone"], counsellor["type"], UTIL.ConvertTimezone(UTIL.ConvertToTime(counsellor["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
 		}
 
 	}
 
-	writer.Flush()
+	if strings.EqualFold(r.FormValue("type"), "json") {
+		response["headings"] = heading
+		response["data"] = data
+		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+		return
+	} else {
+		writer := csv.NewWriter(w)
+
+		writer.Write(heading)
+
+		for _, d := range data {
+			writer.Write(d)
+		}
+
+		writer.Flush()
+		return
+	}
 }
 
 // utils for reports
