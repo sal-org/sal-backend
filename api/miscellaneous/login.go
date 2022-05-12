@@ -105,16 +105,16 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	//check if otp is correct
-	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
-
-	// this for testing
-	if !strings.EqualFold("4444", r.FormValue("otp")) {
+	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// this for testing
+	// if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get counsellor details
 	var counsellorType string
