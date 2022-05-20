@@ -111,6 +111,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// default photo for client and listerner
+	if len(body["photo"]) == 0 || body["photo"] == "string" {
+		body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
+	}
+
 	// add client details
 	client := map[string]string{}
 	client["first_name"] = body["first_name"]

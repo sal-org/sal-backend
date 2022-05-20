@@ -33,3 +33,9 @@ var EventImages = []string{
 const (
 	EventDuration = "60" // Event duration 60 mins
 )
+
+// default photo for client and listerner
+
+const (
+	DefaultPhotoForClientAndListerner = "miscellaneous/1653045756Photo.jpeg"
+)
