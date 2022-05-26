@@ -37,5 +37,5 @@ const (
 // default photo for client and listerner
 
 const (
-	DefaultPhotoForClientAndListerner = "miscellaneous/1653045756Photo.jpeg"
+	DefaultPhotoForClientAndListerner = "miscellaneous/kmPlQ123NSP123.jpg"
 )
