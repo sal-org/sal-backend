@@ -149,7 +149,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["aadhar"] = body["aadhar"]
 	therapist["linkedin"] = body["linkedin"]
 	therapist["device_id"] = body["device_id"]
-	therapist["payout_percentage"] = body["payout_percentage"]
+	therapist["payout_percentage"] = CONSTANT.CounsellorPayoutPercentageColumns
 	therapist["payee_name"] = body["payee_name"]
 	therapist["bank_account_no"] = body["bank_account_no"]
 	therapist["ifsc"] = body["ifsc"]

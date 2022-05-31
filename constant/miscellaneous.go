@@ -9,6 +9,7 @@ const (
 	ClientAppointmentCancellationCharges     = 0.20 // 15% of appointment amount is cancellation charges, if client cancels appointment before 4 hours
 	ClientAppointmentBulkCancellationCharges = 0.20 // 15% of unused appointment amount is cancellation charges, if client cancels unused appointments
 	CounsellorPayoutPercentage               = 50   // 50% Pay the Counsellor for 1 counselling session
+	CounsellorPayoutPercentageColumns        = "50" // these only col to insert in database
 )
 
 // urls
