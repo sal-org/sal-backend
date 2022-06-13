@@ -464,7 +464,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)*/
 
-	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "coupon_code", "created_at"}, map[string]string{"invoice_id": invoiceID})
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
 
@@ -501,19 +501,20 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}*/
 
 	data := Model.EmailDataForPaymentReceipt{
-		Date:         receiptdata,
-		ReceiptNo:    invoiceforemail[0]["id"],
-		ReferenceNo:  invoiceforemail[0]["payment_id"],
-		SPrice:       sprice,
-		Qty:          order[0]["slots_bought"],
-		Total:        tprice,
-		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
-		TPrice:       tprice,
-		Discount:     discount,
-		TotalP:       paid_amount,
+		Date:        receiptdata,
+		ReceiptNo:   invoiceforemail[0]["id"],
+		ReferenceNo: invoiceforemail[0]["payment_id"],
+		SPrice:      sprice,
+		Qty:         order[0]["slots_bought"],
+		Total:       tprice,
+		//SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:   tprice,
+		CouponC:  invoiceforemail[0]["coupon_code"],
+		Discount: discount,
+		TotalP:   paid_amount,
 	}
 
-	filepath := "htmlfile/index.html"
+	filepath := "htmlfile/receiptClove.html"
 
 	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
 	if !ok {
@@ -662,22 +663,22 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Appointment Booked target Client
-	client_data := Model.ClientAppointmentConfirmation{
-		First_Name:      client[0]["first_name"],
-		Counsellor_Name: counsellor[0]["first_name"],
-		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-	}
+	// client_data := Model.ClientAppointmentConfirmation{
+	// 	First_Name:      client[0]["first_name"],
+	// 	Counsellor_Name: counsellor[0]["first_name"],
+	// 	Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	// }
 
-	filepath_text := "htmlfile/Client_Appointment_Book.html"
+	// filepath_text := "htmlfile/Client_Appointment_Book.html"
 
-	emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
+	// emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
 
-	UTIL.SendEmail(
-		"Appointment Booked",
-		emailBody,
-		client[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendEmail(
+	// 	"Appointment Booked",
+	// 	emailBody,
+	// 	client[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// Appointment Booked target Counsellor
 	counsellor_data := Model.ClientAppointmentConfirmation{

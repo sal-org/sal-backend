@@ -228,3 +228,13 @@ const (
 	BulkNotificationAll      = "1"
 	BulkNotificationSpecific = "2"
 )
+
+// Agora status
+const (
+	AgoraResourceID  = "1" // agora resource id gerenated
+	AgoraResourceID2 = "2"
+	AgoraCallStart1  = "3" // agora call start
+	AgoraCallStart2  = "4"
+	AgoraCallStop1   = "5" // agora call stop
+	AgoraCallStop2   = "6"
+)

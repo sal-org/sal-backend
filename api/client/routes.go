@@ -45,9 +45,11 @@ func LoadClientRoutes(router *mux.Router) {
 
 	clientRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 	clientRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 
 	// assessment

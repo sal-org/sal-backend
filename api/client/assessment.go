@@ -546,7 +546,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		created, ok := UTIL.GeneratePdf(emailbody, "pdffile/assessment1.pdf") // name created,
+		created, ok := UTIL.GeneratePdfHeaderAndFooterFixted(emailbody, "pdffile/assessment1.pdf") // name created,
 
 		if !ok {
 			fmt.Println("Pdf is not created")

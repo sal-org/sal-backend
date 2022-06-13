@@ -406,6 +406,13 @@ var doc = `{
                         "name": "appointment_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -526,6 +533,13 @@ var doc = `{
                         "type": "string",
                         "description": "Appointment ID to be started",
                         "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
                         "in": "query",
                         "required": true
                     }

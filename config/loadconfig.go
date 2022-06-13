@@ -30,5 +30,9 @@ func LoadConfig() {
 	AWSSecretKey = os.Getenv("AWSSECRETKEY")
 	AWSRegion = os.Getenv("AWSREGION")
 	JWTSecret = []byte(os.Getenv("JWT_SECRET"))
+	AGORA_APP_ID = os.Getenv("AGORA_APP_ID")
+	AGORA_APP_CERTIFICATE = os.Getenv("AGORA_APP_CERTIFICATE")
+	AGORA_Customer_Key = os.Getenv("AGORA_CUSTOMER_KEY")
+	AGORA_Customer_Secret = os.Getenv("AGORA_CUSTOMER_SECRET")
 	FromEmailID = os.Getenv("FROM_EMAIL_ID")
 }

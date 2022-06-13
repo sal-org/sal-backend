@@ -377,16 +377,16 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
 
 	data := Model.EmailDataForPaymentReceipt{
-		Date:         receiptdata,
-		ReceiptNo:    invoiceforemail[0]["id"],
-		ReferenceNo:  invoiceforemail[0]["payment_id"],
-		SPrice:       orderdetails[0]["price"],
-		Qty:          CONSTANT.SalCafeQty,
-		Total:        orderdetails[0]["price"],
-		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
-		TPrice:       orderdetails[0]["price"],
-		Discount:     invoiceforemail[0]["discount"],
-		TotalP:       invoiceforemail[0]["paid_amount"],
+		Date:        receiptdata,
+		ReceiptNo:   invoiceforemail[0]["id"],
+		ReferenceNo: invoiceforemail[0]["payment_id"],
+		SPrice:      orderdetails[0]["price"],
+		Qty:         CONSTANT.SalCafeQty,
+		Total:       orderdetails[0]["price"],
+		//SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:   orderdetails[0]["price"],
+		Discount: invoiceforemail[0]["discount"],
+		TotalP:   invoiceforemail[0]["paid_amount"],
 	}
 
 	filepath := "htmlfile/index.html"

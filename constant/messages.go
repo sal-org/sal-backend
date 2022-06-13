@@ -6,6 +6,7 @@ const (
 	AdminAccountDeletedMessage             = "Admin account blocked. Please contact super admin"
 	AdminExistsMessage                     = "Admin with specified username already exists"
 	AppointmentNotExistMessage             = "Appointment doesn't exist"
+	AgoraCallMessage                       = "Agora call not started"
 	AppointmentSlotNotExistMessage         = "Appointment slots doesn't exist"
 	AppointmentSlotNotAvailableMessage     = "Appointment slots not available"
 	AppointmentAlreadyStartedMessage       = "Appointment already started"

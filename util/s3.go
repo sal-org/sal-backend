@@ -51,7 +51,7 @@ func saveToDiskFile(file []byte, extension string) (string, bool) {
 
 	newfile := bytes.NewReader(file)
 
-	fileName := "/tmp/" + generateRandomID(10) + extension
+	fileName := "tmp/" + generateRandomID(10) + extension
 
 	f, err := os.Create(fileName)
 	if err != nil {

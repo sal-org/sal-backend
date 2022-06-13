@@ -3,6 +3,7 @@ package constant
 // database tables
 const (
 	AdminsTable                    = "admins"
+	QualityCheckTable              = "qualitycheck"
 	AppointmentsTable              = "appointments"
 	AppointmentSlotsTable          = "appointment_slots"
 	AssessmentsTable               = "assessments"
@@ -42,6 +43,7 @@ const (
 	TopicsTable                    = "topics"
 	ReceiptTable                   = "receipts"
 	AssessmentPdfTable             = "assessment_pdf"
+	AgoraTable                     = "agora"
 )
 
 // NumberOfTimesUniqueInserts - number of times insert statement should get executed for unqiue id
@@ -73,4 +75,5 @@ const (
 	PaymentDigits           = 10
 	RefundDigits            = 9
 	TherapistDigits         = 5
+	AgoraDigits             = 20
 )

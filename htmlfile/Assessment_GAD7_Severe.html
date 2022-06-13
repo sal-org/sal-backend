@@ -9,16 +9,14 @@
 				min-width:300px;        /* Suppose you want minimum width of 1000px */
 				width: auto !important;  /* Firefox will set width as auto */
 				width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+                font-family: 'Open Sans';
 				
 			}
         </style>
     </head>
     <body>
         <div style="padding: 2%;">
-            <div style="float: right;">
-                <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/SAL-standalone+logo.png" alt="SAL TAg" height="140px" width="140px"/>
-            </div>
-            <div style="text-align: center;padding-top: 65px;">
+            <div style="text-align: center;">
                 <h3>THE GENERAL ANXIETY DISORDER-7 <br>(GAD-7)</h3>
             </div>
             <div>
@@ -28,9 +26,9 @@
                 <p style="text-align: center;">GAD-7 is a seven-item instrument that is used to screen for anxiety or to measure its severity.</p>
             </div>
             <div>
-                <p style="font-weight: bold;">Name: {{.Name}} </p>
-                <p style="font-weight: bold;">Age: {{.Age}}</p>
-                <p style="font-weight: bold;">Gender: {{.Gender}}</p>
+                <p style="font-weight: 600;">Name: {{.Name}} </p>
+                <p style="font-weight: 600;">Age: {{.Age}}</p>
+                <p style="font-weight: 600;">Gender: {{.Gender}}</p>
             </div><br>
             <div>
                 <table style="width:100% ;border-collapse: collapse;">
@@ -50,52 +48,52 @@
             </div><hr>
             <div>
                 <div style="display: table-cell;width: 50%;float: left;">
-                    <p style="font-weight: bold;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
+                    <p style="font-weight: 600;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
                 </div>
                 <div style="display: table-cell;width: 50%;float: left;text-align: center;">
-				    <p style="font-weight: bold;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
+				    <p style="font-weight: 600;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
 			    </div>
             </div><hr>
             <div>
-                <p style="font-weight: bold;text-align: center;">ASSESSMENT RESULT</p>
-                <p style="font-weight: bold;text-align: center;">Over the last two weeks, how often have you been bothered by the following problems?</p>
+                <p style="font-weight: 600;text-align: center;">ASSESSMENT RESULT</p>
+                <p style="font-weight: 600;text-align: center;">Over the last two weeks, how often have you been bothered by the following problems?</p>
             </div>
             <div style="padding: 2%;">
                 <table style="width:100% ; text-align: left;">
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">1. Feeling nervous, anxious, or on edge</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer1}}</td>
+                        <td style="text-align: center;">{{.Answer1}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">2. Not being able to stop or control worrying</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer2}}</td>
+                        <td style="text-align: center;">{{.Answer2}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">3. Worrying too much about different things</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer3}}</td>
+                        <td style="text-align: center;">{{.Answer3}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">4. Trouble relaxing</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer4}}</td>
+                        <td style="text-align: center;">{{.Answer4}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">5. Being so restless that it is hard to sit still</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer5}}</td>
+                        <td style="text-align: center;">{{.Answer5}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">6. Becoming easily annoyed or irritable</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer6}}</td>
+                        <td style="text-align: center;">{{.Answer6}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">7. Feeling afraid, as if something awful might happen</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer7}}</td>
+                        <td style="text-align: center;">{{.Answer7}}</td>
                     </tr>
                 </table>
                 <p>If you checked off any problems, how difficult have they made it for you to do your work, take care of
-                    things at home, or get along with other people? <span style="border-bottom: 1px solid rgb(107, 166, 233);">{{.Answer8}}</span></p>
+                    things at home, or get along with other people? <span> {{.Answer8}}</span></p>
             </div><hr>
             <div>
-                <p style="font-weight: bold;">Therapist Inference:</p>
+                <p style="font-weight: 600;">Therapist Inference:</p>
                 <p>Your score indicates severe anxiety. You are worrying too much about things that cannot be controlled that can
                     have a negative effect on overall well-being and is a sign that anxiety may be more severe.</p>
                 <p>Severe anxiety is often debilitating and significantly interrupts a person's ability to function and carry out typical
@@ -134,31 +132,31 @@
                 </div><br>
                 <h4 style="text-align: center;">Tips to control or lessen your Anxiety:</h4>
                 <ul>
-                    <li><span style="font-weight: bold;">Learn about your disorder.</span>The more you know, the better prepared you will be to manage symptoms and
+                    <li><span style="font-weight: 600;">Learn about your disorder.</span>The more you know, the better prepared you will be to manage symptoms and
                         roadblocks along the way. Don’t be afraid to ask your therapist any questions you might have. Remember,
                         you are a key part of your health care team.</li>
-                    <li><span style="font-weight: bold;">Stick to your treatment plan.</span>Suddenly stopping your meds can cause unpleasant side effects and can even
+                    <li><span style="font-weight: 600;">Stick to your treatment plan.</span>Suddenly stopping your meds can cause unpleasant side effects and can even
                         trigger anxiety symptoms.</li>
-                    <li><span style="font-weight: bold;">Cut down on foods and drinks that have caffeine,</span>such as coffee, tea, cola, energy drinks,
+                    <li><span style="font-weight: 600;">Cut down on foods and drinks that have caffeine,</span>such as coffee, tea, cola, energy drinks,
                             and chocolate. Caffeine is a mood-altering drug, and it may make symptoms of anxiety disorders worse.</li>
-                    <li><span style="font-weight: bold;">Don’t use alcohol and recreational street drugs.</span>Substance abuse increases your risk of anxiety disorders.</li>
-                    <li><span style="font-weight: bold;">Eat right and exercise.</span>Brisk aerobic exercises like jogging help release brain chemicals that cutstress and
+                    <li><span style="font-weight: 600;">Don’t use alcohol and recreational street drugs.</span>Substance abuse increases your risk of anxiety disorders.</li>
+                    <li><span style="font-weight: 600;">Eat right and exercise.</span>Brisk aerobic exercises like jogging help release brain chemicals that cutstress and
                         improve your mood.</li>
-                    <li><span style="font-weight: bold;">Get better sleep.</span>Sleep problems and anxiety disorder often go hand in hand. Make getting good rest a
+                    <li><span style="font-weight: 600;">Get better sleep.</span>Sleep problems and anxiety disorder often go hand in hand. Make getting good rest a
                         priority. Follow a relaxing bedtime routine.</li>
-                    <li><span style="font-weight: bold;">Learn to relax.</span>Stress management is an important part of your anxiety disorder treatment plan. Things like
+                    <li><span style="font-weight: 600;">Learn to relax.</span>Stress management is an important part of your anxiety disorder treatment plan. Things like
                         meditation, or mindfulness, can help you unwind after a stressful day and may make your treatment work
                         better.</li>
-                    <li><span style="font-weight: bold;">Keep a journal.</span>Writing down your thoughts before the day is down may help you relax so you’re not tossing
+                    <li><span style="font-weight: 600;">Keep a journal.</span>Writing down your thoughts before the day is down may help you relax so you’re not tossing
                         and turning with anxious thoughts all night.</li>
-                    <li><span style="font-weight: bold;">Manage your negative thoughts.</span>Thinking positive thoughts instead of worrisome ones can help reduce
+                    <li><span style="font-weight: 600;">Manage your negative thoughts.</span>Thinking positive thoughts instead of worrisome ones can help reduce
                         anxiety. This can be challenging if you have certain types of anxiety, however. Cognitive behavioural therapy
                         can teach you how to redirect your thoughts.</li>
-                    <li><span style="font-weight: bold;">Get together with friends.</span>Whether it’s in person, on the phone, or the computer, social connections help
+                    <li><span style="font-weight: 600;">Get together with friends.</span>Whether it’s in person, on the phone, or the computer, social connections help
                         people thrive and stay healthy. People who have a close group of friends that support and chat with them
                         have lower levels of social anxiety.</li>
                     
-                    <li><span style="font-weight: bold;">Seek support.</span>Some people find it helpful and uplifting to talk to others who are experiencing the same
+                    <li><span style="font-weight: 600;">Seek support.</span>Some people find it helpful and uplifting to talk to others who are experiencing the same
                         symptoms and emotions. Many benefits can result from finding a therapist, counsellor, or other to help
                         at times. Take appointment today with your SAL therapist because your health and life are worth it.</li>      
                 </ul>  
@@ -169,15 +167,19 @@
                     wellbeing, you may contact us and talk confidentially to one of our specialists.</p><br/>
             </div>
             <div>
-                <div style="display: table-cell;width: 33.33%;float: left;">
-                    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/sal-tagline.png" alt="SAL Tag" width="150px" height="150px"/>
+                <div style="float: left;">
+                    <button type="button" style="background-color: #FC8766;color: white; height: 40px;width: 200px;border-color: #FC8766;border-radius: 10%;font-weight: 600;">BOOK APPOINTMENT</button>
                   </div>
-                <div style="display: table-cell;width: 43.33%;float: left;">
-				    <p><span style="font-weight: bold;">Salubrium Private Limited <br>Website:</span> www.sal-foundation.com</p>
-				    <button type="button" style="background-color: blue;color: white; height: 40px;width: 200px;border-radius: 10%;font-weight: bold;">BOOK APPOINTMENT</button>
-			    </div>
-			    <div style="display: table-cell;width: 23.33%;float: left;">
-				    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/SMicons.jpg" alt="Social mediun Logo" width="60px" height="60px"/>
+			    <div style="float: right;">
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.linkedin.com/company/sal-foundation/" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Linkedin" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/linkedin-circle-black.png" alt="In" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.facebook.com/FoundationSAL/" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Facebook" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/facebook-circle-black.png" alt="Fb" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.instagram.com/sal.foundation/?hl-en" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Instagram" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/instagram-circle-black.png" alt="Inst" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
 			    </div>
             </div>
         </div>
