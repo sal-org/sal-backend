@@ -1,15 +1,17 @@
 package client
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // EventsList godoc
@@ -25,7 +27,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming events
-	events, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderCounsellorEventTable + " where status = " + CONSTANT.EventToBeStarted + " order by date asc, time asc")
+	events, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderCounsellorEventTable + " where status = " + CONSTANT.EventToBeStarted + " order by date desc, time desc")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -237,10 +239,12 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// calculate bill
 	billing := UTIL.GetBillingDetails(price, order["discount"])
-	order["actual_amount"] = billing["actual_amount"]
+	order["paid_amount"] = billing["paid_amount"]
 	order["discount"] = billing["discount"]
 	order["tax"] = billing["tax"]
-	order["paid_amount"] = billing["paid_amount"]
+	order["actual_amount"] = billing["actual_amount"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
 	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
@@ -321,6 +325,8 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["order_type"] = CONSTANT.OrderEventBookType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["discount"] = order[0]["discount"]
 	invoice["coupon_code"] = order[0]["coupon_code"]
 	invoice["coupon_id"] = order[0]["coupon_id"]
@@ -346,6 +352,94 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		orderUpdate,
 	)
 
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "user_id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "title", "date", "time", "price"}, map[string]string{"order_id": order[0]["event_order_id"]})
+	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone", "email"}, map[string]string{"client_id": order[0]["user_id"]})
+
+	// send event booking notification to client
+	UTIL.SendNotification(
+		CONSTANT.ClientEventPaymentSucessClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientEventPaymentSucessClientContent,
+			map[string]string{
+				"###cafe_name###":   orderdetails[0]["title"],
+				"###paid_amount###": order[0]["paid_amount"],
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+			},
+		),
+		order[0]["user_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		order[0]["event_order_id"],
+	)
+
+	// send event reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientEventReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientEventRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		order[0]["user_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]).Add(-15*time.Minute).String(),
+		order[0]["event_order_id"],
+	)
+
+	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
+
+	data := Model.EmailDataForPaymentReceipt{
+		Date:         receiptdata,
+		ReceiptNo:    invoiceforemail[0]["id"],
+		ReferenceNo:  invoiceforemail[0]["payment_id"],
+		SPrice:       orderdetails[0]["price"],
+		Qty:          CONSTANT.SalCafeQty,
+		Total:        orderdetails[0]["price"],
+		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:       orderdetails[0]["price"],
+		Discount:     invoiceforemail[0]["discount"],
+		TotalP:       invoiceforemail[0]["paid_amount"],
+	}
+
+	filepath := "htmlfile/index.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	if !ok {
+		fmt.Println("html body not create ")
+	}
+
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		emailbody,
+		client[0]["email"], //
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.SendAReceiptForClient,
+			map[string]string{
+				"###Date###":         receiptdata,
+				"###ReceiptNo###":    invoiceforemail[0]["id"],
+				"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
+				"###SPrice###":       orderdetails[0]["price"],
+				"###Qty###":          CONSTANT.SalCafeQty,
+				"###Total###":        orderdetails[0]["price"],
+				"###SessionsType###": CONSTANT.SalCafeTypeForReceipt,
+				"###TPrice###":       orderdetails[0]["price"],
+				"###Discount###":     invoiceforemail[0]["discount"],
+				"###TotalP###":       invoiceforemail[0]["paid_amount"],
+			},
+		),
+		client[0]["email"], //client[0]["email"]
+		CONSTANT.InstantSendEmailMessage,
+	)*/
+
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+
 }

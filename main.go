@@ -22,6 +22,7 @@ import (
 // @securityDefinitions.apikey JWTAuth
 // @in header
 // @name Authorization
+
 func main() {
 
 	rand.Seed(time.Now().UnixNano()) // seed for random generator

@@ -26,7 +26,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+")", r.FormValue("listener_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -147,7 +147,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status":      CONSTANT.AppointmentCancelled,
+			"status":      CONSTANT.AppointmentCounsellorCancelled,
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
@@ -155,6 +155,10 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// send appointment cancel notification, email to client
 	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
 
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
@@ -167,6 +171,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SendEmail(
@@ -294,6 +300,8 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

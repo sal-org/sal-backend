@@ -1,15 +1,16 @@
 package therapist
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
+	UTIL "salbackend/util"
 	"strconv"
 	"strings"
-
-	UTIL "salbackend/util"
 )
 
 // EventsList godoc
@@ -240,6 +241,8 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["actual_amount"] = billing["actual_amount"]
 	order["discount"] = billing["discount"]
 	order["tax"] = billing["tax"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 	order["paid_amount"] = billing["paid_amount"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
@@ -321,6 +324,8 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["order_type"] = CONSTANT.OrderEventBookType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["discount"] = order[0]["discount"]
 	invoice["coupon_code"] = order[0]["coupon_code"]
 	invoice["coupon_id"] = order[0]["coupon_id"]
@@ -345,6 +350,78 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 		orderUpdate,
 	)
+
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"title", "time", "date", "price"}, map[string]string{"order_id": order[0]["event_order_id"]})
+	// counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": orderdetails[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"timezone", "email"}, map[string]string{"therapist_id": order[0]["user_id"]})
+
+	// send appointment booking notification to therapist
+	UTIL.SendNotification(
+		CONSTANT.ClientEventPaymentSucessClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientEventPaymentSucessClientContent,
+			map[string]string{
+				"###cafe_name###":   orderdetails[0]["title"],
+				"###paid_amount###": order[0]["paid_amount"],
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+			},
+		),
+		order[0]["user_id"],
+		CONSTANT.TherapistType,
+		UTIL.GetCurrentTime().String(),
+		order[0]["event_order_id"],
+	)
+
+	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
+
+	data := Model.EmailDataForPaymentReceipt{
+		Date:         receiptdata,
+		ReceiptNo:    invoiceforemail[0]["id"],
+		ReferenceNo:  invoiceforemail[0]["payment_id"],
+		SPrice:       orderdetails[0]["price"],
+		Qty:          CONSTANT.SalCafeQty,
+		Total:        orderdetails[0]["price"],
+		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:       orderdetails[0]["price"],
+		Discount:     invoiceforemail[0]["discount"],
+		TotalP:       invoiceforemail[0]["paid_amount"],
+	}
+
+	filepath := "htmlfile/index.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	if !ok {
+		fmt.Println("html body not create ")
+	}
+
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		emailbody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.SendAReceiptForClient,
+			map[string]string{
+				"###Date###":         receiptdata,
+				"###ReceiptNo###":    invoiceforemail[0]["id"],
+				"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
+				"###SPrice###":       orderdetails[0]["price"],
+				"###Qty###":          CONSTANT.SalCafeQty,
+				"###Total###":        orderdetails[0]["price"],
+				"###SessionsType###": CONSTANT.SalCafeTypeForReceipt,
+				"###TPrice###":       orderdetails[0]["price"],
+				"###Discount###":     invoiceforemail[0]["discount"],
+				"###TotalP###":       invoiceforemail[0]["paid_amount"],
+			},
+		),
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)*/
 
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -397,13 +474,13 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	if strings.EqualFold(r.FormValue("status"), CONSTANT.EventStarted) {
-		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventToBeStarted}, map[string]string{"status": CONSTANT.EventStarted, "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventToBeStarted}, map[string]string{"status": CONSTANT.EventStarted, "started_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 	} else {
-		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventStarted}, map[string]string{"status": CONSTANT.EventCompleted, "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id"), "counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.EventStarted}, map[string]string{"status": CONSTANT.EventCompleted, "ended_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -463,7 +540,8 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["title"] = body["title"]
 	order["description"] = body["description"]
 	order["topic_id"] = body["topic_id"]
-	order["duration"] = body["duration"]
+	order["type"] = CONSTANT.TherapistType
+	order["duration"] = CONSTANT.EventDuration
 	order["price"] = body["price"]
 	order["photo"] = body["photo"]
 	order["date"] = body["date"]
@@ -475,6 +553,8 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
 	order["actual_amount"] = billing["actual_amount"]
 	order["tax"] = billing["tax"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 	order["paid_amount"] = billing["paid_amount"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
@@ -486,6 +566,60 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	//body := HTMLDATA.GetHTMLTemplate(orderdetails)
+	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "title", "description", "photo", "topic_id", "date", "time", "duration", "price"}, map[string]string{"order_id": orderID})
+	counsellordetails, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name"}, map[string]string{"therapist_id": orderdetails[0]["counsellor_id"]})
+	topic_name, _, _ := DB.SelectSQL(CONSTANT.TopicsTable, []string{"topic"}, map[string]string{"id": orderdetails[0]["topic_id"]})
+
+	data := Model.EmailDataForEvent{
+		First_Name:  counsellordetails[0]["first_name"],
+		Last_Name:   counsellordetails[0]["last_name"],
+		Title:       orderdetails[0]["title"],
+		Type:        "Therapists",
+		Description: orderdetails[0]["description"],
+		Photo:       orderdetails[0]["photo"],
+		Topic_Name:  topic_name[0]["topic"],
+		Date:        orderdetails[0]["date"],
+		Time:        orderdetails[0]["time"],
+		Duration:    orderdetails[0]["duration"],
+		Price:       orderdetails[0]["price"],
+	}
+
+	filepath := "htmlfile/Event.html"
+
+	emailbody := UTIL.GetHTMLTemplateForEvent(data, filepath)
+
+	UTIL.SendEmail(
+		CONSTANT.NewEventWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.SameerEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Email send with string replace with dynamic value in html format
+
+	/*UTIL.SendEmail(
+		CONSTANT.NewEventWaitingForApprovalTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.EventWaitingForApprovalBody,
+			map[string]string{
+				"###First_name###":  counsellordetails[0]["first_name"],
+				"###Last_name###":   counsellordetails[0]["last_name"],
+				"###Type###":        "Therapists",
+				"###Title###":       orderdetails[0]["title"],
+				"###Description###": orderdetails[0]["description"],
+				"###Photo###":       orderdetails[0]["photo"],
+				"###Topic_id###":    topic_name[0]["topic"],
+				"###Date###":        orderdetails[0]["date"],
+				"###Time###":        orderdetails[0]["time"],
+				"###Duration###":    orderdetails[0]["duration"],
+				"###Price###":       orderdetails[0]["price"],
+			},
+		),
+		CONSTANT.SameerEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)*/
 
 	response["billing"] = billing
 	response["order_id"] = orderID
@@ -500,7 +634,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+/*func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -556,6 +690,8 @@ func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["order_type"] = CONSTANT.OrderEventBlockType
 	invoice["actual_amount"] = order[0]["actual_amount"]
 	invoice["tax"] = order[0]["tax"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["paid_amount"] = order[0]["paid_amount"]
 	invoice["status"] = CONSTANT.InvoiceInProgress
 	invoice["created_at"] = UTIL.GetCurrentTime().String()
@@ -581,3 +717,4 @@ func EventBlockOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }
+*/

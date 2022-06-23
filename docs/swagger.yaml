@@ -48,6 +48,8 @@ definitions:
               type: string
           type: object
         type: array
+      feedback:
+        type: string
       gender:
         type: string
       name:
@@ -55,6 +57,11 @@ definitions:
       phone:
         type: string
       user_id:
+        type: string
+    type: object
+  model.CancellationUpdateRequest:
+    properties:
+      cancellation_reason:
         type: string
     type: object
   model.ClientProfileAddRequest:
@@ -101,6 +108,13 @@ definitions:
       timezone:
         type: string
       topic_ids:
+        type: string
+    type: object
+  model.CounsellorCommentRequest:
+    properties:
+      attachments:
+        type: string
+      commentforclient:
         type: string
     type: object
   model.CounsellorOrderCreateRequest:
@@ -163,6 +177,8 @@ definitions:
         type: string
       linkedin:
         type: string
+      multiple_sessions:
+        type: string
       pan:
         type: string
       payee_name:
@@ -220,6 +236,8 @@ definitions:
         type: string
       linkedin:
         type: string
+      multiple_sessions:
+        type: string
       pan:
         type: string
       payee_name:
@@ -249,8 +267,6 @@ definitions:
         type: string
       description:
         type: string
-      duration:
-        type: string
       photo:
         type: string
       price:
@@ -260,15 +276,6 @@ definitions:
       title:
         type: string
       topic_id:
-        type: string
-    type: object
-  model.EventBlockOrderPaymentCompleteRequest:
-    properties:
-      order_id:
-        type: string
-      payment_id:
-        type: string
-      payment_method:
         type: string
     type: object
   model.EventOrderCreateRequest:
@@ -307,13 +314,15 @@ definitions:
     type: object
   model.ListenerProfileAddRequest:
     properties:
+      aadhar:
+        type: string
       about:
+        type: string
+      age_group:
         type: string
       device_id:
         type: string
       email:
-        type: string
-      experience:
         type: string
       first_name:
         type: string
@@ -336,11 +345,13 @@ definitions:
     type: object
   model.ListenerProfileUpdateRequest:
     properties:
+      aadhar:
+        type: string
       about:
         type: string
-      device_id:
+      age_group:
         type: string
-      experience:
+      device_id:
         type: string
       first_name:
         type: string
@@ -438,6 +449,8 @@ definitions:
         type: string
       linkedin:
         type: string
+      multiple_sessions:
+        type: string
       pan:
         type: string
       payee_name:
@@ -494,6 +507,8 @@ definitions:
       last_name:
         type: string
       linkedin:
+        type: string
+      multiple_sessions:
         type: string
       pan:
         type: string
@@ -654,6 +669,34 @@ paths:
       summary: Reschedule an appointment
       tags:
       - Client Appointment
+  /client/appointment/agoratoken:
+    get:
+      parameters:
+      - description: Appointment ID or Order ID is equal to Channel Name
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Individual(1), Cafe(2)
+        in: query
+        name: session
+        required: true
+        type: string
+      - description: Publisher(1), Subscriber(2)
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get Agora Token
+      tags:
+      - Client Appointment
   /client/appointment/bulk:
     delete:
       parameters:
@@ -670,6 +713,71 @@ paths:
       security:
       - JWTAuth: []
       summary: Cancel bulk appointments
+      tags:
+      - Client Appointment
+  /client/appointment/cancellationreason:
+    put:
+      parameters:
+      - description: Appointment ID, Appointment Slot ID to Cancellation Reason
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Single Sessions(2), Multiple Sessions(3)
+        in: query
+        name: sessions
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CancellationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancellation Region client
+      tags:
+      - Client Appointment
+  /client/appointment/download:
+    get:
+      parameters:
+      - description: Logged in invoice ID
+        in: query
+        name: invoice_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get invoice download Receipt
+      tags:
+      - Client Appointment
+  /client/appointment/end:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: End an appointment
       tags:
       - Client Appointment
   /client/appointment/past:
@@ -727,6 +835,24 @@ paths:
       summary: Get client appointment slots
       tags:
       - Client Appointment
+  /client/appointment/start:
+    put:
+      parameters:
+      - description: Appointment ID to be started
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Start an appointment
+      tags:
+      - Client Appointment
   /client/appointment/upcoming:
     get:
       parameters:
@@ -781,14 +907,27 @@ paths:
       summary: Add client assessment
       tags:
       - Client Assessment
+  /client/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Client Assessment
   /client/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in client ID
         in: query
         name: client_id
@@ -1180,7 +1319,11 @@ paths:
         in: query
         name: price
         type: string
-      - description: Sort by - 1(price), 2(rating)
+      - description: Experience range - 0,30 (min,max)
+        in: query
+        name: experience
+        type: string
+      - description: Sort by - 1(price), 2(rating), 3(age_group)
         in: query
         name: sort_by
         type: string
@@ -1324,6 +1467,10 @@ paths:
       - description: Content category ID - false if required all
         in: query
         name: category_id
+        type: string
+      - description: Content mood ID - false if required all
+        in: query
+        name: mood_id
         type: string
       produces:
       - application/json
@@ -1469,6 +1616,24 @@ paths:
       summary: Update counsellor profile details
       tags:
       - Counsellor Profile
+  /counsellor-content:
+    get:
+      parameters:
+      - description: Logged in therapists ID (counsellor_id/therapist_id)
+        in: query
+        name: therapist_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get contents
+      tags:
+      - Miscellaneous
   /counsellor/appointment:
     delete:
       parameters:
@@ -1485,6 +1650,30 @@ paths:
       security:
       - JWTAuth: []
       summary: Cancel an appointment
+      tags:
+      - Counsellor Appointment
+  /counsellor/appointment/comment:
+    put:
+      parameters:
+      - description: Appointment ID to be ended
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CounsellorCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Comment an appointment
       tags:
       - Counsellor Appointment
   /counsellor/appointment/end:
@@ -1751,25 +1940,6 @@ paths:
       security:
       - JWTAuth: []
       summary: Block a slot for an event
-      tags:
-      - Counsellor Event
-  /counsellor/event/block/paymentcomplete:
-    post:
-      parameters:
-      - description: Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/model.EventBlockOrderPaymentCompleteRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Call after payment is completed for event block order
       tags:
       - Counsellor Event
   /counsellor/event/booked:
@@ -2764,25 +2934,6 @@ paths:
       security:
       - JWTAuth: []
       summary: Block a slot for an event
-      tags:
-      - Therapist Event
-  /therapist/event/block/paymentcomplete:
-    post:
-      parameters:
-      - description: Request Body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/model.EventBlockOrderPaymentCompleteRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      security:
-      - JWTAuth: []
-      summary: Call after payment is completed for event block order
       tags:
       - Therapist Event
   /therapist/event/booked:

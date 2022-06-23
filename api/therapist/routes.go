@@ -61,7 +61,7 @@ func LoadTherapistRoutes(router *mux.Router) {
 		"status", "{status}",
 	).Methods("PUT")
 	therapistRoutes.HandleFunc("/event/block/order", EventBlockOrderCreate).Methods("POST")
-	therapistRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
+	//therapistRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
 
 	// home
 	therapistRoutes.HandleFunc("/home", Home).Methods("GET")

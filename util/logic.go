@@ -3,6 +3,7 @@ package util
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -12,19 +13,22 @@ import (
 func GetBillingDetails(price, discount string) map[string]string {
 	billing := map[string]string{}
 
-	actualAmount, _ := strconv.ParseFloat(price, 64)
+	paidAmount, _ := strconv.ParseFloat(price, 64)
 	discountAmount, _ := strconv.ParseFloat(discount, 64)
-	actualAmount -= discountAmount
-	if actualAmount < 0 { // if amount becomes negative after discount
-		actualAmount = 0
+	paidAmount -= discountAmount
+	if paidAmount < 0 { // if amount becomes negative after discount
+		paidAmount = 0
 	}
-	tax := actualAmount * CONSTANT.GSTPercent
-	paidAmount := actualAmount + tax
+	tax := (float64(paidAmount) / float64((100 + CONSTANT.GSTPercent))) * float64(CONSTANT.GSTPercent)
+	actualAmount := float64(paidAmount) - tax
+	cgst, sgst := tax/2, tax/2
 
-	billing["actual_amount"] = price
+	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 2, 64)
 	billing["discount"] = discount
 	billing["tax"] = strconv.FormatFloat(tax, 'f', 2, 64)
-	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 2, 64)
+	billing["actual_amount"] = strconv.FormatFloat(actualAmount, 'f', 2, 64)
+	billing["cgst"] = strconv.FormatFloat(cgst, 'f', 2, 64)
+	billing["sgst"] = strconv.FormatFloat(sgst, 'f', 2, 64)
 
 	return billing
 }
@@ -63,7 +67,7 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 		startSlot := 0
 		if strings.EqualFold(GetCurrentTime().Format("2006-01-02"), slot["date"]) {
 			// use from next hour and multiply by 2 to get 30 min slots
-			startSlot = (GetCurrentTime().Hour() + 1) * 2 // use next slot for removing expired time for today
+			startSlot = (GetCurrentTime().Add(330*time.Minute).Hour() + 1) * 2 // use next slot for removing expired time for today
 		}
 
 		for i := startSlot; i < 48; i++ { // 48 - 30 min slots
@@ -72,7 +76,9 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 				filteredSlot[strconv.Itoa(i)] = "1"
 			}
 		}
+
 		if len(filteredSlot) > 0 { // atleast 1 slot is available
+			//filteredSlot["date"] = slot["date"]
 			filteredSlot["date"] = slot["date"]
 			filteredSlots = append(filteredSlots, filteredSlot)
 		}

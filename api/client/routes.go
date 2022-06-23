@@ -31,6 +31,25 @@ func LoadClientRoutes(router *mux.Router) {
 	).Methods("DELETE")
 	clientRoutes.HandleFunc("/appointment/rate", AppointmentRatingAdd).Methods("POST")
 
+	clientRoutes.HandleFunc("/appointment/download", DownloadReceipt).Queries(
+		"invoice_id", "{invoice_id}",
+	).Methods("GET")
+
+	clientRoutes.HandleFunc("/appointment/cancellationreason", CancellationReason).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
+	clientRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
+
+	clientRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+	clientRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
 	// assessment
 	clientRoutes.HandleFunc("/assessments", AssessmentsList).Methods("GET")
 	clientRoutes.HandleFunc("/assessment", AssessmentDetail).Queries(
@@ -38,8 +57,10 @@ func LoadClientRoutes(router *mux.Router) {
 	).Methods("GET")
 	clientRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
 	clientRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
-		"assessment_id", "{assessment_id}",
 		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/assessment/download", AssessmentDownload).Queries(
+		"assessment_result_id", "{assessment_result_id}",
 	).Methods("GET")
 
 	// counsellor

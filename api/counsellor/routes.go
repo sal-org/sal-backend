@@ -30,6 +30,9 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	counsellorRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("PUT")
+	counsellorRoutes.HandleFunc("/appointment/comment", CounsellorComment).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
 
 	// assessment
 	counsellorRoutes.HandleFunc("/assessments", AssessmentsList).Methods("GET")
@@ -61,7 +64,7 @@ func LoadCounsellorRoutes(router *mux.Router) {
 		"status", "{status}",
 	).Methods("PUT")
 	counsellorRoutes.HandleFunc("/event/block/order", EventBlockOrderCreate).Methods("POST")
-	counsellorRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
+	//counsellorRoutes.HandleFunc("/event/block/paymentcomplete", EventBlockOrderPaymentComplete).Methods("POST")
 
 	// home
 	counsellorRoutes.HandleFunc("/home", Home).Methods("GET")

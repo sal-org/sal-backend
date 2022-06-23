@@ -104,11 +104,17 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	// check if otp is correct
+	//check if otp is correct
 	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// this for testing
+	// if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get counsellor details
 	var counsellorType string
@@ -194,6 +200,21 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 				return
 			}
+
+			languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", counsellor[0]["counsellor_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			// get counsellor topics
+			topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", counsellor[0]["counsellor_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			response["languages"] = languages
+			response["topics"] = topics
 			response["counsellor"] = counsellor[0]
 		case CONSTANT.ListenerType:
 			accessToken, ok = UTIL.CreateAccessToken(counsellor[0]["listener_id"])
@@ -206,6 +227,21 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 				return
 			}
+
+			languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", counsellor[0]["listener_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			// get counsellor topics
+			topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", counsellor[0]["listener_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			response["languages"] = languages
+			response["topics"] = topics
 			response["listener"] = counsellor[0]
 		case CONSTANT.TherapistType:
 			accessToken, ok = UTIL.CreateAccessToken(counsellor[0]["therapist_id"])
@@ -218,6 +254,20 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 				return
 			}
+			languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", counsellor[0]["therapist_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			// get counsellor topics
+			topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", counsellor[0]["therapist_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			response["languages"] = languages
+			response["topics"] = topics
 			response["therapist"] = counsellor[0]
 		}
 

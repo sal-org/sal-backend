@@ -5,9 +5,9 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	"strings"
-
+	Model "salbackend/model"
 	UTIL "salbackend/util"
+	"strings"
 )
 
 // ProfileGet godoc
@@ -65,9 +65,23 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", counsellor[0]["counsellor_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor topics
+		topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", counsellor[0]["counsellor_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
-
+		response["languages"] = languages
+		response["topics"] = topics
 		response["counsellor"] = counsellor[0]
 		response["media_url"] = CONFIG.MediaURL
 	}
@@ -122,6 +136,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["photo"] = body["photo"]
 	counsellor["email"] = body["email"]
 	counsellor["price"] = body["price"]
+	counsellor["multiple_sessions"] = body["multiple_sessions"]
 	counsellor["price_3"] = body["price_3"]
 	counsellor["price_5"] = body["price_5"]
 	counsellor["education"] = body["education"]
@@ -132,7 +147,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["certificate"] = body["certificate"]
 	counsellor["aadhar"] = body["aadhar"]
 	counsellor["linkedin"] = body["linkedin"]
-	counsellor["payout_percentage"] = body["payout_percentage"]
+	counsellor["payout_percentage"] = CONSTANT.CounsellorPayoutPercentageColumns
 	counsellor["payee_name"] = body["payee_name"]
 	counsellor["bank_account_no"] = body["bank_account_no"]
 	counsellor["ifsc"] = body["ifsc"]
@@ -165,7 +180,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["counsellor_id"] = counsellorID
 
 	// send account signup notification, message to counsellor
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), counsellorID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -175,8 +190,80 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		body["phone"],
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendTextMessage,
 	)
+
+	// Counsellor details Send with SAL Team
+	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
+
+	counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
+		First_Name: counsellor_details[0]["first_name"],
+	}
+
+	filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailBody,
+		counsellor_details[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	data := Model.EmailDataForCounsellorProfile{
+		First_Name:  counsellor_details[0]["first_name"],
+		Last_Name:   counsellor_details[0]["last_name"],
+		Gender:      counsellor_details[0]["gender"],
+		Type:        "Counsellor",
+		Phone:       counsellor_details[0]["phone"],
+		Photo:       counsellor_details[0]["photo"],
+		Email:       counsellor_details[0]["email"],
+		Education:   counsellor_details[0]["education"],
+		Experience:  counsellor_details[0]["experience"],
+		About:       counsellor_details[0]["about"],
+		Resume:      counsellor_details[0]["resume"],
+		Certificate: counsellor_details[0]["certificate"],
+		Aadhar:      counsellor_details[0]["aadhar"],
+		Linkedin:    counsellor_details[0]["linkedin"],
+		Status:      counsellor_details[0]["status"],
+	}
+
+	filepath := "htmlfile/CounsellorProfile.html"
+
+	emailbody := UTIL.GetHTMLTemplateForProfile(data, filepath)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorProfileHtml,
+			map[string]string{
+				"###First_Name###":  counsellor[0]["first_name"],
+				"###Last_Name###":   orderdetails[0]["last_name"],
+				"###Gender###":      orderdetails[0]["gender"],
+				"###Phone###":       orderdetails[0]["phone"],
+				"###Photo###":       orderdetails[0]["photo"],
+				"###Email###":       orderdetails[0]["email"],
+				"###Education###":   orderdetails[0]["education"],
+				"###Experience###":  orderdetails[0]["experience"],
+				"###About###":       orderdetails[0]["about"],
+				"###Resume###":      orderdetails[0]["resume"],
+				"###Certificate###": orderdetails[0]["certificate"],
+				"###Aadhar###":      orderdetails[0]["aadhar"],
+				"###Linkedin###":    orderdetails[0]["linkedin"],
+				"###Status###":      orderdetails[0]["status"],
+			},
+		),
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)*/
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -218,6 +305,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["price"]) > 0 {
 		counsellor["price"] = body["price"]
+	}
+	if len(body["multiple_sessions"]) > 0 {
+		counsellor["multiple_sessions"] = body["multiple_sessions"]
 	}
 	if len(body["price_3"]) > 0 {
 		counsellor["price_3"] = body["price_3"]

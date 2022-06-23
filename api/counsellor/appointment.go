@@ -26,7 +26,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+")", r.FormValue("counsellor_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -66,6 +66,12 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	/*appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status = ? order by date desc", r.FormValue("counsellor_id"), CONSTANT.AppointmentCompleted)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}*/
 	// get client ids to get details
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 
@@ -147,7 +153,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status":      CONSTANT.AppointmentCancelled,
+			"status":      CONSTANT.AppointmentCounsellorCancelled,
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
@@ -194,6 +200,10 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -205,6 +215,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SendEmail(
@@ -217,6 +229,18 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		),
 		client[0]["email"],
 		CONSTANT.LaterSendEmailMessage,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentCancellationToClientTextMessage,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -244,11 +268,6 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	// check if appointment is valid
 	if len(appointment) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -297,11 +316,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
 
 	// get counsellor type
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
@@ -335,15 +349,16 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountAfterDiscount := actualAmount - discount
-		if amountAfterDiscount > 0 { // add only if amount paid
+		paidAfterDiscount := paidAmount + discount
+		if paidAfterDiscount > 0 { // add only if amount paid
 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
 
-			payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
+			// These come in Database
+			// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
 
-			amountToBePaid := (amountAfterDiscount / slotsBought) * payoutPercentage / 100 // for 1 counselling session
+			amountToBePaid := (paidAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
 
 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
 				"counsellor_id": appointment[0]["counsellor_id"],
@@ -367,7 +382,58 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// Appointment Comment godoc
+// @Tags Counsellor Appointment
+// @Summary Comment an appointment
+// @Router /counsellor/appointment/comment [put]
+// @Param appointment_id query string true "Appointment ID to be ended"
+// @Param body body model.CounsellorCommentRequest true "Request Body"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func CounsellorComment(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellor := map[string]string{}
+	if len(body["commentforclient"]) > 0 {
+		counsellor["commentforclient"] = body["commentforclient"]
+	}
+	if len(body["attachments"]) > 0 {
+		counsellor["attachments"] = body["attachments"]
+	}
+
+	status, ok = DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, counsellor)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

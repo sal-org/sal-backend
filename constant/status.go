@@ -123,10 +123,15 @@ const (
 
 // appointment status
 const (
-	AppointmentToBeStarted = "1"
-	AppointmentStarted     = "2"
-	AppointmentCompleted   = "3"
-	AppointmentCancelled   = "4"
+	AppointmentToBeStarted         = "1"
+	AppointmentStarted             = "2"
+	AppointmentCompleted           = "3"
+	AppointmentUserCancelled       = "4"
+	AppointmentCounsellorCancelled = "5"
+	AppointmentAdminCancelled      = "6"
+	AppointmentNoShowClient        = "7"
+	AppointmentNoShowCounsellor    = "8"
+	AppointmentNoShowBoth          = "9"
 )
 
 // appointment slots status
@@ -146,6 +151,12 @@ const (
 const (
 	RefundInProgress = "1"
 	RefundCompleted  = "4"
+)
+
+// refund type
+const (
+	RefundCancellationType = "1"
+	RefundNoShowType       = "2"
 )
 
 // coupon types
@@ -173,6 +184,7 @@ const (
 	EventToBeStarted = "1"
 	EventStarted     = "2"
 	EventCompleted   = "3"
+	EventNoShow      = "4"
 )
 
 // assessment status
@@ -209,4 +221,10 @@ const (
 const (
 	MoodResultInactive = "0"
 	MoodResultActive   = "1"
+)
+
+// bulk notification type
+const (
+	BulkNotificationAll      = "1"
+	BulkNotificationSpecific = "2"
 )

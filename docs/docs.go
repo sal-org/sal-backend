@@ -235,6 +235,50 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/agoratoken": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get Agora Token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID or Order ID is equal to Channel Name",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Individual(1), Cafe(2)",
+                        "name": "session",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Publisher(1), Subscriber(2)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/bulk": {
             "delete": {
                 "security": [
@@ -254,6 +298,112 @@ var doc = `{
                         "type": "string",
                         "description": "Appointment slot ID to be cancelled",
                         "name": "appointment_slot_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/cancellationreason": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Cancellation Region client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID, Appointment Slot ID to Cancellation Reason",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Single Sessions(2), Multiple Sessions(3)",
+                        "name": "sessions",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CancellationUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Get invoice download Receipt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in invoice ID",
+                        "name": "invoice_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/client/appointment/end": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "End an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
                         "in": "query",
                         "required": true
                     }
@@ -357,6 +507,36 @@ var doc = `{
                 }
             }
         },
+        "/client/appointment/start": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Appointment"
+                ],
+                "summary": "Start an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be started",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/appointment/upcoming": {
             "get": {
                 "security": [
@@ -447,6 +627,36 @@ var doc = `{
                 }
             }
         },
+        "/client/assessment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Assessment"
+                ],
+                "summary": "Get assessment download",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in Assessment Result ID",
+                        "name": "assessment_result_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/assessment/history": {
             "get": {
                 "security": [
@@ -462,13 +672,6 @@ var doc = `{
                 ],
                 "summary": "Get assessment history",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Assessment ID to get details",
-                        "name": "assessment_id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Logged in client ID",
@@ -1118,7 +1321,13 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "Sort by - 1(price), 2(rating)",
+                        "description": "Experience range - 0,30 (min,max)",
+                        "name": "experience",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by - 1(price), 2(rating), 3(age_group)",
                         "name": "sort_by",
                         "in": "query"
                     },
@@ -1349,6 +1558,12 @@ var doc = `{
                         "description": "Content category ID - false if required all",
                         "name": "category_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Content mood ID - false if required all",
+                        "name": "mood_id",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1576,6 +1791,36 @@ var doc = `{
                 }
             }
         },
+        "/counsellor-content": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Get contents",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in therapists ID (counsellor_id/therapist_id)",
+                        "name": "therapist_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/appointment": {
             "delete": {
                 "security": [
@@ -1597,6 +1842,45 @@ var doc = `{
                         "name": "appointment_id",
                         "in": "query",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/counsellor/appointment/comment": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Appointment"
+                ],
+                "summary": "Comment an appointment",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to be ended",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CounsellorCommentRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -2035,38 +2319,6 @@ var doc = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.EventBlockOrderCreateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/counsellor/event/block/paymentcomplete": {
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Counsellor Event"
-                ],
-                "summary": "Call after payment is completed for event block order",
-                "parameters": [
-                    {
-                        "description": "Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
                         }
                     }
                 ],
@@ -3728,38 +3980,6 @@ var doc = `{
                 }
             }
         },
-        "/therapist/event/block/paymentcomplete": {
-            "post": {
-                "security": [
-                    {
-                        "JWTAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Therapist Event"
-                ],
-                "summary": "Call after payment is completed for event block order",
-                "parameters": [
-                    {
-                        "description": "Request Body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventBlockOrderPaymentCompleteRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/therapist/event/booked": {
             "get": {
                 "security": [
@@ -4204,6 +4424,9 @@ var doc = `{
                         }
                     }
                 },
+                "feedback": {
+                    "type": "string"
+                },
                 "gender": {
                     "type": "string"
                 },
@@ -4214,6 +4437,14 @@ var doc = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CancellationUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "cancellation_reason": {
                     "type": "string"
                 }
             }
@@ -4284,6 +4515,17 @@ var doc = `{
                     "type": "string"
                 },
                 "topic_ids": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CounsellorCommentRequest": {
+            "type": "object",
+            "properties": {
+                "attachments": {
+                    "type": "string"
+                },
+                "commentforclient": {
                     "type": "string"
                 }
             }
@@ -4379,6 +4621,9 @@ var doc = `{
                 "linkedin": {
                     "type": "string"
                 },
+                "multiple_sessions": {
+                    "type": "string"
+                },
                 "pan": {
                     "type": "string"
                 },
@@ -4465,6 +4710,9 @@ var doc = `{
                 "linkedin": {
                     "type": "string"
                 },
+                "multiple_sessions": {
+                    "type": "string"
+                },
                 "pan": {
                     "type": "string"
                 },
@@ -4509,9 +4757,6 @@ var doc = `{
                 "description": {
                     "type": "string"
                 },
-                "duration": {
-                    "type": "string"
-                },
                 "photo": {
                     "type": "string"
                 },
@@ -4525,20 +4770,6 @@ var doc = `{
                     "type": "string"
                 },
                 "topic_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.EventBlockOrderPaymentCompleteRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                },
-                "payment_id": {
-                    "type": "string"
-                },
-                "payment_method": {
                     "type": "string"
                 }
             }
@@ -4599,16 +4830,19 @@ var doc = `{
         "model.ListenerProfileAddRequest": {
             "type": "object",
             "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
                 "about": {
+                    "type": "string"
+                },
+                "age_group": {
                     "type": "string"
                 },
                 "device_id": {
                     "type": "string"
                 },
                 "email": {
-                    "type": "string"
-                },
-                "experience": {
                     "type": "string"
                 },
                 "first_name": {
@@ -4643,13 +4877,16 @@ var doc = `{
         "model.ListenerProfileUpdateRequest": {
             "type": "object",
             "properties": {
+                "aadhar": {
+                    "type": "string"
+                },
                 "about": {
                     "type": "string"
                 },
-                "device_id": {
+                "age_group": {
                     "type": "string"
                 },
-                "experience": {
+                "device_id": {
                     "type": "string"
                 },
                 "first_name": {
@@ -4798,6 +5035,9 @@ var doc = `{
                 "linkedin": {
                     "type": "string"
                 },
+                "multiple_sessions": {
+                    "type": "string"
+                },
                 "pan": {
                     "type": "string"
                 },
@@ -4882,6 +5122,9 @@ var doc = `{
                     "type": "string"
                 },
                 "linkedin": {
+                    "type": "string"
+                },
+                "multiple_sessions": {
                     "type": "string"
                 },
                 "pan": {
@@ -4977,5 +5220,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

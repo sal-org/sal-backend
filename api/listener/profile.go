@@ -65,6 +65,21 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", listener[0]["listener_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor topics
+		topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", listener[0]["listener_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		response["languages"] = languages
+		response["topics"] = topics
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 
@@ -113,16 +128,22 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// default photo for client and listerner
+	if len(body["photo"]) == 0 || body["photo"] == "string" {
+		body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
+	}
+
 	// add listener details
 	listener := map[string]string{}
 	listener["first_name"] = body["first_name"]
 	listener["last_name"] = body["last_name"]
 	listener["gender"] = body["gender"]
+	listener["age_group"] = body["age_group"]
 	listener["phone"] = body["phone"]
 	listener["photo"] = body["photo"]
 	listener["email"] = body["email"]
 	listener["occupation"] = body["occupation"]
-	listener["experience"] = body["experience"]
+	listener["aadhar"] = body["aadhar"]
 	listener["about"] = body["about"]
 	listener["timezone"] = body["timezone"]
 	listener["device_id"] = body["device_id"]
@@ -150,7 +171,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["listener_id"] = listenerID
 
 	// send account signup notification to listener
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), listenerID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,

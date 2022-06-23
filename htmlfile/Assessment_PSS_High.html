@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset='utf-8'>
+		<title>Receipt Page</title>
+		<meta name='viewport' content='width=device-width, initial-scale=1'>
+        <style>
+            body{
+				min-width:300px;        /* Suppose you want minimum width of 1000px */
+				width: auto !important;  /* Firefox will set width as auto */
+				width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+				
+			}
+        </style>
+    </head>
+    <body>
+        <div style="padding: 2%;">
+            <div style="float: right;">
+                <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/SAL-standalone+logo.png" alt="SAL TAg" height="140px" width="140px"/>
+            </div>
+            <div style="text-align: center;padding-top: 65px;">
+                <h3>PERCEIVED STRESS SCALE <br>by Sheldon Cohen</h3>
+            </div>
+            <div>
+                <p>The Perceived Stress Scale (PSS) by Sheldon Cohen is the most widely used psychological instrument for measuring the perception of stress. It is a measure of the degree to which situations in one’s life are appraised as stressful. The assessment helps us to understand how different situations affect our feelings and our perceived stress. The questions in this scale ask you about your feelings and thoughts during the last month.</p>
+            </div>
+            <div>
+                <p style="font-weight: bold;">Name: {{.Name}} <span style="float: right; font-weight: bold;">Your Total Score is:  {{.Score}}</span></p>
+            </div>
+            <div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <p style="font-weight: bold;">Age: {{.Age}}</p>
+                </div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <p style="font-weight: bold;">Gender: {{.Gender}}</p>
+                </div>
+                <div style="display: table-cell;width: 33.33%;float: right;">
+                    <p style="font-weight: bold;">Date: {{.Date}}</p>
+                </div><br/><br/><br/>
+            </div><br/><br/>
+            <div>
+                <table style="width:100% ;border-collapse: collapse;">
+                    <tr>
+                        <th style="border: 1px solid black;">0 = Never</th>
+                        <th style="border: 1px solid black;">1 = Almost Never</th>
+                        <th style="border: 1px solid black;">2 = Sometimes</th>
+                        <th style="border: 1px solid black;">3 = Fairly Often</th>
+                        <th style="border: 1px solid black;">4 = Very Often</th>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <p style="font-weight: bold;text-align: center;">ASSESSMENT RESULT</p>
+            </div>
+            <div style="padding: 2%;">
+                <table style="width:100% ; text-align: left;">
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">l. In the last month, how often have you been upset because of something that happened unexpectedly?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer1}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">2. In the last month, how often have you felt that you were unable to control the important things in your life?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer2}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">3. In the last month, how often have you felt nervous and stressed?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer3}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">4. In the last month, how often have you felt confident about your ability to handle your personal problems?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer4}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">5. In the last month, how often have you felt that things were going your way?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer5}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">6. In the last month, how often have you found that you could not cope with all the things that you had to do?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer6}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">7. In the last month, how often have you been able to control irritations in your life?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer7}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">8. In the last month, how often have you felt that you were on top of things?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer8}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">9. In the last month, how often have you been angered because of things that happened that were outside of your control?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer9}}</td>
+                    </tr>
+                    <tr>
+                        <th style=" padding: 10px; font-weight: 545;">10. In the last month, how often have you felt difficulties were piling up so high that you could not overcome them?</th>
+                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer10}}</td>
+                    </tr>
+                </table>
+            </div><hr>
+            <div>
+                <p style="font-weight: bold;">Therapist Inference:</p>
+                <p>You are definitely experiencing a lot of pressure and stress in your life. It must be affecting your physical and emotional wellbeing.</p>
+                <p>This score indicates high levels of stress experienced by you at work. You might feel overwhelmed at times and out of control of your life. Though it’s natural and normal to be stressed sometimes, long-term and high levels of stress can cause physical ailments, emotional imbalance and unhealthy behaviours.</p>
+                <p>Each one of us are stressed for a specific reason or a set of reasons unique to our life and situation. We would urge you to reflect and understand:</p>
+                <p>1) What could be the underlying reasons behind your stress levels? <br/>2) What does this score mean to you?</p>
+                <p>We recommend you to discuss your assessment report with SAL counsellors to help identify the key stressors and then devise a plan to address those areas. Taking steps to manage your stress levels will help prevent physical, psychological and emotional problems.</p>
+            </div><br/><hr><br/>
+            <div>
+                <dl>
+                    <dt>Individual scores on the PSS can range from 0 to 40 with higher scores indicating higher perceived stress.</dt>
+                    <dd>► Scores ranging from 0-13 would be considered low stress.</dd>
+                    <dd>► Scores ranging from 14-26 would be considered moderate stress.</dd>
+                    <dd>► Scores ranging from 27-40 would be considered high perceived stress.</dd>
+                  </dl>
+            </div><hr/>
+            <p>Disclaimer: The scores on the self-assessment do not reflect any particular diagnosis or course of treatment. They are meant as a tool to help assess your level of stress. If you have any further concerns about your current wellbeing, you may contact us and talk confidentially to one of our specialists.</p><br/>
+            <div>
+                <h4 style="text-align: center;">Stress Management Tips</h4>
+                <p><span style="font-weight: bold;">1. Re-balance Work and Home.</span> All work and no play? If you’re spending too much time at the office, intentionally put more dates in your calendar to enjoy time for fun, either alone or with others.</p>
+                <p><span style="font-weight: bold;">2. Build in Regular Exercise.</span> Moving your body on a regular basis balances the nervous system and increases blood circulation, helping to flush out stress hormones. Even a daily 20-minute walk makes a difference.</p>
+                <p><span style="font-weight: bold;">3. Eat Well and Limit Alcohol and Stimulants.</span>Alcohol, nicotine and caffeine may temporarily relieve stress but have negative health impacts and can make stress worse in the long run. Well-nourished bodies cope better, so start with a good breakfast, add more fruits and vegetables, avoid processed foods and sugar, and drink more water.</p>
+                <p><span style="font-weight: bold;">4. Connect with Supportive People.</span>Talking face to face with another person releases hormones that reduce stress. Lean on those good listeners in your life.</p>
+                <p><span style="font-weight: bold;">5. Carve out Hobby Time.</span>Do you enjoy gardening, reading, listening to music or some other creative pursuit? Engage in activities that bring you pleasure and joy; research shows that reduces stress by almost half and lowers your heart rate, too.</p>
+                <p><span style="font-weight: bold;">6. Practice Meditation, Stress Reduction or Yoga.</span>Relaxation techniques activate a state of restfulness that counterbalances your body’s fight-or-flight hormones. Consider joining mindfulness inducing exercise classes teaching Yoga, body balance, meditation, laughing clubs and many other courses to learn effective, lasting tools.</p>
+                <p><span style="font-weight: bold;">7. Get adequate Sleep.</span>If you sleep too little or too much, there might be psychosomatic issues. So 7-8 hours on an average are good for physical and emotional well-being.</p>
+                <p><span style="font-weight: bold;">8. Bond with Your Pet.</span>Clinical studies show that spending even a short time with a companion animal can cut anxiety levels almost in half.</p>
+                <p><span style="font-weight: bold;">9. Take a Vacation.</span>Getting away from it all can reset your stress tolerance by increasing your mental and emotional outlook, which makes you a happier, more productive person upon return. Leave your cell phone and laptop at home.</p>
+                <p><span style="font-weight: bold;">10. See a Counsellor, Coach or Therapist.</span>If negative thoughts overwhelm your ability to make positive changes, it’s time to seek professional help. Make an appointment today with your SAL therapist because your health and life are worth it.</p>
+            </div>
+            <div>
+                <div style="display: table-cell;width: 33.33%;float: left;">
+                    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/sal-tagline.png" alt="SAL Tag" width="150px" height="150px"/>
+                  </div>
+                <div style="display: table-cell;width: 43.33%;float: left;">
+				    <p><span style="font-weight: bold;">Salubrium Private Limited <br>Website:</span> www.sal-foundation.com</p>
+				    <button type="button" style="background-color: blue;color: white; height: 40px;width: 200px;border-radius: 10%;font-weight: bold;">BOOK APPOINTMENT</button>
+			    </div>
+			    <div style="display: table-cell;width: 23.33%;float: left;">
+				    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/SMicons.jpg" alt="Social mediun Logo" width="60px" height="60px"/>
+			    </div>
+            </div>
+        </div>
+    </body>
+</html>

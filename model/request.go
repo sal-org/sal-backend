@@ -76,7 +76,6 @@ type EventBlockOrderCreateRequest struct {
 	Date         string `json:"date"`
 	Photo        string `json:"photo"`
 	Time         string `json:"time"`
-	Duration     string `json:"duration"`
 	Price        string `json:"price"`
 }
 
@@ -118,6 +117,7 @@ type CounsellorProfileAddRequest struct {
 	Photo             string `json:"photo"`
 	Email             string `json:"email"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`
@@ -146,11 +146,12 @@ type ListenerProfileAddRequest struct {
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
 	Gender      string `json:"gender"`
+	AgeGroup    string `json:"age_group"`
 	Phone       string `json:"phone"`
 	Photo       string `json:"photo"`
 	Email       string `json:"email"`
 	Occupation  string `json:"occupation"`
-	Experience  string `json:"experience"`
+	Aadhar      string `json:"aadhar"`
 	About       string `json:"about"`
 	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
@@ -167,6 +168,7 @@ type TherapistProfileAddRequest struct {
 	Photo             string `json:"photo"`
 	Email             string `json:"email"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`
@@ -210,6 +212,7 @@ type CounsellorProfileUpdateRequest struct {
 	Gender            string `json:"gender"`
 	Photo             string `json:"photo"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`
@@ -238,9 +241,10 @@ type ListenerProfileUpdateRequest struct {
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
 	Gender      string `json:"gender"`
+	AgeGroup    string `json:"age_group"`
 	Photo       string `json:"photo"`
 	Occupation  string `json:"occupation"`
-	Experience  string `json:"experience"`
+	Aadhar      string `json:"aadhar"`
 	About       string `json:"about"`
 	Timezone    string `json:"timezone"`
 	TopicIDs    string `json:"topic_ids"`
@@ -255,6 +259,7 @@ type TherapistProfileUpdateRequest struct {
 	Gender            string `json:"gender"`
 	Photo             string `json:"photo"`
 	Price             string `json:"price"`
+	Multiple_Sessions string `json:"multiple_sessions"`
 	Price3            string `json:"price_3"`
 	Price5            string `json:"price_5"`
 	Education         string `json:"education"`
@@ -296,6 +301,7 @@ type AssessmentAddRequest struct {
 	Gender       string `json:"gender"`
 	Phone        string `json:"phone"`
 	AssessmentID string `json:"assessment_id"`
+	Feedback     string `json:"feedback"`
 	Details      []struct {
 		AssessmentQuestionID       string `json:"assessment_question_id"`
 		AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
@@ -313,4 +319,181 @@ type MoodAddRequest struct {
 	MoodID   string `json:"mood_id"`
 	Date     string `json:"date"`
 	Notes    string `json:"notes"`
+}
+
+type EmailDataForEvent struct {
+	First_Name  string
+	Last_Name   string
+	Type        string
+	Title       string
+	Description string
+	Photo       string
+	Topic_Name  string
+	Date        string
+	Time        string
+	Duration    string
+	Price       string
+}
+
+type EmailDataForCounsellorProfile struct {
+	First_Name  string
+	Last_Name   string
+	Gender      string
+	Type        string
+	Phone       string
+	Email       string
+	Photo       string
+	Education   string
+	Experience  string
+	About       string
+	Resume      string
+	Certificate string
+	Aadhar      string
+	Linkedin    string
+	Status      string
+}
+
+type EmailDataForPaymentReceipt struct {
+	Date         string
+	ReceiptNo    string
+	ReferenceNo  string
+	SPrice       string
+	Qty          string
+	Total        string
+	SessionsType string
+	TPrice       string
+	Discount     string
+	TotalP       string
+}
+
+type CancellationUpdateRequest struct {
+	CancellationReason string `json:"cancellation_reason"`
+}
+
+type CounsellorCommentRequest struct {
+	CommentForClient string `json:"commentforclient"`
+	Attachment       string `json:"attachments"`
+}
+
+type AssessmentDownloadAIS struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+}
+
+type AssessmentDownloadGAD7Model struct {
+	Name    string `json:"name"`
+	Date    string `json:"date"`
+	Age     string `json:"age"`
+	Gender  string `json:"gender"`
+	Score   string `json:"score"`
+	Answer1 string `json:"answer1"`
+	Answer2 string `json:"answer2"`
+	Answer3 string `json:"answer3"`
+	Answer4 string `json:"answer4"`
+	Answer5 string `json:"answer5"`
+	Answer6 string `json:"answer6"`
+	Answer7 string `json:"answer7"`
+	Answer8 string `json:"answer8"`
+}
+
+type AssessmentDownloadSRSModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+	Answer11 string `json:"answer11"`
+	Answer12 string `json:"answer12"`
+	Answer13 string `json:"answer13"`
+	Answer14 string `json:"answer14"`
+	Answer15 string `json:"answer15"`
+	Answer16 string `json:"answer16"`
+	Answer17 string `json:"answer17"`
+	Answer18 string `json:"answer18"`
+	Answer19 string `json:"answer19"`
+	Answer20 string `json:"answer20"`
+	Answer21 string `json:"answer21"`
+}
+
+type AssessmentDownloadBDIModel struct {
+	Name       string `json:"name"`
+	Date       string `json:"date"`
+	Age        string `json:"age"`
+	Gender     string `json:"gender"`
+	Score      string `json:"score"`
+	Answer1    string `json:"answer1"`
+	Answer2    string `json:"answer2"`
+	Answer3    string `json:"answer3"`
+	Answer4    string `json:"answer4"`
+	Answer5    string `json:"answer5"`
+	Answer6    string `json:"answer6"`
+	Answer7    string `json:"answer7"`
+	Answer8    string `json:"answer8"`
+	Answer9    string `json:"answer9"`
+	Answer10   string `json:"answer10"`
+	Answer11   string `json:"answer11"`
+	Answer12   string `json:"answer12"`
+	Answer13   string `json:"answer13"`
+	Answer14   string `json:"answer14"`
+	Answer15   string `json:"answer15"`
+	Answer16   string `json:"answer16"`
+	Answer17   string `json:"answer17"`
+	Answer18   string `json:"answer18"`
+	Answer19   string `json:"answer19"`
+	Answer20   string `json:"answer20"`
+	Answer21   string `json:"answer21"`
+	Response1  string `json:"response1"`
+	Response2  string `json:"response2"`
+	Response3  string `json:"response3"`
+	Response4  string `json:"response4"`
+	Response5  string `json:"response5"`
+	Response6  string `json:"response6"`
+	Response7  string `json:"response7"`
+	Response8  string `json:"response8"`
+	Response9  string `json:"response9"`
+	Response10 string `json:"response10"`
+	Response11 string `json:"response11"`
+	Response12 string `json:"response12"`
+	Response13 string `json:"response13"`
+	Response14 string `json:"response14"`
+	Response15 string `json:"response15"`
+	Response16 string `json:"response16"`
+	Response17 string `json:"response17"`
+	Response18 string `json:"response18"`
+	Response19 string `json:"response19"`
+	Response20 string `json:"response20"`
+	Response21 string `json:"response21"`
+}
+
+type CounsellorProfileSendEmailTextMessage struct {
+	First_Name string `json:"first_name"`
+}
+
+type ClientAppointmentConfirmation struct {
+	First_Name      string `json:"first_name"`
+	Counsellor_Name string `json:"counsellor_name"`
+	Date_Time       string `json:"date_time"`
 }

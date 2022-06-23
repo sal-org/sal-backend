@@ -1,15 +1,17 @@
 package client
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // CounsellorProfile godoc
@@ -237,10 +239,12 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// calculate bill
 	billing := UTIL.GetBillingDetails(price, order["discount"])
-	order["actual_amount"] = billing["actual_amount"]
+	order["paid_amount"] = billing["paid_amount"]
 	order["discount"] = billing["discount"]
 	order["tax"] = billing["tax"]
-	order["paid_amount"] = billing["paid_amount"]
+	order["actual_amount"] = billing["actual_amount"]
+	order["cgst"] = billing["cgst"]
+	order["sgst"] = billing["sgst"]
 
 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
 	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
@@ -326,6 +330,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	invoice["user_type"] = CONSTANT.ClientType
 	invoice["order_type"] = CONSTANT.OrderAppointmentType
 	invoice["actual_amount"] = order[0]["actual_amount"]
+	invoice["cgst"] = order[0]["cgst"]
+	invoice["sgst"] = order[0]["sgst"]
 	invoice["tax"] = order[0]["tax"]
 	invoice["discount"] = order[0]["discount"]
 	invoice["coupon_code"] = order[0]["coupon_code"]
@@ -365,7 +371,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	appointment["time"] = order[0]["time"]
 	appointment["status"] = CONSTANT.AppointmentToBeStarted
 	appointment["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	appointmentID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -395,8 +401,8 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send notitifications
-	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": order[0]["client_id"]})
+	counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5", "email"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
@@ -410,6 +416,23 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###counsellor_name###": counsellor[0]["first_name"],
+			},
+		),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	// send payment success notification, email to client
@@ -424,9 +447,11 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		invoiceID,
 	)
 
-	UTIL.SendEmail(
+	/*UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientTitle,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientPaymentSucessClientBody,
@@ -437,7 +462,93 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
+	)*/
+
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+
+	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
+
+	var sprice, tprice, discount, paid_amount string
+
+	paid_Amount, _ := strconv.ParseFloat(invoiceforemail[0]["paid_amount"], 64)
+
+	discount_value, _ := strconv.ParseFloat(invoiceforemail[0]["discount"], 64)
+
+	slots_bought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+	actual_Amount := paid_Amount + discount_value
+
+	price := actual_Amount / slots_bought
+
+	sprice = strconv.FormatFloat(price, 'f', 2, 64)
+
+	tprice = strconv.FormatFloat(actual_Amount, 'f', 2, 64)
+
+	discount = strconv.FormatFloat(discount_value, 'f', 2, 64)
+
+	paid_amount = strconv.FormatFloat(paid_Amount, 'f', 2, 64)
+
+	/*switch order[0]["slots_bought"] {
+	case "1":
+		sprice = counsellor[0]["price"]
+		tprice = counsellor[0]["price"]
+	case "3":
+		sprice = counsellor[0]["multiple_sessions"]
+		tprice = counsellor[0]["price_3"]
+	case "5":
+		sprice = counsellor[0]["multiple_sessions"]
+		tprice = counsellor[0]["price_5"]
+	}*/
+
+	data := Model.EmailDataForPaymentReceipt{
+		Date:         receiptdata,
+		ReceiptNo:    invoiceforemail[0]["id"],
+		ReferenceNo:  invoiceforemail[0]["payment_id"],
+		SPrice:       sprice,
+		Qty:          order[0]["slots_bought"],
+		Total:        tprice,
+		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:       tprice,
+		Discount:     discount,
+		TotalP:       paid_amount,
+	}
+
+	filepath := "htmlfile/index.html"
+
+	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	if !ok {
+		fmt.Println("html body not create")
+	}
+
+	UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientHeading,
+		emailbody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
+
+	// Email Send using string format
+
+	/*UTIL.SendEmail(
+		CONSTANT.ClientPaymentSucessClientTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.SendAReceiptForClient,
+			map[string]string{
+				"###Date###":         receiptdata,
+				"###ReceiptNo###":    invoiceforemail[0]["id"],
+				"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
+				"###SPrice###":       sprice,
+				"###Qty###":          order[0]["slots_bought"],
+				"###Total###":        tprice,
+				"###SessionsType###": CONSTANT.AppointmentSessionsTypeForReceipt,
+				"###TPrice###":       tprice,
+				"###Discount###":     invoiceforemail[0]["discount"],
+				"###TotalP###":       invoiceforemail[0]["paid_amount"],
+			},
+		),
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)*/
 
 	// send appointment booking notification to counsellor
 	UTIL.SendNotification(
@@ -451,6 +562,23 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.CounsellorType,
+		UTIL.GetCurrentTime().String(),
+		appointmentID,
+	)
+
+	// send appointment reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+			},
+		),
+		order[0]["counsellor_id"],
+		CONSTANT.CounsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		appointmentID,
 	)
 
 	// send payment received notification, message to counsellor
@@ -478,8 +606,11 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.CounsellorType,
+		UTIL.GetCurrentTime().String(),
+		invoiceID,
 	)
 
+	// send messsage to counsellor for Appointment Confirmation
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
@@ -491,7 +622,79 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
+
+	timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
+
+	// send messsage to client for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###client_name###":     client[0]["first_name"],
+				"###counsellor_name###": counsellor[0]["first_name"],
+				"###date###":            dateFormat,
+				"###time###":            timeFormat,
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Send to Payment SMS to client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientPaymentConfirmationTextMeassge,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+				"###amount###":      invoiceforemail[0]["paid_amount"],
+				"###bought###":      order[0]["slots_bought"],
+				"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Appointment Booked target Client
+	client_data := Model.ClientAppointmentConfirmation{
+		First_Name:      client[0]["first_name"],
+		Counsellor_Name: counsellor[0]["first_name"],
+		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	}
+
+	filepath_text := "htmlfile/Client_Appointment_Book.html"
+
+	emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
+
+	UTIL.SendEmail(
+		"Appointment Booked",
+		emailBody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Appointment Booked target Counsellor
+	counsellor_data := Model.ClientAppointmentConfirmation{
+		First_Name:      counsellor[0]["first_name"],
+		Counsellor_Name: client[0]["first_name"],
+		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	}
+
+	filepath2 := "htmlfile/Counsellor_Client_Booking_Confirmation.html"
+
+	emailBody1 := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(counsellor_data, filepath2)
+
+	UTIL.SendEmail(
+		"Appointment Booked",
+		emailBody1,
+		counsellor[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	response["invoice_id"] = invoiceID

@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -65,9 +66,23 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", therapist[0]["therapist_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor topics
+		topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", therapist[0]["therapist_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
-
+		response["languages"] = languages
+		response["topics"] = topics
 		response["therapist"] = therapist[0]
 		response["media_url"] = CONFIG.MediaURL
 	}
@@ -122,6 +137,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["photo"] = body["photo"]
 	therapist["email"] = body["email"]
 	therapist["price"] = body["price"]
+	therapist["multiple_sessions"] = body["multiple_sessions"]
 	therapist["price_3"] = body["price_3"]
 	therapist["price_5"] = body["price_5"]
 	therapist["education"] = body["education"]
@@ -133,7 +149,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["aadhar"] = body["aadhar"]
 	therapist["linkedin"] = body["linkedin"]
 	therapist["device_id"] = body["device_id"]
-	therapist["payout_percentage"] = body["payout_percentage"]
+	therapist["payout_percentage"] = CONSTANT.CounsellorPayoutPercentageColumns
 	therapist["payee_name"] = body["payee_name"]
 	therapist["bank_account_no"] = body["bank_account_no"]
 	therapist["ifsc"] = body["ifsc"]
@@ -165,7 +181,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["therapist_id"] = therapistID
 
 	// send account signup notification, message to therapist
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), therapistID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -177,6 +193,87 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		body["phone"],
 		CONSTANT.LaterSendTextMessage,
 	)
+
+	/*orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
+	counsellorbody := UTIL.GetHTMLTemplateForCounsellor(orderdetails)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		counsellorbody,
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)*/
+
+	therapist_details, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
+
+	counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
+		First_Name: therapist_details[0]["first_name"],
+	}
+
+	filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailBody,
+		therapist_details[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	data := Model.EmailDataForCounsellorProfile{
+		First_Name:  therapist_details[0]["first_name"],
+		Last_Name:   therapist_details[0]["last_name"],
+		Gender:      therapist_details[0]["gender"],
+		Type:        "Counsellor",
+		Phone:       therapist_details[0]["phone"],
+		Photo:       therapist_details[0]["photo"],
+		Email:       therapist_details[0]["email"],
+		Education:   therapist_details[0]["education"],
+		Experience:  therapist_details[0]["experience"],
+		About:       therapist_details[0]["about"],
+		Resume:      therapist_details[0]["resume"],
+		Certificate: therapist_details[0]["certificate"],
+		Aadhar:      therapist_details[0]["aadhar"],
+		Linkedin:    therapist_details[0]["linkedin"],
+		Status:      therapist_details[0]["status"],
+	}
+
+	filepath := "htmlfile/CounsellorProfile.html"
+
+	emailbody := UTIL.GetHTMLTemplateForProfile(data, filepath)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	/*UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorProfileHtml,
+			map[string]string{
+				"###First_Name###":  orderdetails[0]["first_name"],
+				"###Last_Name###":   orderdetails[0]["last_name"],
+				"###Gender###":      orderdetails[0]["gender"],
+				"###Phone###":       orderdetails[0]["phone"],
+				"###Email###":       orderdetails[0]["email"],
+				"###Photo###":       orderdetails[0]["photo"],
+				"###Education###":   orderdetails[0]["education"],
+				"###Experience###":  orderdetails[0]["experience"],
+				"###About###":       orderdetails[0]["about"],
+				"###Resume###":      orderdetails[0]["resume"],
+				"###Certificate###": orderdetails[0]["certificate"],
+				"###Aadhar###":      orderdetails[0]["aadhar"],
+				"###Linkedin###":    orderdetails[0]["linkedin"],
+				"###Status###":      orderdetails[0]["status"],
+			},
+		),
+		CONSTANT.AnandEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)*/
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -218,6 +315,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["price"]) > 0 {
 		therapist["price"] = body["price"]
+	}
+	if len(body["multiple_sessions"]) > 0 {
+		therapist["multiple_sessions"] = body["multiple_sessions"]
 	}
 	if len(body["price_3"]) > 0 {
 		therapist["price_3"] = body["price_3"]
