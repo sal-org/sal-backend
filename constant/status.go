@@ -238,3 +238,8 @@ const (
 	AgoraCallStop1   = "5" // agora call stop
 	AgoraCallStop2   = "6"
 )
+
+const (
+	QualityCheckDataInsert = "1" // data insert in qualitycheckdetails table
+	QualityCheckLinkInsert = "2" // for link
+)

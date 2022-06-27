@@ -4,7 +4,6 @@
     ],
     "swagger": "2.0",
     "info": {
-        "description": "This is a api for SAL client/listener/counsellor APIs",
         "title": "SAL Backend API",
         "contact": {},
         "version": "1.0"
@@ -257,6 +256,13 @@
                         "type": "string",
                         "description": "Publisher(1), Subscriber(2)",
                         "name": "type",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Counsellor(1) , Client(2)",
+                        "name": "user_type",
                         "in": "query",
                         "required": true
                     }

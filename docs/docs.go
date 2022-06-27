@@ -270,6 +270,13 @@ var doc = `{
                         "name": "type",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Counsellor(1) , Client(2)",
+                        "name": "user_type",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -5199,7 +5206,7 @@ var SwaggerInfo = swaggerInfo{
 	BasePath:    "/prod",
 	Schemes:     []string{"https"},
 	Title:       "SAL Backend API",
-	Description: "This is a api for SAL client/listener/counsellor APIs",
+	Description: "",
 }
 
 type s struct{}

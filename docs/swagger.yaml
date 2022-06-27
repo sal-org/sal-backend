@@ -534,7 +534,6 @@ definitions:
 host: yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 info:
   contact: {}
-  description: This is a api for SAL client/listener/counsellor APIs
   title: SAL Backend API
   version: "1.0"
 paths:
@@ -685,6 +684,11 @@ paths:
       - description: Publisher(1), Subscriber(2)
         in: query
         name: type
+        required: true
+        type: string
+      - description: Counsellor(1) , Client(2)
+        in: query
+        name: user_type
         required: true
         type: string
       produces:

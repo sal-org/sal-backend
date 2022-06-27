@@ -196,20 +196,22 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// Counsellor details Send with SAL Team
 	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
 
-	counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
-		First_Name: counsellor_details[0]["first_name"],
-	}
+	// use this future
+	// filepath_text := "htmlfile/emailmessagebody.html"
 
-	filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name:    counsellor_details[0]["first_name"],
+	// 	Message: CONSTANT.CounsellorAccountSignupCounsellorEmailBody,
+	// }
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
-
-	UTIL.SendEmail(
-		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-		emailBody,
-		counsellor_details[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// // email for counsellor
+	// UTIL.SendEmail(
+	// 	CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+	// 	emailBody,
+	// 	counsellor_details[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	data := Model.EmailDataForCounsellorProfile{
 		First_Name:  counsellor_details[0]["first_name"],

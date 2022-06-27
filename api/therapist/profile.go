@@ -206,20 +206,20 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	therapist_details, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
 
-	counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
-		First_Name: therapist_details[0]["first_name"],
-	}
+	// counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
+	// 	First_Name: therapist_details[0]["first_name"],
+	// }
 
-	filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
+	// filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
 
-	UTIL.SendEmail(
-		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-		emailBody,
-		therapist_details[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendEmail(
+	// 	CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+	// 	emailBody,
+	// 	therapist_details[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	data := Model.EmailDataForCounsellorProfile{
 		First_Name:  therapist_details[0]["first_name"],

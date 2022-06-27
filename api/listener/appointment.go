@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strconv"
 	"strings"
 	"time"
@@ -153,7 +154,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// send appointment cancel notification, email to client
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
@@ -165,8 +166,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-				"###counsellor_name###": listener[0]["first_name"],
+				"###therapist_name###": listener[0]["first_name"],
+				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		appointment[0]["client_id"],
@@ -175,16 +176,56 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		r.FormValue("appointment_id"),
 	)
 
-	UTIL.SendEmail(
-		CONSTANT.CounsellorAppointmentCancelClientTitle,
+	UTIL.SendNotification(
+		CONSTANT.CounsellorAppointmentCancelCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.CounsellorAppointmentCancelClientBody,
+			CONSTANT.CounsellorAppointmentCancelCounsellorContent,
 			map[string]string{
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),
+		appointment[0]["counsellor_id"],
+		appointment[0]["type"],
+		UTIL.GetCurrentTime().String(),
+		r.FormValue("appointment_id"),
+	)
+
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	// send email for client
+	emaildata := Model.EmailBodyMessageModel{
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentCancelClientBodyEmailBody,
+			map[string]string{
+				"###therapist_name###": listener[0]["first_name"],
+				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+			},
+		),
+	}
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.CounsellorAppointmentCancelClientTitle,
+		emailBody,
 		client[0]["email"],
-		CONSTANT.LaterSendEmailMessage,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name:    listener[0]["first_name"],
+		Message: CONSTANT.CounsellorAppointmentCancelCounsellorBodyEmailBody,
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for counsellor
+	UTIL.SendEmail(
+		CONSTANT.CounsellorAppointmentCancelCounsellorTitle,
+		emailBody1,
+		listener[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

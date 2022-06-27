@@ -17,6 +17,8 @@ var (
 	CounsellorOrderPaymentCompleteRequiredFields = []string{"order_id", "payment_method", "payment_id"}
 	ListenerOrderPaymentCompleteRequiredFields   = []string{"order_id"}
 	ClientProfileAddRequiredFields               = []string{"phone", "email"}
+	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
+	VideoCheckCommentRequiredFields              = []string{"appointment_id", "comments"}
 	CounsellorProfileAddRequiredFields           = []string{"first_name", "phone", "price"}
 	MoodAddRequiredFields                        = []string{"mood_id", "date"}
 	ListenerProfileAddRequiredFields             = []string{"first_name", "phone"}

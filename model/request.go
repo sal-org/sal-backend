@@ -488,10 +488,6 @@ type AssessmentDownloadBDIModel struct {
 	Response21 string `json:"response21"`
 }
 
-type CounsellorProfileSendEmailTextMessage struct {
-	First_Name string `json:"first_name"`
-}
-
 type ClientAppointmentConfirmation struct {
 	First_Name      string `json:"first_name"`
 	Counsellor_Name string `json:"counsellor_name"`
@@ -575,4 +571,9 @@ type AgoraFileNameModel struct {
 		} `json:"fileList"`
 		UploadingStatus string `json:"uploadingStatus"`
 	} `json:"serverResponse"`
+}
+
+type EmailBodyMessageModel struct {
+	Name    string
+	Message string
 }

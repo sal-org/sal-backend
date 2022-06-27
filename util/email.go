@@ -75,3 +75,67 @@ func sendSESMail(title, body, email string) {
 	output, err := svc.SendEmail(params)
 	fmt.Println(err, output.String())
 }
+
+// SendEmail - send email using SES. now : true - send now without background workers
+func SendEmailForQuality(title, body, emailfrom, emailto string, now bool) {
+	if strings.Contains(title, "###") || strings.Contains(body, "###") { // check if mail variables are replaced
+		return
+	}
+
+	// add data to mails
+	mail := map[string]string{}
+	mail["title"] = title
+	mail["body"] = body
+	mail["email_from"] = emailfrom
+	mail["email_to"] = emailto
+	if now {
+		// set mail sent status as sent if now is true
+		mail["status"] = CONSTANT.EmailSent
+		sendSESMailForQualityCheck(title, body, emailfrom, emailto)
+	} else {
+		mail["status"] = CONSTANT.EmailInProgress
+	}
+	mail["created_at"] = GetCurrentTime().String()
+	DB.InsertWithUniqueID(CONSTANT.QualityCheckEmailTable, CONSTANT.EmailsDigits, mail, "email_id")
+
+}
+
+func sendSESMailForQualityCheck(title, body, emailfrom, emailto string) {
+	// start a new aws session
+	sess, err := session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		return
+	}
+
+	// start a new ses session
+	svc := ses.New(sess, &aws.Config{
+		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+		Region:      aws.String("ap-south-1"),
+	})
+
+	params := &ses.SendEmailInput{
+		Destination: &ses.Destination{ // Required
+			ToAddresses: []*string{
+				aws.String(emailto), // Required
+			},
+		},
+		Message: &ses.Message{ // Required
+			Body: &ses.Body{ // Required
+				Html: &ses.Content{
+					Data:    aws.String(body), // Required
+					Charset: aws.String("UTF-8"),
+				},
+			},
+			Subject: &ses.Content{ // Required
+				Data:    aws.String(title), // Required
+				Charset: aws.String("UTF-8"),
+			},
+		},
+		Source: aws.String(emailfrom),
+	}
+
+	//end email
+	output, err := svc.SendEmail(params)
+	fmt.Println(err, output.String())
+}

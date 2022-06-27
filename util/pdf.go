@@ -60,7 +60,7 @@ func GetHTMLTemplateForProfile(data Model.EmailDataForCounsellorProfile, filepat
 	return templateBuffer.String()
 }
 
-func GetHTMLTemplateForCounsellorProfileText(data Model.CounsellorProfileSendEmailTextMessage, filepath string) string {
+func GetHTMLTemplateForCounsellorProfileText(data Model.EmailBodyMessageModel, filepath string) string {
 	var templateBuffer bytes.Buffer
 
 	// You can bind custom data here as per requirements.

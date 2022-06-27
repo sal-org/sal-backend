@@ -54,6 +54,31 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !(body["mood_id"] == "1") {
+
+		moodTitle, status, ok := DB.SelectProcess("select title from "+CONSTANT.MoodsTable+" where id = ?", body["mood_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		UTIL.SendNotification(
+			CONSTANT.ClientSelectSadMoodHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientSelectSadMoodContent,
+				map[string]string{
+					"###mood###": moodTitle[0]["title"],
+				},
+			),
+			body["client_id"],
+			CONSTANT.ClientType,
+			UTIL.GetCurrentTime().String(),
+			moodResultID,
+		)
+
+		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	}
+
 	response["mood_result_id"] = moodResultID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

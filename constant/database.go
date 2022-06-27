@@ -4,6 +4,7 @@ package constant
 const (
 	AdminsTable                    = "admins"
 	QualityCheckTable              = "qualitycheck"
+	QualityCheckDetailsTable       = "qualitycheck_details"
 	AppointmentsTable              = "appointments"
 	AppointmentSlotsTable          = "appointment_slots"
 	AssessmentsTable               = "assessments"
@@ -21,6 +22,7 @@ const (
 	CounsellorLanguagesTable       = "counsellor_languages"
 	CounsellorTopicsTable          = "counsellor_topics"
 	EmailsTable                    = "emails"
+	QualityCheckEmailTable         = "qualitycheck_email"
 	InvoicesTable                  = "invoices"
 	LanguagesTable                 = "languages"
 	ListenersTable                 = "listeners"

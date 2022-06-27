@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -156,6 +157,26 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// send notification to client
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), clientID)
+
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	emaildata := Model.EmailBodyMessageModel{
+		Name:    body["first_name"],
+		Message: CONSTANT.ClientSignupClientEmailBody,
+	}
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientSignupProfileTitle,
+		emailBody,
+		body["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken

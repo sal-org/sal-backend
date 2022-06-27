@@ -8,4 +8,11 @@ func LoadQualityCheckRoutes(router *mux.Router) {
 	//login
 	qualityCheckRoutes.HandleFunc("/login", Login).Methods("GET")
 	qualityCheckRoutes.HandleFunc("/refresh-token", RefreshToken).Methods("GET")
+
+	// appointment
+	qualityCheckRoutes.HandleFunc("/appointment", GetAppointmentdetails).Methods("POST")
+
+	qualityCheckRoutes.HandleFunc("/send-email", SendEmail).Methods("POST")
+
+	qualityCheckRoutes.HandleFunc("/video-comment", VideoCallComment).Methods("POST")
 }
