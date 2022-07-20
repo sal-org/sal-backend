@@ -514,19 +514,22 @@ type RecordingConfigModel struct {
 	// StreamMode        string `json:"streamMode"`
 }
 
-// type ExtensionParamsModel struct {
-// 	Tag string `json:"tag"`
-// 	SSE string `json:"sse"`
-// }
+type Tags struct {
+	Security string `json:"security"`
+}
+
+type ExtensionParamsModel struct {
+	Tag string `json:"tag"`
+}
 
 type StorageConfigModel struct {
-	AccessKey      string   `json:"accessKey"`
-	Bucket         string   `json:"bucket"`
-	SecretKey      string   `json:"secretKey"`
-	Vendor         int      `json:"vendor"`
-	Region         int      `json:"region"`
-	FileNamePrefix []string `json:"fileNamePrefix"`
-	// ExtensionParams ExtensionParamsModel `json:"extensionParams"`
+	AccessKey       string               `json:"accessKey"`
+	Bucket          string               `json:"bucket"`
+	SecretKey       string               `json:"secretKey"`
+	Vendor          int                  `json:"vendor"`
+	Region          int                  `json:"region"`
+	FileNamePrefix  []string             `json:"fileNamePrefix"`
+	ExtensionParams ExtensionParamsModel `json:"extensionParams"`
 }
 
 type RecordingFileConfigModel struct {
@@ -557,23 +560,32 @@ type AgoraCallStopModel struct {
 }
 
 type AgoraFileNameModel struct {
-	ResourceID     string `json:"resourceId"`
-	Sid            string `json:"sid"`
-	ServerResponse struct {
-		FileListMode string `json:"fileListMode"`
-		FileList     []struct {
-			FileName       string `json:"fileName"`
-			IsPlayable     bool   `json:"isPlayable"`
-			MixedAllUser   bool   `json:"mixedAllUser"`
-			SliceStartTime int64  `json:"sliceStartTime"`
-			TrackType      string `json:"trackType"`
-			UID            string `json:"uid"`
-		} `json:"fileList"`
-		UploadingStatus string `json:"uploadingStatus"`
-	} `json:"serverResponse"`
+	Code int `json:"Code"`
+	Body struct {
+		ResourceID     string `json:"resourceId"`
+		Sid            string `json:"sid"`
+		ServerResponse struct {
+			FileListMode string `json:"fileListMode"`
+			FileList     []struct {
+				FileName       string `json:"fileName"`
+				TrackType      string `json:"trackType"`
+				UID            string `json:"uid"`
+				MixedAllUser   bool   `json:"mixedAllUser"`
+				IsPlayable     bool   `json:"isPlayable"`
+				SliceStartTime int64  `json:"sliceStartTime"`
+			} `json:"fileList"`
+			UploadingStatus string `json:"uploadingStatus"`
+		} `json:"serverResponse"`
+	} `json:"Body"`
 }
 
 type EmailBodyMessageModel struct {
 	Name    string
 	Message string
+}
+
+type EmailRecipientModel struct {
+	ToEmails  []string
+	CcEmails  []string
+	BccEmails []string
 }

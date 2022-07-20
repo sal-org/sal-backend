@@ -5206,7 +5206,7 @@ var SwaggerInfo = swaggerInfo{
 	BasePath:    "/prod",
 	Schemes:     []string{"https"},
 	Title:       "SAL Backend API",
-	Description: "",
+	Description: "This is a api for SAL client/listener/counsellor APIs",
 }
 
 type s struct{}

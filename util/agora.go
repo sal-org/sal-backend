@@ -119,14 +119,13 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 			StorageConfig: Model.StorageConfigModel{
 				AccessKey:      CONFIG.AWSAccesKey,
 				Region:         14,
-				Bucket:         CONFIG.S3Bucket,
+				Bucket:         "clove-cloud-recording",
 				SecretKey:      CONFIG.AWSSecretKey,
 				Vendor:         1,
 				FileNamePrefix: []string{"recordingfile"},
-				// ExtensionParams: Model.ExtensionParamsModel{
-				// 	Tag: "sal_recording",
-				// 	SSE: "kms",
-				// },
+				ExtensionParams: Model.ExtensionParamsModel{
+					Tag: "public",
+				},
 			},
 		},
 	}
@@ -212,14 +211,18 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, s
 	}
 
 	var mapp Model.AgoraFileNameModel
+	var fileNameInMP4, fileNameInM3U8 string
 
 	err = json.Unmarshal(bodyy, &mapp)
 	if err != nil {
 		fmt.Println("eerror")
 		return "", "", err
 	}
-	fileNameInMP4 := mapp.ServerResponse.FileList[0].FileName
-	fileNameInM3U8 := mapp.ServerResponse.FileList[1].FileName
+
+	if mapp.Code == 200 {
+		fileNameInMP4 = mapp.Body.ServerResponse.FileList[0].FileName
+		fileNameInM3U8 = mapp.Body.ServerResponse.FileList[1].FileName
+	}
 
 	return fileNameInMP4, fileNameInM3U8, nil
 }

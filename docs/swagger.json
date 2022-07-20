@@ -4,6 +4,7 @@
     ],
     "swagger": "2.0",
     "info": {
+        "description": "This is a api for SAL client/listener/counsellor APIs",
         "title": "SAL Backend API",
         "contact": {},
         "version": "1.0"

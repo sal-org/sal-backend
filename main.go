@@ -15,6 +15,7 @@ import (
 
 // @title SAL Backend API
 // @version 1.0
+// @description This is a api for SAL client/listener/counsellor APIs
 // @schemes https
 // @host yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 // @BasePath /prod

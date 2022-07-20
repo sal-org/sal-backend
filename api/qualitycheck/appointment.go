@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strings"
 	"time"
@@ -71,15 +72,15 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// total number of appointment
-	appointmentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.QualityCheckDetailsTable+where, queryArgs...)
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // total number of appointment
+	// appointmentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.QualityCheckDetailsTable+where, queryArgs...)
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	response["appointments"] = appointments
-	response["appointments_count"] = appointmentsCount[0]["ctn"]
+	// response["appointments_count"] = appointmentsCount[0]["ctn"]
 	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -105,10 +106,62 @@ func SendEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// is_valid_email := UTIL.IsValidEmail(body["email_from"])
+	// if is_valid_email == "" {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(body["email_from"], "@")
+	// if domainName[1] != "clovemind.com" {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct domain name like xyz@clovemind.com", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// is_valid_email = UTIL.IsValidEmail(body["email_to"])
+	// if is_valid_email == "" {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	to := strings.Split(body["email_to"], ",")
+
+	receipts := Model.EmailRecipientModel{
+		ToEmails:  to,
+		CcEmails:  []string{},
+		BccEmails: []string{"qualitycontrol@clovemind.com"},
+	}
+
+	// set toAddress section
+	var toRecipients []*string
+	for _, r := range receipts.ToEmails {
+		toAddress := r
+		toRecipients = append(toRecipients, &toAddress)
+	}
+
+	var ccRecipients []*string
+	if len(receipts.CcEmails) > 0 {
+		for _, c := range receipts.CcEmails {
+			ccAddress := c
+			ccRecipients = append(ccRecipients, &ccAddress)
+		}
+	}
+
+	var bccRecipients []*string
+	if len(receipts.BccEmails) > 0 {
+		for _, b := range receipts.BccEmails {
+			bccAddress := b
+			bccRecipients = append(bccRecipients, &bccAddress)
+		}
+	}
+
 	UTIL.SendEmailForQuality(
 		body["title"],
 		body["body"],
 		body["email_from"],
+		toRecipients,
+		ccRecipients,
+		bccRecipients,
 		body["email_to"],
 		CONSTANT.InstantSendEmailMessage,
 	)
@@ -132,6 +185,12 @@ func VideoCallComment(w http.ResponseWriter, r *http.Request) {
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.VideoCheckCommentRequiredFields)
 	if len(fieldCheck) > 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	oK := DB.CheckIfExists(CONSTANT.QualityCheckDetailsTable, map[string]string{"appointment_id": body["appointment_id"]})
+	if !oK {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
 	}
 
