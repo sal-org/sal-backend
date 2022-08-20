@@ -91,6 +91,12 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get liked content ids
 	likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
 	if !ok {
@@ -141,6 +147,12 @@ func ContentLikeAdd(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	status, ok := DB.InsertSQL(CONSTANT.ContentLikesTable, map[string]string{
 		"content_id": r.FormValue("content_id"),
 		"user_id":    r.FormValue("user_id"),
@@ -167,6 +179,12 @@ func ContentLikeDelete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	status, ok := DB.DeleteSQL(CONSTANT.ContentLikesTable, map[string]string{
 		"content_id": r.FormValue("content_id"),

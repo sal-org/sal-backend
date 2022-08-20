@@ -19,6 +19,7 @@ var (
 	ClientProfileAddRequiredFields               = []string{"phone", "email"}
 	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
 	VideoCheckCommentRequiredFields              = []string{"appointment_id", "comments"}
+	NotificationRequiredFields                   = []string{"userType", "status"}
 	CounsellorProfileAddRequiredFields           = []string{"first_name", "phone", "price"}
 	MoodAddRequiredFields                        = []string{"mood_id", "date"}
 	ListenerProfileAddRequiredFields             = []string{"first_name", "phone"}

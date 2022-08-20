@@ -69,6 +69,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 // @Router /client/verifyotp [get]
 // @Param phone query string true "Phone number OTP has been sent to - send phone number with 91 code"
 // @Param otp query string true "OTP entered by client"
+// @Param device_id query string true "Device ID entered by client"
 // @Produce json
 // @Success 200
 func VerifyOTP(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +82,11 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 	// 	return
 	// }
+
+	if len(r.FormValue("device_id")) < 0 {
+		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if !strings.EqualFold("4444", r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
@@ -104,6 +110,12 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		// check if client is active
 		if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"device_id": r.FormValue("device_id")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 

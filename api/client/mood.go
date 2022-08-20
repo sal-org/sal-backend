@@ -22,6 +22,12 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
 	if !ok {
@@ -96,6 +102,12 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	dates := strings.Split(r.FormValue("dates"), ",")
 	if len(dates) < 2 {

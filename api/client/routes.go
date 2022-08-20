@@ -96,6 +96,7 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/verifyotp", VerifyOTP).Queries(
 		"phone", "{phone}",
 		"otp", "{otp}",
+		"device_id", "{device_id}",
 	).Methods("GET")
 	clientRoutes.Path("/refresh-token").Queries(
 		"client_id", "{client_id}",
@@ -126,6 +127,7 @@ func LoadClientRoutes(router *mux.Router) {
 	// profile
 	clientRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",
+		"device_id", "{device_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("", ProfileAdd).Methods("POST")
 	clientRoutes.HandleFunc("", ProfileUpdate).Queries(

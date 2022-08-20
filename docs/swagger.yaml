@@ -1,4 +1,3 @@
-basePath: /prod
 definitions:
   model.AppointmentBookRequest:
     properties:
@@ -389,6 +388,13 @@ definitions:
       phone:
         type: string
     type: object
+  model.NotificationAllowSettingModel:
+    properties:
+      status:
+        type: string
+      userType:
+        type: string
+    type: object
   model.TherapistOrderCreateRequest:
     properties:
       client_id:
@@ -531,7 +537,6 @@ definitions:
       topic_ids:
         type: string
     type: object
-host: yvsdncrpod.execute-api.ap-south-1.amazonaws.com
 info:
   contact: {}
   description: This is a api for SAL client/listener/counsellor APIs
@@ -544,6 +549,11 @@ paths:
       - description: Email of client - to get details, if signed up already
         in: query
         name: email
+        required: true
+        type: string
+      - description: Device ID of client - to get details, if signed up already
+        in: query
+        name: device_id
         required: true
         type: string
       produces:
@@ -1462,6 +1472,11 @@ paths:
       - description: OTP entered by client
         in: query
         name: otp
+        required: true
+        type: string
+      - description: Device ID entered by client
+        in: query
+        name: device_id
         required: true
         type: string
       produces:
@@ -2579,6 +2594,30 @@ paths:
       summary: Get all moods
       tags:
       - Miscellaneous
+  /notification-status:
+    put:
+      parameters:
+      - description: ClientID/TherapistID/CounsellorID/ListernerID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: User type (counsellor:1/listener:2/client:3/therapists:4)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NotificationAllowSettingModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Update Notification status
+      tags:
+      - Miscellaneous
   /rating-type:
     get:
       produces:
@@ -3166,6 +3205,11 @@ paths:
         name: otp
         required: true
         type: string
+      - description: Device ID entered by counsellor/listener/therapist
+        in: query
+        name: device_id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -3174,11 +3218,4 @@ paths:
       summary: Verify OTP sent to specified phone
       tags:
       - Counsellor/Listener/Therapist Login
-schemes:
-- https
-securityDefinitions:
-  JWTAuth:
-    in: header
-    name: Authorization
-    type: apiKey
 swagger: "2.0"

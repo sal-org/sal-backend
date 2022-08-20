@@ -27,6 +27,11 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
+	// notification change status
+	router.HandleFunc("/notification-status", NotificationInactiveORActive).Queries(
+		"user_id", "{user_id}",
+	).Methods("PUT")
+
 	// topic
 	router.HandleFunc("/topic", ListTopic).Methods("GET")
 

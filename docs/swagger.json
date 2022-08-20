@@ -1,7 +1,4 @@
 {
-    "schemes": [
-        "https"
-    ],
     "swagger": "2.0",
     "info": {
         "description": "This is a api for SAL client/listener/counsellor APIs",
@@ -9,8 +6,6 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
-    "basePath": "/prod",
     "paths": {
         "/client": {
             "get": {
@@ -26,6 +21,13 @@
                         "type": "string",
                         "description": "Email of client - to get details, if signed up already",
                         "name": "email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID of client - to get details, if signed up already",
+                        "name": "device_id",
                         "in": "query",
                         "required": true
                     }
@@ -1531,6 +1533,13 @@
                         "type": "string",
                         "description": "OTP entered by client",
                         "name": "otp",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID entered by client",
+                        "name": "device_id",
                         "in": "query",
                         "required": true
                     }
@@ -3378,6 +3387,45 @@
                 }
             }
         },
+        "/notification-status": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Update Notification status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientID/TherapistID/CounsellorID/ListernerID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "User type (counsellor:1/listener:2/client:3/therapists:4)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NotificationAllowSettingModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/rating-type": {
             "get": {
                 "security": [
@@ -4349,6 +4397,13 @@
                         "name": "otp",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID entered by counsellor/listener/therapist",
+                        "name": "device_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -4954,6 +5009,17 @@
                 }
             }
         },
+        "model.NotificationAllowSettingModel": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "userType": {
+                    "type": "string"
+                }
+            }
+        },
         "model.TherapistOrderCreateRequest": {
             "type": "object",
             "properties": {
@@ -5168,13 +5234,6 @@
                     "type": "string"
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "JWTAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
         }
     }
 }

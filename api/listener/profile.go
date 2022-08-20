@@ -24,6 +24,12 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get listener details
 	params := map[string]string{}
 	if len(r.FormValue("email")) > 0 {
@@ -148,6 +154,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener["timezone"] = body["timezone"]
 	listener["device_id"] = body["device_id"]
 	listener["status"] = CONSTANT.ListenerActive
+	listener["notification_status"] = CONSTANT.NotificationActive
 	listener["last_login_time"] = UTIL.GetCurrentTime().String()
 	listener["created_at"] = UTIL.GetCurrentTime().String()
 	listenerID, status, ok := DB.InsertWithUniqueID(CONSTANT.ListenersTable, CONSTANT.ListenerDigits, listener, "listener_id")
@@ -200,6 +207,12 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)

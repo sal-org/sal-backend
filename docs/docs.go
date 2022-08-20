@@ -39,6 +39,13 @@ var doc = `{
                         "name": "email",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID of client - to get details, if signed up already",
+                        "name": "device_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1542,6 +1549,13 @@ var doc = `{
                         "type": "string",
                         "description": "OTP entered by client",
                         "name": "otp",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID entered by client",
+                        "name": "device_id",
                         "in": "query",
                         "required": true
                     }
@@ -3389,6 +3403,45 @@ var doc = `{
                 }
             }
         },
+        "/notification-status": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Update Notification status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientID/TherapistID/CounsellorID/ListernerID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "User type (counsellor:1/listener:2/client:3/therapists:4)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NotificationAllowSettingModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/rating-type": {
             "get": {
                 "security": [
@@ -4360,6 +4413,13 @@ var doc = `{
                         "name": "otp",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID entered by counsellor/listener/therapist",
+                        "name": "device_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -4965,6 +5025,17 @@ var doc = `{
                 }
             }
         },
+        "model.NotificationAllowSettingModel": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "userType": {
+                    "type": "string"
+                }
+            }
+        },
         "model.TherapistOrderCreateRequest": {
             "type": "object",
             "properties": {
@@ -5180,13 +5251,6 @@ var doc = `{
                 }
             }
         }
-    },
-    "securityDefinitions": {
-        "JWTAuth": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
     }
 }`
 
@@ -5202,9 +5266,9 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
-	BasePath:    "/prod",
-	Schemes:     []string{"https"},
+	Host:        "",
+	BasePath:    "",
+	Schemes:     []string{},
 	Title:       "SAL Backend API",
 	Description: "This is a api for SAL client/listener/counsellor APIs",
 }

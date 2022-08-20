@@ -91,9 +91,10 @@ const (
 
 // notification status
 const (
-	NotificationActive  = "1"
-	NotificationRead    = "2"
-	NotificationDeleted = "3"
+	NotificationInactive = "0"
+	NotificationActive   = "1"
+	NotificationRead     = "2"
+	NotificationDeleted  = "3"
 )
 
 // email status

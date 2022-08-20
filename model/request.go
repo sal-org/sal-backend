@@ -589,3 +589,8 @@ type EmailRecipientModel struct {
 	CcEmails  []string
 	BccEmails []string
 }
+
+type NotificationAllowSettingModel struct {
+	UserType string `json:"userType"`
+	Status   string `json:"status"`
+}
