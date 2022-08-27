@@ -4,6 +4,12 @@ main
 .test-env
 wkhtmltopdf
 *.sql
+.elasticbeanstalk
+.ebignore
+build.sh
+Buildfile
+Dockerrun.aws.json
+Procfile
 
 
 
@@ -14,3 +20,9 @@ wkhtmltopdf
 
 
 
+
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

@@ -239,6 +239,7 @@ func GeneratePdf(htmlfile, filepath string) ([]byte, bool) { // ([]byte
 	// Create PDF document in internal buffer
 	err = pdfg.Create()
 	if err != nil {
+		fmt.Println("file is not create")
 		return nil, false
 	}
 

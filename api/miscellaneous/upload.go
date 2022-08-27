@@ -25,12 +25,6 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
 	s3Path := CONSTANT.MiscellaneousS3Path
 	switch r.FormValue("type") {
 	case CONSTANT.CounsellorType:
