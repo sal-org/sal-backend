@@ -184,7 +184,20 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		DB.InsertSQL(CONSTANT.SlotsTable, map[string]string{"counsellor_id": counsellorID, "date": UTIL.GetCurrentTime().AddDate(0, 0, i).Format("2006-01-02")})
 	}
 
-	response["counsellor_id"] = counsellorID
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(counsellorID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(counsellorID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// send account signup notification, message to counsellor
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), counsellorID)
@@ -201,7 +214,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Counsellor details Send with SAL Team
-	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
+	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
 	// use this future
 	// filepath_text := "htmlfile/emailmessagebody.html"
@@ -273,6 +286,12 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.AnandEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)*/
+
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+
+	response["counsellor"] = counsellor_details[0]
+	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

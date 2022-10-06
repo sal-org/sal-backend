@@ -462,6 +462,21 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
 
+	// send payment success notification, email to client
+	UTIL.SendNotification(
+		CONSTANT.ClientPaymentSucessClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientPaymentSucessClientContent,
+			map[string]string{
+				"###paid_amount###": order[0]["paid_amount"],
+			},
+		),
+		order[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		invoiceID,
+	)
+
 	// send appointment booking notification to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), appointmentID,
@@ -479,7 +494,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 	)
 
@@ -601,7 +616,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.TherapistType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 	)
 

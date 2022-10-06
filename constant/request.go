@@ -18,6 +18,7 @@ var (
 	ListenerOrderPaymentCompleteRequiredFields   = []string{"order_id"}
 	ClientProfileAddRequiredFields               = []string{"phone", "email"}
 	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
+	QualityCheckLoginIDAndPassword               = []string{"username", "password"}
 	VideoCheckCommentRequiredFields              = []string{"appointment_id", "comments"}
 	NotificationRequiredFields                   = []string{"userType", "status"}
 	CounsellorProfileAddRequiredFields           = []string{"first_name", "phone", "price"}

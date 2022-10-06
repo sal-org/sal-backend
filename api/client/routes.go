@@ -118,6 +118,9 @@ func LoadClientRoutes(router *mux.Router) {
 		"client_id", "{client_id}",
 		"dates", "{dates}",
 	).Methods("GET")
+	clientRoutes.HandleFunc("/mood/content", ListMoodContent).Queries(
+		"user_id", "{user_id}",
+	).Methods("GET")
 
 	// notification
 	clientRoutes.HandleFunc("/notification", NotificationsGet).Queries(

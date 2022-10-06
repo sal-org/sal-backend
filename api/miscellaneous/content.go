@@ -126,9 +126,17 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get liked content ids
+	contentLiked, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	response["videos"] = videos
 	response["audios"] = audios
 	response["articles"] = articles
+	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(contentLiked, "content_id")
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

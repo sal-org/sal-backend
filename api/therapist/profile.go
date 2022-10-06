@@ -185,7 +185,20 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		DB.InsertSQL(CONSTANT.SlotsTable, map[string]string{"counsellor_id": therapistID, "date": UTIL.GetCurrentTime().AddDate(0, 0, i).Format("2006-01-02")})
 	}
 
-	response["therapist_id"] = therapistID
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(therapistID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(therapistID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// send account signup notification, message to therapist
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), therapistID)
@@ -211,7 +224,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)*/
 
-	therapist_details, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
+	therapist_details, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": therapistID})
 
 	// counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
 	// 	First_Name: therapist_details[0]["first_name"],
@@ -281,6 +294,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.AnandEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)*/
+
+	response["therapist"] = therapist_details[0]
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

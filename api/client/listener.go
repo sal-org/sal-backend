@@ -32,7 +32,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type"}, map[string]string{"listener_id": r.FormValue("listener_id")})
+	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type", "age_group"}, map[string]string{"listener_id": r.FormValue("listener_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -350,7 +350,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 	)
 
@@ -405,7 +405,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.ListenerType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 	)
 

@@ -39,7 +39,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	therapistArgs := []interface{}{}
 
 	// build counsellor query
-	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, total_rating, average_rating, photo, price, education, experience, about, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
+	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions , education, experience, about, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
 
 	wheres := []string{}
 	if len(r.FormValue("topic")) > 0 { // get counsellors with specified topic
@@ -69,7 +69,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build listener query
-	listenerSQLQuery = "select listener_id as id, first_name, last_name, total_rating, average_rating, photo, 0 as price, occupation, age_group, about, " + CONSTANT.ListenerType + " as type, slot_type from " + CONSTANT.ListenersTable
+	listenerSQLQuery = "select listener_id as id, first_name, last_name, total_rating, average_rating, photo, 0 as price, 0 as multiple_sessions, occupation, age_group, about, " + CONSTANT.ListenerType + " as type, slot_type from " + CONSTANT.ListenersTable
 
 	wheres = []string{}
 	if len(r.FormValue("topic")) > 0 { // get listeners with specified topic
@@ -92,7 +92,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	listenerSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build therapist query
-	therapistSQLQuery = "select therapist_id as id, first_name, last_name, total_rating, average_rating, photo, price, education, experience, about, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
+	therapistSQLQuery = "select therapist_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions, education, experience, about, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
 
 	wheres = []string{}
 	if len(r.FormValue("topic")) > 0 { // get therapists with specified topic

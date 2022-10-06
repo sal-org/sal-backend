@@ -260,7 +260,7 @@ func GeneratePdfHeaderAndFooterFixted(htmlfile, filepath string) ([]byte, bool) 
 	page.FooterFontSize.Set(7)
 	page.FooterRight.Set("[page]")
 	page.EnableLocalFileAccess.Set(true)
-	page.HeaderHTML.Set(`D:\Git\SALBackend\htmlfile\AssessmentHeader.html`)
+	page.HeaderHTML.Set(`htmlfile/AssessmentHeader.html`)
 	page.FooterHTML.Set("htmlfile/AssessmentFooter.html")
 	pdfg.AddPage(page)
 

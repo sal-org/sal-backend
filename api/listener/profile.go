@@ -135,9 +135,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// default photo for client and listerner
-	if len(body["photo"]) == 0 || body["photo"] == "string" {
-		body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
-	}
+	// if len(body["photo"]) == 0 || body["photo"] == "string" {
+	// 	body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
+	// }
 
 	// add listener details
 	listener := map[string]string{}
@@ -175,7 +175,23 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		DB.InsertSQL(CONSTANT.SlotsTable, map[string]string{"counsellor_id": listenerID, "date": UTIL.GetCurrentTime().AddDate(0, 0, i).Format("2006-01-02")})
 	}
 
-	response["listener_id"] = listenerID
+	// Listener details Send with SAL Team
+	listeners, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": listenerID})
+
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(listenerID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(listenerID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// send account signup notification to listener
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), listenerID)
@@ -190,6 +206,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		body["phone"],
 		CONSTANT.LaterSendTextMessage,
 	)
+
+	response["listener"] = listeners[0]
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

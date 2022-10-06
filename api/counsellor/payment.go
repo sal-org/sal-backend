@@ -5,6 +5,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
+	"strings"
 
 	UTIL "salbackend/util"
 )
@@ -14,6 +15,7 @@ import (
 // @Summary Get payments for counsellor
 // @Router /counsellor/payment [get]
 // @Param counsellor_id query string true "Logged in counsellor ID"
+// @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
 // @Param page query string false "Page number"
 // @Security JWTAuth
 // @Produce json
@@ -29,8 +31,14 @@ func PaymentsGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	orderBy := " desc "
+
+	if strings.EqualFold(r.FormValue("order_by"), "1") {
+		orderBy = " asc "
+	}
+
 	// get payments for counsellor
-	payments, status, ok := DB.SelectProcess("select * from "+CONSTANT.PaymentsTable+" where counsellor_id = ? and status = "+CONSTANT.PaymentValid+" order by created_at desc limit "+strconv.Itoa(CONSTANT.CounsellorsPaymentsPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsPaymentsPerPageClient), r.FormValue("counsellor_id"))
+	payments, status, ok := DB.SelectProcess("select * from "+CONSTANT.PaymentsTable+" where counsellor_id = ? and status = "+CONSTANT.PaymentValid+" order by created_at "+orderBy+" limit "+strconv.Itoa(CONSTANT.CounsellorsPaymentsPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsPaymentsPerPageClient), r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

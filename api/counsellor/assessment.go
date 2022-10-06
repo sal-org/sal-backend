@@ -2,8 +2,10 @@ package counsellor
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -178,9 +180,8 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 
 // AssessmentHistory godoc
 // @Tags Counsellor Assessment
-// @Summary Get assessment history
+// @Summary GET counsellor assessment
 // @Router /counsellor/assessment/history [get]
-// @Param assessment_id query string true "Assessment ID to get details"
 // @Param counsellor_id query string true "Logged in counsellor ID"
 // @Security JWTAuth
 // @Produce json
@@ -196,21 +197,18 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	var results []string
 
 	// get assessment past results
-	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and assessment_id = ? and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("counsellor_id"), r.FormValue("assessment_id"))
+	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ?  and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
+	// add swagger tag when you get assessment deatils  @Param assessment_id query string true "Assessment ID to get details"
 	// get assessment details
-	assessment, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", r.FormValue("assessment_id"))
+	/*assessment, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", r.FormValue("assessment_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -228,21 +226,386 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
-	}
+	}*/
 
 	assessmentResultIDs := UTIL.ExtractValuesFromArrayMap(assessmentResults, "assessment_result_id")
 
-	// get assessments result details
-	assessmentResultDetails, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultDetailsTable + " where assessment_result_id in ('" + strings.Join(assessmentResultIDs, "','") + "') order by created_at desc")
+	assessmentIDs := UTIL.ExtractValuesFromArrayMap(assessmentResults, "assessment_id")
+
+	assessmentDetails, status, ok := DB.SelectProcess("select assessment_id , title from " + CONSTANT.AssessmentsTable + " where assessment_id in ('" + strings.Join(assessmentIDs, "','") + "') order by created_at desc")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
+	// get assessments result details
+	/*assessmentResultDetails, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultDetailsTable + " where assessment_result_id in ('" + strings.Join(assessmentResultIDs, "','") + "') order by created_at desc")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}*/
+
+	for i, _ := range assessmentResultIDs {
+		result := DB.QueryRowSQL("select result from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? and min <= ? and max >=  ? ", assessmentResults[i]["assessment_id"], assessmentResults[i]["final_score"], assessmentResults[i]["final_score"])
+
+		results = append(results, result)
+	}
+
 	response["assessment_results"] = assessmentResults
-	response["assessment_result_details"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResultDetails, "assessment_result_id")
-	response["assessment"] = assessment
-	response["assessment_questions"] = assessmentQuestions
-	response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
+	//response["assessment_result_details"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResultDetails, "assessment_result_id")
+	response["result"] = results
+	response["assessment"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentDetails, "assessment_id")
+	//response["assessment"] = assessment
+	//response["assessment_questions"] = assessmentQuestions
+	//response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// AssessmentDownload godoc
+// @Tags Counsellor Assessment
+// @Summary Get assessment download
+// @Router /counsellor/assessment/download [get]
+// @Param assessment_result_id query string true "Logged in Assessment Result ID"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	//const assessment_id = "ywlxbz8yrlp942"
+
+	var fileName, emailbody string
+
+	if DB.CheckIfExists(CONSTANT.AssessmentPdfTable, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")}) {
+
+		receipt, _, _ := DB.SelectSQL(CONSTANT.AssessmentPdfTable, []string{"*"}, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")})
+		fileName = receipt[0]["pdf"]
+	} else {
+
+		assessment_result, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where assessment_result_id = ? ", r.FormValue("assessment_result_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		assessment_result_details, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultDetailsTable+" where assessment_result_id = ? ", r.FormValue("assessment_result_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		//assign := assessment_result[0]["assessment_id"]
+
+		if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp942" {
+
+			var filePath string
+
+			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "39" {
+
+				filePath = "htmlfile/Assessment_AIS_Low.html"
+
+			} else if assessment_result[0]["final_score"] >= "40" && assessment_result[0]["final_score"] <= "69" {
+
+				fmt.Println(assessment_result[0]["score"])
+				filePath = "htmlfile/Assessment_AIS_Mid.html"
+
+			} else {
+
+				filePath = "htmlfile/Assessment_AIS_High.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadAIS{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentAIS(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp943" {
+
+			var filePath string
+
+			var question_options []string
+
+			//var question_option map[string]string
+
+			assessmentResultIDs := UTIL.ExtractValuesFromArrayMap(assessment_result_details, "assessment_question_option_id")
+
+			for i := range assessmentResultIDs {
+
+				options := DB.QueryRowSQL("select `option` from "+CONSTANT.AssessmentQuestionOptionsTable+" where assessment_question_option_id = ? ", assessment_result_details[i]["assessment_question_option_id"])
+				question_options = append(question_options, options)
+
+			}
+
+			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "10" {
+
+				filePath = "htmlfile/Assessment_BDI_II_Normal.html"
+
+			} else if assessment_result[0]["final_score"] >= "11" && assessment_result[0]["final_score"] <= "18" {
+
+				filePath = "htmlfile/Assessment_BDI_II_Mild.html"
+
+			} else if assessment_result[0]["final_score"] >= "19" && assessment_result[0]["final_score"] <= "25" {
+
+				filePath = "htmlfile/Assessment_BDI_II_Mod.html"
+
+			} else {
+
+				filePath = "htmlfile/Assessment_BDI_II_Severe.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadBDIModel{
+				Name:       assessment_result[0]["name"],
+				Date:       UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:        assessment_result[0]["age"],
+				Gender:     assessment_result[0]["gender"],
+				Score:      assessment_result[0]["final_score"],
+				Answer1:    assessment_result_details[0]["score"],
+				Answer2:    assessment_result_details[1]["score"],
+				Answer3:    assessment_result_details[2]["score"],
+				Answer4:    assessment_result_details[3]["score"],
+				Answer5:    assessment_result_details[4]["score"],
+				Answer6:    assessment_result_details[5]["score"],
+				Answer7:    assessment_result_details[6]["score"],
+				Answer8:    assessment_result_details[7]["score"],
+				Answer9:    assessment_result_details[8]["score"],
+				Answer10:   assessment_result_details[9]["score"],
+				Answer11:   assessment_result_details[10]["score"],
+				Answer12:   assessment_result_details[11]["score"],
+				Answer13:   assessment_result_details[12]["score"],
+				Answer14:   assessment_result_details[13]["score"],
+				Answer15:   assessment_result_details[14]["score"],
+				Answer16:   assessment_result_details[15]["score"],
+				Answer17:   assessment_result_details[16]["score"],
+				Answer18:   assessment_result_details[17]["score"],
+				Answer19:   assessment_result_details[18]["score"],
+				Answer20:   assessment_result_details[19]["score"],
+				Answer21:   assessment_result_details[20]["score"],
+				Response1:  question_options[0],
+				Response2:  question_options[1],
+				Response3:  question_options[2],
+				Response4:  question_options[3],
+				Response5:  question_options[4],
+				Response6:  question_options[5],
+				Response7:  question_options[6],
+				Response8:  question_options[7],
+				Response9:  question_options[8],
+				Response10: question_options[9],
+				Response11: question_options[10],
+				Response12: question_options[11],
+				Response13: question_options[12],
+				Response14: question_options[13],
+				Response15: question_options[14],
+				Response16: question_options[15],
+				Response17: question_options[16],
+				Response18: question_options[17],
+				Response19: question_options[18],
+				Response20: question_options[19],
+				Response21: question_options[20],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBDI(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp944" {
+
+			var filePath string
+
+			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "13" {
+
+				filePath = "htmlfile/Assessment_PSS_Low.html"
+
+			} else if assessment_result[0]["final_score"] >= "14" && assessment_result[0]["final_score"] <= "26" {
+
+				filePath = "htmlfile/Assessment_PSS_Mid.html"
+
+			} else {
+
+				filePath = "htmlfile/Assessment_PSS_High.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadAIS{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentAIS(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp945" {
+
+			var filePath string
+
+			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "49" {
+
+				filePath = "htmlfile/Assessment_SRS_Low.html"
+
+			} else if assessment_result[0]["final_score"] >= "50" && assessment_result[0]["final_score"] <= "69" {
+
+				filePath = "htmlfile/Assessment_SRS_Lower_Middle.html"
+
+			} else if assessment_result[0]["final_score"] >= "70" && assessment_result[0]["final_score"] <= "89" {
+
+				filePath = "htmlfile/Assessment_SRS_Upper_Middle.html"
+
+			} else {
+
+				filePath = "htmlfile/Assessment_SRS_High.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSRSModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+				Answer11: assessment_result_details[10]["score"],
+				Answer12: assessment_result_details[11]["score"],
+				Answer13: assessment_result_details[12]["score"],
+				Answer14: assessment_result_details[13]["score"],
+				Answer15: assessment_result_details[14]["score"],
+				Answer16: assessment_result_details[15]["score"],
+				Answer17: assessment_result_details[16]["score"],
+				Answer18: assessment_result_details[17]["score"],
+				Answer19: assessment_result_details[18]["score"],
+				Answer20: assessment_result_details[19]["score"],
+				Answer21: assessment_result_details[20]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSRS(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+		} else {
+
+			var filePath string
+
+			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "4" {
+
+				filePath = "htmlfile/Assessment_GAD7_Minimal.html"
+
+			} else if assessment_result[0]["final_score"] >= "5" && assessment_result[0]["final_score"] <= "9" {
+
+				filePath = "htmlfile/Assessment_GAD7_Mild.html"
+
+			} else if assessment_result[0]["final_score"] >= "10" && assessment_result[0]["final_score"] <= "14" {
+
+				filePath = "htmlfile/Assessment_GAD7_Mod.html"
+
+			} else {
+
+				filePath = "htmlfile/Assessment_GAD7_Severe.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadGAD7Model{
+				Name:    assessment_result[0]["name"],
+				Date:    UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:     assessment_result[0]["age"],
+				Gender:  assessment_result[0]["gender"],
+				Score:   assessment_result[0]["final_score"],
+				Answer1: assessment_result_details[0]["score"],
+				Answer2: assessment_result_details[1]["score"],
+				Answer3: assessment_result_details[2]["score"],
+				Answer4: assessment_result_details[3]["score"],
+				Answer5: assessment_result_details[4]["score"],
+				Answer6: assessment_result_details[5]["score"],
+				Answer7: assessment_result_details[6]["score"],
+				Answer8: assessment_result[0]["feedback"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+		}
+
+		created, ok := UTIL.GeneratePdfHeaderAndFooterFixted(emailbody, "pdffile/assessment1.pdf") // name created,
+
+		if !ok {
+			fmt.Println("Pdf is not created")
+		}
+
+		s3Path := "assessment"
+		filename := "example1.pdf"
+
+		name, uploaded := UTIL.UploadToS3File(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(filename), CONSTANT.S3PublicRead, created)
+		if !uploaded {
+			fmt.Println("UploadFile")
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		fileName = name
+
+		assessment_pdf := map[string]string{}
+
+		assessment_pdf["user_id"] = assessment_result[0]["user_id"]
+		assessment_pdf["assessment_result_id"] = assessment_result[0]["assessment_result_id"]
+		assessment_pdf["pdf"] = fileName
+		assessment_pdf["created_at"] = UTIL.GetCurrentTime().String()
+
+		_, status, ok = DB.InsertWithUniqueID(CONSTANT.AssessmentPdfTable, CONSTANT.ReceiptDigits, assessment_pdf, "assessment_pdf_id")
+
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+	//receipt := map[string]string{}
+
+	response["media_url"] = CONFIG.MediaURL
+	response["pdf_name"] = fileName
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

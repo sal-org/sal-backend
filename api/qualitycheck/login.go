@@ -15,8 +15,22 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.QualityCheckLoginIDAndPassword)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get admin details
-	qualitycheck, status, ok := DB.SelectSQL(CONSTANT.QualityCheckTable, []string{"*"}, map[string]string{"username": r.FormValue("username"), "password": UTIL.GetStringMD5Hash(r.FormValue("password"))})
+	qualitycheck, status, ok := DB.SelectSQL(CONSTANT.QualityCheckTable, []string{"*"}, map[string]string{"username": body["username"], "password": UTIL.GetStringMD5Hash(body["password"])})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

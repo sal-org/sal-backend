@@ -34,14 +34,14 @@ func SendNotification(heading, content, userID, personType, sendAt, tagID string
 	notification["status"] = CONSTANT.NotificationActive
 	notification["onesignal_id"] = GetNotificationID(userID, personType)
 
-	notification_status := CheckNotificationEnableORDisable(userID, personType)
+	notification_status, usertype := CheckNotificationEnableORDisable(userID, personType)
 
 	if len(notification["onesignal_id"]) > 0 && notification_status == "0" {
 		notification["notification_status"] = CONSTANT.NotificationInProgress
 	} else {
 		// set notification sent status as sent if no onesignal id is available
 		notification["notification_status"] = CONSTANT.NotificationSent
-		sendNotification(heading, content, notification["onesignal_id"], sendAt)
+		sendNotification(heading, content, notification["onesignal_id"], sendAt, usertype)
 
 	}
 	notification["created_at"] = GetCurrentTime().String()
@@ -64,24 +64,32 @@ func GetNotificationID(id string, idType string) string {
 	return ""
 }
 
-func CheckNotificationEnableORDisable(id, idType string) string {
+func CheckNotificationEnableORDisable(id, idType string) (string, string) {
 	switch idType {
 	case CONSTANT.CounsellorType:
-		return DB.QueryRowSQL("select notification_status from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", id)
+		return DB.QueryRowSQL("select notification_status from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", id), "1"
 	case CONSTANT.ListenerType:
-		return DB.QueryRowSQL("select notification_status from "+CONSTANT.ListenersTable+" where listener_id = ?", id)
+		return DB.QueryRowSQL("select notification_status from "+CONSTANT.ListenersTable+" where listener_id = ?", id), "1"
 	case CONSTANT.ClientType:
-		return DB.QueryRowSQL("select notification_status from "+CONSTANT.ClientsTable+" where client_id = ?", id)
+		return DB.QueryRowSQL("select notification_status from "+CONSTANT.ClientsTable+" where client_id = ?", id), "0"
 	case CONSTANT.TherapistType:
-		return DB.QueryRowSQL("select notification_status from "+CONSTANT.TherapistsTable+" where therapist_id = ?", id)
+		return DB.QueryRowSQL("select notification_status from "+CONSTANT.TherapistsTable+" where therapist_id = ?", id), "1"
 	}
-	return ""
+	return "", ""
 }
 
-func sendNotification(heading, content, notificationID, sentAt string) {
+func sendNotification(heading, content, notificationID, sentAt, usertype string) {
 	// sent to onesignal
+	var app_id string
+
+	if usertype == "1" {
+		app_id = CONFIG.OneSignalAppIDForTherapist
+	} else {
+		app_id = CONFIG.OneSignalAppIDForClient
+	}
+
 	data := MODEL.OneSignalNotificationData{
-		AppID:            CONFIG.OneSignalAppID,
+		AppID:            app_id,
 		Headings:         map[string]string{"en": heading},
 		Contents:         map[string]string{"en": content},
 		IncludePlayerIDs: []string{notificationID},

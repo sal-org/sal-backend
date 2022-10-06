@@ -1258,6 +1258,24 @@ paths:
       summary: Add client mood
       tags:
       - Client Mood
+  /client/mood/content:
+    get:
+      parameters:
+      - description: Logged in user ID to get mood liked content
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get mood content
+      tags:
+      - Client Mood
   /client/mood/history:
     get:
       parameters:
@@ -1816,14 +1834,27 @@ paths:
       summary: Add counsellor assessment
       tags:
       - Counsellor Assessment
+  /counsellor/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Counsellor Assessment
   /counsellor/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in counsellor ID
         in: query
         name: counsellor_id
@@ -1836,7 +1867,7 @@ paths:
           description: ""
       security:
       - JWTAuth: []
-      summary: Get assessment history
+      summary: GET counsellor assessment
       tags:
       - Counsellor Assessment
   /counsellor/assessments:
@@ -2089,6 +2120,10 @@ paths:
         name: counsellor_id
         required: true
         type: string
+      - description: Order by - 1(asc), 2(desc) - should be sent along with sort_by
+        in: query
+        name: order_by
+        type: string
       - description: Page number
         in: query
         name: page
@@ -2336,14 +2371,27 @@ paths:
       summary: Add listener assessment
       tags:
       - Listener Assessment
+  /listener/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Listener Assessment
   /listener/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in listener ID
         in: query
         name: listener_id
@@ -2834,14 +2882,27 @@ paths:
       summary: Add therapist assessment
       tags:
       - Therapist Assessment
+  /therapist/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Therapist Assessment
   /therapist/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in therapist ID
         in: query
         name: therapist_id
@@ -3106,6 +3167,10 @@ paths:
         in: query
         name: therapist_id
         required: true
+        type: string
+      - description: Order by - 1(asc), 2(desc) - should be sent along with sort_by
+        in: query
+        name: order_by
         type: string
       - description: Page number
         in: query

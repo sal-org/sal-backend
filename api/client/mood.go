@@ -82,7 +82,6 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 			moodResultID,
 		)
 
-		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 	}
 
 	response["mood_result_id"] = moodResultID
@@ -124,4 +123,49 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 
 	response["mood_results"] = moodResults
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// MoodContent godoc
+// @Tags Client Mood
+// @Summary Get mood content
+// @Router /client/mood/content [get]
+// @Param user_id query string true "Logged in user ID to get mood liked content"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func ListMoodContent(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	mood_id, status, ok := DB.SelectProcess("select * from "+CONSTANT.MoodResultsTable+" where client_id = ?  and status = 1 order by created_at desc limit 20", r.FormValue("user_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where mood_id = ? and training = 0 and status = 1 order by created_at desc limit 20", mood_id[0]["mood_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get liked content ids
+	contentLiked, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["mood_content"] = contents
+	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(contentLiked, "content_id")
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

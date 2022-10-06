@@ -324,6 +324,22 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 	)
 
+	// send appointment reminder notification to therapist before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentFollowUpSessionReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentFollowUpRemiderClientContent,
+			map[string]string{
+				"###client_name###":   client[0]["first_name"],
+				"###therapistname###": counsellor[0]["first_name"],
+			},
+		),
+		appointmentSlot[0]["counsellor_id"],
+		counsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+	)
+
 	// send appointment booking notification to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentFollowUpSessionClientHeading,
@@ -351,7 +367,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		),
 		appointmentSlot[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 	)
 
@@ -594,7 +610,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		r.FormValue("appointment_id"),
 	)
 
@@ -649,7 +665,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		r.FormValue("appointment_id"),
 	)
 

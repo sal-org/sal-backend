@@ -41,8 +41,10 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	).Methods("GET")
 	counsellorRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
 	counsellorRoutes.HandleFunc("/assessment/history", AssessmentHistory).Queries(
-		"assessment_id", "{assessment_id}",
 		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+	counsellorRoutes.HandleFunc("/assessment/download", AssessmentDownload).Queries(
+		"assessment_result_id", "{assessment_result_id}",
 	).Methods("GET")
 
 	// event
