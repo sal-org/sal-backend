@@ -119,7 +119,7 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 			StorageConfig: Model.StorageConfigModel{
 				AccessKey:      CONFIG.AWSAccesKey,
 				Region:         14,
-				Bucket:         "clove-cloud-recording",
+				Bucket:         CONFIG.S3BUCKETAGORA,
 				SecretKey:      CONFIG.AWSSecretKey,
 				Vendor:         1,
 				FileNamePrefix: []string{"recordingfile"},
@@ -152,19 +152,22 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 	}
 	defer res.Body.Close()
 
-	bodyy, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
-	}
-	mapp := make(map[string]string)
+	var result Model.AgoraCallStartResponse
+	json.NewDecoder(res.Body).Decode(&result)
 
-	err = json.Unmarshal(bodyy, &mapp)
-	if err != nil {
-		return "", err
-	}
+	// bodyy, err := ioutil.ReadAll(res.Body)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return "", err
+	// }
+	// mapp := make(map[string]string)
 
-	return string(mapp["sid"]), nil
+	// err = json.Unmarshal(bodyy, &mapp)
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	return result.Sid, nil
 
 }
 
@@ -199,30 +202,85 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, s
 	req.Header.Add("Content-Type", "application/json")
 
 	// Send HTTP request
-	res, err := client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", "", err
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	bodyy, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return "", "", err
-	}
+	var result Model.AgoraCallStopResponseModel
+	json.NewDecoder(resp.Body).Decode(&result)
 
-	var mapp Model.AgoraFileNameModel
+	codeStatus, _ := CallStatus(resourceid, sid)
+	fmt.Println(codeStatus)
+	// fmt.Println(result)
+	// b, _ := json.Marshal(result)
+	// fmt.Println(string(b))
+
+	// bodyy, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return "", "", err
+	// }
+	// fmt.Println(string(bodyy))
+
+	// var mapp Model.AgoraCallStopResponseModel
 	var fileNameInMP4, fileNameInM3U8 string
 
-	err = json.Unmarshal(bodyy, &mapp)
-	if err != nil {
-		fmt.Println("eerror")
-		return "", "", err
-	}
+	// err = json.Unmarshal(b, &mapp)
+	// if err != nil {
+	// 	fmt.Println("eerror")
+	// 	return "", "", err
+	// }
 
-	if mapp.Code == 200 {
-		fileNameInMP4 = mapp.Body.ServerResponse.FileList[0].FileName
-		fileNameInM3U8 = mapp.Body.ServerResponse.FileList[1].FileName
+	// fmt.Println(mapp)
+
+	if len(result.ServerResponse.FileList[0].FileName) == 0 {
+		fileNameInM3U8 = ""
+		fileNameInMP4 = ""
+	} else {
+		fileNameInMP4 = result.ServerResponse.FileList[0].FileName
+		// fmt.Println(fileNameInMP4)
+		fileNameInM3U8 = result.ServerResponse.FileList[1].FileName
+		// fmt.Println(fileNameInM3U8)
 	}
 
 	return fileNameInMP4, fileNameInM3U8, nil
+}
+
+func CallStatus(resourceid string, sid string) (Model.AgoraCallStatus, error) {
+
+	customerKey := CONFIG.AGORA_Customer_Key
+	// Customer secret
+	customerSecret := CONFIG.AGORA_Customer_Secret
+
+	// Concatenate customer key and customer secret and use base64 to encode the concatenated string
+	plainCredentials := customerKey + ":" + customerSecret
+	base64Credentials := base64.StdEncoding.EncodeToString([]byte(plainCredentials))
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", CONSTANT.AgoraURL+"/apps/"+CONFIG.AGORA_APP_ID+"/cloud_recording/resourceid/"+resourceid+"/sid/"+sid+"/mode/mix/query", nil)
+
+	if err != nil {
+		return Model.AgoraCallStatus{}, err
+	}
+	// Add Authorization header
+	req.Header.Add("Authorization", "Basic "+base64Credentials)
+	req.Header.Add("Content-Type", "application/json")
+
+	// Send HTTP request
+	resp, err := client.Do(req)
+	if err != nil {
+		return Model.AgoraCallStatus{}, err
+	}
+	defer resp.Body.Close()
+
+	var result Model.AgoraCallStatus
+	json.NewDecoder(resp.Body).Decode(&result)
+	// // b, _ := json.Marshal(result)
+	// bodyBytes, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	//     return "", err
+	// }
+	// result := string(bodyBytes)
+	return result, nil
 }

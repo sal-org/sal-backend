@@ -1734,6 +1734,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -1768,6 +1773,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:
@@ -2271,6 +2281,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2305,6 +2320,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:
@@ -2782,6 +2802,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2816,6 +2841,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:

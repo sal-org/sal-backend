@@ -310,6 +310,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 // @Summary Start an appointment
 // @Router /therapist/appointment/start [put]
 // @Param appointment_id query string true "Appointment ID to be started"
+// @Param uid query string true "User ID to be started"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -343,6 +344,38 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(agora) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if agora[0]["uid"] == r.FormValue("uid") {
+
+		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+		if err != nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"agora_id": agora[0]["agora_id"],
+			},
+			map[string]string{
+				"sid":         sid,
+				"status":      CONSTANT.AgoraCallStart1,
+				"modified_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+
+	}
+
 	// update appointment as started
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
 		map[string]string{
@@ -362,6 +395,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 // @Summary End an appointment
 // @Router /therapist/appointment/end [put]
 // @Param appointment_id query string true "Appointment ID to be ended"
+// @Param uid query string true "User ID to be started"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -393,6 +427,43 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	if !strings.EqualFold(therapistType, CONSTANT.TherapistType) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if agora[0]["uid"] == r.FormValue("uid") {
+		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+		if err != nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"fileNameInMp4":  fileNameInMP4,
+				"fileNameInM3U8": fileNameInM3U8,
+				"status":         CONSTANT.AgoraCallStop1,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
+
+		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"counsellor_mp4": fileNameInMP4,
+				"status":         CONSTANT.QualityCheckLinkInsert,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
+
 	}
 
 	// update appointment as completed

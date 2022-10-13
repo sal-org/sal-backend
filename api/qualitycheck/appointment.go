@@ -87,7 +87,7 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 
 	response["appointments"] = appointments
 	// response["appointments_count"] = appointmentsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLFORAGORA
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 

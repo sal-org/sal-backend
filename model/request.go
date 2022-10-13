@@ -559,24 +559,44 @@ type AgoraCallStopModel struct {
 	ClientRequest ClientRequestForStopCall `json:"clientRequest"`
 }
 
-type AgoraFileNameModel struct {
-	Code int `json:"Code"`
-	Body struct {
-		ResourceID     string `json:"resourceId"`
-		Sid            string `json:"sid"`
-		ServerResponse struct {
-			FileListMode string `json:"fileListMode"`
-			FileList     []struct {
-				FileName       string `json:"fileName"`
-				TrackType      string `json:"trackType"`
-				UID            string `json:"uid"`
-				MixedAllUser   bool   `json:"mixedAllUser"`
-				IsPlayable     bool   `json:"isPlayable"`
-				SliceStartTime int64  `json:"sliceStartTime"`
-			} `json:"fileList"`
-			UploadingStatus string `json:"uploadingStatus"`
-		} `json:"serverResponse"`
-	} `json:"Body"`
+type AgoraCallStartResponse struct {
+	Sid        string `json:"sid"`
+	ResourceID string `json:"resourceId"`
+}
+
+type AgoraCallStatus struct {
+	ResourceID     string `json:"resourceId"`
+	Sid            string `json:"sid"`
+	ServerResponse struct {
+		FileListMode string `json:"fileListMode"`
+		FileList     []struct {
+			FileName       string `json:"fileName"`
+			TrackType      string `json:"trackType"`
+			UID            string `json:"uid"`
+			MixedAllUser   bool   `json:"mixedAllUser"`
+			IsPlayable     bool   `json:"isPlayable"`
+			SliceStartTime int64  `json:"sliceStartTime"`
+		} `json:"fileList"`
+		Status         int   `json:"status"`
+		Slicestarttime int64 `json:"sliceStartTime"`
+	} `json:"serverResponse"`
+}
+
+type AgoraCallStopResponseModel struct {
+	ResourceID     string `json:"resourceId"`
+	Sid            string `json:"sid"`
+	ServerResponse struct {
+		FileListMode string `json:"fileListMode"`
+		FileList     []struct {
+			FileName       string `json:"fileName"`
+			TrackType      string `json:"trackType"`
+			UID            string `json:"uid"`
+			MixedAllUser   bool   `json:"mixedAllUser"`
+			IsPlayable     bool   `json:"isPlayable"`
+			SliceStartTime int64  `json:"sliceStartTime"`
+		} `json:"fileList"`
+		UploadingStatus string `json:"uploadingStatus"`
+	} `json:"serverResponse"`
 }
 
 type EmailBodyMessageModel struct {

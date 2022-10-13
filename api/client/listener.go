@@ -26,10 +26,10 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get listener details
 	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type", "age_group"}, map[string]string{"listener_id": r.FormValue("listener_id")})

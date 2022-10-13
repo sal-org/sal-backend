@@ -26,9 +26,11 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	).Methods("DELETE")
 	counsellorRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 	counsellorRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 	counsellorRoutes.HandleFunc("/appointment/comment", CounsellorComment).Queries(
 		"appointment_id", "{appointment_id}",

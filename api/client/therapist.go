@@ -29,10 +29,10 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get therapist details
 	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})

@@ -1427,10 +1427,10 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 	var roleStr, agora_token, uidStr, channelName string
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	uidStr = generateRandomID()
 
@@ -1592,14 +1592,12 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
-	var sid string
-	var err error
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -1624,30 +1622,9 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if agora[0]["uid"] == r.FormValue("uid") {
-
-		sid, err = UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
-		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
-		}
-
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"agora_id": agora[0]["agora_id"],
-			},
-			map[string]string{
-				"sid":         sid,
-				"status":      CONSTANT.AgoraCallStart1,
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
-
-	}
-
 	if agora[0]["uid1"] == r.FormValue("uid") {
 
-		sid, err = UTIL.AgoraRecordingCallStart(agora[0]["uid1"], agora[0]["appointment_id"], agora[0]["token1"], agora[0]["resource_id1"])
+		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid1"], agora[0]["appointment_id"], agora[0]["token1"], agora[0]["resource_id1"])
 		if err != nil {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
 			return
@@ -1695,10 +1672,10 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -1718,36 +1695,13 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if agora[0]["uid"] == r.FormValue("uid") {
-		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
-		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
-		}
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"fileNameInMp4":  fileNameInMP4,
-				"fileNameInM3U8": fileNameInM3U8,
-				"status":         CONSTANT.AgoraCallStop1,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
+	// codeStatus, err := UTIL.CallStatus(agora[0]["resource_id1"], agora[0]["sid1"])
+	// if err != nil {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "Internal Server Error", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"counsellor_mp4": fileNameInMP4,
-				"status":         CONSTANT.QualityCheckLinkInsert,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
-
-	}
+	// fmt.Println(codeStatus)
 
 	if agora[0]["uid1"] == r.FormValue("uid") {
 		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid1"], agora[0]["appointment_id"], agora[0]["resource_id1"], agora[0]["sid1"])

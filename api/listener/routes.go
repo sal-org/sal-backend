@@ -26,9 +26,11 @@ func LoadListenerRoutes(router *mux.Router) {
 	).Methods("DELETE")
 	listenerRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 	listenerRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 
 	// assessment
