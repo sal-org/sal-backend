@@ -59,7 +59,7 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get last 10 counsellor apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and a.comment != '' order by a.modified_at desc limit 10 ", r.FormValue("counsellor_id"))
+	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" order by a.modified_at desc limit 10 ", r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -619,55 +619,55 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}*/
 
 	// send messsage to counsellor for Appointment Confirmation
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-			map[string]string{
-				"###counsellor_name###": counsellor[0]["first_name"],
-				"###client_name###":     client[0]["first_name"],
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###counsellor_name###": counsellor[0]["first_name"],
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
-	dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
+	// dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
 
-	timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
+	// timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
 
 	// send messsage to client for Appointment Confirmation
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentConfirmationTextMessage,
-			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###counsellor_name###": counsellor[0]["first_name"],
-				"###date###":            dateFormat,
-				"###time###":            timeFormat,
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentConfirmationTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###counsellor_name###": counsellor[0]["first_name"],
+	// 			"###date###":            dateFormat,
+	// 			"###time###":            timeFormat,
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// Send to Payment SMS to client
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientPaymentConfirmationTextMeassge,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###amount###":      invoiceforemail[0]["paid_amount"],
-				"###bought###":      order[0]["slots_bought"],
-				"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientPaymentConfirmationTextMeassge,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 			"###amount###":      invoiceforemail[0]["paid_amount"],
+	// 			"###bought###":      order[0]["slots_bought"],
+	// 			"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	emaildata := Model.EmailBodyMessageModel{
 		Name: counsellor[0]["first_name"],

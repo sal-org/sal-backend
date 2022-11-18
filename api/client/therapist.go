@@ -634,55 +634,55 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	// 	notificationContent = CONSTANT.Client5AppointmentBookCounsellorContent
 	// }
 
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-			map[string]string{
-				"###counsellor_name###": therapist[0]["first_name"],
-				"###client_name###":     client[0]["first_name"],
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		therapist[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###counsellor_name###": therapist[0]["first_name"],
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	therapist[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
-	dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
+	// dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
 
-	timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
+	// timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
 
 	// send messsage to client for Appointment Confirmation
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentConfirmationTextMessage,
-			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###counsellor_name###": therapist[0]["first_name"],
-				"###date###":            dateFormat,
-				"###time###":            timeFormat,
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentConfirmationTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###counsellor_name###": therapist[0]["first_name"],
+	// 			"###date###":            dateFormat,
+	// 			"###time###":            timeFormat,
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// Send to Payment SMS to client
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientPaymentConfirmationTextMeassge,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###amount###":      invoiceforemail[0]["paid_amount"],
-				"###bought###":      order[0]["slots_bought"],
-				"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientPaymentConfirmationTextMeassge,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 			"###amount###":      invoiceforemail[0]["paid_amount"],
+	// 			"###bought###":      order[0]["slots_bought"],
+	// 			"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// Appointment Booked target Counsellor
 

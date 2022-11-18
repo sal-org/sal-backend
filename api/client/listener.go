@@ -429,19 +429,19 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-			map[string]string{
-				"###counsellor_name###": listener[0]["first_name"],
-				"###client_name###":     client[0]["first_name"],
-				"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		listener[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###counsellor_name###": listener[0]["first_name"],
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	listener[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

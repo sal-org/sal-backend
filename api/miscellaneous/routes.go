@@ -22,6 +22,12 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// categories of content
 	router.HandleFunc("/content-category", ListContentCategory).Methods("GET")
 
+	// counsellor account delete
+	router.HandleFunc("/delete-user", DeleteUserProfile).Queries(
+		"user_id", "{user_id}",
+		"type", "{type}",
+	).Methods("DELETE")
+
 	// counsellor content
 	router.HandleFunc("/counsellor-content", ListCounsellorContent).Queries(
 		"therapist_id", "{therapist_id}",

@@ -153,7 +153,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener["about"] = body["about"]
 	listener["timezone"] = body["timezone"]
 	listener["device_id"] = body["device_id"]
-	listener["status"] = CONSTANT.ListenerActive
+	listener["status"] = CONSTANT.ListenerNotApproved
 	listener["notification_status"] = CONSTANT.NotificationActive
 	listener["last_login_time"] = UTIL.GetCurrentTime().String()
 	listener["created_at"] = UTIL.GetCurrentTime().String()

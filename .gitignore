@@ -10,6 +10,7 @@ build.sh
 Buildfile
 Dockerrun.aws.json
 Procfile
+Dockerfile
 
 
 

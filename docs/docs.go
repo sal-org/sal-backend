@@ -2712,6 +2712,43 @@ var doc = `{
                 }
             }
         },
+        "/delete-user": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "delete User details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "1(counsellor)/2(listener)/3(Client)/4(therapist)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/language": {
             "get": {
                 "security": [

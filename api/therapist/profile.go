@@ -163,7 +163,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["bank_name"] = body["bank_name"]
 	therapist["bank_account_type"] = body["bank_account_type"]
 	therapist["pan"] = body["pan"]
-	therapist["status"] = CONSTANT.TherapistActive
+	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["notification_status"] = CONSTANT.NotificationActive
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
 	therapist["created_at"] = UTIL.GetCurrentTime().String()
@@ -395,6 +395,11 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["ifsc"]) > 0 {
 		therapist["ifsc"] = body["ifsc"]
 	}
+
+	if len(body["payee_name"]) > 0 {
+		therapist["payee_name"] = body["payee_name"]
+	}
+
 	if len(body["branch_name"]) > 0 {
 		therapist["branch_name"] = body["branch_name"]
 	}

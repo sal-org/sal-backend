@@ -162,7 +162,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["bank_account_type"] = body["bank_account_type"]
 	counsellor["pan"] = body["pan"]
 	counsellor["device_id"] = body["device_id"]
-	counsellor["status"] = CONSTANT.CounsellorActive
+	counsellor["status"] = CONSTANT.CounsellorNotApproved
 	counsellor["notification_status"] = CONSTANT.NotificationActive
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
@@ -384,6 +384,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["ifsc"]) > 0 {
 		counsellor["ifsc"] = body["ifsc"]
+	}
+	if len(body["payee_name"]) > 0 {
+		counsellor["payee_name"] = body["payee_name"]
 	}
 	if len(body["branch_name"]) > 0 {
 		counsellor["branch_name"] = body["branch_name"]

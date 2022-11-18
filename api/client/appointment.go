@@ -33,9 +33,18 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+	// var localTime int
+	// timeNow := UTIL.GetCurrentTime().Local()
+	// if timeNow.Minute() >= 30 {
+	// 	localTime = timeNow.Hour()*2 - 1
+	// } else {
+	// 	localTime = timeNow.Hour() * 2
+	// }
+	// fmt.Println(localTime)
+	// local := strconv.Itoa(localTime)
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"'order by date asc", r.FormValue("client_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -431,19 +440,19 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-			map[string]string{
-				"###counsellor_name###": counsellor[0]["first_name"],
-				"###client_name###":     client[0]["first_name"],
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###counsellor_name###": counsellor[0]["first_name"],
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -684,32 +693,32 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Send to Client
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRescheduleClientTextMeassge,
-			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###counsellor_name###": counsellor[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentRescheduleClientTextMeassge,
+	// 		map[string]string{
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###counsellor_name###": counsellor[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	// send to counsellor
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRescheduleClientToCounsellorTextMeassge,
-			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###counsellor_name###": "navigatelink", // app link
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentRescheduleClientToCounsellorTextMeassge,
+	// 		map[string]string{
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###counsellor_name###": "navigatelink", // app link
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -927,31 +936,31 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Client Cancel the Appointment to send text message to counsellor
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentCancellationTextMessage,
-			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###slot_bought###":     "1",
-				"###counsellor_name###": counsellor[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentCancellationTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###slot_bought###":     "1",
+	// 			"###counsellor_name###": counsellor[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -1089,31 +1098,31 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Client Cancel the Appointment to send text message to counsellor
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentCancellationTextMessage,
-			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###slot_bought###":     appointmentSlots[0]["slots_remaining"],
-				"###counsellor_name###": counsellor[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentCancellationTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###":     client[0]["first_name"],
+	// 			"###slot_bought###":     appointmentSlots[0]["slots_remaining"],
+	// 			"###counsellor_name###": counsellor[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

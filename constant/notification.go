@@ -61,7 +61,7 @@ const (
 	CounsellorEventReminderCounsellorContent     = "Your event will start in 15 min. Please check your internet connectivity and get ready."
 	CounsellorAccountSignupCounsellorContent     = "Our offline team will contact you shortly."
 	ClientAppointmentScheduleCounsellorContent   = "Your session is confirmed ###Date### and ###Time###. Check 'Booking section' for details. "
-	ClientAppointmentRescheduleCounsellorContent = "Your Client has rescheduled a current booking. Please click here and view the change under 'Booking section"
+	ClientAppointmentRescheduleCounsellorContent = "Appointment has been rescheduled. Please click here and view the change in the 'Booking section' for details"
 	ClientAppointmentCancelCounsellorContent     = "Your scheduled session with ###client_name### for ###date_time### has been cancelled by the client"
 	Client1AppointmentBookCounsellorContent      = "Payment of Rs. ###paid_amount### has been successful. You can manage your account anytime, anywhere from your phone. Click on 'My sessions' to view details "
 	Client3AppointmentBookCounsellorContent      = "Hi. ###client_name### has made a payment of Rs. ###paid_amount### for 3 consultation sessions with you.  Manage your account anytime, anywhere from your phone. Click on 'My Sessions' to view Date and Time."
