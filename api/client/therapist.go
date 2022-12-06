@@ -35,7 +35,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "multiple_sessions", "education", "experience", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -46,7 +46,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist languages
-	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
+	therapistLang, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -74,7 +74,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["therapist"] = therapist[0]
-	response["languages"] = languages
+	response["languages"] = therapistLang
 	response["topics"] = topics
 	response["reviews"] = reviews
 	response["contents"] = contents
@@ -336,6 +336,12 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// verifyPaymentSignature := UTIL.GenerateSignature(body["signature"], body["order_id"], body["payment_id"])
+	// if !verifyPaymentSignature {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
 	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
 	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
@@ -474,12 +480,13 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		invoiceID,
 	)
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), appointmentID,
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -488,13 +495,14 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###clientname###":    client[0]["first_name"],
-				"###therapistname###": therapist[0]["first_name"],
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
@@ -510,6 +518,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		invoiceID,
 	)
 
@@ -574,7 +583,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": therapist[0]["first_name"],
-				"###date_time###":     UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":     UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
@@ -588,6 +597,44 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
+	// Send to appointment Reminder SMS to client
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###userName###":  therapist[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// Send to appointment Reminder SMS to counsellor
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###userName###":  client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		therapist[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
 	// send appointment booking notification to therapist
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
@@ -595,12 +642,13 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
 				"###Date###": order[0]["date"],
-				"###Time###": UTIL.GetTimeFromTimeSlot(order[0]["time"]),
+				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.TherapistType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		appointmentID,
 	)
 
@@ -608,15 +656,16 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###clientname###": client[0]["first_name"],
-				"###time###":       UTIL.GetTimeFromTimeSlot(order[0]["time"]),
+				"###user_name###": therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.TherapistType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
@@ -692,7 +741,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}

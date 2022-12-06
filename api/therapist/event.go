@@ -400,6 +400,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["user_id"],
 		CONSTANT.TherapistType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		order[0]["event_order_id"],
 	)
 

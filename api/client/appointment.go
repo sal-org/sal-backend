@@ -324,12 +324,13 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentFollowUpSessionCounsellorContent,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		appointmentSlot[0]["counsellor_id"],
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		appointmentID,
 	)
 
@@ -337,15 +338,16 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentFollowUpSessionReminderClientHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFollowUpRemiderClientContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###client_name###":   client[0]["first_name"],
-				"###therapistname###": counsellor[0]["first_name"],
+				"###user_name###": counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		appointmentSlot[0]["counsellor_id"],
 		counsellorType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
@@ -361,6 +363,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		appointmentSlot[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		appointmentID,
 	)
 
@@ -368,15 +371,16 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentFollowUpSessionReminderClientHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFollowUpRemiderClientContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###client_name###":   client[0]["first_name"],
-				"###therapistname###": counsellor[0]["first_name"],
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		appointmentSlot[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
@@ -384,16 +388,55 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentFollowUpSessionReminderClientHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFollowUpRemiderCounsellorContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###time###":        UTIL.GetTimeFromTimeSlot(body["time"]),
+				"###user_name###": counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		appointmentSlot[0]["counsellor_id"],
 		counsellorType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
+	)
+
+	// Send to appointment Reminder SMS to client
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###userName###":  counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// Send to appointment Reminder SMS to counsellor
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###userName###":  client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -405,7 +448,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentFollowUpSessionCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
@@ -426,7 +469,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentFollowUpSessionClientEmailBody,
 			map[string]string{
 				"###therpist_name###": counsellor[0]["first_name"],
-				"###date_time###":     UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":     UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
@@ -591,19 +634,26 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// remove all previous notifications
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
 
+	// remove all previous message for client
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+
+	// remove all previous message for therpist
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+
 	// send appointment reschedule notification to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentRescheduleClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRescheduleClientContent,
 			map[string]string{
-				"###date_time###":     UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":     UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###therapistname###": counsellor[0]["first_name"],
 			},
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -613,14 +663,34 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###clientname###":    client[0]["first_name"],
-				"###therapistname###": counsellor[0]["first_name"],
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+	)
+
+	// Send to appointment Reminder SMS to client
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###userName###":  counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	// send email
@@ -632,7 +702,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRescheduleClientEmailBody,
 			map[string]string{
-				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":      UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###therpists_name###": counsellor[0]["first_name"],
 			},
 		),
@@ -660,6 +730,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["counsellor_id"],
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -667,15 +738,36 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###client_name###": client[0]["first_name"],
+				"###user_name###": counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+	)
+
+	// Send to appointment Reminder SMS to counsellor
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###userName###":  client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	emaildata := Model.EmailBodyMessageModel{
@@ -861,19 +953,26 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// remove all previous notifications
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
 
+	// remove all previous message for client
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+
+	// remove all previous message for therpist
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+
 	// send appointment cancel notification, email to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentCancelClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentCancelClientContent,
 			map[string]string{
-				"###datetime###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###datetime###":      UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###therapistname###": counsellor[0]["first_name"],
 			},
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -905,12 +1004,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelCounsellorContent,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -921,7 +1021,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
@@ -1074,6 +1174,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		appointmentSlots[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_slot_id"),
 	)
 
@@ -1200,6 +1301,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		body["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -1631,6 +1733,17 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":            CONSTANT.AppointmentStarted,
+			"client_started_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
 	if agora[0]["uid1"] == r.FormValue("uid") {
 
 		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid1"], agora[0]["appointment_id"], agora[0]["token1"], agora[0]["resource_id1"])
@@ -1652,17 +1765,6 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":            CONSTANT.AppointmentStarted,
-			"client_started_at": UTIL.GetCurrentTime().String(),
-		},
-	)
-
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -1680,11 +1782,11 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	//check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -1703,6 +1805,17 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":          CONSTANT.AppointmentCompleted,
+			"client_ended_at": UTIL.GetCurrentTime().String(),
+		},
+	)
 
 	// codeStatus, err := UTIL.CallStatus(agora[0]["resource_id1"], agora[0]["sid1"])
 	// if err != nil {
@@ -1742,17 +1855,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	// update appointment as completed
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":          CONSTANT.AppointmentCompleted,
-			"client_ended_at": UTIL.GetCurrentTime().String(),
-		},
-	)
-
 	var counsellor []map[string]string
 	switch appointment[0]["type"] {
 	case CONSTANT.CounsellorType:
@@ -1778,6 +1880,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 

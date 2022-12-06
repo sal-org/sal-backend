@@ -113,6 +113,7 @@ const (
 const (
 	NotificationInProgress = "1"
 	NotificationSent       = "2"
+	NotificationInvalid    = "3"
 )
 
 // order status

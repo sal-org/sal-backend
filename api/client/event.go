@@ -395,6 +395,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["user_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		order[0]["event_order_id"],
 	)
 
@@ -410,6 +411,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["user_id"],
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]).Add(-15*time.Minute).String(),
+		CONSTANT.NotificationInProgress,
 		order[0]["event_order_id"],
 	)
 

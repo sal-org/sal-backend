@@ -89,7 +89,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 
 	// get client details
-	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, photo, date_of_birth, gender from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -216,12 +216,18 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send appointment cancel notification, email to client
-	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "phone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
+	// remove all previous message for client
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+
+	// remove all previous message for therpist
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), therapist[0]["phone"])
 
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
@@ -235,6 +241,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -250,6 +257,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["counsellor_id"],
 		appointment[0]["type"],
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
@@ -355,6 +363,17 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":     CONSTANT.AppointmentStarted,
+			"started_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
 	if agora[0]["uid"] == r.FormValue("uid") {
 
 		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
@@ -375,17 +394,6 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		)
 
 	}
-
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":     CONSTANT.AppointmentStarted,
-			"started_at": UTIL.GetCurrentTime().String(),
-		},
-	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -435,6 +443,17 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":   CONSTANT.AppointmentCompleted,
+			"ended_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
 	if agora[0]["uid"] == r.FormValue("uid") {
 		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 		if err != nil {
@@ -465,17 +484,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		)
 
 	}
-
-	// update appointment as completed
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":   CONSTANT.AppointmentCompleted,
-			"ended_at": UTIL.GetCurrentTime().String(),
-		},
-	)
 
 	// add to therapist payments
 	// get invoice details
@@ -525,6 +533,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 

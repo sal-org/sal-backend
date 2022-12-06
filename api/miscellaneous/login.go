@@ -85,6 +85,8 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		r.FormValue("phone"),
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
 		CONSTANT.InstantSendTextMessage,
 	)
 

@@ -23,6 +23,7 @@ func LoadConfig() {
 	Log, _ = strconv.ParseBool(os.Getenv("LOG"))
 	Migrate, _ = strconv.ParseBool(os.Getenv("MIGRATE"))
 	RazorpayAuth = os.Getenv("RAZORPAY_AUTH")
+	RazorpaySecret = os.Getenv("RAZORPAY_SECRET")
 	OneSignalAppIDForClient = os.Getenv("ONESIGNAL_APP_ID_FOR_CLIENT")
 	OneSignalAppIDForTherapist = os.Getenv("ONESIGNAL_APP_ID_FOR_THERAPIST")
 	S3Bucket = os.Getenv("S3_BUCKET")

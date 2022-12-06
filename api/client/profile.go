@@ -189,7 +189,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send notification to client
-	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), clientID)
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
 
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -217,6 +217,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		r.FormValue("phone"),
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
 		CONSTANT.InstantSendTextMessage,
 	)
 

@@ -19,13 +19,14 @@ const (
 
 // text messages
 const (
-	CounsellorAccountSignupTextMessage = "Hey ###counsellor_name###, the onboarding process has been completed successfully. We will contact you shortly to discuss the next steps. - Team Clove"
-	CounsellorOTPTextMessage           = "Your Clove Mobile App registration OTP is ###otp###. You are now only few steps away from your getting your 1st appointment. - Team Clove"
-	ClientOTPTextMessage               = "###otp### is the OTP to register yourself on the Clove Mobile App. Please do not share it with anyone.  - Team Clove"
-	ClientProfileTitleMessage          = "Hey ###client_name###, welcome to Clove! Access self-care assessments and content, daily mood diaries and book counselling sessions with Listeners & Therapists.  - Team Clove"
-	ListenerOTPTextMessage             = "###otp### is the OTP to register yourself on SAL Mobile App. You are only few steps away from your taking your 1st listening session."
+	CounsellorAccountSignupTextMessage   = "Hey ###counsellor_name###, the onboarding process has been completed successfully. We will contact you shortly to discuss the next steps. - Team Clove"
+	CounsellorOTPTextMessage             = "###otp### is the OTP to access the Mobile App. Please do not share it with anyone. - Team SAL"
+	ClientOTPTextMessage                 = "###otp### is the OTP to register yourself on the Clove Mobile App. Please do not share it with anyone.  - Team Clove"
+	ClientProfileTitleMessage            = "Hey ###client_name###, welcome to Clove! Access self-care assessments and content, daily mood diaries and book counselling sessions with Listeners & Therapists.  - Team Clove"
+	ListenerOTPTextMessage               = "###otp### is the OTP to register yourself on SAL Mobile App. You are only few steps away from your taking your 1st listening session."
+	ClientAppointmentReminderTextMessage = "Hey ###user_name###, just a quick reminder for your upcoming session starting soon at ###time### with ###userName###. - Team Salubrium"
 	// ClientAppointmentScheduleCounsellorTextMessage           = "Hi ###counsellor_name###, you have a new counselling session booked by ###client_name### for ###date_time###. Please visit My sessions in the SAL Mobile app menu for more details."
-	// ClientAppointmentConfirmationTextMessage                 = "Hi ###client_name###, your online appointment with ###counsellor_name### is confirmed for ###date### at ###time###. - SAL Team"
+	// ClientAppointmentConfirmationTextMessage = "Hi ###client_name###, your online appointment with ###counsellor_name### is confirmed for ###date### at ###time###. - SAL Team"
 	// ClientPaymentConfirmationTextMeassge                     = "Hi ###client_name###, payment of INR ###amount### for ###bought### session(s) has been received. Please click ###Aaplink### to access the receipt. - SAL Team"
 	// ClientAppointmentRescheduleClientTextMeassge             = "Hello ###client_name##, your appointment has been re-scheduled successfully with ###counsellor_name###. Please view 'My Sessions' in the Menu section for more details. - SAL Team"
 	// ClientAppointmentCancellationToCounsellorTextMessage     = "Update - Your scheduled session has been cancelled by ###client_name###. - SAL Team"

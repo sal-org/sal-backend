@@ -39,6 +39,7 @@ const (
 	MoodAlreadyAddedMessage                = "Mood already added"
 	OrderNotFoundMessage                   = "Order not found"
 	PaymentCapturedMessage                 = "Payment captured. Order created succefully."
+	PaymentFailedMessage                   = "Payment Failed Status "
 	Reschedule4HoursMinimumMessage         = "Reschedule not avaible now, as appointment is in 4 hours."
 	RescheduleSlotNotAvailableMessage      = "Slot not available in this hour. Reschedule to a different slot"
 	SessionExpiredMessage                  = "Session expired. Login again."

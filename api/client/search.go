@@ -113,9 +113,9 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		therapistArgs = append(therapistArgs, prices[0], prices[1])
 	}
 	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
-		prices := strings.Split(r.FormValue("experience"), ",") // min,max price range
+		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
 		wheres = append(wheres, " experience >= ? and experience <= ? ")
-		therapistArgs = append(counsellorArgs, prices[0], prices[1])
+		therapistArgs = append(therapistArgs, experiences[0], experiences[1])
 	}
 	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" ") // only active therapists
 	therapistSQLQuery += " where " + strings.Join(wheres, " and ")
@@ -183,6 +183,8 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// fmt.Println(counsellors)
 
 	response["counsellors"] = counsellors
 	response["slots"] = filteredCounsellorSlots

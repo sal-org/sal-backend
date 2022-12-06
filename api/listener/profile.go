@@ -194,7 +194,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send account signup notification to listener
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), listenerID)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, listenerID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -204,6 +204,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		body["phone"],
+		UTIL.GetCurrentTime().String(),
+		listenerID,
 		CONSTANT.LaterSendTextMessage,
 	)
 

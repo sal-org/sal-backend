@@ -6,5 +6,5 @@ type OneSignalNotificationData struct {
 	Contents         map[string]string `json:"contents"`
 	IncludePlayerIDs []string          `json:"include_player_ids"`
 	Data             map[string]string `json:"data"`
-	SendAfter        string            `json:"send_after"`
+	// SendAfter        string            `json:"send_after"`
 }

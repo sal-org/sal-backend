@@ -37,7 +37,7 @@ const (
 // notification contents
 const (
 	// client
-	ClientAppointmentRemiderClientContent             = "Hi ###clientname###, your session with ###therapistname### is starting in 15 minutes. Please do find a quite place for yourself to take it."
+	ClientAppointmentRemiderClientContent             = "Hi ###user_name###, your session is starting soon at ###time###. Tap here to know more."
 	ClientAppointmentFollowUpRemiderClientContent     = "Hi ###client_name###, your follow-up session with ###therapistname### is starting in 15 minutes. Please do find a quite place for yourself to take it."
 	ClientAppointmentFollowUpRemiderCounsellorContent = "You have a scheduled follow-up session starting in 15 minutes with ###client_name### at ###time###. Check 'My sessions' within the app for details."
 	ClientEventRemiderClientContent                   = "Event with ###counsellor_name### starts in 15 min. Please check your internet connectivity and get ready."

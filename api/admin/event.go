@@ -156,6 +156,7 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 		body["counsellor_id"],
 		counsellorType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		CONSTANT.NotificationInProgress,
 		r.FormValue("order_id"),
 	)
 

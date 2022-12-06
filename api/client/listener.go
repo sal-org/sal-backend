@@ -331,11 +331,11 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// sent notitifications
 	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), appointmentID,
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -344,13 +344,14 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###clientname###":    client[0]["first_name"],
-				"###therapistname###": listener[0]["first_name"],
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
@@ -363,7 +364,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": listener[0]["first_name"],
-				"###date_time###":     UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":     UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
@@ -384,28 +385,68 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
 				"###Date###": order[0]["date"],
-				"###Time###": UTIL.GetTimeFromTimeSlot(order[0]["time"]),
+				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.ListenerType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		appointmentID,
+	)
+
+	// Send to appointment Reminder SMS to client
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###userName###":  listener[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// Send to appointment Reminder SMS to counsellor
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": listener[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###userName###":  client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		listener[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	// send appointment reminder notification to listener before 15 min
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###clientname###": client[0]["first_name"],
-				"###time###":       UTIL.GetTimeFromTimeSlot(order[0]["time"]),
+				"###user_name###": listener[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.ListenerType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationSent,
 		appointmentID,
 	)
 
@@ -415,7 +456,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
