@@ -330,8 +330,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// sent notitifications
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
@@ -364,7 +364,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": listener[0]["first_name"],
-				"###date_time###":     UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date###":          order[0]["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 	}
@@ -450,25 +451,25 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 	)
 
-	emaildata := Model.EmailBodyMessageModel{
-		Name: listener[0]["first_name"],
-		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
-			},
-		),
-	}
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name: listener[0]["first_name"],
+	// 	Message: UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentBookCounsellorEmailBody,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 			"###date_time###":   UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	// 		},
+	// 	),
+	// }
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// email for counsellor
-	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentBookCounsellorTitle,
-		emailBody,
-		listener[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// // email for counsellor
+	// UTIL.SendEmail(
+	// 	CONSTANT.ClientAppointmentBookCounsellorTitle,
+	// 	emailBody,
+	// 	listener[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// UTIL.SendMessage(
 	// 	UTIL.ReplaceNotificationContentInString(

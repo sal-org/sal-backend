@@ -195,13 +195,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountAfterDiscount := actualAmount - discount
-		if amountAfterDiscount > 0 { // add only if amount paid
+		amountBeforeDiscount := paidAmount + discount
+		if amountBeforeDiscount > 0 { // add only if amount paid
 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
 
-			amountFor1Session := amountAfterDiscount / slotsBought // for 1 counselling session
+			amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
 			cancellationCharges := amountFor1Session * CONSTANT.CounsellorCancellationCharges
 
 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{

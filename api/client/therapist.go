@@ -465,7 +465,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// sent notifications
-	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
+	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send payment success notification, email to client
@@ -583,7 +583,8 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": therapist[0]["first_name"],
-				"###date_time###":     UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date###":          order[0]["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 	}

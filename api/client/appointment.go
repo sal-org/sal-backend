@@ -306,16 +306,16 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", body["appointment_slot_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"counsellor_id": appointmentSlot[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"counsellor_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "timezone"}, map[string]string{"listener_id": appointmentSlot[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "timezone"}, map[string]string{"therapist_id": appointmentSlot[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"therapist_id": appointmentSlot[0]["counsellor_id"]})
 		break
 	}
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone"}, map[string]string{"client_id": appointmentSlot[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": appointmentSlot[0]["client_id"]})
 
 	// send appointment booking notification to therapist
 	UTIL.SendNotification(
@@ -334,22 +334,22 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 	)
 
-	// send appointment reminder notification to therapist before 15 min
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentFollowUpSessionReminderClientHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRemiderClientContent,
-			map[string]string{
-				"###user_name###": counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
-			},
-		),
-		appointmentSlot[0]["counsellor_id"],
-		counsellorType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
-		CONSTANT.NotificationInProgress,
-		appointmentID,
-	)
+	// // send appointment reminder notification to therapist before 15 min
+	// UTIL.SendNotification(
+	// 	CONSTANT.ClientAppointmentFollowUpSessionReminderClientHeading,
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentRemiderClientContent,
+	// 		map[string]string{
+	// 			"###user_name###": counsellor[0]["first_name"],
+	// 			"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+	// 		},
+	// 	),
+	// 	appointmentSlot[0]["counsellor_id"],
+	// 	counsellorType,
+	// 	UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+	// 	CONSTANT.NotificationInProgress,
+	// 	appointmentID,
+	// )
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
@@ -439,37 +439,40 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
+	// filepath_text := "htmlfile/emailmessagebody.html"
+
+	// // send email for counsellor
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name: counsellor[0]["first_name"],
+	// 	Message: UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentFollowUpSessionCounsellorEmailBody,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 			"###date_time###":   UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	// 		},
+	// 	),
+	// }
+
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// // email for counsellor
+	// UTIL.SendEmail(
+	// 	CONSTANT.ClientAppointmentFollowUpSessionCounsellorTitle,
+	// 	emailBody,
+	// 	counsellor[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
+
+	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
 
-	// send email for counsellor
-	emaildata := Model.EmailBodyMessageModel{
-		Name: counsellor[0]["first_name"],
-		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFollowUpSessionCounsellorEmailBody,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
-			},
-		),
-	}
-
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// email for counsellor
-	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentFollowUpSessionCounsellorTitle,
-		emailBody,
-		counsellor[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
-
-	// send email for client
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: client[0]["first_name"],
 		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFollowUpSessionClientEmailBody,
+			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": counsellor[0]["first_name"],
-				"###date_time###":     UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date###":          body["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 	}
@@ -477,7 +480,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
 	// email for client
 	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentFollowUpSessionClientTitle,
+		CONSTANT.ClientAppointmentBookCounsellorTitle,
 		emailBody1,
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
@@ -569,13 +572,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 
 	// update counsellor slots
 	// remove previous slot
-	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
-	// get schedules for a weekday
-	schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// date, _ := time.Parse("2006-01-02", appointment[0]["date"])
+	// // get schedules for a weekday
+	// schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 	// sometimes there will be no schedules. situation will be automatically taken care of below
 
 	// update counsellor availability
@@ -585,7 +588,8 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			"date":          appointment[0]["date"],
 		},
 		map[string]string{
-			appointment[0]["time"]: UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"]), // update availability to the latest one
+			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
+			appointment[0]["time"]: CONSTANT.SlotAvailable, // update availability to the latest one
 		},
 	)
 
@@ -702,7 +706,8 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRescheduleClientEmailBody,
 			map[string]string{
-				"###date_time###":      UTIL.BuildDateTime(body["date"], body["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date###":           body["date"],
+				"###time###":           UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 				"###therpists_name###": counsellor[0]["first_name"],
 			},
 		),
@@ -770,19 +775,19 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
-	emaildata := Model.EmailBodyMessageModel{
-		Name:    counsellor[0]["first_name"],
-		Message: CONSTANT.ClientAppointmentRescheduleCounsellorEmailBody,
-	}
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name:    counsellor[0]["first_name"],
+	// 	Message: CONSTANT.ClientAppointmentRescheduleCounsellorEmailBody,
+	// }
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// email for counsellor
-	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentRescheduleClientTitle,
-		emailBody,
-		counsellor[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// // email for counsellor
+	// UTIL.SendEmail(
+	// 	CONSTANT.ClientAppointmentRescheduleClientTitle,
+	// 	emailBody,
+	// 	counsellor[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// Send to Client
 	// UTIL.SendMessage(
@@ -859,13 +864,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 
 	// update counsellor slots
 	// remove previous slot
-	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
+	// date, _ := time.Parse("2006-01-02", appointment[0]["date"])
 	// get schedules for a weekday
-	schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 	// sometimes there will be no schedules. situation will be automatically taken care of below
 
 	// update counsellor availability
@@ -875,7 +880,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"date":          appointment[0]["date"],
 		},
 		map[string]string{
-			appointment[0]["time"]: UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"]), // update availability to the latest one
+			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
+			appointment[0]["time"]: CONSTANT.SlotAvailable, // update availability to the latest one
 		},
 	)
 
@@ -910,13 +916,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-			amountAfterDiscount := paidAmount - discount
-			if amountAfterDiscount > 0 { // refund only if amount paid
+			// discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+			// amountAfterDiscount := paidAmount - discount
+			if paidAmount > 0 { // refund only if amount paid
 				paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 				refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
 				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-				cancellationCharges := (amountAfterDiscount / slotsBought) * charges
+				cancellationCharges := (paidAmount / slotsBought) * charges
 				refundAmount := (paidAmount / slotsBought) - cancellationCharges // remove from paid amount only, not from amount after discount, as discussed
 				if refundAmount+refundedAmount <= paidAmount {
 					// refunded amount will be less than paid amount
