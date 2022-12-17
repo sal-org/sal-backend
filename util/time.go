@@ -148,6 +148,112 @@ func GetTimeFromTimeSlot(timeSlot string) string {
 	return "00:00:00"
 }
 
+func GetTimeFromTimeSlotIN12Hour(timeSlot string) string {
+	slot, _ := strconv.Atoi(timeSlot)
+	switch slot {
+	case 0:
+		return "12 AM"
+	case 1:
+		return "12:30 AM"
+	case 2:
+		return "01:00 AM"
+	case 3:
+		return "01:30 AM"
+	case 4:
+		return "02:00 AM"
+	case 5:
+		return "02:30 AM"
+	case 6:
+		return "03:00 AM"
+	case 7:
+		return "03:30 AM"
+	case 8:
+		return "04:00 AM"
+	case 9:
+		return "04:30 AM"
+
+	case 10:
+		return "05:00 AM"
+	case 11:
+		return "05:30 AM"
+	case 12:
+		return "06:00 AM"
+	case 13:
+		return "06:30 AM"
+	case 14:
+		return "07:00 AM"
+	case 15:
+		return "07:30 AM"
+	case 16:
+		return "08:00 AM"
+	case 17:
+		return "08:30 AM"
+	case 18:
+		return "09:00 AM"
+	case 19:
+		return "09:30 AM"
+
+	case 20:
+		return "10:00 AM"
+	case 21:
+		return "10:30 AM"
+	case 22:
+		return "11:00 AM"
+	case 23:
+		return "11:30 AM"
+	case 24:
+		return "12:00 PM"
+	case 25:
+		return "12:30 PM"
+	case 26:
+		return "01:00 PM"
+	case 27:
+		return "01:30 PM"
+	case 28:
+		return "02:00 PM"
+	case 29:
+		return "02:30 PM"
+	case 30:
+		return "03:00 PM"
+	case 31:
+		return "03:30 PM"
+	case 32:
+		return "04:00 PM"
+	case 33:
+		return "04:30 PM"
+	case 34:
+		return "05:00 PM"
+	case 35:
+		return "05:30 PM"
+	case 36:
+		return "06:00 PM"
+	case 37:
+		return "06:30 PM"
+	case 38:
+		return "07:00 PM"
+	case 39:
+		return "08:30 PM"
+	case 40:
+		return "08:00 PM"
+	case 41:
+		return "08:30 PM"
+	case 42:
+		return "09:00 PM"
+	case 43:
+		return "09:30 PM"
+	case 44:
+		return "10:00 PM"
+	case 45:
+		return "10:30 PM"
+	case 46:
+		return "11:00 PM"
+	case 47:
+		return "11:30 PM"
+
+	}
+	return "12:00 AM"
+}
+
 /*func BuildDateTimeMintues(date string, time string, mintues string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", date+" "+time+":"+GetTimeFromMintuesSlot(mintues))
 	return t

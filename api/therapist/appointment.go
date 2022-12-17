@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +25,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get upcoming appointments both to be started and started
 	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
@@ -60,6 +67,12 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get past completed appointments
 	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.AppointmentCompleted})
 	if !ok {
@@ -76,7 +89,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 
 	// get client details
-	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, photo, date_of_birth, gender from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -100,6 +113,12 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -176,13 +195,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		actualAmount, _ := strconv.ParseFloat(invoice[0]["actual_amount"], 64)
+		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountAfterDiscount := actualAmount - discount
-		if amountAfterDiscount > 0 { // add only if amount paid
+		amountBeforeDiscount := paidAmount + discount
+		if amountBeforeDiscount > 0 { // add only if amount paid
 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
 
-			amountFor1Session := amountAfterDiscount / slotsBought // for 1 counselling session
+			amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
 			cancellationCharges := amountFor1Session * CONSTANT.CounsellorCancellationCharges
 
 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
@@ -197,51 +216,99 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send appointment cancel notification, email to client
-	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "phone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
+	// remove all previous message for client
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+
+	// remove all previous message for therpist
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), therapist[0]["phone"])
 
 	UTIL.SendNotification(
 		CONSTANT.CounsellorAppointmentCancelClientHeading,
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAppointmentCancelClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-				"###counsellor_name###": therapist[0]["first_name"],
+				"###therapist_name###": therapist[0]["first_name"],
+				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 
-	UTIL.SendEmail(
-		CONSTANT.CounsellorAppointmentCancelClientTitle,
+	UTIL.SendNotification(
+		CONSTANT.CounsellorAppointmentCancelCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.CounsellorAppointmentCancelClientBody,
+			CONSTANT.CounsellorAppointmentCancelCounsellorContent,
 			map[string]string{
+				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),
-		client[0]["email"],
-		CONSTANT.LaterSendEmailMessage,
+		appointment[0]["counsellor_id"],
+		appointment[0]["type"],
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
 	)
 
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.CounsellorAppointmentCancellationToClientTextMessage,
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	// send email for client
+	emaildata := Model.EmailBodyMessageModel{
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentCancelClientBodyEmailBody,
 			map[string]string{
-				"###client_name###": client[0]["first_name"],
+				"###therapist_name###": therapist[0]["first_name"],
+				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.LaterSendTextMessage,
+	}
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.CounsellorAppointmentCancelClientTitle,
+		emailBody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name:    therapist[0]["first_name"],
+		Message: CONSTANT.CounsellorAppointmentCancelCounsellorBodyEmailBody,
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for counsellor
+	UTIL.SendEmail(
+		CONSTANT.CounsellorAppointmentCancelCounsellorTitle,
+		emailBody1,
+		therapist[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.CounsellorAppointmentCancellationToClientTextMessage,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -251,6 +318,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 // @Summary Start an appointment
 // @Router /therapist/appointment/start [put]
 // @Param appointment_id query string true "Appointment ID to be started"
+// @Param uid query string true "User ID to be started"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -258,6 +326,12 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -275,6 +349,17 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	therapistType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	if !strings.EqualFold(therapistType, CONSTANT.TherapistType) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(agora) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -289,6 +374,27 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	if agora[0]["uid"] == r.FormValue("uid") {
+
+		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+		if err != nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"agora_id": agora[0]["agora_id"],
+			},
+			map[string]string{
+				"sid":         sid,
+				"status":      CONSTANT.AgoraCallStart1,
+				"modified_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+
+	}
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -297,6 +403,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 // @Summary End an appointment
 // @Router /therapist/appointment/end [put]
 // @Param appointment_id query string true "Appointment ID to be ended"
+// @Param uid query string true "User ID to be started"
 // @Security JWTAuth
 // @Produce json
 // @Success 200
@@ -304,6 +411,12 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -324,6 +437,12 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// update appointment as completed
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
 		map[string]string{
@@ -334,6 +453,37 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			"ended_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	if agora[0]["uid"] == r.FormValue("uid") {
+		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+		if err != nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"fileNameInMp4":  fileNameInMP4,
+				"fileNameInM3U8": fileNameInM3U8,
+				"status":         CONSTANT.AgoraCallStop1,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
+
+		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"counsellor_mp4": fileNameInMP4,
+				"status":         CONSTANT.QualityCheckLinkInsert,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
+
+	}
 
 	// add to therapist payments
 	// get invoice details
@@ -383,6 +533,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
 	)
 

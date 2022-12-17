@@ -28,8 +28,14 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
 	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "multiple_sessions", "education", "experience", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -40,7 +46,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist languages
-	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
+	therapistLang, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -68,7 +74,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["therapist"] = therapist[0]
-	response["languages"] = languages
+	response["languages"] = therapistLang
 	response["topics"] = topics
 	response["reviews"] = reviews
 	response["contents"] = contents
@@ -88,6 +94,12 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get therapist slots
 	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
@@ -113,6 +125,12 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -276,6 +294,12 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
 	if !ok {
@@ -309,6 +333,12 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	// check if order payment is already captured
 	if !strings.EqualFold(order[0]["status"], CONSTANT.OrderWaiting) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentCapturedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	verifyPaymentSignature := UTIL.GenerateSignature(body["signature"], body["razor_order_id"], body["payment_id"])
+	if !verifyPaymentSignature {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -368,11 +398,44 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	appointment["order_id"] = body["order_id"]
 	appointment["client_id"] = order[0]["client_id"]
 	appointment["counsellor_id"] = order[0]["counsellor_id"]
+	appointment["type"] = order[0]["type"]
 	appointment["date"] = order[0]["date"]
 	appointment["time"] = order[0]["time"]
 	appointment["status"] = CONSTANT.AppointmentToBeStarted
 	appointment["created_at"] = UTIL.GetCurrentTime().String()
 	appointmentID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentsTable, CONSTANT.AppointmentDigits, appointment, "appointment_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellor_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", order[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
+
+	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	client_fullname := client_name[0]["first_name"] + " " + client_name[0]["last_name"]
+
+	qualitycheck_details := map[string]string{}
+	qualitycheck_details["appointment_id"] = appointmentID
+	qualitycheck_details["client_id"] = order[0]["client_id"]
+	qualitycheck_details["client_name"] = client_fullname
+	qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
+	qualitycheck_details["counsellor_name"] = counsellor_fullname
+	qualitycheck_details["type"] = order[0]["type"]
+	qualitycheck_details["date"] = order[0]["date"]
+	qualitycheck_details["time"] = order[0]["time"]
+	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
+	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
+	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -402,23 +465,28 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// sent notifications
-	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
+	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
 
-	// send appointment booking notification to client
+	// send payment success notification, email to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading,
+		CONSTANT.ClientPaymentSucessClientHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleClientContent,
+			CONSTANT.ClientPaymentSucessClientContent,
 			map[string]string{
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-				"###counsellor_name###": therapist[0]["first_name"],
+				"###paid_amount###": order[0]["paid_amount"],
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
-		appointmentID,
+		CONSTANT.NotificationSent,
+		invoiceID,
+	)
+
+	// send appointment booking notification to client
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -427,12 +495,14 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###counsellor_name###": therapist[0]["first_name"],
+				"###user_name###": client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
@@ -443,45 +513,18 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientPaymentSucessClientContent,
 			map[string]string{
 				"###paid_amount###": order[0]["paid_amount"],
-				"###client_name###": client[0]["first_name"],
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		invoiceID,
 	)
 
-	/*UTIL.SendEmail(
-		CONSTANT.ClientPaymentSucessClientTitle,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientPaymentSucessClientBody,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###paid_amount###": order[0]["paid_amount"],
-			},
-		),
-		client[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)*/
-
-	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "created_at"}, map[string]string{"invoice_id": invoiceID})
+	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "coupon_code", "created_at"}, map[string]string{"invoice_id": invoiceID})
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
-
-	/*var sprice, tprice string
-
-	switch order[0]["slots_bought"] {
-	case "1":
-		sprice = therapist[0]["price"]
-		tprice = therapist[0]["price"]
-	case "3":
-		sprice = therapist[0]["multiple_sessions"]
-		tprice = therapist[0]["price_3"]
-	case "5":
-		sprice = therapist[0]["multiple_sessions"]
-		tprice = therapist[0]["price_5"]
-	}*/
 
 	var sprice, tprice, discount, paid_amount string
 
@@ -504,19 +547,20 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	paid_amount = strconv.FormatFloat(paid_Amount, 'f', 2, 64)
 
 	data := Model.EmailDataForPaymentReceipt{
-		Date:         receiptdata,
-		ReceiptNo:    invoiceforemail[0]["id"],
-		ReferenceNo:  invoiceforemail[0]["payment_id"],
-		SPrice:       sprice,
-		Qty:          order[0]["slots_bought"],
-		Total:        tprice,
-		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
-		TPrice:       tprice,
-		Discount:     discount,
-		TotalP:       paid_amount,
+		Date:        receiptdata,
+		ReceiptNo:   invoiceforemail[0]["id"],
+		ReferenceNo: invoiceforemail[0]["payment_id"],
+		SPrice:      sprice,
+		Qty:         order[0]["slots_bought"],
+		Total:       tprice,
+		// SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:   tprice,
+		CouponC:  invoiceforemail[0]["coupon_code"],
+		Discount: discount,
+		TotalP:   paid_amount,
 	}
 
-	filepath := "htmlfile/index.html"
+	filepath := "htmlfile/receiptClove.html"
 
 	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
 	if !ok {
@@ -530,46 +574,67 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	/*UTIL.SendEmail(
-		CONSTANT.ClientPaymentSucessClientTitle,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.SendAReceiptForClient,
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
-				"###Date###":         receiptdata,
-				"###ReceiptNo###":    invoiceforemail[0]["id"],
-				"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
-				"###SPrice###":       sprice,
-				"###Qty###":          order[0]["slots_bought"],
-				"###Total###":        tprice,
-				"###SessionsType###": CONSTANT.AppointmentSessionsTypeForReceipt,
-				"###TPrice###":       tprice,
-				"###Discount###":     invoiceforemail[0]["discount"],
-				"###TotalP###":       invoiceforemail[0]["paid_amount"],
+				"###therpist_name###": therapist[0]["first_name"],
+				"###date###":          order[0]["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientAppointmentBookCounsellorTitle,
+		emailBody1,
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
-	)*/
-
-	/*htmfile := UTIL.ReplaceNotificationContentInString(
-		CONSTANT.SendAReceiptForClient,
-		map[string]string{
-			"###Date###":         receiptdata,
-			"###ReceiptNo###":    invoiceforemail[0]["id"],
-			"###ReferenceNo###":  invoiceforemail[0]["payment_id"],
-			"###SPrice###":       sprice,
-			"###Qty###":          order[0]["slots_bought"],
-			"###Total###":        tprice,
-			"###SessionsType###": CONSTANT.AppointmentSessionsTypeForReceipt,
-			"###TPrice###":       tprice,
-			"###Discount###":     invoiceforemail[0]["discount"],
-			"###TotalP###":       invoiceforemail[0]["paid_amount"],
-		},
 	)
-	//pdfPath := "pdffile/example.pdf"
 
-	// Pdf is generating for receipt
-	UTIL.GeneratePdf(htmfile, pdfPath)*/
+	// Send to appointment Reminder SMS to client
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###userName###":  therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// Send to appointment Reminder SMS to counsellor
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": therapist[0]["first_name"],
+				"###userName###":  client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		therapist[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
 
 	// send appointment booking notification to therapist
 	UTIL.SendNotification(
@@ -577,13 +642,14 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-				"###client_name###": client[0]["first_name"],
+				"###Date###": order[0]["date"],
+				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.TherapistType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		appointmentID,
 	)
 
@@ -591,132 +657,147 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentReminderCounsellorContent,
+			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###client_name###": client[0]["first_name"],
+				"###user_name###": therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.TherapistType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
 
 	// send payment received notification, message to therapist
-	var notificationHeading, notificationContent string
-	switch order[0]["slots_bought"] {
-	case "1":
-		notificationHeading = CONSTANT.Client1AppointmentBookCounsellorHeading
-		notificationContent = CONSTANT.Client1AppointmentBookCounsellorContent
-	case "3":
-		notificationHeading = CONSTANT.Client3AppointmentBookCounsellorHeading
-		notificationContent = CONSTANT.Client3AppointmentBookCounsellorContent
-	case "5":
-		notificationHeading = CONSTANT.Client5AppointmentBookCounsellorHeading
-		notificationContent = CONSTANT.Client5AppointmentBookCounsellorContent
-	}
+	// var notificationHeading, notificationContent string
+	// switch order[0]["slots_bought"] {
+	// case "1":
+	// 	notificationHeading = CONSTANT.Client1AppointmentBookCounsellorHeading
+	// 	notificationContent = CONSTANT.Client1AppointmentBookCounsellorContent
+	// case "3":
+	// 	notificationHeading = CONSTANT.Client3AppointmentBookCounsellorHeading
+	// 	notificationContent = CONSTANT.Client3AppointmentBookCounsellorContent
+	// case "5":
+	// 	notificationHeading = CONSTANT.Client5AppointmentBookCounsellorHeading
+	// 	notificationContent = CONSTANT.Client5AppointmentBookCounsellorContent
+	// }
 
-	UTIL.SendNotification(
-		notificationHeading,
-		UTIL.ReplaceNotificationContentInString(
-			notificationContent,
-			map[string]string{
-				"###paid_amount###": order[0]["paid_amount"],
-				"###client_name###": client[0]["first_name"],
-			},
-		),
-		order[0]["counsellor_id"],
-		CONSTANT.TherapistType,
-		UTIL.GetCurrentTime().String(),
-		invoiceID,
-	)
-
+	// send messsage to therpists for Appointment Confirmation
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
 			map[string]string{
-				"###counsellor_name###": therapist[0]["first_name"],
-				"###client_name###":     client[0]["first_name"],
-				"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
+				"###userName###":  therapist[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		therapist[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
+	// dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
 
-	timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
+	// timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
 
 	// send messsage to client for Appointment Confirmation
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentConfirmationTextMessage,
 			map[string]string{
-				"###client_name###":     client[0]["first_name"],
-				"###counsellor_name###": therapist[0]["first_name"],
-				"###date###":            dateFormat,
-				"###time###":            timeFormat,
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": therapist[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
 		CONSTANT.InstantSendEmailMessage,
 	)
 
 	// Send to Payment SMS to client
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientPaymentConfirmationTextMeassge,
-			map[string]string{
-				"###client_name###": client[0]["first_name"],
-				"###amount###":      invoiceforemail[0]["paid_amount"],
-				"###bought###":      order[0]["slots_bought"],
-				"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		CONSTANT.InstantSendEmailMessage,
-	)
-
-	// Appointment Booked target Client
-	client_data := Model.ClientAppointmentConfirmation{
-		First_Name:      client[0]["first_name"],
-		Counsellor_Name: therapist[0]["first_name"],
-		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-	}
-
-	filepath_text := "htmlfile/Client_Appointment_Book.html"
-
-	emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
-
-	UTIL.SendEmail(
-		"Appointment Booked",
-		emailBody,
-		client[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientPaymentConfirmationTextMeassge,
+	// 		map[string]string{
+	// 			"###client_name###": client[0]["first_name"],
+	// 			"###amount###":      invoiceforemail[0]["paid_amount"],
+	// 			"###bought###":      order[0]["slots_bought"],
+	// 			"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// Appointment Booked target Counsellor
-	counsellor_data := Model.ClientAppointmentConfirmation{
-		First_Name:      therapist[0]["first_name"],
-		Counsellor_Name: client[0]["first_name"],
-		Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+
+	emaildata := Model.EmailBodyMessageModel{
+		Name: therapist[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
+			map[string]string{
+				"###client_name###": client[0]["first_name"],
+				"###date_time###":   UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+			},
+		),
 	}
 
-	filepath2 := "htmlfile/Counsellor_Client_Booking_Confirmation.html"
-
-	emailBody1 := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(counsellor_data, filepath2)
-
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for counsellor
 	UTIL.SendEmail(
-		"Appointment Booked",
-		emailBody1,
+		CONSTANT.ClientAppointmentBookCounsellorTitle,
+		emailBody,
 		therapist[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	response["invoice_id"] = invoiceID
+	// Appointment Booked target Client
+	// client_data := Model.ClientAppointmentConfirmation{
+	// 	First_Name:      client[0]["first_name"],
+	// 	Counsellor_Name: therapist[0]["first_name"],
+	// 	Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	// }
+
+	// filepath_text := "htmlfile/Client_Appointment_Book.html"
+
+	// emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
+
+	// UTIL.SendEmail(
+	// 	"Appointment Booked",
+	// 	emailBody,
+	// 	client[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
+
+	// Appointment Booked target Counsellor
+	// counsellor_data := Model.ClientAppointmentConfirmation{
+	// 	First_Name:      therapist[0]["first_name"],
+	// 	Counsellor_Name: client[0]["first_name"],
+	// 	Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+	// }
+
+	// filepath2 := "htmlfile/Counsellor_Client_Booking_Confirmation.html"
+
+	// emailBody1 := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(counsellor_data, filepath2)
+
+	// UTIL.SendEmail(
+	// 	"Appointment Booked",
+	// 	emailBody1,
+	// 	therapist[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
+
+	// response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

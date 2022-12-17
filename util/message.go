@@ -10,8 +10,13 @@ import (
 	"strings"
 )
 
+func RemoveMessage(tagID, phone string) {
+	// delete any previous message, if any
+	DB.DeleteSQL(CONSTANT.MessagesTable, map[string]string{"tag_id": tagID, "phone": phone})
+}
+
 // SendMessage - send text message using message provider. now : true - send now without background workers
-func SendMessage(text, route, phone string, now bool) {
+func SendMessage(text, route, phone, sent_at, tagID string, now bool) {
 	if strings.Contains(text, "###") { // check if message variables are replaced
 		return
 	}
@@ -21,12 +26,16 @@ func SendMessage(text, route, phone string, now bool) {
 	message["text"] = text
 	message["route"] = route
 	message["phone"] = phone
+	message["tag_id"] = tagID
+	message["send_at"] = sent_at
 	if now {
 		// set message sent status as sent if now is true
 		message["status"] = CONSTANT.MessageSent
+		message["message_status"] = CONSTANT.MessageSent
 		sendMessageCoreFactor(text, route, phone)
 	} else {
 		message["status"] = CONSTANT.MessageInProgress
+		message["message_status"] = CONSTANT.MessageInProgress
 	}
 	message["created_at"] = GetCurrentTime().String()
 	DB.InsertWithUniqueID(CONSTANT.MessagesTable, CONSTANT.MessagesDigits, message, "message_id")

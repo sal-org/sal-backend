@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -15,6 +16,7 @@ import (
 // @Summary Get client profile with email, if signed up already
 // @Router /client [get]
 // @Param email query string true "Email of client - to get details, if signed up already"
+// @Param device_id query string true "Device ID of client - to get details, if signed up already"
 // @Produce json
 // @Success 200
 func ProfileGet(w http.ResponseWriter, r *http.Request) {
@@ -22,8 +24,30 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	if len(r.FormValue("device_id")) < 0 {
+		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"phone": r.FormValue("phone")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("email")}, map[string]string{"device_id": r.FormValue("device_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok = DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -111,10 +135,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// default photo for client and listerner
-	if len(body["photo"]) == 0 || body["photo"] == "string" {
-		body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
-	}
+	// // default photo for client and listerner
+	// if len(body["photo"]) == 0 || body["photo"] == "string" {
+	// 	body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
+	// }
 
 	// add client details
 	client := map[string]string{}
@@ -130,9 +154,16 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive
+	client["notification_status"] = CONSTANT.NotificationActive
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": clientID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -157,10 +188,44 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// send notification to client
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
+
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	emaildata := Model.EmailBodyMessageModel{
+		Name:    body["first_name"],
+		Message: CONSTANT.ClientSignupClientEmailBody,
+	}
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientSignupProfileTitle,
+		emailBody,
+		body["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientProfileTitleMessage,
+			map[string]string{
+				"###client_name###": body["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		r.FormValue("phone"),
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
+		CONSTANT.InstantSendTextMessage,
+	)
+
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 
-	response["client_id"] = clientID
+	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -179,6 +244,12 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)

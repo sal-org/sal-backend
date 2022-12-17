@@ -24,6 +24,12 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get listener details
 	params := map[string]string{}
 	if len(r.FormValue("email")) > 0 {
@@ -129,9 +135,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// default photo for client and listerner
-	if len(body["photo"]) == 0 || body["photo"] == "string" {
-		body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
-	}
+	// if len(body["photo"]) == 0 || body["photo"] == "string" {
+	// 	body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
+	// }
 
 	// add listener details
 	listener := map[string]string{}
@@ -147,7 +153,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener["about"] = body["about"]
 	listener["timezone"] = body["timezone"]
 	listener["device_id"] = body["device_id"]
-	listener["status"] = CONSTANT.ListenerActive
+	listener["status"] = CONSTANT.ListenerNotApproved
+	listener["notification_status"] = CONSTANT.NotificationActive
 	listener["last_login_time"] = UTIL.GetCurrentTime().String()
 	listener["created_at"] = UTIL.GetCurrentTime().String()
 	listenerID, status, ok := DB.InsertWithUniqueID(CONSTANT.ListenersTable, CONSTANT.ListenerDigits, listener, "listener_id")
@@ -168,10 +175,26 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		DB.InsertSQL(CONSTANT.SlotsTable, map[string]string{"counsellor_id": listenerID, "date": UTIL.GetCurrentTime().AddDate(0, 0, i).Format("2006-01-02")})
 	}
 
-	response["listener_id"] = listenerID
+	// Listener details Send with SAL Team
+	listeners, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": listenerID})
+
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(listenerID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(listenerID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// send account signup notification to listener
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), listenerID)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, listenerID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -181,8 +204,15 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		body["phone"],
+		UTIL.GetCurrentTime().String(),
+		listenerID,
 		CONSTANT.LaterSendTextMessage,
 	)
+
+	response["listener"] = listeners[0]
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -200,6 +230,12 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)

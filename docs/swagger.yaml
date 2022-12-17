@@ -389,6 +389,13 @@ definitions:
       phone:
         type: string
     type: object
+  model.NotificationAllowSettingModel:
+    properties:
+      status:
+        type: string
+      userType:
+        type: string
+    type: object
   model.TherapistOrderCreateRequest:
     properties:
       client_id:
@@ -538,12 +545,41 @@ info:
   title: SAL Backend API
   version: "1.0"
 paths:
+  /cancellationreason:
+    put:
+      parameters:
+      - description: Appointment ID to Cancellation Reason
+        in: query
+        name: appointment_id
+        required: true
+        type: string
+      - description: Request Body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CancellationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Cancellation Region Counsellor
+      tags:
+      - Counsellor Cancellation
   /client:
     get:
       parameters:
       - description: Email of client - to get details, if signed up already
         in: query
         name: email
+        required: true
+        type: string
+      - description: Device ID of client - to get details, if signed up already
+        in: query
+        name: device_id
         required: true
         type: string
       produces:
@@ -687,6 +723,11 @@ paths:
         name: type
         required: true
         type: string
+      - description: Counsellor(1) , Client(2)
+        in: query
+        name: user_type
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -770,6 +811,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -841,6 +887,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:
@@ -1231,6 +1282,24 @@ paths:
       summary: Add client mood
       tags:
       - Client Mood
+  /client/mood/content:
+    get:
+      parameters:
+      - description: Logged in user ID to get mood liked content
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get mood content
+      tags:
+      - Client Mood
   /client/mood/history:
     get:
       parameters:
@@ -1447,6 +1516,11 @@ paths:
       - description: OTP entered by client
         in: query
         name: otp
+        required: true
+        type: string
+      - description: Device ID entered by client
+        in: query
+        name: device_id
         required: true
         type: string
       produces:
@@ -1684,6 +1758,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -1718,6 +1797,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:
@@ -1784,14 +1868,27 @@ paths:
       summary: Add counsellor assessment
       tags:
       - Counsellor Assessment
+  /counsellor/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Counsellor Assessment
   /counsellor/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in counsellor ID
         in: query
         name: counsellor_id
@@ -1804,7 +1901,7 @@ paths:
           description: ""
       security:
       - JWTAuth: []
-      summary: Get assessment history
+      summary: GET counsellor assessment
       tags:
       - Counsellor Assessment
   /counsellor/assessments:
@@ -2057,6 +2154,10 @@ paths:
         name: counsellor_id
         required: true
         type: string
+      - description: Order by - 1(asc), 2(desc) - should be sent along with sort_by
+        in: query
+        name: order_by
+        type: string
       - description: Page number
         in: query
         name: page
@@ -2106,6 +2207,29 @@ paths:
       summary: Get counsellor training content
       tags:
       - Counsellor Training
+  /delete-user:
+    delete:
+      parameters:
+      - description: User ID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: 1(counsellor)/2(listener)/3(Client)/4(therapist)
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: delete User details
+      tags:
+      - Miscellaneous
   /language:
     get:
       produces:
@@ -2204,6 +2328,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2238,6 +2367,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:
@@ -2304,14 +2438,27 @@ paths:
       summary: Add listener assessment
       tags:
       - Listener Assessment
+  /listener/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Listener Assessment
   /listener/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in listener ID
         in: query
         name: listener_id
@@ -2564,6 +2711,30 @@ paths:
       summary: Get all moods
       tags:
       - Miscellaneous
+  /notification-status:
+    put:
+      parameters:
+      - description: ClientID/TherapistID/CounsellorID/ListernerID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: User type (counsellor:1/listener:2/client:3/therapists:4)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NotificationAllowSettingModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Update Notification status
+      tags:
+      - Miscellaneous
   /rating-type:
     get:
       produces:
@@ -2678,6 +2849,11 @@ paths:
         name: appointment_id
         required: true
         type: string
+      - description: User ID to be started
+        in: query
+        name: uid
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -2712,6 +2888,11 @@ paths:
       - description: Appointment ID to be started
         in: query
         name: appointment_id
+        required: true
+        type: string
+      - description: User ID to be started
+        in: query
+        name: uid
         required: true
         type: string
       produces:
@@ -2778,14 +2959,27 @@ paths:
       summary: Add therapist assessment
       tags:
       - Therapist Assessment
+  /therapist/assessment/download:
+    get:
+      parameters:
+      - description: Logged in Assessment Result ID
+        in: query
+        name: assessment_result_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      security:
+      - JWTAuth: []
+      summary: Get assessment download
+      tags:
+      - Therapist Assessment
   /therapist/assessment/history:
     get:
       parameters:
-      - description: Assessment ID to get details
-        in: query
-        name: assessment_id
-        required: true
-        type: string
       - description: Logged in therapist ID
         in: query
         name: therapist_id
@@ -3051,6 +3245,10 @@ paths:
         name: therapist_id
         required: true
         type: string
+      - description: Order by - 1(asc), 2(desc) - should be sent along with sort_by
+        in: query
+        name: order_by
+        type: string
       - description: Page number
         in: query
         name: page
@@ -3149,6 +3347,11 @@ paths:
       - description: OTP entered by counsellor/listener/therapist
         in: query
         name: otp
+        required: true
+        type: string
+      - description: Device ID entered by counsellor/listener/therapist
+        in: query
+        name: device_id
         required: true
         type: string
       produces:

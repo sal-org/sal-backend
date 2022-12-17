@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"net/mail"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -74,4 +75,77 @@ func sendSESMail(title, body, email string) {
 	//end email
 	output, err := svc.SendEmail(params)
 	fmt.Println(err, output.String())
+}
+
+// SendEmail - send email using SES. now : true - send now without background workers
+func SendEmailForQuality(title string, body string, emailfrom string, emailto, emailcc, emailbcc []*string, todata string, now bool) {
+	if strings.Contains(title, "###") || strings.Contains(body, "###") { // check if mail variables are replaced
+		return
+	}
+
+	// add data to mails
+	mail := map[string]string{}
+	mail["title"] = title
+	mail["body"] = body
+	mail["email_from"] = emailfrom
+	mail["email_to"] = todata
+	if now {
+		// set mail sent status as sent if now is true
+		mail["status"] = CONSTANT.EmailSent
+		sendSESMailForQualityCheck(title, body, emailfrom, emailto, emailcc, emailbcc)
+	} else {
+		mail["status"] = CONSTANT.EmailInProgress
+	}
+	mail["created_at"] = GetCurrentTime().String()
+	DB.InsertWithUniqueID(CONSTANT.QualityCheckEmailTable, CONSTANT.EmailsDigits, mail, "email_id")
+
+}
+
+func sendSESMailForQualityCheck(title string, body string, emailfrom string, emailto, emailcc, emailbcc []*string) {
+	// start a new aws session
+	sess, err := session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		return
+	}
+
+	// start a new ses session
+	svc := ses.New(sess, &aws.Config{
+		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+		Region:      aws.String("ap-south-1"),
+	})
+
+	params := &ses.SendEmailInput{
+		Destination: &ses.Destination{ // Required
+			CcAddresses:  emailcc,
+			ToAddresses:  emailto,
+			BccAddresses: emailbcc,
+		},
+		Message: &ses.Message{ // Required
+			Body: &ses.Body{ // Required
+				Html: &ses.Content{
+					Data:    aws.String(body), // Required
+					Charset: aws.String("UTF-8"),
+				},
+			},
+			Subject: &ses.Content{ // Required
+				Data:    aws.String(title), // Required
+				Charset: aws.String("UTF-8"),
+			},
+		},
+		Source: aws.String(emailfrom),
+	}
+
+	//end email
+	output, err := svc.SendEmail(params)
+	fmt.Println(err, output.String())
+}
+
+func IsValidEmail(email_id string) string {
+	_, err := mail.ParseAddress(email_id)
+	if err != nil {
+		return ""
+	}
+
+	return email_id
 }

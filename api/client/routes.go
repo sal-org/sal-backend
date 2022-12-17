@@ -45,9 +45,11 @@ func LoadClientRoutes(router *mux.Router) {
 
 	clientRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 	clientRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
+		"uid", "{uid}",
 	).Methods("PUT")
 
 	// assessment
@@ -94,6 +96,7 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/verifyotp", VerifyOTP).Queries(
 		"phone", "{phone}",
 		"otp", "{otp}",
+		"device_id", "{device_id}",
 	).Methods("GET")
 	clientRoutes.Path("/refresh-token").Queries(
 		"client_id", "{client_id}",
@@ -115,6 +118,9 @@ func LoadClientRoutes(router *mux.Router) {
 		"client_id", "{client_id}",
 		"dates", "{dates}",
 	).Methods("GET")
+	clientRoutes.HandleFunc("/mood/content", ListMoodContent).Queries(
+		"user_id", "{user_id}",
+	).Methods("GET")
 
 	// notification
 	clientRoutes.HandleFunc("/notification", NotificationsGet).Queries(
@@ -124,6 +130,7 @@ func LoadClientRoutes(router *mux.Router) {
 	// profile
 	clientRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",
+		"device_id", "{device_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("", ProfileAdd).Methods("POST")
 	clientRoutes.HandleFunc("", ProfileUpdate).Queries(

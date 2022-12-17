@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strconv"
 	"strings"
 
@@ -137,43 +138,208 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(invoice) > 0 {
-		// invoice is available => amount is paid, order is not free
-		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-		refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
-		refundAmount, _ := strconv.ParseFloat(r.FormValue("refund_amount"), 64)
-		if refundAmount <= 0 {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Cant refund less than 0 amount", CONSTANT.ShowDialog, response)
-			return
-		}
-		if refundAmount+refundedAmount <= paidAmount {
-			// refunded amount will be less than paid amount
-			DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
-				"invoice_id":      invoice[0]["invoice_id"],
-				"payment_id":      invoice[0]["payment_id"],
-				"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
-				"status":          CONSTANT.RefundInProgress,
-				"created_at":      UTIL.GetCurrentTime().String(),
-			}, "refund_id")
-		} else {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, strconv.FormatFloat(refundedAmount, 'f', 2, 64)+" has already been refunded from "+invoice[0]["paid_amount"]+". So, "+r.FormValue("refund_amount")+" cant be refunded.", CONSTANT.ShowDialog, response)
-			return
-		}
-	} else {
+
+	if len(invoice) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "No invoice found", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// update appointment status to refunded
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":      CONSTANT.AppointmentAdminCancelled,
-			"modified_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
+	paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+	refundAmount, _ := strconv.ParseFloat(r.FormValue("refund_amount"), 64)
+	if refundAmount <= 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Cant refund less than 0 amount", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(appointment[0]["cancellation_reason"]) > 0 || appointment[0]["status"] == "4" {
+
+		if refundAmount <= refundedAmount {
+
+			UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
+
+			// update appointment status to refunded
+			DB.UpdateSQL(CONSTANT.RefundsTable,
+				map[string]string{
+					"invoice_id": invoice[0]["invoice_id"],
+				},
+				map[string]string{
+					"actual_refunded_amount": r.FormValue("refund_amount"),
+					"status":                 CONSTANT.RefundCompleted,
+					"modified_at":            UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			// update appointment status to refunded
+			DB.UpdateSQL(CONSTANT.AppointmentsTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"status":      CONSTANT.AppointmentAdminRefunds,
+					"modified_at": UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			// send email
+			filepath_text := "htmlfile/emailmessagebody.html"
+
+			// send client email body
+			emaildata1 := Model.EmailBodyMessageModel{
+				Name: client[0]["first_name"],
+				Message: UTIL.ReplaceNotificationContentInString(
+					CONSTANT.AdminRefundAmonutForClientEmailBody,
+					map[string]string{
+						"###amount###": r.FormValue("refund_amount"),
+						"###date###":   appointment[0]["date"],
+						"###time###":   UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+					},
+				),
+			}
+
+			emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+			// email for client
+			UTIL.SendEmail(
+				CONSTANT.ClientAppointmentCancelClientTitle,
+				emailBody1,
+				client[0]["email"],
+				CONSTANT.InstantSendEmailMessage,
+			)
+
+			UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
+			return
+
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Error: Please check the amount. Refund amount should be equal or below "+strconv.FormatFloat(refundedAmount, 'f', 2, 64)+".", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	}
+
+	if len(appointment[0]["cancel_reason_counsellor"]) > 0 || appointment[0]["status"] == "5" {
+
+		if refundAmount+refundedAmount <= paidAmount {
+
+			UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
+
+			DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+				"invoice_id":             invoice[0]["invoice_id"],
+				"payment_id":             invoice[0]["payment_id"],
+				"refunded_amount":        invoice[0]["paid_amount"],
+				"actual_refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
+				"status":                 CONSTANT.RefundCompleted,
+				"created_at":             UTIL.GetCurrentTime().String(),
+			}, "refund_id")
+
+			// update appointment status to refunded
+			DB.UpdateSQL(CONSTANT.AppointmentsTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"status":      CONSTANT.AppointmentAdminRefunds,
+					"modified_at": UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			// send email
+			filepath_text := "htmlfile/emailmessagebody.html"
+
+			// send client email body
+			emaildata1 := Model.EmailBodyMessageModel{
+				Name: client[0]["first_name"],
+				Message: UTIL.ReplaceNotificationContentInString(
+					CONSTANT.AdminRefundAmonutForClientEmailBody,
+					map[string]string{
+						"###amount###": r.FormValue("refund_amount"),
+						"###date###":   appointment[0]["date"],
+						"###time###":   UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+					},
+				),
+			}
+
+			emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+			// email for client
+			UTIL.SendEmail(
+				CONSTANT.ClientAppointmentCancelClientTitle,
+				emailBody1,
+				client[0]["email"],
+				CONSTANT.InstantSendEmailMessage,
+			)
+
+			UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
+			return
+
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Error: Please check the amount. Refund amount should be equal or below "+invoice[0]["paid_amount"]+".", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	}
+
+	boo := !(len(appointment[0]["ended_at"]) > 0) && (len(appointment[0]["client_ended_at"]) > 0)
+
+	if boo {
+		if refundAmount+refundedAmount <= paidAmount {
+
+			UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
+			// refunded amount will be less than paid amount
+			DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+				"invoice_id":             invoice[0]["invoice_id"],
+				"payment_id":             invoice[0]["payment_id"],
+				"refunded_amount":        invoice[0]["paid_amount"],
+				"actual_refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
+				"status":                 CONSTANT.RefundCompleted,
+				"created_at":             UTIL.GetCurrentTime().String(),
+			}, "refund_id")
+
+			// update appointment status to refunded
+			DB.UpdateSQL(CONSTANT.AppointmentsTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"status":      CONSTANT.AppointmentAdminRefunds,
+					"modified_at": UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			// send email
+			filepath_text := "htmlfile/emailmessagebody.html"
+
+			// send client email body
+			emaildata1 := Model.EmailBodyMessageModel{
+				Name: client[0]["first_name"],
+				Message: UTIL.ReplaceNotificationContentInString(
+					CONSTANT.AdminRefundAmonutForClientEmailBody,
+					map[string]string{
+						"###amount###": r.FormValue("refund_amount"),
+						"###date###":   appointment[0]["date"],
+						"###time###":   UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+					},
+				),
+			}
+
+			emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+			// email for client
+			UTIL.SendEmail(
+				CONSTANT.ClientAppointmentCancelClientTitle,
+				emailBody1,
+				client[0]["email"],
+				CONSTANT.InstantSendEmailMessage,
+			)
+
+			UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
+			return
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Error: Please check the amount. Refund amount should be equal or below "+invoice[0]["paid_amount"]+".", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "client side no show happened", CONSTANT.ShowDialog, response)
+
 }

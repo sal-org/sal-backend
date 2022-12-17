@@ -91,9 +91,10 @@ const (
 
 // notification status
 const (
-	NotificationActive  = "1"
-	NotificationRead    = "2"
-	NotificationDeleted = "3"
+	NotificationInactive = "0"
+	NotificationActive   = "1"
+	NotificationRead     = "2"
+	NotificationDeleted  = "3"
 )
 
 // email status
@@ -112,6 +113,7 @@ const (
 const (
 	NotificationInProgress = "1"
 	NotificationSent       = "2"
+	NotificationInvalid    = "3"
 )
 
 // order status
@@ -132,6 +134,7 @@ const (
 	AppointmentNoShowClient        = "7"
 	AppointmentNoShowCounsellor    = "8"
 	AppointmentNoShowBoth          = "9"
+	AppointmentAdminRefunds        = "10"
 )
 
 // appointment slots status
@@ -150,7 +153,7 @@ const (
 // refund status
 const (
 	RefundInProgress = "1"
-	RefundCompleted  = "4"
+	RefundCompleted  = "2"
 )
 
 // refund type
@@ -227,4 +230,19 @@ const (
 const (
 	BulkNotificationAll      = "1"
 	BulkNotificationSpecific = "2"
+)
+
+// Agora status
+const (
+	AgoraResourceID  = "1" // agora resource id gerenated
+	AgoraResourceID2 = "2"
+	AgoraCallStart1  = "3" // agora call start
+	AgoraCallStart2  = "4"
+	AgoraCallStop1   = "5" // agora call stop
+	AgoraCallStop2   = "6"
+)
+
+const (
+	QualityCheckDataInsert = "1" // data insert in qualitycheckdetails table
+	QualityCheckLinkInsert = "2" // for link
 )

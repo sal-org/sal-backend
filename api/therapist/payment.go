@@ -5,6 +5,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
+	"strings"
 
 	UTIL "salbackend/util"
 )
@@ -14,6 +15,7 @@ import (
 // @Summary Get payments for counsellor
 // @Router /therapist/payment [get]
 // @Param therapist_id query string true "Logged in therapist ID"
+// @Param order_by query string false "Order by - 1(asc), 2(desc) - should be sent along with sort_by"
 // @Param page query string false "Page number"
 // @Security JWTAuth
 // @Produce json
@@ -23,8 +25,20 @@ func PaymentsGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	orderBy := " desc "
+
+	if strings.EqualFold(r.FormValue("order_by"), "1") {
+		orderBy = " asc "
+	}
+
 	// get payments for therapist
-	payments, status, ok := DB.SelectProcess("select * from "+CONSTANT.PaymentsTable+" where counsellor_id = ? and status = "+CONSTANT.PaymentValid+" order by created_at desc limit "+strconv.Itoa(CONSTANT.CounsellorsPaymentsPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsPaymentsPerPageClient), r.FormValue("therapist_id"))
+	payments, status, ok := DB.SelectProcess("select * from "+CONSTANT.PaymentsTable+" where counsellor_id = ? and status = "+CONSTANT.PaymentValid+" order by created_at "+orderBy+" limit "+strconv.Itoa(CONSTANT.CounsellorsPaymentsPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsPaymentsPerPageClient), r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

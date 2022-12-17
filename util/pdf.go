@@ -60,7 +60,7 @@ func GetHTMLTemplateForProfile(data Model.EmailDataForCounsellorProfile, filepat
 	return templateBuffer.String()
 }
 
-func GetHTMLTemplateForCounsellorProfileText(data Model.CounsellorProfileSendEmailTextMessage, filepath string) string {
+func GetHTMLTemplateForCounsellorProfileText(data Model.EmailBodyMessageModel, filepath string) string {
 	var templateBuffer bytes.Buffer
 
 	// You can bind custom data here as per requirements.
@@ -239,8 +239,41 @@ func GeneratePdf(htmlfile, filepath string) ([]byte, bool) { // ([]byte
 	// Create PDF document in internal buffer
 	err = pdfg.Create()
 	if err != nil {
+		fmt.Println("file is not create")
 		return nil, false
 	}
+
+	//Your Pdf Name
+	return pdfg.Bytes(), true
+
+}
+
+func GeneratePdfHeaderAndFooterFixted(htmlfile, filepath string) ([]byte, bool) { // ([]byte
+	pdfg, err := wkhtml.NewPDFGenerator()
+	if err != nil {
+		fmt.Println("New not pdf sesssion")
+		return nil, false
+	}
+	page := wkhtml.NewPageReader(s.NewReader(htmlfile))
+	page.DisableExternalLinks.Set(false)
+	// page.PageOptions.HeaderHTML.Set(`<img src='https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/assessment_header.png' alt='Assessment Header' height='80%'' width='100%'/>`)
+	page.FooterFontSize.Set(7)
+	page.FooterRight.Set("[page]")
+	page.EnableLocalFileAccess.Set(true)
+	page.HeaderHTML.Set(`htmlfile/AssessmentHeader.html`)
+	page.FooterHTML.Set("htmlfile/AssessmentFooter.html")
+	pdfg.AddPage(page)
+
+	// Create PDF document in internal buffer
+	err = pdfg.Create()
+	if err != nil {
+		return nil, false
+	}
+
+	// err = pdfg.WriteFile(`D:\TestHFHTML.pdf`)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
 	//Your Pdf Name
 	return pdfg.Bytes(), true

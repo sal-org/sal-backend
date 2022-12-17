@@ -354,16 +354,16 @@ type EmailDataForCounsellorProfile struct {
 }
 
 type EmailDataForPaymentReceipt struct {
-	Date         string
-	ReceiptNo    string
-	ReferenceNo  string
-	SPrice       string
-	Qty          string
-	Total        string
-	SessionsType string
-	TPrice       string
-	Discount     string
-	TotalP       string
+	Date        string
+	ReceiptNo   string
+	ReferenceNo string
+	SPrice      string
+	Qty         string
+	Total       string
+	TPrice      string
+	CouponC     string
+	Discount    string
+	TotalP      string
 }
 
 type CancellationUpdateRequest struct {
@@ -488,12 +488,129 @@ type AssessmentDownloadBDIModel struct {
 	Response21 string `json:"response21"`
 }
 
-type CounsellorProfileSendEmailTextMessage struct {
-	First_Name string `json:"first_name"`
-}
-
 type ClientAppointmentConfirmation struct {
 	First_Name      string `json:"first_name"`
 	Counsellor_Name string `json:"counsellor_name"`
 	Date_Time       string `json:"date_time"`
+}
+
+type ClientRequestS struct {
+	Region              string `json:"region"`
+	ResourceExpiredHour int    `json:"resourceExpiredHour"`
+	Scene               int    `json:"scene"`
+}
+
+type PostRequestForAgora struct {
+	CName         string         `json:"cname"`
+	Uid           string         `json:"uid"`
+	ClientRequest ClientRequestS `json:"clientRequest"`
+}
+
+type RecordingConfigModel struct {
+	MaxIdleTime int `json:"maxIdleTime"`
+	StreamTypes int `json:"streamTypes"`
+	ChannelType int `json:"channelType"`
+	// SubscribeUidGroup int `json:"subscribeUidGroup"`
+	// StreamMode        string `json:"streamMode"`
+}
+
+type Tags struct {
+	Security string `json:"security"`
+}
+
+type ExtensionParamsModel struct {
+	Tag string `json:"tag"`
+}
+
+type StorageConfigModel struct {
+	AccessKey       string               `json:"accessKey"`
+	Bucket          string               `json:"bucket"`
+	SecretKey       string               `json:"secretKey"`
+	Vendor          int                  `json:"vendor"`
+	Region          int                  `json:"region"`
+	FileNamePrefix  []string             `json:"fileNamePrefix"`
+	ExtensionParams ExtensionParamsModel `json:"extensionParams"`
+}
+
+type RecordingFileConfigModel struct {
+	AvFileType []string `json:"avFileType"`
+}
+
+type ClientRequestForStartCall struct {
+	Token               string                   `json:"token"`
+	RecordingConfig     RecordingConfigModel     `json:"recordingConfig"`
+	RecordingFileConfig RecordingFileConfigModel `json:"recordingFileConfig"`
+	StorageConfig       StorageConfigModel       `json:"storageConfig"`
+}
+
+type AgoraCallStartModel struct {
+	Uid           string                    `json:"uid"`
+	CName         string                    `json:"cname"`
+	ClientRequest ClientRequestForStartCall `json:"clientRequest"`
+}
+
+type ClientRequestForStopCall struct {
+	Async_stop bool `json:"async_stop"`
+}
+
+type AgoraCallStopModel struct {
+	CName         string                   `json:"cname"`
+	Uid           string                   `json:"uid"`
+	ClientRequest ClientRequestForStopCall `json:"clientRequest"`
+}
+
+type AgoraCallStartResponse struct {
+	Sid        string `json:"sid"`
+	ResourceID string `json:"resourceId"`
+}
+
+type AgoraCallStatus struct {
+	ResourceID     string `json:"resourceId"`
+	Sid            string `json:"sid"`
+	ServerResponse struct {
+		FileListMode string `json:"fileListMode"`
+		FileList     []struct {
+			FileName       string `json:"fileName"`
+			TrackType      string `json:"trackType"`
+			UID            string `json:"uid"`
+			MixedAllUser   bool   `json:"mixedAllUser"`
+			IsPlayable     bool   `json:"isPlayable"`
+			SliceStartTime int64  `json:"sliceStartTime"`
+		} `json:"fileList"`
+		Status         int   `json:"status"`
+		Slicestarttime int64 `json:"sliceStartTime"`
+	} `json:"serverResponse"`
+}
+
+type AgoraCallStopResponseModel struct {
+	ResourceID     string `json:"resourceId"`
+	Sid            string `json:"sid"`
+	ServerResponse struct {
+		FileListMode string `json:"fileListMode"`
+		FileList     []struct {
+			FileName       string `json:"fileName"`
+			TrackType      string `json:"trackType"`
+			UID            string `json:"uid"`
+			MixedAllUser   bool   `json:"mixedAllUser"`
+			IsPlayable     bool   `json:"isPlayable"`
+			SliceStartTime int64  `json:"sliceStartTime"`
+		} `json:"fileList"`
+		UploadingStatus string `json:"uploadingStatus"`
+	} `json:"serverResponse"`
+}
+
+type EmailBodyMessageModel struct {
+	Name    string
+	Message string
+}
+
+type EmailRecipientModel struct {
+	ToEmails  []string
+	CcEmails  []string
+	BccEmails []string
+}
+
+type NotificationAllowSettingModel struct {
+	UserType string `json:"userType"`
+	Status   string `json:"status"`
 }

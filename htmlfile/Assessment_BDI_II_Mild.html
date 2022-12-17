@@ -9,16 +9,15 @@
 				min-width:300px;        /* Suppose you want minimum width of 1000px */
 				width: auto !important;  /* Firefox will set width as auto */
 				width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+                font-family: 'Open Sans';
+                page-break-inside: avoid !important;
 				
 			}
         </style>
     </head>
     <body>
         <div style="padding: 2%;">
-            <div style="float: right;">
-                <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/SAL-standalone+logo.png" alt="SAL TAg" height="140px" width="140px"/>
-            </div>
-            <div style="text-align: center;padding-top: 65px;">
+            <div style="text-align: center;">
                 <h3>BECK DEPRESSION INVENTORY II</h3>
             </div>
             <div>
@@ -29,20 +28,20 @@
                     including today.</p>
             </div><br><hr>
             <div>
-                <p style="font-weight: bold;">Name: {{.Name}} </p>
-                <p style="font-weight: bold;">Age: {{.Age}}</p>
-                <p style="font-weight: bold;">Gender: {{.Gender}}</p>
+                <p style="font-weight: 600;">Name: {{.Name}} </p>
+                <p style="font-weight: 600;">Age: {{.Age}}</p>
+                <p style="font-weight: 600;">Gender: {{.Gender}}</p>
             </div><hr>
             <div>
                 <div style="display: table-cell;width: 50%;float: left;">
-                    <p style="font-weight: bold;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
+                    <p style="font-weight: 600;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
                 </div>
                 <div style="display: table-cell;width: 50%;float: left;text-align: center;">
-				    <p style="font-weight: bold;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
+				    <p style="font-weight: 600;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
 			    </div>
             </div><hr>
             <div>
-                <p style="font-weight: bold;text-align: center;">ASSESSMENT RESULT</p>
+                <p style="font-weight: 600;text-align: center;">ASSESSMENT RESULT</p>
             </div>
             <div style="padding: 2%;">
                 <table style="width:100% ; text-align: left;">
@@ -54,112 +53,112 @@
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">1. Sadness</th>
                         <td>{{.Response1}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer1}}</td>
+                        <td style="text-align: center;">{{.Answer1}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">2. Pessimism</th>
                         <td>{{.Response2}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer2}}</td>
+                        <td style="text-align: center;">{{.Answer2}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">3. Past Failure</th>
                         <td>{{.Response3}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer3}}</td>
+                        <td style="text-align: center;">{{.Answer3}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">4. Loss of Pleasure</th>
                         <td>{{.Response4}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer4}}</td>
+                        <td style="text-align: center;">{{.Answer4}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">5. Guilty Feelings</th>
                         <td>{{.Response5}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer5}}</td>
+                        <td style="text-align: center;">{{.Answer5}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">6. Punishment Feelings</th>
                         <td>{{.Response6}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer6}}</td>
+                        <td style="text-align: center;">{{.Answer6}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">7. Self-Dislike</th>
                         <td>{{.Response7}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer7}}</td>
+                        <td style="text-align: center;">{{.Answer7}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">8. Self-Criticalness</th>
                         <td>{{.Response8}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer8}}</td>
+                        <td style="text-align: center;">{{.Answer8}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">9. Suicidal Thoughts or Wishes</th>
                         <td>{{.Response9}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer9}}</td>
+                        <td style="text-align: center;">{{.Answer9}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">10. Crying</th>
                         <td>{{.Response10}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer10}}</td>
+                        <td style="text-align: center;">{{.Answer10}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">11. Agitation</th>
                         <td>{{.Response11}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer11}}</td>
+                        <td style="text-align: center;">{{.Answer11}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">12. Loss of Interest</th>
                         <td>{{.Response12}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer12}}</td>
+                        <td style="text-align: center;">{{.Answer12}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">13. Indecisiveness</th>
                         <td>{{.Response13}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer13}}</td>
+                        <td style="text-align: center;">{{.Answer13}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">14. Worthlessness</th>
                         <td>{{.Response14}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer14}}</td>
+                        <td style="text-align: center;">{{.Answer14}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">15. Loss of Energy</th>
                         <td>{{.Response15}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer15}}</td>
+                        <td style="text-align: center;">{{.Answer15}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">16. Changes in Sleep Pattern</th>
                         <td>{{.Response16}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer16}}</td>
+                        <td style="text-align: center;">{{.Answer16}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">17. Irritability</th>
                         <td>{{.Response17}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer17}}</td>
+                        <td style="text-align: center;">{{.Answer17}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">18. Changes in Appetite</th>
                         <td>{{.Response18}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer18}}</td>
+                        <td style="text-align: center;">{{.Answer18}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">19. Concentration Difficulty</th>
                         <td>{{.Response19}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer19}}</td>
+                        <td style="text-align: center;">{{.Answer19}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">20. Tiredness or Fatigue</th>
                         <td>{{.Response20}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer20}}</td>
+                        <td style="text-align: center;">{{.Answer20}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">21. Loss of Interest in Libido</th>
                         <td>{{.Response21}}</td>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer21}}</td>
+                        <td style="text-align: center;">{{.Answer21}}</td>
                     </tr>
                 </table>
             </div><hr>
             <div>
-                <p style="font-weight: bold;">Therapist Inference:</p>
+                <p style="font-weight: 600;">Therapist Inference:</p>
                 <p>You are experiencing a mild, low-grade episode of depression, the symptoms of which can be subtle enough
                     for you not to realize. Mild depression involves more than just feeling blue temporarily. The symptoms can go
                     on for days and are noticeable enough to interfere with the individual's usual activities. Mild depression may
@@ -180,12 +179,14 @@
                     <h4 style="padding-left: 15px;">Score Interpretation: Severity of Depression</h4>
                     <table style="width: 80%;margin-left: auto;margin-right: auto;border-collapse: collapse;text-align: center;">
                         <tr>
-                            <th style="border:1px solid rgb(94, 62, 235);">0-10</th>
+                            <th style="border:1px solid rgb(94, 62, 235);">0</th>
+                            <th style="border:1px solid rgb(94, 62, 235);">1-10</th>
                             <th style="border:1px solid rgb(94, 62, 235);">11-18</th>
                             <th style="border:1px solid rgb(94, 62, 235);">19-25</th>
                             <th style="border:1px solid rgb(94, 62, 235);">26-63</th>
                         </tr>
                         <tr>
+                            <td style="border:1px solid rgb(94, 62, 235);">Invalid</td> 
                            <td style="border:1px solid rgb(94, 62, 235);">Normal</td>
                            <td style="border:1px solid rgb(94, 62, 235);">Mild</td>
                            <td style="border:1px solid rgb(94, 62, 235);">Moderate</td>
@@ -198,42 +199,46 @@
                     you can do on your own to fight back. Changing your behaviour -- your physical activity, lifestyle, and even your way
                     of thinking -- are all natural depression treatments.</p>
                 <p>These tips can help you feel better --starting right now.</p>
-                <p><span style="font-weight: bold;">Express Yourself in Writing.</span>Writing down your feelings and challenges with depression can release pent-up
+                <p><span style="font-weight: 600;">Express Yourself in Writing.</span>Writing down your feelings and challenges with depression can release pent-up
                     emotions.</p>
-                <p><span style="font-weight: bold;">Boost Your Self-Image.</span>Practice positive thinking by focusing your thoughts on your best qualities. You can
+                <p><span style="font-weight: 600;">Boost Your Self-Image.</span>Practice positive thinking by focusing your thoughts on your best qualities. You can
                     also make lifestyle changes that can improve your self-esteem, such as eating a healthy diet, getting
                     regular exercise, and spending time with friends who make you feel good about who you are.</p>
-                <p><span style="font-weight: bold;">Stick to a Schedule.</span>Schedule an activity that you have to do every day — make it one you really enjoy — and aim for
+                <p><span style="font-weight: 600;">Stick to a Schedule.</span>Schedule an activity that you have to do every day — make it one you really enjoy — and aim for
                     as much balance as possible in your life.</p>
-                <p><span style="font-weight: bold;">Stay Involved.</span>Social connections can help keep you from spiralling downward into deeper depression and
+                <p><span style="font-weight: 600;">Stay Involved.</span>Social connections can help keep you from spiralling downward into deeper depression and
                     from becoming isolated and alone with your thoughts. Go to the movies, share a brisk walk, or just catch up
                     with a close friend — it might lift your spirits. Allow yourself to lean on loved ones when you need them. They
                     can encourage you to follow your treatment plan, exercise, eat a healthy diet, and generally take care of
                     yourself — all steps necessary to get better.</p>
-                <p><span style="font-weight: bold;">Sleep Well.</span>Getting plenty of rest every night is a must for your mood.</p>
-                <p><span style="font-weight: bold;">Meditation Practice.</span>Helps in knowing our bodies. It’s also a recovery technique that helps regulate our
+                <p><span style="font-weight: 600;">Sleep Well.</span>Getting plenty of rest every night is a must for your mood.</p>
+                <p><span style="font-weight: 600;">Meditation Practice.</span>Helps in knowing our bodies. It’s also a recovery technique that helps regulate our
                     emotions.</p>
-                <p><span style="font-weight: bold;">Exercise.</span>Physical activity relieves stress and can make you feel great. Plus, the satisfaction you get from
+                <p><span style="font-weight: 600;">Exercise.</span>Physical activity relieves stress and can make you feel great. Plus, the satisfaction you get from
                     finishing an engaging and challenging workout can boost your self-esteem as you get stronger and more
                     physically fit.</p>
-                <p><span style="font-weight: bold;">Make the Mood and Food Connection.</span>Eating a healthy diet can make you feel healthy, fit, and attractive,
+                <p><span style="font-weight: 600;">Make the Mood and Food Connection.</span>Eating a healthy diet can make you feel healthy, fit, and attractive,
                     which improves self-esteem.</p>
-                <p><span style="font-weight: bold;">Say No to Alcohol & Drugs.</span>Drinking can make the symptoms of depression even worse and alcohol may also
+                <p><span style="font-weight: 600;">Say No to Alcohol & Drugs.</span>Drinking can make the symptoms of depression even worse and alcohol may also
                     have a negative interaction with medications you’re taking to control depression. Avoiding drugs and liquor is
                     one key to a healthy lifestyle.</p>
-                <p><span style="font-weight: bold;">Seek Therapy.</span>If negative thoughts overwhelm your ability to make positive changes, it’s time to seek
+                <p><span style="font-weight: 600;">Seek Therapy.</span>If negative thoughts overwhelm your ability to make positive changes, it’s time to seek
                     professional help. Take appointment today with your SAL therapist because your health and life are worth it.</p> 
             </div>
             <div>
-                <div style="display: table-cell;width: 33.33%;float: left;">
-                    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/sal-tagline.png" alt="SAL Tag" width="150px" height="150px"/>
+                <div style="float: left;">
+                    <button type="button" style="background-color: #FC8766;color: white; height: 40px;width: 200px;border-color: #FC8766;border-radius: 10%;font-weight: 600;">BOOK APPOINTMENT</button>
                   </div>
-                <div style="display: table-cell;width: 43.33%;float: left;">
-				    <p><span style="font-weight: bold;">Salubrium Private Limited <br>Website:</span> www.sal-foundation.com</p>
-				    <button type="button" style="background-color: blue;color: white; height: 40px;width: 200px;border-radius: 10%;font-weight: bold;">BOOK APPOINTMENT</button>
-			    </div>
-			    <div style="display: table-cell;width: 23.33%;float: left;">
-				    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/SMicons.jpg" alt="Social mediun Logo" width="60px" height="60px"/>
+			    <div style="float: right;">
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.linkedin.com/company/sal-foundation/" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Linkedin" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/linkedin-circle-black.png" alt="In" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.facebook.com/FoundationSAL/" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Facebook" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/facebook-circle-black.png" alt="Fb" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.instagram.com/sal.foundation/?hl-en" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Instagram" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/instagram-circle-black.png" alt="Inst" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
 			    </div>
             </div>
         </div>

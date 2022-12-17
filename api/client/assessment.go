@@ -173,6 +173,12 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	var results []string
 
 	// get assessment past results
@@ -546,7 +552,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		created, ok := UTIL.GeneratePdf(emailbody, "pdffile/assessment1.pdf") // name created,
+		created, ok := UTIL.GeneratePdfHeaderAndFooterFixted(emailbody, "pdffile/assessment1.pdf") // name created,
 
 		if !ok {
 			fmt.Println("Pdf is not created")

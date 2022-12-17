@@ -14,6 +14,9 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"user_id", "{user_id}",
 		"content_id", "{content_id}",
 	).Methods("POST")
+	router.HandleFunc("/cancellationreason", CancellationReason).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
 	router.HandleFunc("/content/like", ContentLikeDelete).Queries(
 		"user_id", "{user_id}",
 		"content_id", "{content_id}",
@@ -22,10 +25,21 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// categories of content
 	router.HandleFunc("/content-category", ListContentCategory).Methods("GET")
 
+	// counsellor account delete
+	router.HandleFunc("/delete-user", DeleteUserProfile).Queries(
+		"user_id", "{user_id}",
+		"type", "{type}",
+	).Methods("DELETE")
+
 	// counsellor content
 	router.HandleFunc("/counsellor-content", ListCounsellorContent).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
+
+	// notification change status
+	router.HandleFunc("/notification-status", NotificationInactiveORActive).Queries(
+		"user_id", "{user_id}",
+	).Methods("PUT")
 
 	// topic
 	router.HandleFunc("/topic", ListTopic).Methods("GET")

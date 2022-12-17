@@ -23,6 +23,45 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/cancellationreason": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Cancellation"
+                ],
+                "summary": "Cancellation Region Counsellor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to Cancellation Reason",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CancellationUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client": {
             "get": {
                 "produces": [
@@ -37,6 +76,13 @@ var doc = `{
                         "type": "string",
                         "description": "Email of client - to get details, if signed up already",
                         "name": "email",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID of client - to get details, if signed up already",
+                        "name": "device_id",
                         "in": "query",
                         "required": true
                     }
@@ -270,6 +316,13 @@ var doc = `{
                         "name": "type",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Counsellor(1) , Client(2)",
+                        "name": "user_type",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -406,6 +459,13 @@ var doc = `{
                         "name": "appointment_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -526,6 +586,13 @@ var doc = `{
                         "type": "string",
                         "description": "Appointment ID to be started",
                         "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
                         "in": "query",
                         "required": true
                     }
@@ -1171,6 +1238,36 @@ var doc = `{
                 }
             }
         },
+        "/client/mood/content": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Client Mood"
+                ],
+                "summary": "Get mood content",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in user ID to get mood liked content",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client/mood/history": {
             "get": {
                 "security": [
@@ -1521,6 +1618,13 @@ var doc = `{
                         "type": "string",
                         "description": "OTP entered by client",
                         "name": "otp",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID entered by client",
+                        "name": "device_id",
                         "in": "query",
                         "required": true
                     }
@@ -1911,6 +2015,13 @@ var doc = `{
                         "name": "appointment_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1969,6 +2080,13 @@ var doc = `{
                         "type": "string",
                         "description": "Appointment ID to be started",
                         "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
                         "in": "query",
                         "required": true
                     }
@@ -2070,6 +2188,36 @@ var doc = `{
                 }
             }
         },
+        "/counsellor/assessment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Assessment"
+                ],
+                "summary": "Get assessment download",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in Assessment Result ID",
+                        "name": "assessment_result_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/counsellor/assessment/history": {
             "get": {
                 "security": [
@@ -2083,15 +2231,8 @@ var doc = `{
                 "tags": [
                     "Counsellor Assessment"
                 ],
-                "summary": "Get assessment history",
+                "summary": "GET counsellor assessment",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Assessment ID to get details",
-                        "name": "assessment_id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Logged in counsellor ID",
@@ -2533,6 +2674,12 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "description": "Order by - 1(asc), 2(desc) - should be sent along with sort_by",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -2595,6 +2742,43 @@ var doc = `{
                         "description": "Logged in counsellor ID",
                         "name": "counsellor_id",
                         "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/delete-user": {
+            "delete": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "delete User details",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "1(counsellor)/2(listener)/3(Client)/4(therapist)",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2773,6 +2957,13 @@ var doc = `{
                         "name": "appointment_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2831,6 +3022,13 @@ var doc = `{
                         "type": "string",
                         "description": "Appointment ID to be started",
                         "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
                         "in": "query",
                         "required": true
                     }
@@ -2932,6 +3130,36 @@ var doc = `{
                 }
             }
         },
+        "/listener/assessment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Listener Assessment"
+                ],
+                "summary": "Get assessment download",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in Assessment Result ID",
+                        "name": "assessment_result_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/listener/assessment/history": {
             "get": {
                 "security": [
@@ -2947,13 +3175,6 @@ var doc = `{
                 ],
                 "summary": "Get assessment history",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Assessment ID to get details",
-                        "name": "assessment_id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Logged in listener ID",
@@ -3368,6 +3589,45 @@ var doc = `{
                 }
             }
         },
+        "/notification-status": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Miscellaneous"
+                ],
+                "summary": "Update Notification status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ClientID/TherapistID/CounsellorID/ListernerID",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "User type (counsellor:1/listener:2/client:3/therapists:4)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NotificationAllowSettingModel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/rating-type": {
             "get": {
                 "security": [
@@ -3562,6 +3822,13 @@ var doc = `{
                         "name": "appointment_id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -3620,6 +3887,13 @@ var doc = `{
                         "type": "string",
                         "description": "Appointment ID to be started",
                         "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID to be started",
+                        "name": "uid",
                         "in": "query",
                         "required": true
                     }
@@ -3721,6 +3995,36 @@ var doc = `{
                 }
             }
         },
+        "/therapist/assessment/download": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Therapist Assessment"
+                ],
+                "summary": "Get assessment download",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Logged in Assessment Result ID",
+                        "name": "assessment_result_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/therapist/assessment/history": {
             "get": {
                 "security": [
@@ -3736,13 +4040,6 @@ var doc = `{
                 ],
                 "summary": "Get assessment history",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Assessment ID to get details",
-                        "name": "assessment_id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Logged in therapist ID",
@@ -4184,6 +4481,12 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "description": "Order by - 1(asc), 2(desc) - should be sent along with sort_by",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Page number",
                         "name": "page",
                         "in": "query"
@@ -4337,6 +4640,13 @@ var doc = `{
                         "type": "string",
                         "description": "OTP entered by counsellor/listener/therapist",
                         "name": "otp",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Device ID entered by counsellor/listener/therapist",
+                        "name": "device_id",
                         "in": "query",
                         "required": true
                     }
@@ -4940,6 +5250,17 @@ var doc = `{
                     "type": "string"
                 },
                 "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.NotificationAllowSettingModel": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "userType": {
                     "type": "string"
                 }
             }

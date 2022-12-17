@@ -8,17 +8,17 @@
             body{
 				min-width:300px;        /* Suppose you want minimum width of 1000px */
 				width: auto !important;  /* Firefox will set width as auto */
-				width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+				width:300px;/* As IE6 ignores !important it will set width as 1000px; */
+                page-break-inside: avoid !important;
+                font-family: 'Open Sans';
 				
 			}
         </style>
     </head>
     <body>
         <div style="padding: 2%;">
-            <div style="float: right;">
-                <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/SAL-standalone+logo.png" alt="SAL TAg" height="140px" width="140px"/>
-            </div>
-            <div style="text-align: center;padding-top: 65px;">
+            
+            <div style="text-align: center;">
                 <h3>SELF-RESILIENCE SURVEY <br>Developed by Al Siebert</h3>
             </div>
             <div>
@@ -31,9 +31,9 @@
                     We are all resilient to some degree and capable of learning skills to become more resilient.</p>
             </div>
             <div>
-                <p style="font-weight: bold;">Name: {{.Name}} </p>
-                <p style="font-weight: bold;">Age: {{.Age}}</p>
-                <p style="font-weight: bold;">Gender: {{.Gender}}</p>
+                <p style="font-weight: 600;">Name: {{.Name}} </p>
+                <p style="font-weight: 600;">Age: {{.Age}}</p>
+                <p style="font-weight: 600;">Gender: {{.Gender}}</p>
             </div><br>
             <div>
                 <table style="width:100% ;border-collapse: collapse;">
@@ -53,105 +53,105 @@
             </div><hr>
             <div>
                 <div style="display: table-cell;width: 50%;float: left;">
-                    <p style="font-weight: bold;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
+                    <p style="font-weight: 600;color: rgb(85, 85, 236);">Date: {{.Date}}</p>
                 </div>
                 <div style="display: table-cell;width: 50%;float: left;text-align: center;">
-				    <p style="font-weight: bold;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
+				    <p style="font-weight: 600;color: rgb(85, 85, 236);"> TOTAL SCORE: {{.Score}}</p>
 			    </div>
             </div><hr>
             <div>
-                <p style="font-weight: bold;text-align: center;">ASSESSMENT RESULT</p>
+                <p style="font-weight: 600;text-align: center;">ASSESSMENT RESULT</p>
             </div>
             <div style="padding: 2%;">
                 <table style="width:100% ; text-align: left;">
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">1. In a crisis or a panic situation, I can calm myself and take a decision.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer1}}</td>
+                        <td style="text-align: center;">{{.Answer1}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">2. I am usually optimistic and I see difficulties as temporary.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer2}}</td>
+                        <td style="text-align: center;">{{.Answer2}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">3. I can tolerate high levels of ambiguity and uncertainty about situation.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer3}}</td>
+                        <td style="text-align: center;">{{.Answer3}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">4. I adapt quickly to new developments. I am good at bouncing back from difficulties.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer4}}</td>
+                        <td style="text-align: center;">{{.Answer4}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">5. I am playful and find humour in rough situation, can laugh at myself.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer5}}</td>
+                        <td style="text-align: center;">{{.Answer5}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">6. I am able to recover emotionally from losses and setbacks. I have friends I can talk with.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer6}}</td>
+                        <td style="text-align: center;">{{.Answer6}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">7. I feel self-confident, can appreciate myself and have a healthy concept about myself.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer7}}</td>
+                        <td style="text-align: center;">{{.Answer7}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">8. I am curious; I ask questions about new things and like to try new ways of doing things.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer8}}</td>
+                        <td style="text-align: center;">{{.Answer8}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">9. I learn valuable lessons from my experience and of others.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer9}}</td>
+                        <td style="text-align: center;">{{.Answer9}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">10. I am good at solving problems. I can use analytical/practical knowledge along with creativity.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer10}}</td>
+                        <td style="text-align: center;">{{.Answer10}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">11. I am good at making thing work well. I am often asked to lead groups and projects.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer11}}</td>
+                        <td style="text-align: center;">{{.Answer11}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">12. I am very flexible; I am both optimistic and pessimistic depending on the circumstances.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer12}}</td>
+                        <td style="text-align: center;">{{.Answer12}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">13. I am trusting, cautious, selfish and selfless depending on the circumstances.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer13}}</td>
+                        <td style="text-align: center;">{{.Answer13}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">14. I am always myself but I have notices that I am different in different situations.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer14}}</td>
+                        <td style="text-align: center;">{{.Answer14}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">15. I prefer to work without a written job description. I am more effective when I am free to do what I think is best for the situation.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer15}}</td>
+                        <td style="text-align: center;">{{.Answer15}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">16. I “read” people well and trust my intuition.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer16}}</td>
+                        <td style="text-align: center;">{{.Answer16}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">17. I am good listener and have empathy skills.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer17}}</td>
+                        <td style="text-align: center;">{{.Answer17}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">18. I am non-judgmental about others and adapt to different personality styles.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer18}}</td>
+                        <td style="text-align: center;">{{.Answer18}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">19. I am very durable. I can hold up well during tough times.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer19}}</td>
+                        <td style="text-align: center;">{{.Answer19}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">20. I am stronger and better because of difficult experiences.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer20}}</td>
+                        <td style="text-align: center;">{{.Answer20}}</td>
                     </tr>
                     <tr>
                         <th style=" padding: 10px; font-weight: 545;">21. I have tried to convert misfortune to good luck and found benefit in bad experiences.</th>
-                        <td style="border-bottom: 1px solid rgb(107, 166, 233);text-align: center;">{{.Answer21}}</td>
+                        <td style="text-align: center;">{{.Answer21}}</td>
                     </tr>
                 </table>
             </div><hr>
             <div>
-                <p style="font-weight: bold;">Therapist Inference:</p>
+                <p style="font-weight: 600;">Therapist Inference:</p>
                 <p>Your score indicates you appear to be fairly adequate, but you may be underrating yourself. A much larger
                     percentage of people underrate themselves than overrate themselves on the assessment.</p>
                 <p>One validity check is to ask two people who know you well to rate you on the items and see what scores they
@@ -175,26 +175,26 @@
                     </table>
                 </div>
                 <h4 style="text-align: center;">Factors that Contribute to Resiliency</h4>
-                <p><span style="font-weight: bold;">Build your connections.</span>Prioritize relationships. A strong support system of family and friends can boost our
+                <p><span style="font-weight: 600;">Build your connections.</span>Prioritize relationships. A strong support system of family and friends can boost our
                     resilience in the most challenging times. Along with one-on-one relationships, join a group. Some people find
                     that being active in civic groups, faith-based communities, or other local organizations provides social support
                     and can help you reclaim hope.</p>
-                <p><span style="font-weight: bold;">Foster wellness.</span>Promoting a positive lifestyle to include proper nutrition, sleep, hydration, regular exercise,
+                <p><span style="font-weight: 600;">Foster wellness.</span>Promoting a positive lifestyle to include proper nutrition, sleep, hydration, regular exercise,
                     mindful journaling, yoga, meditation, and other practices can help when we are dealing with situations that
                     require resilience.</p>
-                <p><span style="font-weight: bold;">Find purpose.</span>Be proactive. If the problems seem too big to tackle, break them down into manageable pieces.
+                <p><span style="font-weight: 600;">Find purpose.</span>Be proactive. If the problems seem too big to tackle, break them down into manageable pieces.
                     Develop some realistic goals even if it seems like a small accomplishment — that enables you to move toward
                     the things you want to accomplish.</p>
-                <p><span style="font-weight: bold;">Embrace healthy thoughts.</span>Accept that change is a part of life. An optimistic outlook empowers you to expect
+                <p><span style="font-weight: 600;">Embrace healthy thoughts.</span>Accept that change is a part of life. An optimistic outlook empowers you to expect
                     that good things will happen to you. Remind yourself of where you’ve been able to find strength and ask yourself
                     what you’ve learned from those experiences. Avoid negative outlets.</p>
-                <p><span style="font-weight: bold;">Seek Help.</span>If negative thoughts overwhelm your ability to make positive changes, these are occasions to seek
+                <p><span style="font-weight: 600;">Seek Help.</span>If negative thoughts overwhelm your ability to make positive changes, these are occasions to seek
                     out a professional to assist us. Many benefits can result from finding a therapist, counsellor, or other to help at
                     times. Take appointment today with your SAL therapist because your health and life are worth it.</p> 
-            </div><br><br><br><br><br><br>
+            </div><br>
             <div>
                 <dl>
-                    <dt style="font-weight: bold;">Other factors that also contribute to resiliency are:</dt>
+                    <dt style="font-weight: 600;">Other factors that also contribute to resiliency are:</dt>
                     <dd>✓ Holding a positive view of yourself and your abilities</dd>
                     <dd>✓ The ability to make realistic plans and stick to them</dd>
                     <dd>✓ Having an internal belief of control of your actions and outcomes</dd>
@@ -207,17 +207,20 @@
                 <p>Disclaimer: The scores on the self-assessment do not reflect any particular diagnosis or course of treatment. They are meant as a tool to help assess your level of stress. If you have any further concerns about your current wellbeing, you may contact us and talk confidentially to one of our specialists.</p><br/>
             </div>
             <div>
-                <div style="display: table-cell;width: 33.33%;float: left;">
-                    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/sal-tagline.png" alt="SAL Tag" width="150px" height="150px"/>
+                <div style="float: left;">
+                    <button type="button" style="background-color: #FC8766;color: white; height: 40px;width: 200px;border-color: #FC8766;border-radius: 10%;font-weight: 600;">BOOK APPOINTMENT</button>
                   </div>
-                <div style="display: table-cell;width: 43.33%;float: left;">
-				    <p><span style="font-weight: bold;">Salubrium Private Limited <br>Website:</span> www.sal-foundation.com</p>
-				    <button type="button" style="background-color: blue;color: white; height: 40px;width: 200px;border-radius: 10%;font-weight: bold;">BOOK APPOINTMENT</button>
-			    </div>
-			    <div style="display: table-cell;width: 23.33%;float: left;">
-				    <img src="https://sal-prod.s3.ap-south-1.amazonaws.com/content/SMicons.jpg" alt="Social mediun Logo" width="60px" height="60px"/>
+			    <div style="float: right;">
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.linkedin.com/company/sal-foundation/" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Linkedin" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/linkedin-circle-black.png" alt="In" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.facebook.com/FoundationSAL/" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Facebook" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/facebook-circle-black.png" alt="Fb" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
+                    <div style="display: table-cell;width: 33.33%;float: left;">
+                        <a target="_blank" href="https://www.instagram.com/sal.foundation/?hl-en" style="text-decoration:underline;color:#FFFFFF;font-size:14px"><img title="Instagram" src="https://sal-prod.s3.ap-south-1.amazonaws.com/miscellaneous/instagram-circle-black.png" alt="Inst" height="32" style="display:block;border:0;outline:none;text-decoration:none;"></a>
+                    </div>
 			    </div>
             </div>
         </div>
     </body>
-</html>

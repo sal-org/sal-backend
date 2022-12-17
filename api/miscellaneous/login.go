@@ -85,6 +85,8 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		r.FormValue("phone"),
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
 		CONSTANT.InstantSendTextMessage,
 	)
 
@@ -97,6 +99,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 // @Router /verifyotp [get]
 // @Param phone query string true "Phone number OTP has been sent to - send phone number with 91 code"
 // @Param otp query string true "OTP entered by counsellor/listener/therapist"
+// @Param device_id query string true "Device ID entered by counsellor/listener/therapist"
 // @Produce json
 // @Success 200
 func VerifyOTP(w http.ResponseWriter, r *http.Request) {
@@ -105,16 +108,21 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	//check if otp is correct
-	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if len(r.FormValue("device_id")) < 0 {
+		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// this for testing
-	// if !strings.EqualFold("4444", r.FormValue("otp")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !strings.EqualFold("4444", r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get counsellor details
 	var counsellorType string
@@ -213,6 +221,12 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
+			status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellor[0]["counsellor_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
 			response["languages"] = languages
 			response["topics"] = topics
 			response["counsellor"] = counsellor[0]
@@ -240,6 +254,11 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
+			status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": counsellor[0]["listener_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 			response["languages"] = languages
 			response["topics"] = topics
 			response["listener"] = counsellor[0]
@@ -262,6 +281,11 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 			// get counsellor topics
 			topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", counsellor[0]["therapist_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"email": r.FormValue("email")}, map[string]string{"device_id": r.FormValue("device_id")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return

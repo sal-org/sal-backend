@@ -49,6 +49,12 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get event details
 	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": r.FormValue("order_id")})
 	if !ok {
@@ -104,6 +110,12 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming booked events
 	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("client_id"))
 	if !ok {
@@ -134,6 +146,12 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -274,6 +292,12 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
 	if !ok {
@@ -371,6 +395,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["user_id"],
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
 		order[0]["event_order_id"],
 	)
 
@@ -386,22 +411,23 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		order[0]["user_id"],
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]).Add(-15*time.Minute).String(),
+		CONSTANT.NotificationInProgress,
 		order[0]["event_order_id"],
 	)
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
 
 	data := Model.EmailDataForPaymentReceipt{
-		Date:         receiptdata,
-		ReceiptNo:    invoiceforemail[0]["id"],
-		ReferenceNo:  invoiceforemail[0]["payment_id"],
-		SPrice:       orderdetails[0]["price"],
-		Qty:          CONSTANT.SalCafeQty,
-		Total:        orderdetails[0]["price"],
-		SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
-		TPrice:       orderdetails[0]["price"],
-		Discount:     invoiceforemail[0]["discount"],
-		TotalP:       invoiceforemail[0]["paid_amount"],
+		Date:        receiptdata,
+		ReceiptNo:   invoiceforemail[0]["id"],
+		ReferenceNo: invoiceforemail[0]["payment_id"],
+		SPrice:      orderdetails[0]["price"],
+		Qty:         CONSTANT.SalCafeQty,
+		Total:       orderdetails[0]["price"],
+		//SessionsType: CONSTANT.AppointmentSessionsTypeForReceipt,
+		TPrice:   orderdetails[0]["price"],
+		Discount: invoiceforemail[0]["discount"],
+		TotalP:   invoiceforemail[0]["paid_amount"],
 	}
 
 	filepath := "htmlfile/index.html"

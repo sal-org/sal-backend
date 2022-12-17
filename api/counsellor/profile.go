@@ -24,6 +24,12 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get counsellor details
 	params := map[string]string{}
 	if len(r.FormValue("email")) > 0 {
@@ -156,7 +162,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["bank_account_type"] = body["bank_account_type"]
 	counsellor["pan"] = body["pan"]
 	counsellor["device_id"] = body["device_id"]
-	counsellor["status"] = CONSTANT.CounsellorActive
+	counsellor["status"] = CONSTANT.CounsellorNotApproved
+	counsellor["notification_status"] = CONSTANT.NotificationActive
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
 	counsellorID, status, ok := DB.InsertWithUniqueID(CONSTANT.CounsellorsTable, CONSTANT.CounsellorDigits, counsellor, "counsellor_id")
@@ -177,10 +184,23 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		DB.InsertSQL(CONSTANT.SlotsTable, map[string]string{"counsellor_id": counsellorID, "date": UTIL.GetCurrentTime().AddDate(0, 0, i).Format("2006-01-02")})
 	}
 
-	response["counsellor_id"] = counsellorID
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(counsellorID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(counsellorID)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// send account signup notification, message to counsellor
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), counsellorID)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, counsellorID)
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -190,26 +210,30 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		body["phone"],
+		UTIL.GetCurrentTime().String(),
+		counsellorID,
 		CONSTANT.InstantSendTextMessage,
 	)
 
 	// Counsellor details Send with SAL Team
-	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"counsellor_id": counsellorID})
+	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
-	counsellor_name := Model.CounsellorProfileSendEmailTextMessage{
-		First_Name: counsellor_details[0]["first_name"],
-	}
+	// use this future
+	// filepath_text := "htmlfile/emailmessagebody.html"
 
-	filepath_text := "htmlfile/Counsellor_Profile_Text_Message.html"
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name:    counsellor_details[0]["first_name"],
+	// 	Message: CONSTANT.CounsellorAccountSignupCounsellorEmailBody,
+	// }
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(counsellor_name, filepath_text)
-
-	UTIL.SendEmail(
-		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-		emailBody,
-		counsellor_details[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// // email for counsellor
+	// UTIL.SendEmail(
+	// 	CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+	// 	emailBody,
+	// 	counsellor_details[0]["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	data := Model.EmailDataForCounsellorProfile{
 		First_Name:  counsellor_details[0]["first_name"],
@@ -265,6 +289,12 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)*/
 
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+
+	response["counsellor"] = counsellor_details[0]
+	response["media_url"] = CONFIG.MediaURL
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -281,6 +311,12 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -350,6 +386,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["ifsc"]) > 0 {
 		counsellor["ifsc"] = body["ifsc"]
+	}
+	if len(body["payee_name"]) > 0 {
+		counsellor["payee_name"] = body["payee_name"]
 	}
 	if len(body["branch_name"]) > 0 {
 		counsellor["branch_name"] = body["branch_name"]
