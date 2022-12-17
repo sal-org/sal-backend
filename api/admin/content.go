@@ -160,6 +160,7 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 	content["category_id"] = body["category_id"]
 	content["training"] = body["training"]
 	content["mood_id"] = body["mood_id"]
+	content["created_by"] = body["created_by"]
 	content["status"] = body["status"]
 	content["modified_by"] = body["modified_by"]
 	content["modified_at"] = UTIL.GetCurrentTime().String()

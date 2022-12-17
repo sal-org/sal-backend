@@ -23,6 +23,45 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/cancellationreason": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Counsellor Cancellation"
+                ],
+                "summary": "Cancellation Region Counsellor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID to Cancellation Reason",
+                        "name": "appointment_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "Request Body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CancellationUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/client": {
             "get": {
                 "produces": [

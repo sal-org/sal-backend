@@ -134,6 +134,7 @@ const (
 	AppointmentNoShowClient        = "7"
 	AppointmentNoShowCounsellor    = "8"
 	AppointmentNoShowBoth          = "9"
+	AppointmentAdminRefunds        = "10"
 )
 
 // appointment slots status
@@ -152,7 +153,7 @@ const (
 // refund status
 const (
 	RefundInProgress = "1"
-	RefundCompleted  = "4"
+	RefundCompleted  = "2"
 )
 
 // refund type

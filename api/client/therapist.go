@@ -336,11 +336,11 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// verifyPaymentSignature := UTIL.GenerateSignature(body["signature"], body["order_id"], body["payment_id"])
-	// if !verifyPaymentSignature {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	verifyPaymentSignature := UTIL.GenerateSignature(body["signature"], body["razor_order_id"], body["payment_id"])
+	if !verifyPaymentSignature {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
 	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
@@ -606,8 +606,8 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 				"###userName###":  therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -625,8 +625,8 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": therapist[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 				"###userName###":  client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -684,39 +684,45 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	// 	notificationContent = CONSTANT.Client5AppointmentBookCounsellorContent
 	// }
 
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-	// 		map[string]string{
-	// 			"###counsellor_name###": therapist[0]["first_name"],
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), therapist[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	therapist[0]["phone"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
+	// send messsage to therpists for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  therapist[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		therapist[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	// dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
 
 	// timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
 
 	// send messsage to client for Appointment Confirmation
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentConfirmationTextMessage,
-	// 		map[string]string{
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###counsellor_name###": therapist[0]["first_name"],
-	// 			"###date###":            dateFormat,
-	// 			"###time###":            timeFormat,
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	client[0]["phone"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": therapist[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	// Send to Payment SMS to client
 	// UTIL.SendMessage(

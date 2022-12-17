@@ -14,6 +14,9 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"user_id", "{user_id}",
 		"content_id", "{content_id}",
 	).Methods("POST")
+	router.HandleFunc("/cancellationreason", CancellationReason).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
 	router.HandleFunc("/content/like", ContentLikeDelete).Queries(
 		"user_id", "{user_id}",
 		"content_id", "{content_id}",

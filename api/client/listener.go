@@ -396,6 +396,24 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 	)
 
+	// confirmation for client message
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": listener[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendTextMessage,
+	)
+
 	// Send to appointment Reminder SMS to client
 	// send at 15 min before of appointment
 	UTIL.SendMessage(
@@ -404,8 +422,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 				"###userName###":  listener[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -423,8 +441,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": listener[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 				"###userName###":  client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -470,20 +488,23 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	// 	listener[0]["email"],
 	// 	CONSTANT.InstantSendEmailMessage,
 	// )
-
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-	// 		map[string]string{
-	// 			"###counsellor_name###": listener[0]["first_name"],
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###date###":            UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), listener[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	listener[0]["phone"],
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	// confirmation for listener message
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  listener[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		listener[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

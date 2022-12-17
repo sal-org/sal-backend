@@ -409,8 +409,8 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 				"###userName###":  counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -428,8 +428,8 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 				"###userName###":  client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -486,19 +486,41 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentScheduleCounsellorTextMessage,
-	// 		map[string]string{
-	// 			"###counsellor_name###": counsellor[0]["first_name"],
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###date_time###":       UTIL.ConvertTimezone(UTIL.BuildDateTime(body["date"], body["time"]), counsellor[0]["timezone"]).Format(CONSTANT.ReadbleDateFormat),
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	counsellor[0]["phone"],
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	// send messsage to therpists for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  counsellor[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      body["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// send messsage to therpists for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": counsellor[0]["first_name"],
+				"###date###":      body["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -686,8 +708,8 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 				"###userName###":  counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -764,8 +786,8 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 				"###userName###":  client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -780,42 +802,63 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// 	Message: CONSTANT.ClientAppointmentRescheduleCounsellorEmailBody,
 	// }
 
-	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// // email for counsellor
-	// UTIL.SendEmail(
-	// 	CONSTANT.ClientAppointmentRescheduleClientTitle,
-	// 	emailBody,
-	// 	counsellor[0]["email"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
+	// send counsellor email body
+	emaildata := Model.EmailBodyMessageModel{
+		Name: counsellor[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleCounsellorEmailBody,
+			map[string]string{
+				"###first_name###": client[0]["first_name"],
+				"###date###":       body["date"],
+				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+	}
 
-	// Send to Client
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentRescheduleClientTextMeassge,
-	// 		map[string]string{
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###counsellor_name###": counsellor[0]["first_name"],
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	client[0]["phone"],
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for counsellor
+	UTIL.SendEmail(
+		CONSTANT.ClientAppointmentRescheduleClientTitle,
+		emailBody,
+		counsellor[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
 
-	// send to counsellor
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentRescheduleClientToCounsellorTextMeassge,
-	// 		map[string]string{
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###counsellor_name###": "navigatelink", // app link
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	counsellor[0]["phone"],
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	//Send to Client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleClientTextMeassge,
+			map[string]string{
+				"###clientName###":    client[0]["first_name"],
+				"###therapistName###": counsellor[0]["first_name"],
+				"###date###":          body["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	//send to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRescheduleClientToCounsellorTextMeassge,
+			map[string]string{
+				"###counsellorName###": counsellor[0]["first_name"],
+				"###clientName###":     client[0]["first_name"],
+				"###date###":           body["date"],
+				"###time###":           body["time"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -985,10 +1028,17 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// send email
 	filepath_text := "htmlfile/emailmessagebody.html"
 
-	// send email for client
+	// send client email body
 	emaildata1 := Model.EmailBodyMessageModel{
-		Name:    client[0]["first_name"],
-		Message: CONSTANT.ClientAppointmentCancelClientBody,
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancelClientBody,
+			map[string]string{
+				"###therapist_name###": counsellor[0]["first_name"],
+				"###date###":           appointment[0]["date"],
+				"###time###":           UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+			},
+		),
 	}
 
 	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
@@ -1027,7 +1077,8 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date_time###":   UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date###":        appointment[0]["date"],
+				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
 	}
@@ -1042,31 +1093,39 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Client Cancel the Appointment to send text message to counsellor
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
-	// 		map[string]string{
-	// 			"###client_name###": client[0]["first_name"],
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	counsellor[0]["phone"],
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+			map[string]string{
+				"###userName###":  counsellor[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      appointment[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
 
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentCancellationTextMessage,
-	// 		map[string]string{
-	// 			"###client_name###":     client[0]["first_name"],
-	// 			"###slot_bought###":     "1",
-	// 			"###counsellor_name###": counsellor[0]["first_name"],
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	client[0]["phone"],
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+			map[string]string{
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": counsellor[0]["first_name"],
+				"###date###":      appointment[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

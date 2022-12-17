@@ -7,6 +7,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -16,11 +17,11 @@ import (
 
 // Verify Payment Signature
 func GenerateSignature(signature, orderID, paymentID string) bool {
-	data := "" + orderID + "|" + paymentID + ""
-
+	data := orderID + "|" + paymentID
+	fmt.Println(data)
 	// Create a new HMAC by defining the hash type and the key (as byte array)
-	h := hmac.New(sha256.New, []byte(CONFIG.AWSSecretKey))
-
+	h := hmac.New(sha256.New, []byte(CONFIG.RazorpaySecret))
+	fmt.Println(CONFIG.RazorpaySecret)
 	// Write Data to it
 	_, err := h.Write([]byte(data))
 
@@ -30,12 +31,10 @@ func GenerateSignature(signature, orderID, paymentID string) bool {
 
 	// Get result and encode as hexadecimal string
 	sha := hex.EncodeToString(h.Sum(nil))
-
-	if subtle.ConstantTimeCompare([]byte(sha), []byte(signature)) != 1 {
-		return false
+	if subtle.ConstantTimeCompare([]byte(sha), []byte(signature)) == 1 {
+		return true
 	}
-
-	return true
+	return false
 
 }
 
@@ -103,6 +102,7 @@ func CaptureRazorpayPayment(transactionID string, amount float64) {
 
 // RefundRazorpayPayment - refund amount from razorpay transaction
 func RefundRazorpayPayment(transactionID string, amount float64) {
+	amount = amount * 100
 	refundBodyBytes, _ := json.Marshal(map[string]interface{}{
 		"amount": amount,
 	})
@@ -111,5 +111,15 @@ func RefundRazorpayPayment(transactionID string, amount float64) {
 	req.Header.Add("Authorization", CONFIG.RazorpayAuth)
 	req.Header.Add("Content-Type", "application/json")
 
-	http.DefaultClient.Do(req)
+	// http.DefaultClient.Do(req)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("error", err)
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(string(body))
 }

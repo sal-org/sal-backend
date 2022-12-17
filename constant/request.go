@@ -14,7 +14,7 @@ var (
 	EventOrderPaymentCompleteRequiredFields      = []string{"order_id", "payment_method", "payment_id"}
 	EventBlockOrderPaymentCompleteRequiredFields = []string{"order_id", "payment_method", "payment_id"}
 	ListenerOrderCreateRequiredFields            = []string{"client_id", "listener_id", "date", "time"}
-	CounsellorOrderPaymentCompleteRequiredFields = []string{"order_id", "payment_method", "payment_id"}
+	CounsellorOrderPaymentCompleteRequiredFields = []string{"order_id", "payment_method", "payment_id", "signature", "razor_order_id"}
 	ListenerOrderPaymentCompleteRequiredFields   = []string{"order_id"}
 	ClientProfileAddRequiredFields               = []string{"phone", "email"}
 	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
@@ -26,7 +26,7 @@ var (
 	ListenerProfileAddRequiredFields             = []string{"first_name", "phone"}
 	QuoteAddRequiredFields                       = []string{"quote"}
 	TherapistOrderCreateRequiredFields           = []string{"client_id", "therapist_id", "date", "time", "no_session"}
-	TherapistOrderPaymentCompleteRequiredFields  = []string{"order_id", "payment_method", "payment_id", "signature"}
+	TherapistOrderPaymentCompleteRequiredFields  = []string{"order_id", "payment_method", "payment_id", "signature", "razor_order_id"}
 	TherapistProfileAddRequiredFields            = []string{"first_name", "phone", "price"}
 	CancellationUpdateRequiredFields             = []string{"cancellation_reason"}
 	CounsellorCommentFields                      = []string{"commentforclient", "attachments"}
