@@ -87,7 +87,6 @@ func BasicAuthorization(channelName, uid string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return string(mapp["resourceId"]), nil
 
 }
@@ -107,11 +106,16 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 		ClientRequest: Model.ClientRequestForStartCall{
 			Token: token,
 			RecordingConfig: Model.RecordingConfigModel{
-				MaxIdleTime: 660,
-				// StreamMode:        "standard",
-				StreamTypes: 2,
-				ChannelType: 0,
-				// SubscribeUidGroup: 0,
+				MaxIdleTime:     660,
+				StreamTypes:     2,
+				ChannelType:     0,
+				VideoStreamType: 0,
+				TranscodingConfigs: Model.TranscodingConfig{
+					Height:           640,
+					Width:            360,
+					Fps:              15,
+					MixedVideoLayout: 1,
+				},
 			},
 			RecordingFileConfig: Model.RecordingFileConfigModel{
 				AvFileType: []string{"hls", "mp4"},
@@ -151,7 +155,9 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 		return "", err
 	}
 	defer res.Body.Close()
+	bodyy, _ := ioutil.ReadAll(res.Body)
 
+	fmt.Println(string(bodyy))
 	var result Model.AgoraCallStartResponse
 	json.NewDecoder(res.Body).Decode(&result)
 
@@ -160,15 +166,77 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 	// 	fmt.Println(err)
 	// 	return "", err
 	// }
-	// mapp := make(map[string]string)
+	mapp := make(map[string]string)
 
-	// err = json.Unmarshal(bodyy, &mapp)
+	err = json.Unmarshal(bodyy, &mapp)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println(result)
+
+	return mapp["sid"], nil
+
+}
+
+func AgoraUpateRecordingSettingCallStart(uid, channelName, sid, resourceid, uid1 string) (string, string, error) {
+	customerKey := CONFIG.AGORA_Customer_Key
+	// Customer secret
+	customerSecret := CONFIG.AGORA_Customer_Secret
+
+	var allUsers = []string{uid + "123", uid1 + "321"}
+
+	fmt.Println(allUsers)
+
+	// Concatenate customer key and customer secret and use base64 to encode the concatenated string
+	plainCredentials := customerKey + ":" + customerSecret
+	base64Credentials := base64.StdEncoding.EncodeToString([]byte(plainCredentials))
+
+	body := Model.ClientRequestForUpdateStartCall{
+		UID:           uid,
+		Cname:         channelName,
+		ClientRequest: Model.ClientRequest{StreamSubscribe: Model.StreamSubscribe{AudioUIDList: Model.AudioUIDList{SubscribeAudioUids: allUsers}, VideoUIDList: Model.VideoUIDList{SubscribeVideoUids: allUsers}}},
+	}
+
+	payloadBuf := new(bytes.Buffer)
+	json.NewEncoder(payloadBuf).Encode(body)
+
+	client := &http.Client{}
+	//https://api.agora.io/v1/apps/<appid>/cloud_recording/resourceid/<resourceid>/sid/<sid>/mode/<mode>/update
+	req, err := http.NewRequest("POST", CONSTANT.AgoraURL+"/apps/"+CONFIG.AGORA_APP_ID+"/cloud_recording/resourceid/"+resourceid+"/sid/"+sid+"/mode/mix/update", payloadBuf)
+	if err != nil {
+		fmt.Println(err)
+		return "", "", err
+	}
+	// Add Authorization header
+	req.Header.Add("Authorization", "Basic "+base64Credentials)
+	req.Header.Add("Content-Type", "application/json")
+
+	// Send HTTP request
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return "", "", err
+	}
+	defer res.Body.Close()
+
+	// var result Model.AgoraCallStartResponse
+	// json.NewDecoder(res.Body).Decode(&result)
+
+	bodyy, _ := ioutil.ReadAll(res.Body)
 	// if err != nil {
+	// 	fmt.Println(err)
 	// 	return "", err
 	// }
+	fmt.Println(string(bodyy))
+	mapp := make(map[string]string)
 
-	return result.Sid, nil
-
+	err = json.Unmarshal(bodyy, &mapp)
+	if err != nil {
+		return "", "", err
+	}
+	fmt.Println(mapp)
+	return mapp["sid"], mapp["resourceId"], nil
 }
 
 func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, string, error) {
@@ -217,11 +285,11 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, s
 	// b, _ := json.Marshal(result)
 	// fmt.Println(string(b))
 
-	// bodyy, err := ioutil.ReadAll(resp.Body)
+	bodyy, _ := ioutil.ReadAll(resp.Body)
 	// if err != nil {
 	// 	return "", "", err
 	// }
-	// fmt.Println(string(bodyy))
+	fmt.Println(string(bodyy))
 
 	// var mapp Model.AgoraCallStopResponseModel
 	var fileNameInMP4, fileNameInM3U8 string
@@ -277,10 +345,7 @@ func CallStatus(resourceid string, sid string) (Model.AgoraCallStatus, error) {
 	var result Model.AgoraCallStatus
 	json.NewDecoder(resp.Body).Decode(&result)
 	// // b, _ := json.Marshal(result)
-	// bodyBytes, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	//     return "", err
-	// }
-	// result := string(bodyBytes)
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println(string(bodyBytes))
 	return result, nil
 }

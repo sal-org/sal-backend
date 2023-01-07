@@ -213,7 +213,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		body["phone"],
 		UTIL.GetCurrentTime().String(),
 		therapistID,
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendTextMessage,
 	)
 
 	/*orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
@@ -244,10 +244,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	data := Model.EmailDataForCounsellorProfile{
+		Media_URL:   CONFIG.MediaURL,
 		First_Name:  therapist_details[0]["first_name"],
 		Last_Name:   therapist_details[0]["last_name"],
 		Gender:      therapist_details[0]["gender"],
-		Type:        "Counsellor",
+		Type:        "Therapist",
 		Phone:       therapist_details[0]["phone"],
 		Photo:       therapist_details[0]["photo"],
 		Email:       therapist_details[0]["email"],
@@ -268,7 +269,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AnandEmailID,
+		CONSTANT.AkshayEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)
 

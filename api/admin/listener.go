@@ -98,7 +98,7 @@ func ListenerUpdate(w http.ResponseWriter, r *http.Request) {
 	listener["email"] = body["email"]
 	listener["gender"] = body["gender"]
 	listener["occupation"] = body["occupation"]
-	listener["experience"] = body["experience"]
+	listener["age_group"] = body["age_group"]
 	listener["about"] = body["about"]
 	listener["status"] = body["status"]
 	listener["modified_by"] = body["modified_by"]

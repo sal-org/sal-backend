@@ -1,6 +1,7 @@
 package listener
 
 import (
+	"fmt"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -272,10 +273,10 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -289,10 +290,10 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get listener type
 	listenerType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
@@ -312,23 +313,19 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":     CONSTANT.AppointmentStarted,
-			"started_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	// var allUsers []string
 
-	if agora[0]["uid"] == r.FormValue("uid") {
+	// var user = agora[0]["uid"]
+	// fmt.Println(user)
+
+	// allUsers = append(allUsers, agora[0]["uid1"])
+	// allUsers = append(allUsers, agora[0]["uid"])
+
+	if len(agora[0]["sid"]) == 0 {
 
 		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
 		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
+			fmt.Println("cloud recording not started")
 		}
 
 		DB.UpdateSQL(CONSTANT.AgoraTable,
@@ -343,6 +340,17 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		)
 
 	}
+
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":     CONSTANT.AppointmentStarted,
+			"started_at": UTIL.GetCurrentTime().Local().String(),
+		},
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -379,10 +387,10 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check if appointment is to be started
-	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentStarted) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentDidntStartedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get listener type
 	listenerType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
@@ -404,15 +412,14 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		},
 		map[string]string{
 			"status":   CONSTANT.AppointmentCompleted,
-			"ended_at": UTIL.GetCurrentTime().String(),
+			"ended_at": UTIL.GetCurrentTime().Local().String(),
 		},
 	)
 
-	if agora[0]["uid"] == r.FormValue("uid") {
+	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
 		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
+			fmt.Println("file is not created")
 		}
 		DB.UpdateSQL(CONSTANT.AgoraTable,
 			map[string]string{

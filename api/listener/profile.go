@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -192,6 +193,36 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	data := Model.EmailDataForCounsellorProfile{
+		Media_URL:   CONFIG.MediaURL,
+		First_Name:  listeners[0]["first_name"],
+		Last_Name:   listeners[0]["last_name"],
+		Gender:      listeners[0]["gender"],
+		Type:        "Listener",
+		Phone:       listeners[0]["phone"],
+		Photo:       listeners[0]["photo"],
+		Email:       listeners[0]["email"],
+		Education:   listeners[0]["occupation"],
+		Experience:  listeners[0]["age_group"],
+		About:       listeners[0]["about"],
+		Resume:      "NULL",
+		Certificate: "NULL",
+		Aadhar:      listeners[0]["aadhar"],
+		Linkedin:    "NULL",
+		Status:      listeners[0]["status"],
+	}
+
+	filepath := "htmlfile/CounsellorProfile.html"
+
+	emailbody := UTIL.GetHTMLTemplateForProfile(data, filepath)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailbody,
+		CONSTANT.AkshayEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	// send account signup notification to listener
 	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, listenerID)

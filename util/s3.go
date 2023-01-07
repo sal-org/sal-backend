@@ -80,7 +80,7 @@ func UploadToS3(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, a
 		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
 		Region:      aws.String(s3Region),
 	}
-	sess := session.New(&conf)
+	sess, _ := session.NewSession(&conf)
 
 	svc := s3manager.NewUploader(sess)
 
@@ -125,7 +125,7 @@ func UploadToS3File(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extensio
 		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
 		Region:      aws.String(s3Region),
 	}
-	sess := session.New(&conf)
+	sess, _ := session.NewSession(&conf)
 
 	svc := s3manager.NewUploader(sess)
 

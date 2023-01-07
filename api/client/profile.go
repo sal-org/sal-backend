@@ -216,9 +216,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		r.FormValue("phone"),
+		body["phone"],
 		UTIL.GetCurrentTime().String(),
-		CONSTANT.MessageSent,
+		clientID,
 		CONSTANT.InstantSendTextMessage,
 	)
 

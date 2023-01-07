@@ -33,6 +33,22 @@ func GetBillingDetails(price, discount string) map[string]string {
 	return billing
 }
 
+func AvgRatingFromula(rating []map[string]string, totalCount string) string {
+
+	totalCnt, _ := strconv.ParseFloat(totalCount, 32)
+
+	var sum float64
+	for i := 0; i < len(rating); i++ {
+		rating, _ := strconv.ParseFloat(rating[i]["rating"], 64)
+		sum = sum + rating
+	}
+
+	avg := sum / totalCnt
+	avgInString := strconv.FormatFloat(avg, 'f', 1, 64)
+
+	return avgInString
+}
+
 // CheckIfAppointmentSlotAvailable - for both counsellor and listener, check if the specfied slot is available - date (2021-01-12), time (0-47 slots in IST)
 func CheckIfAppointmentSlotAvailable(counsellorID, date, time string) bool {
 	data, _, _ := DB.SelectSQL(CONSTANT.SlotsTable, []string{"1"}, map[string]string{"counsellor_id": counsellorID, "date": date, time: CONSTANT.SlotAvailable}) // if the date time data is 1 in database

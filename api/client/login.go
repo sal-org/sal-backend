@@ -80,20 +80,20 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	//check if otp is correct
-	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if len(r.FormValue("device_id")) < 0 {
 		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if !strings.EqualFold("4444", r.FormValue("otp")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone")})

@@ -108,10 +108,10 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	//check if otp is correct
-	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if len(r.FormValue("device_id")) < 0 {
 		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
@@ -119,10 +119,10 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// this for testing
-	if !strings.EqualFold("4444", r.FormValue("otp")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get counsellor details
 	var counsellorType string
@@ -136,7 +136,15 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	if len(counsellor) > 0 {
 		// counsellor already signed up
 		// check if counsellor is active
-		if !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorNotApproved) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorInactive) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
@@ -153,7 +161,15 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		if len(counsellor) > 0 {
 			// listener already signed up
 			// check if listener is active
-			if !strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerActive) {
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerNotApproved) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerInactive) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountBlockedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerBlocked) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
@@ -171,7 +187,15 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		if len(counsellor) > 0 {
 			// therapist already signed up
 			// check if therapist is active
-			if !strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistActive) {
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistNotApproved) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistInactive) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountBlockedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistBlocked) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
 				return
 			}

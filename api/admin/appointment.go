@@ -208,6 +208,22 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 				CONSTANT.InstantSendEmailMessage,
 			)
 
+			UTIL.SendMessage(
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.ClientRefundAmonutTextMessage,
+					map[string]string{
+						"###amount###": r.FormValue("refund_amount"),
+						"###date###":   appointment[0]["date"],
+						"###time###":   UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+					},
+				),
+				CONSTANT.TransactionalRouteTextMessage,
+				client[0]["phone"],
+				UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+				r.FormValue("appointment_id"),
+				CONSTANT.InstantSendEmailMessage,
+			)
+
 			UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "Refund of "+r.FormValue("refund_amount")+" is initiated", CONSTANT.ShowDialog, response)
 			return
 
@@ -266,6 +282,22 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 				CONSTANT.ClientAppointmentCancelClientTitle,
 				emailBody1,
 				client[0]["email"],
+				CONSTANT.InstantSendEmailMessage,
+			)
+
+			UTIL.SendMessage(
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.ClientRefundAmonutTextMessage,
+					map[string]string{
+						"###amount###": r.FormValue("refund_amount"),
+						"###date###":   appointment[0]["date"],
+						"###time###":   UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+					},
+				),
+				CONSTANT.TransactionalRouteTextMessage,
+				client[0]["phone"],
+				UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+				r.FormValue("appointment_id"),
 				CONSTANT.InstantSendEmailMessage,
 			)
 
@@ -328,6 +360,22 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 				CONSTANT.ClientAppointmentCancelClientTitle,
 				emailBody1,
 				client[0]["email"],
+				CONSTANT.InstantSendEmailMessage,
+			)
+
+			UTIL.SendMessage(
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.ClientRefundAmonutTextMessage,
+					map[string]string{
+						"###amount###": r.FormValue("refund_amount"),
+						"###date###":   appointment[0]["date"],
+						"###time###":   UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+					},
+				),
+				CONSTANT.TransactionalRouteTextMessage,
+				client[0]["phone"],
+				UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+				r.FormValue("appointment_id"),
 				CONSTANT.InstantSendEmailMessage,
 			)
 

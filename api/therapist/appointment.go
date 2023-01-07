@@ -1,6 +1,7 @@
 package therapist
 
 import (
+	"fmt"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -374,12 +375,16 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	if agora[0]["uid"] == r.FormValue("uid") {
+	// var allUsers []string
+
+	// allUsers = append(allUsers, agora[0]["uid1"])
+	// allUsers = append(allUsers, agora[0]["uid"])
+
+	if len(agora[0]["sid"]) == 0 {
 
 		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
 		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
+			fmt.Println("cloud recording not started")
 		}
 
 		DB.UpdateSQL(CONSTANT.AgoraTable,
@@ -454,11 +459,10 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	if agora[0]["uid"] == r.FormValue("uid") {
+	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
 		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
+			fmt.Println("file is not created")
 		}
 		DB.UpdateSQL(CONSTANT.AgoraTable,
 			map[string]string{

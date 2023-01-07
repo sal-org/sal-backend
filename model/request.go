@@ -336,6 +336,7 @@ type EmailDataForEvent struct {
 }
 
 type EmailDataForCounsellorProfile struct {
+	Media_URL   string
 	First_Name  string
 	Last_Name   string
 	Gender      string
@@ -508,10 +509,23 @@ type PostRequestForAgora struct {
 
 type RecordingConfigModel struct {
 	MaxIdleTime int `json:"maxIdleTime"`
+	// StreamMode         string `json:"streamMode"`
 	StreamTypes int `json:"streamTypes"`
-	ChannelType int `json:"channelType"`
-	// SubscribeUidGroup int `json:"subscribeUidGroup"`
-	// StreamMode        string `json:"streamMode"`
+	// AudioProfile       int `json:"audioProfile"`
+	ChannelType        int `json:"channelType"`
+	VideoStreamType    int `json:"videoStreamType"`
+	TranscodingConfigs TranscodingConfig
+	// SubscribeVideoUids []string `json:"subscribeVideoUids"`
+	// SubscribeAudioUids []string `json:"subscribeAudioUids"`
+	// SubscribeUidGroup  int      `json:"subscribeUidGroup"`
+}
+
+type TranscodingConfig struct {
+	Height           int `json:"height"`
+	Width            int `json:"width"`
+	Bitrate          int `json:"bitrate"`
+	Fps              int `json:"fps"`
+	MixedVideoLayout int `json:"mixedVideoLayout"`
 }
 
 type Tags struct {
@@ -541,6 +555,25 @@ type ClientRequestForStartCall struct {
 	RecordingConfig     RecordingConfigModel     `json:"recordingConfig"`
 	RecordingFileConfig RecordingFileConfigModel `json:"recordingFileConfig"`
 	StorageConfig       StorageConfigModel       `json:"storageConfig"`
+}
+
+type ClientRequestForUpdateStartCall struct {
+	UID           string        `json:"uid"`
+	Cname         string        `json:"cname"`
+	ClientRequest ClientRequest `json:"clientRequest"`
+}
+type AudioUIDList struct {
+	SubscribeAudioUids []string `json:"subscribeAudioUids"`
+}
+type VideoUIDList struct {
+	SubscribeVideoUids []string `json:"subscribeVideoUids"`
+}
+type StreamSubscribe struct {
+	AudioUIDList AudioUIDList `json:"audioUidList"`
+	VideoUIDList VideoUIDList `json:"videoUidList"`
+}
+type ClientRequest struct {
+	StreamSubscribe StreamSubscribe `json:"streamSubscribe"`
 }
 
 type AgoraCallStartModel struct {

@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"fmt"
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -153,6 +154,10 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	fmt.Println(UTIL.GetCurrentTime().Local().String())
+	fmt.Println(UTIL.GetCurrentTime().String())
+	fmt.Println(devices)
+
 	// send all notifications
 	for _, device := range devices {
 		DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, map[string]string{
@@ -162,6 +167,7 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 			"body":                notification["body"],
 			"status":              CONSTANT.NotificationActive,
 			"notification_status": CONSTANT.NotificationInProgress,
+			"send_at":             UTIL.GetCurrentTime().Local().String(),
 			"created_at":          UTIL.GetCurrentTime().String(),
 		}, "notification_id")
 	}

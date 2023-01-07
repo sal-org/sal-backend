@@ -236,6 +236,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	data := Model.EmailDataForCounsellorProfile{
+		Media_URL:   CONFIG.MediaURL,
 		First_Name:  counsellor_details[0]["first_name"],
 		Last_Name:   counsellor_details[0]["last_name"],
 		Gender:      counsellor_details[0]["gender"],
@@ -260,7 +261,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AnandEmailID,
+		CONSTANT.AkshayEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)
 
