@@ -232,7 +232,7 @@ func GetTimeFromTimeSlotIN12Hour(timeSlot string) string {
 	case 38:
 		return "07:00 PM"
 	case 39:
-		return "08:30 PM"
+		return "07:30 PM"
 	case 40:
 		return "08:00 PM"
 	case 41:

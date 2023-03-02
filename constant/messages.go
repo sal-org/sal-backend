@@ -5,6 +5,7 @@ const (
 	AdminAccountWrongCredentialsMessage    = "Admin account doesn't exist with given credentials. Check your username and password."
 	AdminAccountDeletedMessage             = "Admin account blocked. Please contact super admin"
 	AdminExistsMessage                     = "Admin with specified username already exists"
+	AminUserProfileMessage                 = "User doesn't exists"
 	AppointmentNotExistMessage             = "Appointment doesn't exist"
 	AgoraCallMessage                       = "Agora call not started"
 	AppointmentSlotNotExistMessage         = "Appointment slots doesn't exist"

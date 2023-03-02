@@ -5502,7 +5502,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
+	Host:        "btkbtwnsw0.execute-api.ap-south-1.amazonaws.com",
 	BasePath:    "/prod",
 	Schemes:     []string{"https"},
 	Title:       "SAL Backend API",

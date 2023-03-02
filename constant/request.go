@@ -3,6 +3,8 @@ package constant
 // required fields for api endpoints
 var (
 	AdminProfileAddRequiredFields                = []string{"username", "password", "type"}
+	AdminUserRoleRequiredFields                  = []string{"role_id", "user_name", "password", "profile_name"}
+	AdminUserProfileRequiredFields               = []string{"profile_name"}
 	AppointmentBookRequiredFields                = []string{"appointment_slot_id", "date", "time"}
 	AppointmentRescheduleRequiredFields          = []string{"date", "time"}
 	AppointmentRatingAddRequiredFields           = []string{"appointment_id", "rating", "client_id", "counsellor_id"}
@@ -18,6 +20,7 @@ var (
 	ListenerOrderPaymentCompleteRequiredFields   = []string{"order_id"}
 	ClientProfileAddRequiredFields               = []string{"phone", "email"}
 	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
+	SMSServicesRequiredFields                    = []string{"phone", "body"}
 	QualityCheckLoginIDAndPassword               = []string{"username", "password"}
 	VideoCheckCommentRequiredFields              = []string{"appointment_id", "comments"}
 	NotificationRequiredFields                   = []string{"userType", "status"}

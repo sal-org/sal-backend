@@ -174,6 +174,8 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var invoice, order []map[string]string
+
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
 	if !ok {
@@ -185,30 +187,32 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get appointment slots details
-	appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
 	// get appointment order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	order, status, ok = DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
-	invoice, status, ok := DB.SelectProcess("select order_id as id, payment_id, user_type, paid_amount, created_at, payment_method  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
+	if !(appointment[0]["type"] == "2") {
+
+		// get appointment slots details
+		appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
+		invoice, status, ok = DB.SelectProcess("select order_id as id, payment_id, user_type, paid_amount, created_at, payment_method  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
+		response["appointment_slots"] = appointmentSlots[0]
 	}
 
-	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["appointment"] = appointment[0]
-	response["appointment_slots"] = appointmentSlots[0]
 	response["order"] = order[0]
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

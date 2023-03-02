@@ -3,6 +3,8 @@ package constant
 // database tables
 const (
 	AdminsTable                    = "admins"
+	UsersPermissionTable           = "usersPermission"
+	RolesTable                     = "roles"
 	QualityCheckTable              = "qualitycheck"
 	QualityCheckDetailsTable       = "qualitycheck_details"
 	AppointmentsTable              = "appointments"

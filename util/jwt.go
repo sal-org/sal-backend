@@ -40,6 +40,16 @@ func CreateAccessToken(id string) (string, bool) {
 	return createJWTToken(id, CONSTANT.JWTAccessExpiry)
 }
 
+// CreateAccessToken - jwt token for accessing api
+func CreateAccessTokenForWeb(id string) (string, bool) {
+	return createJWTToken(id, CONSTANT.JWTAccessExpiryForWeb)
+}
+
+// CreateRefreshToken - jwt token for getting access token, if expired
+func CreateRefreshTokenForWeb(id string) (string, bool) {
+	return createJWTToken(id, CONSTANT.JWTRefreshExpiryForWeb, true)
+}
+
 // CreateRefreshToken - jwt token for getting access token, if expired
 func CreateRefreshToken(id string) (string, bool) {
 	return createJWTToken(id, CONSTANT.JWTRefreshExpiry, true)

@@ -6,11 +6,14 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
+	"sync"
 	"time"
 
 	UTIL "salbackend/util"
 	"strings"
 )
+
+var wg sync.WaitGroup
 
 // ListenerProfile godoc
 // @Tags Client Listener
@@ -32,7 +35,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type", "age_group"}, map[string]string{"listener_id": r.FormValue("listener_id")})
+	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type", "age_group", "about"}, map[string]string{"listener_id": r.FormValue("listener_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -57,7 +60,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get last 10 listener apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 10 ", r.FormValue("listener_id"))
+	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 10 ", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -301,23 +304,41 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	qualitycheck_details["time"] = order[0]["time"]
 	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
 	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
 
 	// change order status
 	orderUpdate := map[string]string{}
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
-	status, ok = DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
+
+	// sent notitifications
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	// wg.Add(12)
+	// go func() {
+	// 	defer wg.Done()
+	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// }()
+
+	// go func() {
+	// 	defer wg.Done()
+	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{
 			"order_id": body["order_id"],
 		},
 		orderUpdate,
 	)
+	// }()
 
+	// go func() {
+	// 	defer wg.Done()
 	// update listener slots
 	DB.UpdateSQL(CONSTANT.SlotsTable,
 		map[string]string{
@@ -328,16 +349,18 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			order[0]["time"]: CONSTANT.SlotBooked,
 		},
 	)
+	// }()
 
-	// sent notitifications
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
-
+	// go func() {
+	// 	defer wg.Done()
 	// send appointment booking notification to client
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
 	)
+	// }()
 
+	// go func() {
+	// 	defer wg.Done()
 	// send appointment reminder notification to client before 15 min
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderClientHeading,
@@ -354,10 +377,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
+	// }()
 
-	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
-
+	// go func() {
+	// 	defer wg.Done()
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: client[0]["first_name"],
 		Message: UTIL.ReplaceNotificationContentInString(
@@ -378,7 +401,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
+	// }()
 
+	// go func() {
+	// 	defer wg.Done()
 	// send appointment booking notification, message to listener
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
@@ -395,7 +421,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.NotificationSent,
 		appointmentID,
 	)
+	// }()
 
+	// go func() {
+	// 	defer wg.Done()
 	// confirmation for client message
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
@@ -413,7 +442,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
 	)
+	// }()
 
+	// go func() {
+	// 	defer wg.Done()
 	// Send to appointment Reminder SMS to client
 	// send at 15 min before of appointment
 	UTIL.SendMessage(
@@ -432,7 +464,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
+	// }()
 
+	// go func() {
+	// 	defer wg.Done()
 	// Send to appointment Reminder SMS to counsellor
 	// send at 15 min before of appointment
 	UTIL.SendMessage(
@@ -452,6 +487,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
+	// }()
+
+	// go func() {
+	// 	defer wg.Done()
 	// send appointment reminder notification to listener before 15 min
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
@@ -468,6 +507,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.NotificationInProgress,
 		appointmentID,
 	)
+	// }()
 
 	// emaildata := Model.EmailBodyMessageModel{
 	// 	Name: listener[0]["first_name"],
@@ -488,6 +528,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	// 	listener[0]["email"],
 	// 	CONSTANT.InstantSendEmailMessage,
 	// )
+	// go func() {
+	// 	defer wg.Done()
 	// confirmation for listener message
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
@@ -505,6 +547,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
 	)
+	// }()
+	// wg.Wait()
 
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

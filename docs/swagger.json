@@ -9,7 +9,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "yvsdncrpod.execute-api.ap-south-1.amazonaws.com",
+    "host": "btkbtwnsw0.execute-api.ap-south-1.amazonaws.com",
     "basePath": "/prod",
     "paths": {
         "/cancellationreason": {

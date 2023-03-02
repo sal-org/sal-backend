@@ -15,4 +15,7 @@ func LoadQualityCheckRoutes(router *mux.Router) {
 	qualityCheckRoutes.HandleFunc("/send-email", SendEmail).Methods("POST")
 
 	qualityCheckRoutes.HandleFunc("/video-comment", VideoCallComment).Methods("POST")
+
+	// sms
+	qualityCheckRoutes.HandleFunc("/send-sms", SendSMS).Methods("POST")
 }

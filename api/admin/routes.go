@@ -58,6 +58,22 @@ func LoadAdminRoutes(router *mux.Router) {
 	adminRoutes.HandleFunc("/login", Login).Methods("GET")
 	adminRoutes.HandleFunc("/refresh-token", RefreshToken).Methods("GET")
 
+	// add user role
+	adminRoutes.HandleFunc("/profileRole", AddProfileForUsers).Methods("POST")
+	adminRoutes.HandleFunc("/profileRole", UpdateProfileForUsers).Queries("id", "{id}").Methods("PUT")
+	adminRoutes.HandleFunc("/profileRole", UserProfileGet).Methods("GET")
+	adminRoutes.HandleFunc("/profileRole", UserProfileDelete).Queries(
+		"role_id", "{role_id}",
+	).Methods("DELETE")
+
+	// add user attch role
+	adminRoutes.HandleFunc("/userRole", AttachPermission).Methods("POST")
+	adminRoutes.HandleFunc("/userRole", UpdateUserPermission).Queries("id", "{id}").Methods("PUT")
+	adminRoutes.HandleFunc("/userRole", UserPermissionGet).Methods("GET")
+	adminRoutes.HandleFunc("/userRole", UserPermissionDelete).Queries(
+		"user_id", "{user_id}",
+	).Methods("DELETE")
+
 	// notification
 	adminRoutes.HandleFunc("/notification", NotificationGet).Methods("GET")
 	adminRoutes.HandleFunc("/notification", NotificationAdd).Methods("POST")
