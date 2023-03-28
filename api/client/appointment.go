@@ -897,6 +897,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// check if appointment is to be started
+	if strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentUserCancelled) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancelByUserMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// check if appointment is to be started
 	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
@@ -992,13 +999,10 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		break
 	case CONSTANT.ListenerType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		break
 	case CONSTANT.TherapistType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		break
 
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
@@ -1130,7 +1134,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		r.FormValue("appointment_id"),
 		CONSTANT.InstantSendTextMessage,
 	)
-
+	fmt.Println("Status:" + CONSTANT.StatusCodeOk)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

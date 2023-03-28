@@ -446,7 +446,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 	orderUpdate["invoice_id"] = invoiceID
-	status, ok = DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
+	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{
 			"order_id": body["order_id"],
 		},
@@ -464,9 +464,15 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	// sent notifications
+	// therapists deatils
 	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email", "timezone", "price", "multiple_sessions", "price_3", "price_5"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
+
+	// client deatils
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": order[0]["client_id"]})
+
+	// Notifcation
+
+	// Client Notifcation
 
 	// send payment success notification, email to client
 	UTIL.SendNotification(
@@ -506,21 +512,123 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 	)
 
-	// send payment success notification, email to client
+	// therapists Notifcation
+
+	// send appointment booking notification to therapist
 	UTIL.SendNotification(
-		CONSTANT.ClientPaymentSucessClientHeading,
+		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientPaymentSucessClientContent,
+			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###paid_amount###": order[0]["paid_amount"],
+				"###Date###": order[0]["date"],
+				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
-		order[0]["client_id"],
-		CONSTANT.ClientType,
+		order[0]["counsellor_id"],
+		CONSTANT.TherapistType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		invoiceID,
+		appointmentID,
 	)
+
+	// send appointment reminder notification to therapist before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###user_name###": therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+		order[0]["counsellor_id"],
+		CONSTANT.TherapistType,
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
+		appointmentID,
+	)
+
+	// SMS NOTIFICATION
+
+	// Client SMS Notifcation
+
+	// send messsage to client for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": therapist[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###userName###":  therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// Counsellor SMS Notification
+
+	// send messsage to therpists for Appointment Confirmation
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  therapist[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		therapist[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// send at 15 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": therapist[0]["first_name"],
+				"###userName###":  client[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		therapist[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// EMAIL
+
+	// client email
 
 	invoiceforemail, _, _ := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"id", "discount", "paid_amount", "payment_id", "coupon_code", "created_at"}, map[string]string{"invoice_id": invoiceID})
 
@@ -598,149 +706,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	// Send to appointment Reminder SMS to client
-	// send at 15 min before of appointment
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			// need to change
-			CONSTANT.ClientAppointmentReminderTextMessage,
-			map[string]string{
-				"###user_name###": client[0]["first_name"],
-				"###userName###":  therapist[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
-		appointmentID,
-		CONSTANT.LaterSendTextMessage,
-	)
-
-	// Send to appointment Reminder SMS to counsellor
-	// send at 15 min before of appointment
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			// need to change
-			CONSTANT.ClientAppointmentReminderTextMessage,
-			map[string]string{
-				"###user_name###": therapist[0]["first_name"],
-				"###userName###":  client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		therapist[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
-		appointmentID,
-		CONSTANT.LaterSendTextMessage,
-	)
-
-	// send appointment booking notification to therapist
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleCounsellorHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentScheduleCounsellorContent,
-			map[string]string{
-				"###Date###": order[0]["date"],
-				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-		order[0]["counsellor_id"],
-		CONSTANT.TherapistType,
-		UTIL.GetCurrentTime().String(),
-		CONSTANT.NotificationSent,
-		appointmentID,
-	)
-
-	// send appointment reminder notification to therapist before 15 min
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentReminderCounsellorHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRemiderClientContent,
-			map[string]string{
-				"###user_name###": therapist[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
-			},
-		),
-		order[0]["counsellor_id"],
-		CONSTANT.TherapistType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
-		CONSTANT.NotificationInProgress,
-		appointmentID,
-	)
-
-	// send payment received notification, message to therapist
-	// var notificationHeading, notificationContent string
-	// switch order[0]["slots_bought"] {
-	// case "1":
-	// 	notificationHeading = CONSTANT.Client1AppointmentBookCounsellorHeading
-	// 	notificationContent = CONSTANT.Client1AppointmentBookCounsellorContent
-	// case "3":
-	// 	notificationHeading = CONSTANT.Client3AppointmentBookCounsellorHeading
-	// 	notificationContent = CONSTANT.Client3AppointmentBookCounsellorContent
-	// case "5":
-	// 	notificationHeading = CONSTANT.Client5AppointmentBookCounsellorHeading
-	// 	notificationContent = CONSTANT.Client5AppointmentBookCounsellorContent
-	// }
-
-	// send messsage to therpists for Appointment Confirmation
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentConfirmationTextMessage,
-			map[string]string{
-				"###userName###":  therapist[0]["first_name"],
-				"###user_Name###": client[0]["first_name"],
-				"###date###":      order[0]["date"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		therapist[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
-		appointmentID,
-		CONSTANT.InstantSendEmailMessage,
-	)
-
-	// dateFormat := UTIL.BuildOnlyDate(order[0]["date"])
-
-	// timeFormat := UTIL.GetTimeFromTimeSlot(order[0]["time"])
-
-	// send messsage to client for Appointment Confirmation
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentConfirmationTextMessage,
-			map[string]string{
-				"###userName###":  client[0]["first_name"],
-				"###user_Name###": therapist[0]["first_name"],
-				"###date###":      order[0]["date"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
-		appointmentID,
-		CONSTANT.InstantSendEmailMessage,
-	)
-
-	// Send to Payment SMS to client
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientPaymentConfirmationTextMeassge,
-	// 		map[string]string{
-	// 			"###client_name###": client[0]["first_name"],
-	// 			"###amount###":      invoiceforemail[0]["paid_amount"],
-	// 			"###bought###":      order[0]["slots_bought"],
-	// 			"###Aaplink###":     "www.sal-foundation.com", // replace with app receipt link
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	client[0]["phone"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
-
-	// Appointment Booked target Counsellor
+	// therapists Email
 
 	emaildata := Model.EmailBodyMessageModel{
 		Name: therapist[0]["first_name"],
@@ -762,42 +728,6 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	// Appointment Booked target Client
-	// client_data := Model.ClientAppointmentConfirmation{
-	// 	First_Name:      client[0]["first_name"],
-	// 	Counsellor_Name: therapist[0]["first_name"],
-	// 	Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-	// }
-
-	// filepath_text := "htmlfile/Client_Appointment_Book.html"
-
-	// emailBody := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(client_data, filepath_text)
-
-	// UTIL.SendEmail(
-	// 	"Appointment Booked",
-	// 	emailBody,
-	// 	client[0]["email"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
-
-	// Appointment Booked target Counsellor
-	// counsellor_data := Model.ClientAppointmentConfirmation{
-	// 	First_Name:      therapist[0]["first_name"],
-	// 	Counsellor_Name: client[0]["first_name"],
-	// 	Date_Time:       UTIL.ConvertTimezone(UTIL.BuildDateTime(order[0]["date"], order[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
-	// }
-
-	// filepath2 := "htmlfile/Counsellor_Client_Booking_Confirmation.html"
-
-	// emailBody1 := UTIL.GetHTMLTemplateForClientAppointmentConfirmation(counsellor_data, filepath2)
-
-	// UTIL.SendEmail(
-	// 	"Appointment Booked",
-	// 	emailBody1,
-	// 	therapist[0]["email"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
-
-	// response["invoice_id"] = invoiceID
+	response["invoice_id"] = invoiceID
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 }

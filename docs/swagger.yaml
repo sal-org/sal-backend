@@ -563,7 +563,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancellation Region Counsellor
@@ -586,7 +586,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Get client profile with email, if signed up already
       tags:
       - Client Profile
@@ -602,7 +602,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Add client profile after OTP verified to signup
       tags:
       - Client Profile
@@ -623,7 +623,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update client profile details
@@ -641,7 +641,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancel an appointment
@@ -658,7 +658,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get client appointment details
@@ -676,7 +676,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Book an appointment
@@ -699,7 +699,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Reschedule an appointment
@@ -732,7 +732,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get Agora Token
@@ -750,7 +750,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancel bulk appointments
@@ -779,7 +779,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancellation Region client
@@ -797,7 +797,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get invoice download Receipt
@@ -820,7 +820,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: End an appointment
@@ -838,7 +838,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get client past appointments
@@ -857,7 +857,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Rate the appointment
@@ -875,7 +875,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get client appointment slots
@@ -898,7 +898,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Start an appointment
@@ -916,7 +916,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get client upcoming appointments
@@ -934,7 +934,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment detail
@@ -952,7 +952,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Add client assessment
@@ -970,7 +970,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment download
@@ -988,7 +988,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment history
@@ -1006,7 +1006,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available assessments
@@ -1024,7 +1024,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor details
@@ -1043,7 +1043,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Create appointment order with client and counsellor
@@ -1062,7 +1062,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for counsellor order
@@ -1080,7 +1080,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor slots
@@ -1098,7 +1098,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get event details
@@ -1116,7 +1116,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get booked upcoming and past events
@@ -1135,7 +1135,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Book a slot in an event
@@ -1154,7 +1154,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for event order
@@ -1166,7 +1166,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available events
@@ -1183,7 +1183,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get home page content
@@ -1201,7 +1201,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener details
@@ -1220,7 +1220,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Create appointment order with client and listener
@@ -1239,7 +1239,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for listener order
@@ -1257,7 +1257,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener slots
@@ -1276,7 +1276,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Add client mood
@@ -1294,7 +1294,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get mood content
@@ -1317,7 +1317,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get mood history
@@ -1339,7 +1339,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get notifications for client
@@ -1357,7 +1357,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get new access token with refresh token
@@ -1408,7 +1408,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor/listener/therapist list with search filters
@@ -1426,7 +1426,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Send OTP to specified phone
       tags:
       - Client Login
@@ -1442,7 +1442,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist details
@@ -1461,7 +1461,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Create appointment order with client and therapist
@@ -1480,7 +1480,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for therapist order
@@ -1498,7 +1498,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist slots
@@ -1527,7 +1527,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Verify OTP sent to specified phone
       tags:
       - Client Login
@@ -1550,7 +1550,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get contents
@@ -1562,7 +1562,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get all available content categories
@@ -1585,7 +1585,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Unlike content
@@ -1602,7 +1602,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get liked contents
@@ -1624,7 +1624,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Like content
@@ -1645,7 +1645,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor profile with email, if signed up already
@@ -1663,7 +1663,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Add counsellor profile after OTP verified to signup
       tags:
       - Counsellor Profile
@@ -1684,7 +1684,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update counsellor profile details
@@ -1702,7 +1702,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get contents
@@ -1720,7 +1720,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancel an appointment
@@ -1744,7 +1744,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Comment an appointment
@@ -1767,7 +1767,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: End an appointment
@@ -1785,7 +1785,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor past appointments
@@ -1808,7 +1808,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Start an appointment
@@ -1826,7 +1826,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor upcoming appointments
@@ -1844,7 +1844,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment detail
@@ -1862,7 +1862,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Add counsellor assessment
@@ -1880,7 +1880,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment download
@@ -1898,7 +1898,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: GET counsellor assessment
@@ -1916,7 +1916,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available assessments
@@ -1934,7 +1934,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor availability hours
@@ -1951,7 +1951,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update counsellor availability hours
@@ -1969,7 +1969,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get event details
@@ -1996,7 +1996,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Start and stop event
@@ -2014,7 +2014,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get blocked upcoming and past events
@@ -2033,7 +2033,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Block a slot for an event
@@ -2051,7 +2051,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get booked upcoming and past events
@@ -2070,7 +2070,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Book a slot in an event
@@ -2089,7 +2089,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for event order
@@ -2101,7 +2101,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available events
@@ -2118,7 +2118,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get home page content
@@ -2140,7 +2140,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get notifications for counsellor
@@ -2166,7 +2166,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get payments for counsellor
@@ -2184,7 +2184,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get new access token with refresh token
@@ -2201,7 +2201,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get counsellor training content
@@ -2224,7 +2224,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: delete User details
@@ -2236,7 +2236,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get all available language
@@ -2257,7 +2257,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener profile with email, if signed up already
@@ -2275,7 +2275,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Add listener profile after OTP verified to signup
       tags:
       - Listener Profile
@@ -2296,7 +2296,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update listener profile details
@@ -2314,7 +2314,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancel an appointment
@@ -2337,7 +2337,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: End an appointment
@@ -2355,7 +2355,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener past appointments
@@ -2378,7 +2378,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Start an appointment
@@ -2396,7 +2396,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener upcoming appointments
@@ -2414,7 +2414,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment detail
@@ -2432,7 +2432,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Add listener assessment
@@ -2450,7 +2450,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment download
@@ -2468,7 +2468,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment history
@@ -2486,7 +2486,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available assessments
@@ -2504,7 +2504,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener availability hours
@@ -2521,7 +2521,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update listener availability hours
@@ -2539,7 +2539,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get event details
@@ -2557,7 +2557,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get booked upcoming and past events
@@ -2576,7 +2576,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Book a slot in an event
@@ -2595,7 +2595,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for event order
@@ -2607,7 +2607,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available events
@@ -2624,7 +2624,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get home page content
@@ -2646,7 +2646,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get notifications for listener
@@ -2664,7 +2664,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get new access token with refresh token
@@ -2681,7 +2681,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get listener training content
@@ -2693,7 +2693,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get all available topics, languages
@@ -2705,7 +2705,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get all moods
@@ -2729,7 +2729,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update Notification status
@@ -2741,7 +2741,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get ratings types
@@ -2759,7 +2759,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Send OTP to specified phone
       tags:
       - Counsellor/Listener/Therapist Login
@@ -2778,7 +2778,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist profile with email, if signed up already
@@ -2796,7 +2796,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Add therapist profile after OTP verified to signup
       tags:
       - Therapist Profile
@@ -2817,7 +2817,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update therapist profile details
@@ -2835,7 +2835,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Cancel an appointment
@@ -2858,7 +2858,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: End an appointment
@@ -2876,7 +2876,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist past appointments
@@ -2899,7 +2899,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Start an appointment
@@ -2917,7 +2917,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist upcoming appointments
@@ -2935,7 +2935,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment detail
@@ -2953,7 +2953,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Add therapist assessment
@@ -2971,7 +2971,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment download
@@ -2989,7 +2989,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get assessment history
@@ -3007,7 +3007,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available assessments
@@ -3025,7 +3025,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist availability hours
@@ -3042,7 +3042,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Update therapist availability hours
@@ -3060,7 +3060,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get event details
@@ -3087,7 +3087,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Start and stop event
@@ -3105,7 +3105,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get blocked upcoming and past events
@@ -3124,7 +3124,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Block a slot for an event
@@ -3142,7 +3142,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get booked upcoming and past events
@@ -3161,7 +3161,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Book a slot in an event
@@ -3180,7 +3180,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Call after payment is completed for event order
@@ -3192,7 +3192,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: List available events
@@ -3209,7 +3209,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get home page content
@@ -3231,7 +3231,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get notifications for therapist
@@ -3257,7 +3257,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get payments for counsellor
@@ -3275,7 +3275,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get new access token with refresh token
@@ -3292,7 +3292,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get therapist training content
@@ -3304,7 +3304,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Get all available topics
@@ -3329,7 +3329,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       security:
       - JWTAuth: []
       summary: Upload files like photos, certificates, aadhar etc
@@ -3358,7 +3358,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Verify OTP sent to specified phone
       tags:
       - Counsellor/Listener/Therapist Login

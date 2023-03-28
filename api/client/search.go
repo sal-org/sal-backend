@@ -63,7 +63,9 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		// Param experience query string false "Experience range - 0,30 (min,max)"
 		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
 		wheres = append(wheres, " experience >= ? and experience <= ? ")
-		counsellorArgs = append(counsellorArgs, experiences[0], experiences[1])
+		min, _ := strconv.ParseFloat(experiences[0], 64)
+		max, _ := strconv.ParseFloat(experiences[1], 64)
+		counsellorArgs = append(counsellorArgs, min, max)
 	}
 	wheres = append(wheres, " status = "+CONSTANT.CounsellorActive+" ") // only active counsellors
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
@@ -115,7 +117,9 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
 		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
 		wheres = append(wheres, " experience >= ? and experience <= ? ")
-		therapistArgs = append(therapistArgs, experiences[0], experiences[1])
+		min, _ := strconv.ParseFloat(experiences[0], 64)
+		max, _ := strconv.ParseFloat(experiences[1], 64)
+		therapistArgs = append(therapistArgs, min, max)
 	}
 	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" ") // only active therapists
 	therapistSQLQuery += " where " + strings.Join(wheres, " and ")
@@ -134,6 +138,11 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 				args = therapistArgs
 			}
 		}
+	} else if len(r.FormValue("price")) > 0 {
+		SQLQuery = " ( " + counsellorSQLQuery + " ) union ( " + therapistSQLQuery + " ) "
+		args = append(args, counsellorArgs...)
+		args = append(args, therapistArgs...)
+
 	} else { // union if all needed
 		SQLQuery = " ( " + counsellorSQLQuery + " ) union ( " + listenerSQLQuery + " ) union ( " + therapistSQLQuery + " ) "
 		args = append(args, counsellorArgs...)
