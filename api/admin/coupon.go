@@ -86,6 +86,7 @@ func CouponAdd(w http.ResponseWriter, r *http.Request) {
 	// add coupon
 	coupon := map[string]string{}
 	coupon["coupon_code"] = body["coupon_code"]
+	coupon["description"] = body["description"]
 	coupon["client_id"] = body["client_id"]
 	coupon["counsellor_id"] = body["counsellor_id"]
 	coupon["therapist_id"] = body["therapist_id"]
@@ -124,6 +125,7 @@ func CouponUpdate(w http.ResponseWriter, r *http.Request) {
 	// update coupon
 	coupon := map[string]string{}
 	coupon["coupon_code"] = body["coupon_code"]
+	coupon["description"] = body["description"]
 	coupon["client_id"] = body["client_id"]
 	coupon["counsellor_id"] = body["counsellor_id"]
 	coupon["therapist_id"] = body["therapist_id"]

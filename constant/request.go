@@ -22,6 +22,7 @@ var (
 	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
 	SMSServicesRequiredFields                    = []string{"phone", "body"}
 	QualityCheckLoginIDAndPassword               = []string{"username", "password"}
+	QualityCheckVerifyOTPRequiredFields          = []string{"phone", "otp"}
 	VideoCheckCommentRequiredFields              = []string{"appointment_id", "comments"}
 	NotificationRequiredFields                   = []string{"userType", "status"}
 	CounsellorProfileAddRequiredFields           = []string{"first_name", "phone", "price"}

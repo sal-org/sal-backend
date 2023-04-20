@@ -60,6 +60,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(qualitycheck[0]["phone"])
+
+	// send otp
+	otp, ok := UTIL.GenerateOTP(qualitycheck[0]["phone"])
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientOTPTextMessage,
+			map[string]string{
+				"###otp###": otp,
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		qualitycheck[0]["phone"],
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
+		CONSTANT.InstantSendTextMessage,
+	)
+
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 
@@ -95,6 +117,34 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["access_token"] = accessToken
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func VerifyOTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.QualityCheckVerifyOTPRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	//check if otp is correct
+	if !UTIL.VerifyOTP(body["phone"], body["otp"]) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

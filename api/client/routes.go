@@ -52,6 +52,10 @@ func LoadClientRoutes(router *mux.Router) {
 		"uid", "{uid}",
 	).Methods("PUT")
 
+	clientRoutes.HandleFunc("/appointment/coupon", CouponGet).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
 	// assessment
 	clientRoutes.HandleFunc("/assessments", AssessmentsList).Methods("GET")
 	clientRoutes.HandleFunc("/assessment", AssessmentDetail).Queries(

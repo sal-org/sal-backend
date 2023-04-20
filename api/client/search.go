@@ -182,8 +182,18 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	// group counsellors|listeners|therapists slots
 	counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
 	filteredCounsellorSlots := map[string][]map[string]string{}
+	filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+	// var nextSlot []map[string]string
 	for counsellorID, counsellorSlot := range counsellorSlots {
 		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
+		if len(filteredCounsellorSlots[counsellorID]) == 0 {
+			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", counsellorID)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
+		}
 	}
 
 	// get counsellors|listeners|therapists count
@@ -200,5 +210,6 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
+	response["next_available"] = filteredCounsellorSlotsNextAvaliable
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

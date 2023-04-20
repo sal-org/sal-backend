@@ -43,7 +43,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add mood result
-	moodResultID, status, ok := DB.InsertWithUniqueID(CONSTANT.MoodResultsTable, CONSTANT.MoodResultsDigits, map[string]string{
+	moodResultID, _, ok := DB.InsertWithUniqueID(CONSTANT.MoodResultsTable, CONSTANT.MoodResultsDigits, map[string]string{
 		"client_id":  body["client_id"],
 		"name":       body["name"],
 		"age":        body["age"],
@@ -56,8 +56,17 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		"created_at": UTIL.GetCurrentTime().UTC().String(),
 	}, "mood_result_id")
 	if !ok {
-		UTIL.SetReponse(w, status, CONSTANT.MoodAlreadyAddedMessage, CONSTANT.ShowDialog, response)
-		return
+		status, ok := DB.UpdateSQL(CONSTANT.MoodResultsTable, map[string]string{"client_id": body["client_id"], "date": body["date"]}, map[string]string{
+			"mood_id":     body["mood_id"],
+			"notes":       body["notes"],
+			"modified_at": UTIL.GetCurrentTime().UTC().String(),
+		})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		// UTIL.SetReponse(w, status, CONSTANT.MoodAlreadyAddedMessage, CONSTANT.ShowDialog, response)
+		// return
 	}
 
 	if !(body["mood_id"] == "1") {
