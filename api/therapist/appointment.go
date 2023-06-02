@@ -236,7 +236,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.CounsellorAppointmentCancelClientContent,
 			map[string]string{
 				"###therapist_name###": therapist[0]["first_name"],
-				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":      UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 		appointment[0]["client_id"],
@@ -251,7 +251,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAppointmentCancelCounsellorContent,
 			map[string]string{
-				"###date_time###":   UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":   UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 				"###client_name###": client[0]["first_name"],
 			},
 		),
@@ -271,7 +271,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.CounsellorAppointmentCancelClientBodyEmailBody,
 			map[string]string{
 				"###therapist_name###": therapist[0]["first_name"],
-				"###date_time###":      UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]), client[0]["timezone"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###date_time###":      UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
 			},
 		),
 	}
@@ -523,6 +523,23 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 				"created_at":    UTIL.GetCurrentTime().String(),
 			}, "payment_id")
 		}
+	} else {
+
+		// get counsellor details
+		therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"corporate_price"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+			"counsellor_id": appointment[0]["counsellor_id"],
+			"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+			"description":   "Corporate Client",
+			"amount":        therapist[0]["corporate_price"],
+			"status":        CONSTANT.PaymentActive,
+			"created_at":    UTIL.GetCurrentTime().String(),
+		}, "payment_id")
 	}
 
 	// send appointment ended notification and rating to client

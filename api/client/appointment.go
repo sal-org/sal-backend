@@ -194,7 +194,22 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !(appointment[0]["type"] == "2") {
+	// get appointment details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(client) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	domainName := strings.Split(client[0]["email"], "@")
+
+	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+
+	if !(appointment[0]["type"] == "2" || ok) {
 
 		// get appointment slots details
 		appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
@@ -1129,7 +1144,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
+		client[0]["phone"],
 		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
 		r.FormValue("appointment_id"),
 		CONSTANT.InstantSendTextMessage,

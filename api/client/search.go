@@ -67,7 +67,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		max, _ := strconv.ParseFloat(experiences[1], 64)
 		counsellorArgs = append(counsellorArgs, min, max)
 	}
-	wheres = append(wheres, " status = "+CONSTANT.CounsellorActive+" ") // only active counsellors
+	wheres = append(wheres, " status = "+CONSTANT.CounsellorActive+" and corporate_therpist != '2' ") // only active counsellors
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build listener query
@@ -121,7 +121,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		max, _ := strconv.ParseFloat(experiences[1], 64)
 		therapistArgs = append(therapistArgs, min, max)
 	}
-	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" ") // only active therapists
+	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != '2' ") // only active therapists
 	therapistSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	if len(r.FormValue("type")) > 0 { // get only certain types
@@ -158,6 +158,108 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	if strings.EqualFold(r.FormValue("sort_by"), "3") {
 		sortBy = " age_group "
 	}
+	if strings.EqualFold(r.FormValue("order_by"), "1") {
+		orderBy = " asc "
+	}
+	SQLQuery += " order by " + sortBy + orderBy
+
+	// get counsellors|listeners|therapists
+	counsellors, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.CounsellorsListPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient), args...)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// extract counsellors|listeners|therapists ids
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
+
+	// get counsellors|listeners|therapists slots
+	slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// group counsellors|listeners|therapists slots
+	counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
+	filteredCounsellorSlots := map[string][]map[string]string{}
+	filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+	// var nextSlot []map[string]string
+	for counsellorID, counsellorSlot := range counsellorSlots {
+		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
+		if len(filteredCounsellorSlots[counsellorID]) == 0 {
+			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", counsellorID)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
+		}
+	}
+
+	// get counsellors|listeners|therapists count
+	counsellorsCount, status, ok := DB.SelectProcess("select count(*) as ctn from ("+SQLQuery+") as a", args...)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// fmt.Println(counsellors)
+
+	response["counsellors"] = counsellors
+	response["slots"] = filteredCounsellorSlots
+	response["counsellors_count"] = counsellorsCount[0]["ctn"]
+	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
+	response["media_url"] = CONFIG.MediaURL
+	response["next_available"] = filteredCounsellorSlotsNextAvaliable
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	var SQLQuery, counsellorSQLQuery, therapistSQLQuery string
+	args := []interface{}{}
+
+	counsellorArgs := []interface{}{}
+	therapistArgs := []interface{}{}
+
+	// build counsellor query
+	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions , education, experience, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
+	wheres := []string{}
+	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
+		// Param experience query string false "Experience range - 0,30 (min,max)"
+		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
+		wheres = append(wheres, " experience >= ? and experience <= ? ")
+		min, _ := strconv.ParseFloat(experiences[0], 64)
+		max, _ := strconv.ParseFloat(experiences[1], 64)
+		counsellorArgs = append(counsellorArgs, min, max)
+	}
+	wheres = append(wheres, " status = "+CONSTANT.CounsellorActive+" and corporate_therpist != 0 ") // only active counsellors
+	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
+
+	// build therapist query
+	therapistSQLQuery = "select therapist_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions, education, experience, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
+	wheres = []string{}
+	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
+		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
+		wheres = append(wheres, " experience >= ? and experience <= ? ")
+		min, _ := strconv.ParseFloat(experiences[0], 64)
+		max, _ := strconv.ParseFloat(experiences[1], 64)
+		therapistArgs = append(therapistArgs, min, max)
+	}
+	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != 0 ") // only active therapists
+	therapistSQLQuery += " where " + strings.Join(wheres, " and ")
+
+	// } else { // union if all needed
+	SQLQuery = " ( " + counsellorSQLQuery + " ) union ( " + therapistSQLQuery + " ) "
+	args = append(args, counsellorArgs...)
+	args = append(args, therapistArgs...)
+	// }
+
+	sortBy := " average_rating " // default ordering by rating
+	orderBy := " desc "
 	if strings.EqualFold(r.FormValue("order_by"), "1") {
 		orderBy = " asc "
 	}

@@ -50,6 +50,9 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// meta
 	router.HandleFunc("/meta", ListMeta).Methods("GET")
 
+	// adsConent
+	router.HandleFunc("/adscontents", AdsContent).Methods("GET")
+
 	// login
 	router.HandleFunc("/sendotp", SendOTP).Queries(
 		"phone", "{phone}",

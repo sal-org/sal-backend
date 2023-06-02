@@ -93,6 +93,30 @@ func LoadClientRoutes(router *mux.Router) {
 	// home
 	clientRoutes.HandleFunc("/home", Home).Methods("GET")
 
+	// cor login with email
+	clientRoutes.HandleFunc("/coremail/sendotp", SendOTPWithCorporateEmail).Queries(
+		"cor_email", "{cor_email}",
+	).Methods("GET")
+
+	// cor register with  email
+	clientRoutes.HandleFunc("/coremail/send", SendOTPWithCorporateEmailForRegister).Queries(
+		"cor_email", "{cor_email}",
+	).Methods("GET")
+
+	// check access code
+	clientRoutes.HandleFunc("/check_code", CheckAccessCode).Queries(
+		"access_code", "{access_code}",
+	).Methods("GET")
+
+	// check phone and  email
+	clientRoutes.HandleFunc("/check_uniqueid", CheckEmailANDPhone).Methods("GET")
+
+	clientRoutes.HandleFunc("/coremail/verifyotp", VerifyOTPWithCorporateEmail).Queries(
+		"cor_email", "{cor_email}",
+		"otp", "{otp}",
+		"device_id", "{device_id}",
+	).Methods("GET")
+
 	// login
 	clientRoutes.HandleFunc("/sendotp", SendOTP).Queries(
 		"phone", "{phone}",
@@ -137,12 +161,16 @@ func LoadClientRoutes(router *mux.Router) {
 		"device_id", "{device_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("", ProfileAdd).Methods("POST")
+	clientRoutes.HandleFunc("/corporate", ProfileAddForCor).Methods("POST")
 	clientRoutes.HandleFunc("", ProfileUpdate).Queries(
 		"client_id", "{client_id}",
 	).Methods("PUT")
 
 	// search
 	clientRoutes.HandleFunc("/search", ListSearch).Methods("GET")
+
+	// corporate search
+	clientRoutes.HandleFunc("/corporate_search", ListSearchForCorporate).Methods("GET")
 
 	// therapist
 	clientRoutes.HandleFunc("/therapist", TherapistProfile).Queries(
@@ -153,5 +181,10 @@ func LoadClientRoutes(router *mux.Router) {
 	).Methods("GET")
 	clientRoutes.HandleFunc("/therapist/order", TherapistOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/therapist/paymentcomplete", TherapistOrderPaymentComplete).Methods("POST")
+
+	// corporate client
+
+	clientRoutes.HandleFunc("/corporateCounsellor/order", CorporateCounsellorOrderCreate).Methods("POST")
+	clientRoutes.HandleFunc("/corporateCounsellor/paymentcomplete", CorporateCounsellorOrderPaymentComplete).Methods("POST")
 
 }

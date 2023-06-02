@@ -100,6 +100,7 @@ func CounsellorUpdate(w http.ResponseWriter, r *http.Request) {
 	counsellor["price"] = body["price"]
 	counsellor["price_3"] = body["price_3"]
 	counsellor["price_5"] = body["price_5"]
+	counsellor["corporate_price"] = body["corporate_price"]
 	counsellor["education"] = body["education"]
 	counsellor["experience"] = body["experience"]
 	counsellor["about"] = body["about"]
@@ -111,6 +112,7 @@ func CounsellorUpdate(w http.ResponseWriter, r *http.Request) {
 	counsellor["bank_name"] = body["bank_name"]
 	counsellor["bank_account_type"] = body["bank_account_type"]
 	counsellor["pan"] = body["pan"]
+	counsellor["corporate_therpist"] = body["corporate_therpist"]
 	counsellor["status"] = body["status"]
 	counsellor["modified_by"] = body["modified_by"]
 	counsellor["modified_at"] = UTIL.GetCurrentTime().String()

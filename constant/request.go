@@ -10,6 +10,8 @@ var (
 	AppointmentRatingAddRequiredFields           = []string{"appointment_id", "rating", "client_id", "counsellor_id"}
 	ContentAddRequiredFields                     = []string{"title", "photo", "content", "type"}
 	CounsellorOrderCreateRequiredFields          = []string{"client_id", "counsellor_id", "date", "time", "no_session"}
+	PartnersAddressAddRequiredFields             = []string{"partnerName", "domain", "address"}
+	PartnersAddRequiredFields                    = []string{"partnerName", "domain", "accessCode"}
 	CouponAddRequiredFields                      = []string{"coupon_code", "discount", "minimum_order_value", "type", "start_by", "end_by"}
 	EventOrderCreateRequiredFields               = []string{"user_id", "event_order_id"}
 	EventBlockOrderCreateRequiredFields          = []string{"counsellor_id", "title", "description", "topic_id", "date", "time", "price"}
@@ -19,6 +21,7 @@ var (
 	CounsellorOrderPaymentCompleteRequiredFields = []string{"order_id", "payment_method", "payment_id", "signature", "razor_order_id"}
 	ListenerOrderPaymentCompleteRequiredFields   = []string{"order_id"}
 	ClientProfileAddRequiredFields               = []string{"phone", "email"}
+	CorporateClientProfileAddRequiredFields      = []string{"phone", "email", "otp"}
 	QualityCheckEmailRequiredFields              = []string{"email_from", "email_to", "body", "title"}
 	SMSServicesRequiredFields                    = []string{"phone", "body"}
 	QualityCheckLoginIDAndPassword               = []string{"username", "password"}

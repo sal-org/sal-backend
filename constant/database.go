@@ -16,6 +16,8 @@ const (
 	AssessmentResultsTable         = "assessment_results"
 	AssessmentResultDetailsTable   = "assessment_result_details"
 	ClientsTable                   = "clients"
+	CorporatePartnersTable         = "corporate_partners"
+	CorporatePartnersAddressTable  = "partners_address"
 	ContentsTable                  = "contents"
 	ContentCategoriesTable         = "content_categories"
 	ContentLikesTable              = "content_likes"
@@ -30,6 +32,7 @@ const (
 	ListenersTable                 = "listeners"
 	MessagesTable                  = "messages"
 	MoodsTable                     = "moods"
+	AdsContentTable                = "adsContent"
 	MoodResultsTable               = "mood_results"
 	NotificationsTable             = "notifications"
 	NotificationsBulkTable         = "notifications_bulk"
@@ -65,6 +68,8 @@ const (
 	MoodResultsDigits       = 17
 	ClientDigits            = 13
 	ContentDigits           = 10
+	CorporateDigits         = 8
+	CorporateAddressDigits  = 10
 	CounsellorDigits        = 6
 	ListenerDigits          = 9
 	MessagesDigits          = 10

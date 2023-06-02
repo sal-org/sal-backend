@@ -174,6 +174,18 @@ const (
 	CouponActive   = "1"
 )
 
+// partner status
+const (
+	PartnerInactive = "0"
+	PartnerActive   = "1"
+)
+
+// partner address status
+const (
+	PartnerAddressInactive = "0"
+	PartnerAddressActive   = "1"
+)
+
 // appointment slots types
 const (
 	SlotUnavailable = "0"

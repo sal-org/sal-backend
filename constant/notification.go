@@ -47,7 +47,7 @@ const (
 	ClientAppointmentRescheduleClientContent          = "Hey, you have rescheduled your session to ###date_time### with ###therapistname###, please view 'my sessions' for more details."
 	ClientAppointmentCancelClientContent              = "You have cancelled your scheduled session on ###datetime### with ###therapistname###."
 	ClientBulkAppointmentCancelClientContent          = "You have cancelled all your pending sessions with ###counsellor_name###. "
-	CounsellorAppointmentCancelClientContent          = "Your session has been cancelled by your ###therapist_name### for ###date_time### due to personal emergency. Please reschedule your appointment within the next 7 days or request for a session credit refund."
+	CounsellorAppointmentCancelClientContent          = "Your session has been cancelled by ###therapist_name### for ###date_time### due to personal emergency. Please reschedule your appointment within the next 7 days or request for a session credit refund."
 	CounsellorAppointmentCancelCounsellorContent      = "You have now cancelled your scheduled session on ###date_time### with ###client_name###."
 	ClientPaymentSucessClientContent                  = "Payment of Rs. ###paid_amount### has been successful. You can manage your account anytime, anywhere from your phone. Click on My sessions to view details"
 	ClientAppointmentFeedbackContent                  = "Your feedback is so important to us. Please rate your session with ###counsellor_name### to help us constantly improve our services"

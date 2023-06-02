@@ -122,42 +122,48 @@ func AddProfileForUsers(w http.ResponseWriter, r *http.Request) {
 
 	// add assessment result
 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.RolesTable, CONSTANT.AssessmentResultsDigits, map[string]string{
-		"profile_name": body["profile_name"],
-		"pc_add":       body["pc_add"],
-		"pc_edit":      body["pc_edit"],
-		"pc_view":      body["pc_view"],
-		"noti_add":     body["noti_add"],
-		"noti_edit":    body["noti_edit"],
-		"noti_view":    body["noti_view"],
-		"cont_add":     body["cont_add"],
-		"cont_edit":    body["cont_edit"],
-		"cont_view":    body["cont_view"],
-		"mq_view":      body["mq_view"],
-		"mq_add":       body["mq_add"],
-		"mq_edit":      body["mq_edit"],
-		"cent_add":     body["cent_add"],
-		"cent_edit":    body["cent_edit"],
-		"cent_view":    body["cent_view"],
-		"coun_view":    body["coun_view"],
-		"coun_edit":    body["coun_edit"],
-		"coun_add":     body["coun_add"],
-		"list_add":     body["list_add"],
-		"list_edit":    body["list_edit"],
-		"list_view":    body["list_view"],
-		"ther_view":    body["ther_view"],
-		"ther_add":     body["ther_add"],
-		"ther_edit":    body["ther_edit"],
-		"appoint_add":  body["appoint_add"],
-		"appoint_edit": body["appoint_edit"],
-		"appoint_view": body["appoint_view"],
-		"cafe_add":     body["cafe_add"],
-		"cafe_view":    body["cafe_view"],
-		"cafe_edit":    body["cafe_edit"],
-		"rept_view":    body["rept_view"],
-		"rept_edit":    body["rept_edit"],
-		"rept_add":     body["rept_add"],
-		"status":       CONSTANT.ClientActive,
-		"created_at":   UTIL.GetCurrentTime().UTC().String(),
+		"profile_name":  body["profile_name"],
+		"pc_add":        body["pc_add"],
+		"pc_edit":       body["pc_edit"],
+		"pc_view":       body["pc_view"],
+		"noti_add":      body["noti_add"],
+		"noti_edit":     body["noti_edit"],
+		"noti_view":     body["noti_view"],
+		"cont_add":      body["cont_add"],
+		"cont_edit":     body["cont_edit"],
+		"cont_view":     body["cont_view"],
+		"mq_view":       body["mq_view"],
+		"mq_add":        body["mq_add"],
+		"mq_edit":       body["mq_edit"],
+		"cent_add":      body["cent_add"],
+		"cent_edit":     body["cent_edit"],
+		"cent_view":     body["cent_view"],
+		"coun_view":     body["coun_view"],
+		"coun_edit":     body["coun_edit"],
+		"coun_add":      body["coun_add"],
+		"part_add":      body["part_add"],
+		"part_edit":     body["part_edit"],
+		"part_view":     body["part_view"],
+		"part_loc_add":  body["part_loc_add"],
+		"part_loc_edit": body["part_loc_edit"],
+		"part_loc_view": body["part_loc_view"],
+		"list_add":      body["list_add"],
+		"list_edit":     body["list_edit"],
+		"list_view":     body["list_view"],
+		"ther_view":     body["ther_view"],
+		"ther_add":      body["ther_add"],
+		"ther_edit":     body["ther_edit"],
+		"appoint_add":   body["appoint_add"],
+		"appoint_edit":  body["appoint_edit"],
+		"appoint_view":  body["appoint_view"],
+		"cafe_add":      body["cafe_add"],
+		"cafe_view":     body["cafe_view"],
+		"cafe_edit":     body["cafe_edit"],
+		"rept_view":     body["rept_view"],
+		"rept_edit":     body["rept_edit"],
+		"rept_add":      body["rept_add"],
+		"status":        CONSTANT.ClientActive,
+		"created_at":    UTIL.GetCurrentTime().UTC().String(),
 	}, "role_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -281,6 +287,30 @@ func UpdateProfileForUsers(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["coun_edit"]) > 0 {
 		profile["coun_edit"] = body["coun_edit"]
+	}
+
+	if len(body["part_add"]) > 0 {
+		profile["part_add"] = body["part_add"]
+	}
+
+	if len(body["part_edit"]) > 0 {
+		profile["part_edit"] = body["part_edit"]
+	}
+
+	if len(body["part_view"]) > 0 {
+		profile["part_view"] = body["part_view"]
+	}
+
+	if len(body["part_loc_add"]) > 0 {
+		profile["part_loc_add"] = body["part_loc_add"]
+	}
+
+	if len(body["part_loc_edit"]) > 0 {
+		profile["part_loc_edit"] = body["part_loc_edit"]
+	}
+
+	if len(body["part_loc_view"]) > 0 {
+		profile["part_loc_view"] = body["part_loc_view"]
 	}
 
 	if len(body["list_view"]) > 0 {

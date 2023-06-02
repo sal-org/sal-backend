@@ -2,7 +2,7 @@ package client
 
 import (
 	"net/http"
-	CONFIG "salbackend/config"
+	// CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
@@ -10,118 +10,15 @@ import (
 
 	UTIL "salbackend/util"
 	"strings"
+	// "github.com/swaggo/swag"
 )
 
-// ListenerProfile godoc
-// @Tags Client Listener
-// @Summary Get listener details
-// @Router /client/listener [get]
-// @Param listener_id query string true "Listener ID to get details"
-// @Security JWTAuth
-// @Produce json
-// @Success 200
-func ListenerProfile(w http.ResponseWriter, r *http.Request) {
+func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
-
-	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
-
-	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type", "age_group", "about"}, map[string]string{"listener_id": r.FormValue("listener_id")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(listener) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get listener languages
-	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("listener_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get listener topics
-	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", r.FormValue("listener_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get last 10 listener apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 10 ", r.FormValue("listener_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get counsellor latest content
-	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("listener_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	response["listener"] = listener[0]
-	response["languages"] = languages
-	response["topics"] = topics
-	response["reviews"] = reviews
-	response["contents"] = contents
-	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
-}
-
-// ListenerSlots godoc
-// @Tags Client Listener
-// @Summary Get listener slots
-// @Router /client/listener/slots [get]
-// @Param listener_id query string true "Listener ID to get slot details"
-// @Security JWTAuth
-// @Produce json
-// @Success 200
-func ListenerSlots(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var response = make(map[string]interface{})
-
-	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get listener slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// remove times and dates with no availability
-	response["slots"] = UTIL.FilterAvailableSlots(slots)
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
-}
-
-// ListenerOrderCreate godoc
-// @Tags Client Listener
-// @Summary Create appointment order with client and listener
-// @Router /client/listener/order [post]
-// @Param body body model.ListenerOrderCreateRequest true "Request Body"
-// @Security JWTAuth
-// @Produce json
-// @Success 200
-func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var response = make(map[string]interface{})
+	// get counsellor details
+	var counsellorType string
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -160,38 +57,37 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": body["listener_id"]})
+	// get counsellor details
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["listener_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
 	// check if listener is valid
-	if len(listener) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-	// check if listener is active
-	if !strings.EqualFold(listener[0]["status"], CONSTANT.ListenerActive) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerNotActiveMessage, CONSTANT.ShowDialog, response)
-		return
+	if len(counsellor) == 0 {
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["listener_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistActive) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		counsellorType = CONSTANT.TherapistType
+	} else {
+		// check if listener is active
+		if !strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerActive) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerNotActiveMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		counsellorType = CONSTANT.CounsellorType
 	}
 
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// check 2nd appoimtent with the same listener
-	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"], body["listener_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	if len(appointment2nd) != 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -201,7 +97,7 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order["counsellor_id"] = body["listener_id"]
 	order["date"] = body["date"]
 	order["time"] = body["time"]
-	order["type"] = CONSTANT.ListenerType
+	order["type"] = counsellorType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 	// no paid amount and billing
@@ -224,7 +120,7 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -261,7 +157,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check if order is with listener
-	if !strings.EqualFold(order[0]["type"], CONSTANT.ListenerType) {
+	if strings.EqualFold(order[0]["type"], CONSTANT.ListenerType) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
@@ -287,12 +183,19 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellor_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ListenersTable+" where listener_id = ?", order[0]["counsellor_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
+	var counsellor []map[string]string
+
+	// sent notitifications
+	switch order[0]["type"] {
+	case CONSTANT.CounsellorType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "phone", "email", "timezone"}, map[string]string{"counsellor_id": order[0]["counsellor_id"]})
+
+	case CONSTANT.TherapistType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "phone", "email", "timezone"}, map[string]string{"therapist_id": order[0]["counsellor_id"]})
+
 	}
-	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
+
+	counsellor_fullname := counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
 
 	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
 	if !ok {
@@ -319,8 +222,6 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 
-	// sent notitifications
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send email to client
@@ -398,7 +299,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
-				"###user_name###": listener[0]["first_name"],
+				"###user_name###": counsellor[0]["first_name"],
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
@@ -417,7 +318,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentConfirmationTextMessage,
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
-				"###user_Name###": listener[0]["first_name"],
+				"###user_Name###": counsellor[0]["first_name"],
 				"###date###":      order[0]["date"],
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
@@ -436,7 +337,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###userName###":  listener[0]["first_name"],
+				"###userName###":  counsellor[0]["first_name"],
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
@@ -454,14 +355,14 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentConfirmationTextMessage,
 			map[string]string{
-				"###userName###":  listener[0]["first_name"],
+				"###userName###":  counsellor[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
 				"###date###":      order[0]["date"],
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		listener[0]["phone"],
+		counsellor[0]["phone"],
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
@@ -473,13 +374,13 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			// need to change
 			CONSTANT.ClientAppointmentReminderTextMessage,
 			map[string]string{
-				"###user_name###": listener[0]["first_name"],
+				"###user_name###": counsellor[0]["first_name"],
 				"###userName###":  client[0]["first_name"],
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		listener[0]["phone"],
+		counsellor[0]["phone"],
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
@@ -493,7 +394,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
-				"###therpist_name###": listener[0]["first_name"],
+				"###therpist_name###": counsellor[0]["first_name"],
 				"###date###":          order[0]["date"],
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},

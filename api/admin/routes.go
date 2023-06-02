@@ -27,6 +27,18 @@ func LoadAdminRoutes(router *mux.Router) {
 	).Methods("PUT")
 	adminRoutes.HandleFunc("/content/upload", UploadContentFile).Methods("POST")
 
+	// partner
+	adminRoutes.HandleFunc("/partner", PartnerGet).Methods("GET")
+	adminRoutes.HandleFunc("/partner", PartnerAdd).Methods("POST")
+	adminRoutes.HandleFunc("/partner", PartnerUpdate).Queries(
+		"id", "{id}",
+	).Methods("PUT")
+	adminRoutes.HandleFunc("/partner/address", PartnerAddressGet).Methods("GET")
+	adminRoutes.HandleFunc("/partner/address", PartnerAddressAdd).Methods("POST")
+	adminRoutes.HandleFunc("/partner/address", PartnerAddressUpdate).Queries(
+		"id", "{id}",
+	).Methods("PUT")
+
 	// counsellor
 	adminRoutes.HandleFunc("/counsellor", CounsellorGet).Methods("GET")
 	adminRoutes.HandleFunc("/counsellor", CounsellorUpdate).Queries(
