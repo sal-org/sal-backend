@@ -183,6 +183,8 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
 	filteredCounsellorSlots := map[string][]map[string]string{}
 	filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+	var counsellorFirstList []map[string]string
+	var counsellorSecondList []map[string]string
 	// var nextSlot []map[string]string
 	for counsellorID, counsellorSlot := range counsellorSlots {
 		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
@@ -203,9 +205,30 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for key, value := range counsellors {
+
+		slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date = '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", value["id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		filteredCounsellorSlot := map[string][]map[string]string{}
+
+		filteredCounsellorSlot[value["id"]] = UTIL.FilterAvailableSlots(slots)
+		if len(filteredCounsellorSlot[value["id"]]) != 0 {
+			counsellorFirstList = append(counsellorFirstList, counsellors[key])
+		} else {
+			counsellorSecondList = append(counsellorSecondList, counsellors[key])
+		}
+
+	}
+
+	counsellorFirstList = append(counsellorFirstList, counsellorSecondList...)
+
 	// fmt.Println(counsellors)
 
-	response["counsellors"] = counsellors
+	response["counsellors"] = counsellorFirstList
 	response["slots"] = filteredCounsellorSlots
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))

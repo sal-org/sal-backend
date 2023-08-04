@@ -133,6 +133,17 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var typeOfService string
+
+	switch body["corporate_therpist"] {
+	case "Individual Clients":
+		typeOfService = "0"
+	case "Corporate Clients":
+		typeOfService = "2"
+	case "Both":
+		typeOfService = "1"
+	}
+
 	// add counsellor details
 	counsellor := map[string]string{}
 	counsellor["first_name"] = body["first_name"]
@@ -163,6 +174,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["pan"] = body["pan"]
 	counsellor["device_id"] = body["device_id"]
 	counsellor["status"] = CONSTANT.CounsellorNotApproved
+	counsellor["corporate_therpist"] = typeOfService
 	counsellor["notification_status"] = CONSTANT.NotificationActive
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
@@ -218,23 +230,6 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// Counsellor details Send with SAL Team
 	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
-	// use this future
-	// filepath_text := "htmlfile/emailmessagebody.html"
-
-	// emaildata := Model.EmailBodyMessageModel{
-	// 	Name:    counsellor_details[0]["first_name"],
-	// 	Message: CONSTANT.CounsellorAccountSignupCounsellorEmailBody,
-	// }
-
-	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// // email for counsellor
-	// UTIL.SendEmail(
-	// 	CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-	// 	emailBody,
-	// 	counsellor_details[0]["email"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
-
 	data := Model.EmailDataForCounsellorProfile{
 		Media_URL:   CONFIG.MediaURL,
 		First_Name:  counsellor_details[0]["first_name"],
@@ -264,31 +259,6 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.AkshayEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)
-
-	/*UTIL.SendEmail(
-		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.CounsellorProfileHtml,
-			map[string]string{
-				"###First_Name###":  counsellor[0]["first_name"],
-				"###Last_Name###":   orderdetails[0]["last_name"],
-				"###Gender###":      orderdetails[0]["gender"],
-				"###Phone###":       orderdetails[0]["phone"],
-				"###Photo###":       orderdetails[0]["photo"],
-				"###Email###":       orderdetails[0]["email"],
-				"###Education###":   orderdetails[0]["education"],
-				"###Experience###":  orderdetails[0]["experience"],
-				"###About###":       orderdetails[0]["about"],
-				"###Resume###":      orderdetails[0]["resume"],
-				"###Certificate###": orderdetails[0]["certificate"],
-				"###Aadhar###":      orderdetails[0]["aadhar"],
-				"###Linkedin###":    orderdetails[0]["linkedin"],
-				"###Status###":      orderdetails[0]["status"],
-			},
-		),
-		CONSTANT.AnandEmailID,
-		CONSTANT.InstantSendEmailMessage,
-	)*/
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken

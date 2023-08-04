@@ -601,7 +601,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check if appointment is alteast after 4 hours
-	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() < 4 {
+	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now().Add(330*time.Minute).UTC()).Hours() < 4 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -2019,13 +2019,13 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get counsellor details
-	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and end_by >= '"+UTIL.GetCurrentTime().Format("2006-01-02 00:00:00")+"' ", r.FormValue("client_id"))
+	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and start_by < '" + UTIL.GetCurrentTime().String() + "' and '" + UTIL.GetCurrentTime().String() + "' < end_by ", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

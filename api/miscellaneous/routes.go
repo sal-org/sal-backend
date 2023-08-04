@@ -53,6 +53,10 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// adsConent
 	router.HandleFunc("/adscontents", AdsContent).Methods("GET")
 
+
+	// get discount value
+	router.HandleFunc("/counsellor-record", CounsellorClientRecord).Methods("POST")
+
 	// login
 	router.HandleFunc("/sendotp", SendOTP).Queries(
 		"phone", "{phone}",

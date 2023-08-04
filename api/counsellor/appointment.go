@@ -43,7 +43,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 
 	// get client details
-	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, photo, date_of_birth, gender from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+	clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, photo, date_of_birth, gender, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

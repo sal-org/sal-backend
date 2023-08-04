@@ -307,6 +307,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	client["topic_ids"] = body["topic_ids"]
 	client["gender"] = body["gender"]
 	client["location"] = body["location"]
+	client["department"] = body["cor_darpartment"]
 	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive

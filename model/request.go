@@ -354,6 +354,23 @@ type EmailDataForCounsellorProfile struct {
 	Status      string
 }
 
+type EmailDataForCounsellorRecord struct {
+	First_Name      string
+	Last_Name       string
+	Gender          string
+	Age             string
+	Department      string
+	Location        string
+	SessionMode     string
+	SessionNo       string
+	SessionDate     string
+	InTime          string
+	OutTime         string
+	TherapeuticGoal string
+	TherapyPlan     string
+	AssessmentTool  string
+}
+
 type EmailDataForPaymentReceipt struct {
 	Date        string
 	ReceiptNo   string
@@ -408,6 +425,20 @@ type AssessmentDownloadGAD7Model struct {
 	Answer6 string `json:"answer6"`
 	Answer7 string `json:"answer7"`
 	Answer8 string `json:"answer8"`
+}
+
+type AssessmentDownloadGWBModel struct {
+	Name    string `json:"name"`
+	Date    string `json:"date"`
+	Age     string `json:"age"`
+	Gender  string `json:"gender"`
+	Score   string `json:"score"`
+	Answer1 string `json:"answer1"`
+	Answer2 string `json:"answer2"`
+	Answer3 string `json:"answer3"`
+	Answer4 string `json:"answer4"`
+	Answer5 string `json:"answer5"`
+	Answer6 string `json:"answer6"`
 }
 
 type AssessmentDownloadSRSModel struct {

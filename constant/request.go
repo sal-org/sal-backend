@@ -29,6 +29,7 @@ var (
 	VideoCheckCommentRequiredFields              = []string{"appointment_id", "comments"}
 	NotificationRequiredFields                   = []string{"userType", "status"}
 	CounsellorProfileAddRequiredFields           = []string{"first_name", "phone", "price"}
+	CounsellorRecordAddRequiredFields            = []string{"counsellor_id"}
 	MoodAddRequiredFields                        = []string{"mood_id", "date"}
 	ListenerProfileAddRequiredFields             = []string{"first_name", "phone"}
 	QuoteAddRequiredFields                       = []string{"quote"}

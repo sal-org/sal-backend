@@ -134,6 +134,15 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	var typeOfService string
+
+	switch body["corporate_therpist"] {
+	case "Individual Clients": typeOfService = "0" 
+	case "Corporate Clients": typeOfService = "2"
+	case "Both" : typeOfService = "1"
+	}
+
 	// add therapist details
 	therapist := map[string]string{}
 	therapist["first_name"] = body["first_name"]
@@ -163,6 +172,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["bank_name"] = body["bank_name"]
 	therapist["bank_account_type"] = body["bank_account_type"]
 	therapist["pan"] = body["pan"]
+	therapist["corporate_therpist"] = typeOfService
 	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["notification_status"] = CONSTANT.NotificationActive
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()

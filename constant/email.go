@@ -64,6 +64,11 @@ const (
 	CounsellorProfileWaitingForApprovalTitle = "Clove successful sign in"
 )
 
+// counsellor - client record
+const (
+	CounsellorRecordForClientTitle = "Clove: New Client Record"
+)
+
 // For Receipt type
 const (
 	AppointmentSessionsTypeForReceipt = "Counselling Sessions"

@@ -507,6 +507,43 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				fmt.Println("html body not create ")
 			}
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp947" {
+			var filePath string
+
+			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "20" {
+
+				filePath = "htmlfile/GWB_Low.html"
+
+			} else if assessment_result[0]["final_score"] >= "21" && assessment_result[0]["final_score"] <= "23" {
+
+				filePath = "htmlfile/GWB_Mid.html"
+			} else {
+				filePath = "htmlfile/GWB_High.html"
+			}
+
+			assessment_data := MODEL.AssessmentDownloadGWBModel{
+				Name:    assessment_result[0]["name"],
+				Date:    UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:     assessment_result[0]["age"],
+				Gender:  assessment_result[0]["gender"],
+				Score:   assessment_result[0]["final_score"],
+				Answer1: assessment_result_details[0]["score"],
+				Answer2: assessment_result_details[1]["score"],
+				Answer3: assessment_result_details[2]["score"],
+				Answer4: assessment_result_details[3]["score"],
+				Answer5: assessment_result_details[4]["score"],
+				Answer6: assessment_result_details[5]["score"],
+			}
+
+			fmt.Println(assessment_data)
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGWB(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+			fmt.Println(emailbody)
+
 		} else {
 
 			var filePath string

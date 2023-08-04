@@ -33,6 +33,23 @@ func GetBillingDetails(price, discount string) map[string]string {
 	return billing
 }
 
+// GetBillingDetails - calculate tax, paid amount
+func GetDiscount(price, discount string) map[string]string {
+	billing := map[string]string{}
+
+	paidAmount, _ := strconv.ParseFloat(price, 64)
+	discountAmount, _ := strconv.ParseFloat(discount, 64)
+	paidAmount -= discountAmount
+	if paidAmount < 0 { // if amount becomes negative after discount
+		paidAmount = 0
+	}
+
+	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 2, 64)
+	billing["discount"] = discount
+
+	return billing
+}
+
 func AvgRatingFromula(rating []map[string]string, totalCount string) string {
 
 	totalCnt, _ := strconv.ParseFloat(totalCount, 32)

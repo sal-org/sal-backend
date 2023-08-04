@@ -35,6 +35,12 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorNotApproved) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
 		return
@@ -47,6 +53,12 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerNotApproved) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
 		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerActive) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
 			return
@@ -58,6 +70,10 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"status"}, map[string]string{"phone": r.FormValue("phone")})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistNotApproved) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistActive) {

@@ -23,6 +23,7 @@ const (
 	ContentLikesTable              = "content_likes"
 	CouponsTable                   = "coupons"
 	CounsellorsTable               = "counsellors"
+	CounsellorRecordsTable         = "counsellor_record"
 	CounsellorLanguagesTable       = "counsellor_languages"
 	CounsellorTopicsTable          = "counsellor_topics"
 	EmailsTable                    = "emails"
@@ -71,6 +72,7 @@ const (
 	CorporateDigits         = 8
 	CorporateAddressDigits  = 10
 	CounsellorDigits        = 6
+	CounsellorRecordDigits  = 16
 	ListenerDigits          = 9
 	MessagesDigits          = 10
 	EmailsDigits            = 13
