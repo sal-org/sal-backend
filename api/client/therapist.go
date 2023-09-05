@@ -102,7 +102,7 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0,0,15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -531,6 +531,8 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		appointmentID,
 	)
 
+	
+
 	// send appointment reminder notification to therapist before 15 min
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
@@ -568,6 +570,24 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
 		appointmentID,
 		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// send at 30 min before of appointment
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###userName###":  therapist[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-30*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	// send at 15 min before of appointment

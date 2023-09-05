@@ -28,6 +28,11 @@ func BuildOnlyDate(date string) string {
 	return a
 }
 
+func BuildToDteTime(timedate string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", timedate)
+	return t
+}
+
 func ConvertToTime(date string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", date)
 	return t

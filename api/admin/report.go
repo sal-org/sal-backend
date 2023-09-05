@@ -27,7 +27,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		heading = []string{"Appointment ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time", "Status"}
+		heading = []string{"Appointment ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time", "Start At", "End At", "Mod. At", "Status"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -55,6 +55,21 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
 
 		for _, appointment := range appointments {
+
+			var startTime, endTime string
+
+			if appointment["started_at"] == "" {
+				startTime = ""
+			} else {
+				startTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["ended_at"] == "" {
+				endTime = ""
+			} else {
+				endTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
 			data = append(data, []string{
 				appointment["appointment_id"],
 				appointment["client_id"],
@@ -62,7 +77,9 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				appointment["counsellor_id"],
 				counsellorsMap[appointment["counsellor_id"]]["first_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
-				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "330").Format(CONSTANT.ReadbleDateTimeFormat),
+				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
+				startTime,
+				endTime,
 				getAppointmentStatusInText(appointment["status"]),
 			})
 		}

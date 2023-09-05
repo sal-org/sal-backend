@@ -361,6 +361,7 @@ type EmailDataForCounsellorRecord struct {
 	Age             string
 	Department      string
 	Location        string
+	NoShow          string
 	SessionMode     string
 	SessionNo       string
 	SessionDate     string
@@ -369,6 +370,13 @@ type EmailDataForCounsellorRecord struct {
 	TherapeuticGoal string
 	TherapyPlan     string
 	AssessmentTool  string
+}
+
+type EmailDataForCounsellorVisit struct {
+	Client_Name     string
+	Client_Location string
+	InTime          string
+	OutTime         string
 }
 
 type EmailDataForPaymentReceipt struct {

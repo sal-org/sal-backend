@@ -69,6 +69,11 @@ const (
 	CounsellorRecordForClientTitle = "Clove: New Client Record"
 )
 
+// counsellor - client record
+const (
+	CounsellorVisitForClientTitle = "Clove: New Client Visit Record"
+)
+
 // For Receipt type
 const (
 	AppointmentSessionsTypeForReceipt = "Counselling Sessions"

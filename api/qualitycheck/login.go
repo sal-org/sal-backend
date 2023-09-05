@@ -60,7 +60,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(qualitycheck[0]["phone"])
+	// fmt.Println(qualitycheck[0]["phone"])
 
 	// send otp
 	otp, ok := UTIL.GenerateOTP(qualitycheck[0]["phone"])

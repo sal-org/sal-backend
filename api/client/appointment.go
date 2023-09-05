@@ -1149,7 +1149,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		r.FormValue("appointment_id"),
 		CONSTANT.InstantSendTextMessage,
 	)
-	fmt.Println("Status:" + CONSTANT.StatusCodeOk)
+	// fmt.Println("Status:" + CONSTANT.StatusCodeOk)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

@@ -52,7 +52,13 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var noshow string
 
+	if len(body["noshow"]) > 0 {
+		noshow = body["noshow"]
+	} else {
+		noshow = "0"
+	}
 	// add counsellorRecord details
 	counsellorRecord := map[string]string{}
 	counsellorRecord["counsellor_id"] = body["counsellor_id"]
@@ -62,6 +68,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	counsellorRecord["client_age"] = body["client_age"]
 	counsellorRecord["client_department"] = body["client_department"]
 	counsellorRecord["client_location"] = body["client_location"]
+	counsellorRecord["noshow"] = noshow
 	counsellorRecord["session_mode"] = body["session_mode"]
 	counsellorRecord["session_no"] = body["session_no"]
 	counsellorRecord["session_date"] = body["session_date"]
@@ -78,8 +85,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	
-	
+
 	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"email"}, map[string]string{"counsellor_id": body["counsellor_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -95,21 +101,28 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if noshow == "1" {
+		noshow = "Yes"
+	} else {
+		noshow = "No"
+	}
+
 	data := Model.EmailDataForCounsellorRecord{
-		First_Name:  body["client_first_name"],
-		Last_Name:   body["client_last_name"],
-		Gender:      body["client_gender"],
-		Age:        body["client_age"],
-		Department:       body["client_department"],
-		Location:       body["client_location"],
-		SessionMode:       body["session_mode"],
-		SessionNo:   body["session_no"],
-		SessionDate:  body["session_date"],
-		InTime:       body["in_time"],
-		OutTime:      body["out_time"],
+		First_Name:      body["client_first_name"],
+		Last_Name:       body["client_last_name"],
+		Gender:          body["client_gender"],
+		Age:             body["client_age"],
+		Department:      body["client_department"],
+		Location:        body["client_location"],
+		NoShow:          noshow,
+		SessionMode:     body["session_mode"],
+		SessionNo:       body["session_no"],
+		SessionDate:     body["session_date"],
+		InTime:          body["in_time"],
+		OutTime:         body["out_time"],
 		TherapeuticGoal: body["therapeutic_goal"],
-		TherapyPlan:      body["therapy_plan"],
-		AssessmentTool:    body["assessment_tool"],
+		TherapyPlan:     body["therapy_plan"],
+		AssessmentTool:  body["assessment_tool"],
 	}
 
 	filepath := "htmlfile/CounsellorRecord.html"

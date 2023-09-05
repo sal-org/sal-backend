@@ -39,7 +39,7 @@ func LoadRouter() *mux.Router {
 	sh := http.StripPrefix("/documentaion/swagger/", http.FileServer(http.Dir("./docs/")))
 	router.PathPrefix("/documentaion/swagger/").Handler(sh)
 
-	router.Path("/").HandlerFunc(HealthCheck).Methods("GET")
+	router.Path("/healthcheck").HandlerFunc(HealthCheck).Methods("GET")
 
 	return router
 }

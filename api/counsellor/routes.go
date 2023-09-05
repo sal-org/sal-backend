@@ -102,4 +102,25 @@ func LoadCounsellorRoutes(router *mux.Router) {
 
 	// training
 	counsellorRoutes.HandleFunc("/training", Training).Methods("GET")
+
+	// get partner name
+	counsellorRoutes.HandleFunc("/get-partner", PartnerGet).Methods("GET")
+
+	// GetPartnerAddress
+	counsellorRoutes.HandleFunc("/get-address", GetPartnerAddress).Queries(
+		"client_name", "{client_name}",
+	).Methods("GET")
+
+	// add my time sheet
+	counsellorRoutes.HandleFunc("/my-time-sheet", AddMyTimeSheet).Methods("POST")
+
+	// get my time sheet
+	counsellorRoutes.HandleFunc("/my-time-sheet", MyTimeSheet).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+
+	// update my time sheet
+	counsellorRoutes.HandleFunc("/my-time-sheet", UpdateMyTimeSheet).Queries(
+		"sheet_id", "{sheet_id}",
+	).Methods("PUT")
 }

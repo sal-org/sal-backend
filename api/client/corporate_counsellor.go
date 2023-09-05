@@ -274,7 +274,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		appointmentID,
 	)
 
-	// Listerner Notification
+	// Counsellor Notification
 
 	// send appointment booking notification, message to listener
 	UTIL.SendNotification(
@@ -287,13 +287,13 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			},
 		),
 		order[0]["counsellor_id"],
-		CONSTANT.ListenerType,
+		order[0]["type"],
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
 	)
 
-	// send appointment reminder notification to listener before 15 min
+	// send appointment reminder notification to counsellor before 15 min
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderCounsellorHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -304,7 +304,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			},
 		),
 		order[0]["counsellor_id"],
-		CONSTANT.ListenerType,
+		order[0]["type"],
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
@@ -328,6 +328,25 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
+	)
+
+
+	// 30 min reminder sms notification
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###userName###":  counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-30*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
 	)
 
 	// 15 min reminder sms notification
@@ -407,6 +426,31 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		CONSTANT.ClientAppointmentBookClientTitle,
 		emailBody,
 		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+
+	// Counsellor Email
+
+	// Payment receipt
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: counsellor[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentBookClientEmailBody,
+			map[string]string{
+				"###therpist_name###": client[0]["first_name"],
+				"###date###":          order[0]["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientAppointmentBookClientTitle,
+		emailBody1,
+		counsellor[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
 

@@ -14,6 +14,14 @@ func LoadQualityCheckRoutes(router *mux.Router) {
 	// appointment
 	qualityCheckRoutes.HandleFunc("/appointment", GetAppointmentdetails).Methods("POST")
 
+
+	// counsellor record 
+	qualityCheckRoutes.HandleFunc("/counsellor-record", GetCounsellorRecord).Methods("POST")
+
+
+	// counsellor time sheet 
+	qualityCheckRoutes.HandleFunc("/counsellor-time-sheet", GetCounsellorTimeSheet).Methods("POST")
+
 	qualityCheckRoutes.HandleFunc("/send-email", SendEmail).Methods("POST")
 
 	qualityCheckRoutes.HandleFunc("/video-comment", VideoCallComment).Methods("POST")
