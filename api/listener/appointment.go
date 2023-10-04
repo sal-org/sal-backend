@@ -446,21 +446,21 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	// send appointment ended notification and rating to client
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentFeedbackHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFeedbackContent,
-			map[string]string{
-				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"]),
-			},
-		),
-		appointment[0]["client_id"],
-		CONSTANT.ClientType,
-		UTIL.GetCurrentTime().String(),
-		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
-	)
+	// // send appointment ended notification and rating to client
+	// UTIL.SendNotification(
+	// 	CONSTANT.ClientAppointmentFeedbackHeading,
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentFeedbackContent,
+	// 		map[string]string{
+	// 			"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"]),
+	// 		},
+	// 	),
+	// 	appointment[0]["client_id"],
+	// 	CONSTANT.ClientType,
+	// 	UTIL.GetCurrentTime().String(),
+	// 	CONSTANT.NotificationSent,
+	// 	r.FormValue("appointment_id"),
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

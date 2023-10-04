@@ -443,12 +443,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
 	// update appointment as completed
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
 		map[string]string{
@@ -459,6 +453,12 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			"ended_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
 		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
@@ -545,20 +545,20 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send appointment ended notification and rating to client
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentFeedbackHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFeedbackContent,
-			map[string]string{
-				"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
-			},
-		),
-		appointment[0]["client_id"],
-		CONSTANT.ClientType,
-		UTIL.GetCurrentTime().String(),
-		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
-	)
+	// UTIL.SendNotification(
+	// 	CONSTANT.ClientAppointmentFeedbackHeading,
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentFeedbackContent,
+	// 		map[string]string{
+	// 			"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
+	// 		},
+	// 	),
+	// 	appointment[0]["client_id"],
+	// 	CONSTANT.ClientType,
+	// 	UTIL.GetCurrentTime().String(),
+	// 	CONSTANT.NotificationSent,
+	// 	r.FormValue("appointment_id"),
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

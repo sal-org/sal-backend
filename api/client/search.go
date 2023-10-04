@@ -207,7 +207,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 
 	for key, value := range counsellors {
 
-		slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date = '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", value["id"])
+		slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date = '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and available = 1 order by date asc", value["id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -281,30 +281,30 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	args = append(args, therapistArgs...)
 	// }
 
-	sortBy := " average_rating " // default ordering by rating
-	orderBy := " desc "
-	if strings.EqualFold(r.FormValue("order_by"), "1") {
-		orderBy = " asc "
-	}
-	SQLQuery += " order by " + sortBy + orderBy
+	// sortBy := " average_rating " // default ordering by rating
+	// orderBy := " desc "
+	// if strings.EqualFold(r.FormValue("order_by"), "1") {
+	// 	orderBy = " asc "
+	// }
+	// SQLQuery += " order by " + sortBy + orderBy
 
-	// get counsellors|listeners|therapists
+	// get counsellors|therapists
 	counsellors, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.CounsellorsListPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient), args...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// extract counsellors|listeners|therapists ids
+	// extract counsellors|therapists ids
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
 
-	// get counsellors|listeners|therapists slots
+	// get counsellors|therapists slots
 	slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	// group counsellors|listeners|therapists slots
+	// group counsellors|therapists slots
 	counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
 	filteredCounsellorSlots := map[string][]map[string]string{}
 	filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
@@ -321,7 +321,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// get counsellors|listeners|therapists count
+	// get counsellors|therapists count
 	counsellorsCount, status, ok := DB.SelectProcess("select count(*) as ctn from ("+SQLQuery+") as a", args...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
