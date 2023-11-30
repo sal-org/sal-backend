@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -281,35 +282,45 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, s
 
 	codeStatus, _ := CallStatus(resourceid, sid)
 	fmt.Println(codeStatus)
-	// fmt.Println(result)
-	// b, _ := json.Marshal(result)
-	// fmt.Println(string(b))
+	fmt.Println(result)
 
-	bodyy, _ := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	return "", "", err
-	// }
-	fmt.Println(string(bodyy))
-
-	// var mapp Model.AgoraCallStopResponseModel
 	var fileNameInMP4, fileNameInM3U8 string
 
-	// err = json.Unmarshal(b, &mapp)
-	// if err != nil {
-	// 	fmt.Println("eerror")
-	// 	return "", "", err
-	// }
+	if result.Code == 200 {
 
-	// fmt.Println(mapp)
+		// fmt.Println(result)
+		// b, _ := json.Marshal(result)
+		// fmt.Println(string(b))
 
-	if len(result.ServerResponse.FileList[0].FileName) == 0 {
+		bodyy, _ := io.ReadAll(resp.Body)
+		// if err != nil {
+		// 	return "", "", err
+		// }
+		fmt.Println(string(bodyy))
+
+		// var mapp Model.AgoraCallStopResponseModel
+
+		// err = json.Unmarshal(b, &mapp)
+		// if err != nil {
+		// 	fmt.Println("eerror")
+		// 	return "", "", err
+		// }
+
+		// fmt.Println(mapp)
+
+		if len(result.Body.ServerResponse.FileList[0].FileName) == 0 {
+			fileNameInM3U8 = ""
+			fileNameInMP4 = ""
+		} else {
+			fileNameInMP4 = result.Body.ServerResponse.FileList[0].FileName
+			// fmt.Println(fileNameInMP4)
+			fileNameInM3U8 = result.Body.ServerResponse.FileList[1].FileName
+			// fmt.Println(fileNameInM3U8)
+		}
+
+	} else {
 		fileNameInM3U8 = ""
 		fileNameInMP4 = ""
-	} else {
-		fileNameInMP4 = result.ServerResponse.FileList[0].FileName
-		// fmt.Println(fileNameInMP4)
-		fileNameInM3U8 = result.ServerResponse.FileList[1].FileName
-		// fmt.Println(fileNameInM3U8)
 	}
 
 	return fileNameInMP4, fileNameInM3U8, nil

@@ -135,10 +135,9 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// // default photo for client and listerner
-	// if len(body["photo"]) == 0 || body["photo"] == "string" {
-	// 	body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
-	// }
+	if len(body["notification_status"]) == 0 {
+		body["notification_status"] = "1"
+	}
 
 	// add client details
 	client := map[string]string{}
@@ -154,7 +153,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive
-	client["notification_status"] = CONSTANT.NotificationActive
+	client["notification_status"] = body["notification_status"]
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
@@ -296,6 +295,10 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	// 	body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
 	// }
 
+	if len(body["notification_status"]) == 0 {
+		body["notification_status"] = "1"
+	}
+
 	// add client details
 	client := map[string]string{}
 	client["first_name"] = body["first_name"]
@@ -311,7 +314,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
 	client["status"] = CONSTANT.ClientActive
-	client["notification_status"] = CONSTANT.NotificationActive
+	client["notification_status"] = body["notification_status"]
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")

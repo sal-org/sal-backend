@@ -355,6 +355,7 @@ type EmailDataForCounsellorProfile struct {
 }
 
 type EmailDataForCounsellorRecord struct {
+	TherapistName   string
 	First_Name      string
 	Last_Name       string
 	Gender          string
@@ -367,6 +368,7 @@ type EmailDataForCounsellorRecord struct {
 	SessionDate     string
 	InTime          string
 	OutTime         string
+	MentalHealth    string
 	TherapeuticGoal string
 	TherapyPlan     string
 	AssessmentTool  string
@@ -476,6 +478,44 @@ type AssessmentDownloadSRSModel struct {
 	Answer19 string `json:"answer19"`
 	Answer20 string `json:"answer20"`
 	Answer21 string `json:"answer21"`
+}
+
+type AssessmentDownloadBurnOutModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+	Answer11 string `json:"answer11"`
+	Answer12 string `json:"answer12"`
+}
+
+type AssessmentDownloadSelfEsteemModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
 }
 
 type AssessmentDownloadBDIModel struct {
@@ -654,21 +694,41 @@ type AgoraCallStatus struct {
 	} `json:"serverResponse"`
 }
 
+// type AgoraCallStopResponseModel struct {
+// 	ResourceID     string `json:"resourceId"`
+// 	Sid            string `json:"sid"`
+// 	ServerResponse struct {
+// 		FileListMode string `json:"fileListMode"`
+// 		FileList     []struct {
+// 			FileName       string `json:"fileName"`
+// 			TrackType      string `json:"trackType"`
+// 			UID            string `json:"uid"`
+// 			MixedAllUser   bool   `json:"mixedAllUser"`
+// 			IsPlayable     bool   `json:"isPlayable"`
+// 			SliceStartTime int64  `json:"sliceStartTime"`
+// 		} `json:"fileList"`
+// 		UploadingStatus string `json:"uploadingStatus"`
+// 	} `json:"serverResponse"`
+// }
+
 type AgoraCallStopResponseModel struct {
-	ResourceID     string `json:"resourceId"`
-	Sid            string `json:"sid"`
-	ServerResponse struct {
-		FileListMode string `json:"fileListMode"`
-		FileList     []struct {
-			FileName       string `json:"fileName"`
-			TrackType      string `json:"trackType"`
-			UID            string `json:"uid"`
-			MixedAllUser   bool   `json:"mixedAllUser"`
-			IsPlayable     bool   `json:"isPlayable"`
-			SliceStartTime int64  `json:"sliceStartTime"`
-		} `json:"fileList"`
-		UploadingStatus string `json:"uploadingStatus"`
-	} `json:"serverResponse"`
+	Code int `json:"Code"`
+	Body struct {
+		ResourceID     string `json:"resourceId"`
+		Sid            string `json:"sid"`
+		ServerResponse struct {
+			FileListMode string `json:"fileListMode"`
+			FileList     []struct {
+				FileName       string `json:"fileName"`
+				TrackType      string `json:"trackType"`
+				UID            string `json:"uid"`
+				MixedAllUser   bool   `json:"mixedAllUser"`
+				IsPlayable     bool   `json:"isPlayable"`
+				SliceStartTime int64  `json:"sliceStartTime"`
+			} `json:"fileList"`
+			UploadingStatus string `json:"uploadingStatus"`
+		} `json:"serverResponse"`
+	} `json:"Body"`
 }
 
 type EmailBodyMessageModel struct {

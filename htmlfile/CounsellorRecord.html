@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 </head>
 <body>
+    <p>Therapist Name: {{.TherapistName}}</p>
     <h4 style="color: rgb(113, 113, 233);">Client Profile Details</h4>
     <table style="width: 80%;text-align: left;">
       <tr>
@@ -54,6 +55,10 @@
           <tr>
             <th style="color:#808080; padding: 10px;">Out Time:</th>
             <td>{{.OutTime}}</td>
+          </tr>
+          <tr>
+            <th style="color:#808080; padding: 10px;">Mental Health Score:</th>
+            <td>{{.MentalHealth}}</td>
           </tr>
           <tr>
             <th style="color:#808080; padding: 10px;">Therapeutic Goal:</th>

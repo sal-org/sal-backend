@@ -53,8 +53,11 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// adsConent
 	router.HandleFunc("/adscontents", AdsContent).Methods("GET")
 
-
-	// get discount value
+	// counsellor record
+	router.HandleFunc("/counsellor-record", GetCounsellorClientRecord).Queries(
+		"counsellor_id", "{counsellor_id}",
+		"client_id", "{client_id}",
+	).Methods("GET")
 	router.HandleFunc("/counsellor-record", CounsellorClientRecord).Methods("POST")
 
 	// login

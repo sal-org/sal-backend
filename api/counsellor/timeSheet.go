@@ -19,7 +19,7 @@ func PartnerGet(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	partnersName, status, ok := DB.SelectProcess("select partner_name from " + CONSTANT.CorporatePartnersTable + " order by id desc ")
+	partnersName, status, ok := DB.SelectProcess("select partner_name from " + CONSTANT.CorporatePartnersTable + " where status = 1 order by id desc ")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

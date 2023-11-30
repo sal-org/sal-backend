@@ -60,7 +60,6 @@ func GetHTMLTemplateForProfile(data Model.EmailDataForCounsellorProfile, filepat
 	return templateBuffer.String()
 }
 
-
 func GetHTMLTemplateForCounsellorRecord(data Model.EmailDataForCounsellorRecord, filepath string) string {
 	var templateBuffer bytes.Buffer
 
@@ -253,6 +252,54 @@ func GetHTMLTemplateForAssessmentSRS(data Model.AssessmentDownloadSRSModel, file
 	return templateBuffer.String(), true
 }
 
+func GetHTMLTemplateForAssessmentSelfEsteem(data Model.AssessmentDownloadSelfEsteemModel, filepath string) (string, bool) {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+
+	if err != nil {
+		fmt.Println("file is not read")
+		return "", false
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		fmt.Println("Data not pass in html")
+		return "", false
+	}
+
+	return templateBuffer.String(), true
+}
+
+func GetHTMLTemplateForAssessmentBurnOut(data Model.AssessmentDownloadBurnOutModel, filepath string) (string, bool) {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+
+	if err != nil {
+		fmt.Println("file is not read")
+		return "", false
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		fmt.Println("Data not pass in html")
+		return "", false
+	}
+
+	return templateBuffer.String(), true
+}
+
 func GetHTMLTemplateForAssessmentGAD7(data Model.AssessmentDownloadGAD7Model, filepath string) (string, bool) {
 	var templateBuffer bytes.Buffer
 
@@ -334,7 +381,7 @@ func GeneratePdfHeaderAndFooterFixted(htmlfile, filepath string) ([]byte, bool) 
 	page.FooterRight.Set("[page]")
 	page.EnableLocalFileAccess.Set(true)
 	page.HeaderHTML.Set(`htmlfile/AssessmentHeader.html`)
-	// page.FooterHTML.Set("htmlfile/AssessmentFooter.html")
+	page.FooterHTML.Set("htmlfile/AssessmentFooter.html")
 	pdfg.AddPage(page)
 
 	// Create PDF document in internal buffer

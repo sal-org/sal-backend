@@ -24,6 +24,9 @@ func LoadTherapistRoutes(router *mux.Router) {
 	therapistRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+	therapistRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
 	therapistRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",

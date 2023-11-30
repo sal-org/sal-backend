@@ -125,16 +125,17 @@ const (
 
 // appointment status
 const (
-	AppointmentToBeStarted         = "1"
-	AppointmentStarted             = "2"
-	AppointmentCompleted           = "3"
-	AppointmentUserCancelled       = "4"
-	AppointmentCounsellorCancelled = "5"
-	AppointmentAdminCancelled      = "6"
-	AppointmentNoShowClient        = "7"
-	AppointmentNoShowCounsellor    = "8"
-	AppointmentNoShowBoth          = "9"
-	AppointmentAdminRefunds        = "10"
+	AppointmentToBeStarted              = "1"
+	AppointmentStarted                  = "2"
+	AppointmentCompleted                = "3"
+	AppointmentUserCancelled            = "4"
+	AppointmentUserCancelledWithin4Hour = "12"
+	AppointmentCounsellorCancelled      = "5"
+	AppointmentAdminCancelled           = "6"
+	AppointmentNoShowClient             = "7"
+	AppointmentNoShowCounsellor         = "8"
+	AppointmentNoShowBoth               = "9"
+	AppointmentAdminRefunds             = "10"
 )
 
 // appointment slots status

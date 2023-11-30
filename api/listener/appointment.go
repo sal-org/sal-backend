@@ -2,6 +2,7 @@ package listener
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -258,6 +259,210 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+// Generate Agora Token godoc
+// @Tags Client Appointment
+// @Summary Get Agora Token
+// @Router /client/appointment/agoratoken [get]
+// @Param appointment_id query string true "Appointment ID or Order ID is equal to Channel Name"
+// @Param session query string true "Individual(1), Cafe(2)"
+// @Param type query string true "Publisher(1), Subscriber(2)"
+// @Param user_type query string true "Counsellor(1) , Client(2)"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
+
+	var response = make(map[string]interface{})
+
+	var roleStr, agora_token, uidStr, channelName string
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	uidStr = generateRandomID()
+
+	if r.FormValue("session") == "1" {
+		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		channelName = r.FormValue("appointment_id")
+		if r.FormValue("type") == "1" {
+			roleStr = CONSTANT.RolePublisher
+		} else if r.FormValue("type") == "2" {
+			roleStr = CONSTANT.RoleSubscriber
+		} else {
+			roleStr = "attended"
+		}
+
+		//uidStr = generateRandomID()
+		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestamp := currentTimestamp + expireTimeInSeconds
+
+		token, err := UTIL.GenerateAgoraRTCToken(channelName, roleStr, uidStr, expireTimestamp)
+		if err != nil {
+			UTIL.SetReponse(w, "", "", CONSTANT.ShowDialog, response)
+			return
+		}
+		agora_token = token
+	} else if r.FormValue("session") == "2" {
+		exists := DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		channelName = r.FormValue("appointment_id")
+		if r.FormValue("type") == "1" {
+			roleStr = CONSTANT.RolePublisher
+		} else if r.FormValue("type") == "2" {
+			roleStr = CONSTANT.RoleSubscriber
+		} else {
+			roleStr = "attended"
+		}
+
+		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestamp := currentTimestamp + expireTimeInSeconds
+
+		token, err := UTIL.GenerateAgoraRTCToken(channelName, roleStr, uidStr, expireTimestamp)
+		if err != nil {
+			UTIL.SetReponse(w, "500", "Server Error", CONSTANT.ShowDialog, response)
+			return
+		}
+		agora_token = token
+	}
+
+	agora := map[string]string{}
+
+	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !exists {
+
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestmp := currentTimestamp + expireTimeInSeconds
+
+		uidSt := generateRandomID()
+		channelNa := r.FormValue("appointment_id")
+
+		tokenForResource, err := UTIL.GenerateAgoraRTCToken(channelNa, roleStr, uidSt, expireTimestmp)
+		if err != nil {
+			fmt.Println("Ressource Token not generated")
+		}
+
+		resourceid, err := UTIL.BasicAuthorization(channelNa, uidSt)
+		if err != nil {
+			fmt.Println("resource id not generated for recording file")
+		}
+
+		agora["appointment_id"] = channelNa
+		agora["uid"] = uidSt
+		agora["token"] = tokenForResource
+		agora["resource_id"] = resourceid
+		agora["status"] = CONSTANT.AgoraResourceID
+		agora["created_at"] = UTIL.GetCurrentTime().String()
+		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// if r.FormValue("user_type") == "1" {
+	// 	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// 	if exists {
+	// 		DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 			map[string]string{
+	// 				"appointment_id": r.FormValue("appointment_id"),
+	// 			},
+	// 			map[string]string{
+	// 				"uid":         uidStr,
+	// 				"token":       agora_token,
+	// 				"resource_id": "",
+	// 				"status":      CONSTANT.AgoraResourceID2,
+	// 				"modified_at": UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	} else {
+	// 		agora["appointment_id"] = channelName
+	// 		agora["uid"] = uidStr
+	// 		agora["token"] = agora_token
+	// 		agora["resource_id"] = ""
+	// 		agora["status"] = CONSTANT.AgoraResourceID
+	// 		agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 	}
+	// } else if r.FormValue("user_type") == "2" {
+	// 	resourceid, err := UTIL.BasicAuthorization(channelName, uidStr)
+	// 	if err != nil {
+	// 		fmt.Println("resource id not generated for recording file")
+	// 		return
+	// 	}
+	// 	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// 	if exists {
+	// 		DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 			map[string]string{
+	// 				"appointment_id": r.FormValue("appointment_id"),
+	// 			},
+	// 			map[string]string{
+	// 				"uid1":         uidStr,
+	// 				"token1":       agora_token,
+	// 				"resource_id1": resourceid,
+	// 				"status":       CONSTANT.AgoraResourceID2,
+	// 				"modified_at":  UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	} else {
+	// 		agora["appointment_id"] = channelName
+	// 		agora["uid1"] = uidStr
+	// 		agora["token1"] = agora_token
+	// 		agora["resource_id1"] = resourceid
+	// 		agora["status"] = CONSTANT.AgoraResourceID
+	// 		agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 	}
+	// }
+
+	response["token"] = agora_token
+	response["UID"] = uidStr
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func generateRandomID() string {
+	const randomIDdigits = "123456789"
+	b := make([]byte, 6)
+	for i := range b {
+		b[i] = randomIDdigits[rand.Intn(len(randomIDdigits))]
+	}
+	return string(b)
+}
+
 // AppointmentStart godoc
 // @Tags Listener Appointment
 // @Summary Start an appointment
@@ -341,15 +546,34 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":     CONSTANT.AppointmentStarted,
-			"started_at": UTIL.GetCurrentTime().Local().String(),
-		},
+	if appointment[0]["started_at"] == "" {
+		// update appointment as started
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"status":     CONSTANT.AppointmentStarted,
+				"started_at": UTIL.GetCurrentTime().Local().String(),
+			},
+		)
+	}
+
+	// send appointment join the call notification to Client
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentHasBeenStartedHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentHasBeenStartedContent,
+			map[string]string{
+				"###clientname###":    DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"###therapistname###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"]),
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -421,28 +645,31 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("file is not created")
 		}
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"fileNameInMp4":  fileNameInMP4,
-				"fileNameInM3U8": fileNameInM3U8,
-				"status":         CONSTANT.AgoraCallStop1,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
 
-		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"counsellor_mp4": fileNameInMP4,
-				"status":         CONSTANT.QualityCheckLinkInsert,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
+		if fileNameInMP4 != "" {
+			DB.UpdateSQL(CONSTANT.AgoraTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"fileNameInMp4":  fileNameInMP4,
+					"fileNameInM3U8": fileNameInM3U8,
+					"status":         CONSTANT.AgoraCallStop1,
+					"modified_at":    UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"counsellor_mp4": fileNameInMP4,
+					"status":         CONSTANT.QualityCheckLinkInsert,
+					"modified_at":    UTIL.GetCurrentTime().String(),
+				},
+			)
+		}
 
 	}
 

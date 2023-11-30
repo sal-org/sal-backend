@@ -17,6 +17,7 @@ const (
 	CounsellorAppointmentCancelCounsellorHeading          = "Appointment Cancellation"
 	ClientPaymentSucessClientHeading                      = "Clove: Payment Confirmation"
 	ClientAppointmentFeedbackHeading                      = "Your feedback"
+	ClientAppointmentHasBeenStartedHeading                = "Your session has started!"
 	ClientAppointmentGivenFeedbackHeading                 = "Thanks for your Feedback!"
 	ClientEventPaymentSucessClientHeading                 = "Cafe booked successfully!"
 	ClientSelectSadMoodHeading                            = "Want to speak to somebody now?"
@@ -24,6 +25,7 @@ const (
 
 	// counsellor
 	ClientAppointmentReminderCounsellorHeading   = "Session about to begin"
+	CounsellorAppointmentHasBeenStartedHeading   = "Your session has started!"
 	CounsellorEventReminderCounsellorHeading     = "Event Reminder"
 	CounsellorAccountSignupCounsellorHeading     = "Registration successful"
 	ClientAppointmentScheduleCounsellorHeading   = "New session booked"
@@ -37,6 +39,7 @@ const (
 // notification contents
 const (
 	// client
+	ClientAppointmentHasBeenStartedContent            = "Hey ###clientname###, ###therapistname### has joined the session. Please join"
 	ClientAppointmentRemiderClientContent             = "Hi ###user_name###, your session is starting soon at ###time###. Tap here to know more."
 	ClientAppointmentFollowUpRemiderClientContent     = "Hi ###client_name###, your follow-up session with ###therapistname### is starting in 15 minutes. Please do find a quite place for yourself to take it."
 	ClientAppointmentFollowUpRemiderCounsellorContent = "You have a scheduled follow-up session starting in 15 minutes with ###client_name### at ###time###. Check 'My sessions' within the app for details."
@@ -57,6 +60,7 @@ const (
 	ClientCompletedProfileContent                     = "Thank you for creating your profile with CLOVE"
 
 	// counsellor
+	CounsellorAppointmentHasBeenStartedContent   = "Hey ###therapistname###, ###clientname### has joined the session. Please join"
 	ClientAppointmentReminderCounsellorContent   = "You have a scheduled counselling session starting in 15 minutes with ###clientname### at ###time###. Check 'Booking section' within the app for details."
 	CounsellorEventReminderCounsellorContent     = "Your event will start in 15 min. Please check your internet connectivity and get ready."
 	CounsellorAccountSignupCounsellorContent     = "Our offline team will contact you shortly."

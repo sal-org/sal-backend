@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>Higher General Wellbeing Report</title>
+      <style>
+        body{
+				  min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>Caregiver Burnout Index Report</b></p>
+          <p style="font-size:large;text-align: end;"></p>
+          <p style="font-size:large;text-align: end;">By University of California, Los Angeles(UCLA)</p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p>The demands of caregiving can be exhausting and overwhelming. But there are steps you can take to rein in stress and regain a sense of balance, joy, and hope in your life.</p><br>
+          <p><b>What is caregiver burnout?</b></p>
+          <p>While caring for a loved one can be very rewarding, it also involves many stressors. And since caregiving is often a long-term challenge, the emotional impact can snowball over time. You may face years or even decades of caregiving responsibilities. It can be particularly disheartening if you feel that you’re in over your head, if there’s no hope that your family member will get better, or if, despite your best efforts, their condition is gradually deteriorating.</p>
+          <p>Caregiver burnout interferes with your ability to function. Burnout also raises your risk of chronic depression and other mental and physical ailments, from hypertension and flu to diabetes, stroke, or even premature death.</p>
+          <p>Your data will be kept confidential in accordance with our <a href="https://clovemind.com/privacy-policy/"> Privacy Policy</a> and no information will be released that might identify any individual.</p><br>
+          <p><b>What's your caregiver burnout index?</b></p>
+          <p>Below, you can find your Caregiver Burnout Index scores and comments for the 12 questions you have answered.</p>
+        </div><br> 
+        <div style="text-align: center; font-size: x-large;">
+          <p><b>Questionnaire</b></p>
+        </div>
+        <div>
+          <p><b>Scale</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Seldom or never</th> 
+              <th style="border: 1px solid black;">Sometimes</th>
+              <th style="border: 1px solid black;">Often</th>
+              <th style="border: 1px solid black;">Every day</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">1</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">4</td>
+            </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. How often do you get a good night's sleep (seven or more hours)?</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. How often do you keep up with leisure activities that you enjoyed before caregiving?</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. How often do you feel irritable or lose your temper with others?</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. How often do you feel happy?</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. How often do you find it difficult to concentrate?</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. How often do you need a cigarette(s) or more than two cups of coffee
+                to make it through the day?</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">7. How often do you lack the energy to cook, clean, and take care of everyday basics?</td>
+                <td style="text-align: center;">{{.Answer7}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">8. How often do you feel hopeless about the future?</td>
+                <td style="text-align: center;">{{.Answer8}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">9. How often are you able to relax without the use of alcohol or prescription sedatives?</td>
+                <td style="text-align: center;">{{.Answer9}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">10. How often do you feel overwhelmed by all you have to do?</td>
+                <td style="text-align: center;">{{.Answer10}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">11. How often has someone criticized your caregiving or suggested you're burning out?</td>
+                <td style="text-align: center;">{{.Answer11}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">12. How often do you feel that someone is looking after or caring for you?</td>
+                <td style="text-align: center;">{{.Answer12}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table>
+        </div><br><br><br>
+        <p><b>Score Interpretation:</b></p>
+        <table style="border: 1px solid black; width: 55%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">Score Range </th> 
+            <th style="border: 1px solid black;">Caregiver Burnout Index</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">12 – 17</td>
+            <td style="border: 1px solid black;">Toast (Already burned out)</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">18 – 29</td>
+            <td style="border: 1px solid black;">Too hot to handle (High burnout risk)</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">30 – 41 </td>
+            <td style="border: 1px solid black;">Feverish (Elevated burnout risk)</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">42 – 48 </td>
+            <td style="border: 1px solid black;">Keeping your cool (Low burnout risk)</td>
+          </tr>
+        </table>
+        <p>Scores of question numbers 3, 5, 6, 7, 8, 10, 11 have been reversed and calculated accordingly.</p>
+        <p>Your overall score is in the <p>Keeping your cool (Low burnout risk),</p> range based on the assessment. Although you want to do your best for the person you're caring for, realize that your own health is at stake -- and if you don't look out for Number One, you won't be able to help the person or people in your care.</p><br><br>        <p><b>Suggested Action Plan: </b></p>
+        <p>Keep yourself well fueled for caring by making time for yourself every day. If you're in a relationship, know that a healthy marriage or other close relationship can be a source of strength; learn how caregiving couples can make it work or consult a counselor/ therapist to work with you. </p>
+      </div>
+    </body>
+</html>

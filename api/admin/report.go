@@ -27,8 +27,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		heading = []string{"Appointment ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time", "Start At", "End At", "Mod. At", "Status"}
-		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
+		heading = []string{"Client First Name", "Client Last Name", "Company Name", "Counsellor First Name", "Counsellor Last Name", "Counsellor Type", "Date & Time", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
+		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -38,7 +38,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
 		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -56,12 +56,24 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		for _, appointment := range appointments {
 
-			var startTime, endTime string
+			var startTime, endTime, modAt, clientStartTime, clientEndTime, partnerName, status string
 
 			if appointment["started_at"] == "" {
 				startTime = ""
 			} else {
 				startTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["client_started_at"] == "" {
+				clientStartTime = ""
+			} else {
+				clientStartTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["client_started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["client_ended_at"] == "" {
+				clientEndTime = ""
+			} else {
+				clientEndTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["client_ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
 			}
 
 			if appointment["ended_at"] == "" {
@@ -70,17 +82,54 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				endTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
 			}
 
+			if appointment["modified_at"] == "" {
+				modAt = ""
+			} else {
+				modAt = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["status"] == "3" {
+				if appointment["started_at"] == "" && appointment["ended_at"] == "" {
+					status = getAppointmentStatusInText("8")
+				} else if appointment["client_started_at"] == "" && appointment["client_ended_at"] == "" {
+					status = getAppointmentStatusInText("7")
+				} else {
+					status = getAppointmentStatusInText("3")
+				}
+			} else if appointment["status"] == "4" {
+				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
+					status = getAppointmentStatusInText("12")
+				} else {
+					status = getAppointmentStatusInText("4")
+				}
+			} else {
+				status = getAppointmentStatusInText(appointment["status"])
+			}
+
+			domainName := strings.Split(clientsMap[appointment["client_id"]]["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+			} else {
+				partnerName = "None"
+			}
+
 			data = append(data, []string{
-				appointment["appointment_id"],
-				appointment["client_id"],
 				clientsMap[appointment["client_id"]]["first_name"],
-				appointment["counsellor_id"],
+				clientsMap[appointment["client_id"]]["last_name"],
+				partnerName,
 				counsellorsMap[appointment["counsellor_id"]]["first_name"],
+				counsellorsMap[appointment["counsellor_id"]]["last_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
 				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
 				startTime,
 				endTime,
-				getAppointmentStatusInText(appointment["status"]),
+				clientStartTime,
+				clientEndTime,
+				modAt,
+				status,
 			})
 		}
 	case "2": // sales report
@@ -369,13 +418,15 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 func getAppointmentStatusInText(status string) string {
 	switch status {
 	case CONSTANT.AppointmentToBeStarted:
-		return "Payment not complete"
+		return "Both no-show"
 	case CONSTANT.AppointmentStarted:
 		return "Started"
 	case CONSTANT.AppointmentCompleted:
 		return "Completed"
 	case CONSTANT.AppointmentUserCancelled:
 		return "Client cancelled"
+	case CONSTANT.AppointmentUserCancelledWithin4Hour:
+		return "Client cancelled(to be paid)"
 	case CONSTANT.AppointmentCounsellorCancelled:
 		return "Counsellor cancelled"
 	case CONSTANT.AppointmentAdminCancelled:

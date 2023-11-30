@@ -11,6 +11,7 @@ const (
 	AppointmentSlotNotExistMessage         = "Appointment slots doesn't exist"
 	AppointmentSlotNotAvailableMessage     = "Appointment slots not available"
 	AppointmentAlreadyStartedMessage       = "Appointment already started"
+	AppointmentAlreadyCompletedMessage     = "Appointment already completed"
 	AppointmentDidntStartedMessage         = "Appointment didn't started"
 	AppointmentCancelByUserMessage         = "already appointment cancelled"
 	AppointmentCantRescheduleMessage       = "Appointment cannot be rescheduled"

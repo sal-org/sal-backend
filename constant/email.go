@@ -71,6 +71,11 @@ const (
 
 // counsellor - client record
 const (
+	CounselloRecordClientEmergencyCaseTitle = "Clove: New Emergency Case"
+)
+
+// counsellor - client record
+const (
 	CounsellorVisitForClientTitle = "Clove: New Client Visit Record"
 )
 

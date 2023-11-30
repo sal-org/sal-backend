@@ -7,6 +7,7 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
+	"strconv"
 )
 
 // ListMood godoc
@@ -33,6 +34,28 @@ func AdsContent(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get last cleints
+	lastClient, status, ok := DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"session_date", "mental_health"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["last_client"] = lastClient
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -52,7 +75,15 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var noshow string
+	var noshow, mentalHealth string
+
+	if len(body["mental_health"]) > 0 {
+		mentalHealth = body["mental_health"]
+	} else {
+		mentalHealth = "0"
+	}
+
+	mentalStatus, _ := strconv.Atoi(mentalHealth)
 
 	if len(body["noshow"]) > 0 {
 		noshow = body["noshow"]
@@ -74,6 +105,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	counsellorRecord["session_date"] = body["session_date"]
 	counsellorRecord["in_time"] = body["in_time"]
 	counsellorRecord["out_time"] = body["out_time"]
+	counsellorRecord["mental_health"] = mentalHealth
 	counsellorRecord["therapeutic_goal"] = body["therapeutic_goal"]
 	counsellorRecord["therapy_plan"] = body["therapy_plan"]
 	counsellorRecord["assessment_tool"] = body["assessment_tool"]
@@ -86,7 +118,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"email"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "email"}, map[string]string{"counsellor_id": body["counsellor_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -94,7 +126,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 	if len(counsellor) == 0 {
 		// get therapist details
-		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"email"}, map[string]string{"therapist_id": body["counsellor_id"]})
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "email"}, map[string]string{"therapist_id": body["counsellor_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -108,6 +140,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := Model.EmailDataForCounsellorRecord{
+		TherapistName:   counsellor[0]["first_name"]+" "+counsellor[0]["last_name"],
 		First_Name:      body["client_first_name"],
 		Last_Name:       body["client_last_name"],
 		Gender:          body["client_gender"],
@@ -120,6 +153,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		SessionDate:     body["session_date"],
 		InTime:          body["in_time"],
 		OutTime:         body["out_time"],
+		MentalHealth:    mentalHealth,
 		TherapeuticGoal: body["therapeutic_goal"],
 		TherapyPlan:     body["therapy_plan"],
 		AssessmentTool:  body["assessment_tool"],
@@ -135,6 +169,15 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		counsellor[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
+
+	if mentalStatus > 6 {
+		UTIL.SendEmail(
+			CONSTANT.CounselloRecordClientEmergencyCaseTitle,
+			emailbody,
+			"shambhavi.alve@clovemind.com",
+			CONSTANT.InstantSendEmailMessage,
+		)
+	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 

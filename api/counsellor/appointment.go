@@ -2,6 +2,7 @@ package counsellor
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -184,35 +185,59 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// add penalty for counsellor for cancelling
 	// add to counsellor payments
 	// get invoice details
-	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(invoice) > 0 {
-		// get order details
-		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+
+	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(UTIL.ConvertTimezone(UTIL.GetCurrentTime(), "330")).Hours() <= 4 {
+
+		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		amountBeforeDiscount := paidAmount + discount
-		if amountBeforeDiscount > 0 { // add only if amount paid
-			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+		if len(invoice) > 0 {
+			// get order details
+			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+			amountBeforeDiscount := paidAmount + discount
+			if amountBeforeDiscount > 0 { // add only if amount paid
+				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
 
-			amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
-			cancellationCharges := amountFor1Session * CONSTANT.CounsellorCancellationCharges
+				amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
+				cancellationCharges := amountFor1Session
+
+				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+					"counsellor_id": appointment[0]["counsellor_id"],
+					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+					"description":   "Therapist Cancellation",
+					"amount":        strconv.FormatFloat(-cancellationCharges, 'f', 2, 64),
+					"status":        CONSTANT.PaymentActive,
+					"created_at":    UTIL.GetCurrentTime().String(),
+				}, "payment_id")
+			}
+		} else {
+
+			//UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours()
+
+			// get counsellor details
+			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 
 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
 				"counsellor_id": appointment[0]["counsellor_id"],
 				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-				"description":   "Cancellation",
-				"amount":        strconv.FormatFloat(-cancellationCharges, 'f', 2, 64),
+				"description":   "Therapist Cancellation",
+				"amount":        "-" + counsellor[0]["corporate_price"],
 				"status":        CONSTANT.PaymentActive,
 				"created_at":    UTIL.GetCurrentTime().String(),
 			}, "payment_id")
+
 		}
 	}
 
@@ -300,6 +325,23 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentCancellationToCounsellorTextMessage,
+			map[string]string{
+				"###userName###":  client[0]["first_name"],
+				"###user_Name###": counsellor[0]["first_name"],
+				"###date###":      appointment[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
+
 	// UTIL.SendMessage(
 	// 	UTIL.ReplaceNotificationContentInString(
 	// 		CONSTANT.CounsellorAppointmentCancellationToClientTextMessage,
@@ -313,6 +355,210 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// Generate Agora Token godoc
+// @Tags Client Appointment
+// @Summary Get Agora Token
+// @Router /client/appointment/agoratoken [get]
+// @Param appointment_id query string true "Appointment ID or Order ID is equal to Channel Name"
+// @Param session query string true "Individual(1), Cafe(2)"
+// @Param type query string true "Publisher(1), Subscriber(2)"
+// @Param user_type query string true "Counsellor(1) , Client(2)"
+// @Security JWTAuth
+// @Produce json
+// @Success 200
+func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
+
+	var response = make(map[string]interface{})
+
+	var roleStr, agora_token, uidStr, channelName string
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	uidStr = generateRandomID()
+
+	if r.FormValue("session") == "1" {
+		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		channelName = r.FormValue("appointment_id")
+		if r.FormValue("type") == "1" {
+			roleStr = CONSTANT.RolePublisher
+		} else if r.FormValue("type") == "2" {
+			roleStr = CONSTANT.RoleSubscriber
+		} else {
+			roleStr = "attended"
+		}
+
+		//uidStr = generateRandomID()
+		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestamp := currentTimestamp + expireTimeInSeconds
+
+		token, err := UTIL.GenerateAgoraRTCToken(channelName, roleStr, uidStr, expireTimestamp)
+		if err != nil {
+			UTIL.SetReponse(w, "", "", CONSTANT.ShowDialog, response)
+			return
+		}
+		agora_token = token
+	} else if r.FormValue("session") == "2" {
+		exists := DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		channelName = r.FormValue("appointment_id")
+		if r.FormValue("type") == "1" {
+			roleStr = CONSTANT.RolePublisher
+		} else if r.FormValue("type") == "2" {
+			roleStr = CONSTANT.RoleSubscriber
+		} else {
+			roleStr = "attended"
+		}
+
+		// For demonstration purposes the expiry time is set to 7200 seconds = 2 hours. This shows you the automatic token renew actions of the client.
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestamp := currentTimestamp + expireTimeInSeconds
+
+		token, err := UTIL.GenerateAgoraRTCToken(channelName, roleStr, uidStr, expireTimestamp)
+		if err != nil {
+			UTIL.SetReponse(w, "500", "Server Error", CONSTANT.ShowDialog, response)
+			return
+		}
+		agora_token = token
+	}
+
+	agora := map[string]string{}
+
+	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !exists {
+
+		expireTimeInSeconds := uint32(7200)
+		// Get current timestamp.
+		currentTimestamp := uint32(time.Now().UTC().Unix())
+		// Timestamp when the token expires.
+		expireTimestmp := currentTimestamp + expireTimeInSeconds
+
+		uidSt := generateRandomID()
+		channelNa := r.FormValue("appointment_id")
+
+		tokenForResource, err := UTIL.GenerateAgoraRTCToken(channelNa, roleStr, uidSt, expireTimestmp)
+		if err != nil {
+			fmt.Println("Ressource Token not generated")
+		}
+
+		resourceid, err := UTIL.BasicAuthorization(channelNa, uidSt)
+		if err != nil {
+			fmt.Println("resource id not generated for recording file")
+		}
+
+		agora["appointment_id"] = channelNa
+		agora["uid"] = uidSt
+		agora["token"] = tokenForResource
+		agora["resource_id"] = resourceid
+		agora["status"] = CONSTANT.AgoraResourceID
+		agora["created_at"] = UTIL.GetCurrentTime().String()
+		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// if r.FormValue("user_type") == "1" {
+	// 	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// 	if exists {
+	// 		DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 			map[string]string{
+	// 				"appointment_id": r.FormValue("appointment_id"),
+	// 			},
+	// 			map[string]string{
+	// 				"uid":         uidStr,
+	// 				"token":       agora_token,
+	// 				"resource_id": "",
+	// 				"status":      CONSTANT.AgoraResourceID2,
+	// 				"modified_at": UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	} else {
+	// 		agora["appointment_id"] = channelName
+	// 		agora["uid"] = uidStr
+	// 		agora["token"] = agora_token
+	// 		agora["resource_id"] = ""
+	// 		agora["status"] = CONSTANT.AgoraResourceID
+	// 		agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 	}
+	// } else if r.FormValue("user_type") == "2" {
+	// 	resourceid, err := UTIL.BasicAuthorization(channelName, uidStr)
+	// 	if err != nil {
+	// 		fmt.Println("resource id not generated for recording file")
+	// 		return
+	// 	}
+	// 	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// 	if exists {
+	// 		DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 			map[string]string{
+	// 				"appointment_id": r.FormValue("appointment_id"),
+	// 			},
+	// 			map[string]string{
+	// 				"uid1":         uidStr,
+	// 				"token1":       agora_token,
+	// 				"resource_id1": resourceid,
+	// 				"status":       CONSTANT.AgoraResourceID2,
+	// 				"modified_at":  UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	} else {
+	// 		agora["appointment_id"] = channelName
+	// 		agora["uid1"] = uidStr
+	// 		agora["token1"] = agora_token
+	// 		agora["resource_id1"] = resourceid
+	// 		agora["status"] = CONSTANT.AgoraResourceID
+	// 		agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 	}
+	// }
+
+	response["token"] = agora_token
+	response["UID"] = uidStr
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func generateRandomID() string {
+	const randomIDdigits = "123456789"
+	b := make([]byte, 6)
+	for i := range b {
+		b[i] = randomIDdigits[rand.Intn(len(randomIDdigits))]
+	}
+	return string(b)
 }
 
 // AppointmentStart godoc
@@ -365,16 +611,18 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":     CONSTANT.AppointmentStarted,
-			"started_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	if appointment[0]["started_at"] == "" {
+		// update appointment as started
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"status":     CONSTANT.AppointmentStarted,
+				"started_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+	}
 
 	// var allUsers []string
 
@@ -400,6 +648,23 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		)
 
 	}
+
+	// send appointment join the call notification to Client
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentHasBeenStartedHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentHasBeenStartedContent,
+			map[string]string{
+				"###clientname###":    DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"###therapistname###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -460,87 +725,167 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if appointment[0]["ended_at"] != "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// add to counsellor payments
+	// get invoice details
+
+	if appointment[0]["client_started_at"] == "" && appointment[0]["client_ended_at"] == "" {
+
+		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(invoice) > 0 {
+
+			// normal clients payment
+
+			// get order details
+			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+			paidAfterDiscount := paidAmount + discount
+			if paidAfterDiscount > 0 { // add only if amount paid
+				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+				// These come in Database
+				// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
+
+				amountToBePaid := (paidAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
+
+				amountToBePaid = amountToBePaid * 0.2
+
+				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+					"counsellor_id": appointment[0]["counsellor_id"],
+					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+					"description":   "Client No Show",
+					"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
+					"status":        CONSTANT.PaymentActive,
+					"created_at":    UTIL.GetCurrentTime().String(),
+				}, "payment_id")
+			}
+		} else {
+			// corporate appointment payments
+
+			// get counsellor details
+			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			paidAmount, _ := strconv.ParseFloat(counsellor[0]["corporate_price"], 64)
+
+			amountToBePaid := paidAmount * 0.2
+
+			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+				"counsellor_id": appointment[0]["counsellor_id"],
+				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"description":   "Corporate Client",
+				"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
+				"status":        CONSTANT.PaymentActive,
+				"created_at":    UTIL.GetCurrentTime().String(),
+			}, "payment_id")
+
+		}
+
+	} else {
+		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(invoice) > 0 {
+
+			// normal clients payment
+
+			// get order details
+			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+			paidAfterDiscount := paidAmount + discount
+			if paidAfterDiscount > 0 { // add only if amount paid
+				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+				// These come in Database
+				// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
+
+				amountToBePaid := (paidAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
+
+				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+					"counsellor_id": appointment[0]["counsellor_id"],
+					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+					"description":   "Consultation",
+					"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
+					"status":        CONSTANT.PaymentActive,
+					"created_at":    UTIL.GetCurrentTime().String(),
+				}, "payment_id")
+			}
+		} else {
+			// corporate appointment payments
+
+			// get counsellor details
+			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+				"counsellor_id": appointment[0]["counsellor_id"],
+				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"description":   "Corporate Client",
+				"amount":        counsellor[0]["corporate_price"],
+				"status":        CONSTANT.PaymentActive,
+				"created_at":    UTIL.GetCurrentTime().String(),
+			}, "payment_id")
+
+		}
+	}
+
+	// cloud recording
 	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
 		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 		if err != nil {
 			fmt.Println("file is not created")
 		}
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"fileNameInMp4":  fileNameInMP4,
-				"fileNameInM3U8": fileNameInM3U8,
-				"status":         CONSTANT.AgoraCallStop1,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
 
-		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"counsellor_mp4": fileNameInMP4,
-				"status":         CONSTANT.QualityCheckLinkInsert,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
+		if fileNameInMP4 != "" {
+			DB.UpdateSQL(CONSTANT.AgoraTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"fileNameInMp4":  fileNameInMP4,
+					"fileNameInM3U8": fileNameInM3U8,
+					"status":         CONSTANT.AgoraCallStop1,
+					"modified_at":    UTIL.GetCurrentTime().String(),
+				},
+			)
 
-	}
-
-	// add to counsellor payments
-	// get invoice details
-	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(invoice) > 0 {
-		// get order details
-		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
+			DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"counsellor_mp4": fileNameInMP4,
+					"status":         CONSTANT.QualityCheckLinkInsert,
+					"modified_at":    UTIL.GetCurrentTime().String(),
+				},
+			)
 		}
-		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-		paidAfterDiscount := paidAmount + discount
-		if paidAfterDiscount > 0 { // add only if amount paid
-			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-
-			// These come in Database
-			// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
-
-			amountToBePaid := (paidAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
-
-			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
-				"counsellor_id": appointment[0]["counsellor_id"],
-				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-				"description":   "Consultation",
-				"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
-				"status":        CONSTANT.PaymentActive,
-				"created_at":    UTIL.GetCurrentTime().String(),
-			}, "payment_id")
-		}
-	} else {
-
-		// get counsellor details
-		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
-			"counsellor_id": appointment[0]["counsellor_id"],
-			"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-			"description":   "Corporate Client",
-			"amount":        counsellor[0]["corporate_price"],
-			"status":        CONSTANT.PaymentActive,
-			"created_at":    UTIL.GetCurrentTime().String(),
-		}, "payment_id")
 
 	}
 

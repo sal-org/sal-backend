@@ -968,16 +968,56 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// refund amount
 	// check if appointment is alteast after 4 hours
 	// if below 4 hours, charges are 100% that means dont refund anything
-	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() >= 4 {
-		charges := CONSTANT.ClientAppointmentCancellationCharges
-		// get invoice details
-		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() >= 4 {
+	// 	charges := CONSTANT.ClientAppointmentCancellationCharges
+	// 	// get invoice details
+	// 	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 	if !ok {
+	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// 	if len(invoice) > 0 {
+	// 		// invoice is available => amount is paid, order is not free
+	// 		// get order details
+	// 		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+	// 		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	// 		// discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+	// 		// amountAfterDiscount := paidAmount - discount
+	// 		if paidAmount > 0 { // refund only if amount paid
+	// 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	// 			refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+	// 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+	// 			cancellationCharges := (paidAmount / slotsBought) * charges
+	// 			refundAmount := (paidAmount / slotsBought) - cancellationCharges // remove from paid amount only, not from amount after discount, as discussed
+	// 			if refundAmount+refundedAmount <= paidAmount {
+	// 				// refunded amount will be less than paid amount
+	// 				DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+	// 					"invoice_id":      invoice[0]["invoice_id"],
+	// 					"payment_id":      invoice[0]["payment_id"],
+	// 					"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
+	// 					"status":          CONSTANT.RefundInProgress,
+	// 					"created_at":      UTIL.GetCurrentTime().String(),
+	// 				}, "refund_id")
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	// add penalty for counsellor for cancelling
+	// add to counsellor payments
+	// get invoice details
+
+	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(UTIL.ConvertTimezone(UTIL.GetCurrentTime(), "330")).Hours() <= 4 {
+		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 		if len(invoice) > 0 {
-			// invoice is available => amount is paid, order is not free
 			// get order details
 			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
 			if !ok {
@@ -985,25 +1025,47 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-			// discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-			// amountAfterDiscount := paidAmount - discount
-			if paidAmount > 0 { // refund only if amount paid
-				paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-				refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+			amountBeforeDiscount := paidAmount + discount
+			if amountBeforeDiscount > 0 { // add only if amount paid
 				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-				cancellationCharges := (paidAmount / slotsBought) * charges
-				refundAmount := (paidAmount / slotsBought) - cancellationCharges // remove from paid amount only, not from amount after discount, as discussed
-				if refundAmount+refundedAmount <= paidAmount {
-					// refunded amount will be less than paid amount
-					DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
-						"invoice_id":      invoice[0]["invoice_id"],
-						"payment_id":      invoice[0]["payment_id"],
-						"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
-						"status":          CONSTANT.RefundInProgress,
-						"created_at":      UTIL.GetCurrentTime().String(),
-					}, "refund_id")
-				}
+
+				amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
+				cancellationCharges := amountFor1Session * CONSTANT.CounsellorCancellationCharges
+
+				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+					"counsellor_id": appointment[0]["counsellor_id"],
+					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+					"description":   "Cancellation",
+					"amount":        strconv.FormatFloat(cancellationCharges, 'f', 2, 64),
+					"status":        CONSTANT.PaymentActive,
+					"created_at":    UTIL.GetCurrentTime().String(),
+				}, "payment_id")
 			}
+		} else {
+
+			//UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours()
+
+			// get counsellor details
+			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			amount, _ := strconv.ParseFloat(counsellor[0]["corporate_price"], 64)
+
+			cancellationCharges := amount * CONSTANT.CounsellorCancellationCharges
+
+			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+				"counsellor_id": appointment[0]["counsellor_id"],
+				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+				"description":   "Client Cancellation",
+				"amount":        strconv.FormatFloat(cancellationCharges, 'f', 2, 64),
+				"status":        CONSTANT.PaymentActive,
+				"created_at":    UTIL.GetCurrentTime().String(),
+			}, "payment_id")
+
 		}
 	}
 
@@ -1632,10 +1694,10 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 	var roleStr, agora_token, uidStr, channelName string
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	uidStr = generateRandomID()
 
@@ -1833,10 +1895,10 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -1861,16 +1923,18 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":            CONSTANT.AppointmentStarted,
-			"client_started_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	if appointment[0]["client_started_at"] == "" {
+		// update appointment as started
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"status":            CONSTANT.AppointmentStarted,
+				"client_started_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+	}
 
 	if len(agora[0]["sid"]) == 0 {
 
@@ -1890,6 +1954,37 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 			},
 		)
 	}
+
+	var counsellorName string
+
+	switch appointment[0]["type"] {
+	case "1":
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"])
+
+	case "2":
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"])
+
+	case "4":
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
+
+	}
+
+	// send appointment join the call notification to Therapists
+	UTIL.SendNotification(
+		CONSTANT.CounsellorAppointmentHasBeenStartedHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentHasBeenStartedContent,
+			map[string]string{
+				"###therapistname###": counsellorName,
+				"###clientname###":    DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+			},
+		),
+		appointment[0]["counsellor_id"],
+		CONSTANT.CounsellorType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -1942,6 +2037,68 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			"client_ended_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	if appointment[0]["client_ended_at"] != "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// type 2 is listerner
+	if appointment[0]["type"] != "2" {
+		if appointment[0]["started_at"] == "" && appointment[0]["ended_at"] == "" {
+			invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			if len(invoice) > 0 {
+				// get order details
+				order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+				paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+				discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+				amountBeforeDiscount := paidAmount + discount
+				if amountBeforeDiscount > 0 { // add only if amount paid
+					slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+					amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
+					cancellationCharges := amountFor1Session
+
+					DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+						"counsellor_id": appointment[0]["counsellor_id"],
+						"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+						"description":   "Therapist No Show",
+						"amount":        strconv.FormatFloat(-cancellationCharges, 'f', 2, 64),
+						"status":        CONSTANT.PaymentActive,
+						"created_at":    UTIL.GetCurrentTime().String(),
+					}, "payment_id")
+				}
+			} else {
+
+				//UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours()
+
+				// get counsellor details
+				counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
+				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+					"counsellor_id": appointment[0]["counsellor_id"],
+					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+					"description":   "Therapist No Show",
+					"amount":        "-" + counsellor[0]["corporate_price"],
+					"status":        CONSTANT.PaymentActive,
+					"created_at":    UTIL.GetCurrentTime().String(),
+				}, "payment_id")
+
+			}
+		}
+	}
 
 	// codeStatus, err := UTIL.CallStatus(agora[0]["resource_id1"], agora[0]["sid1"])
 	// if err != nil {
@@ -2025,7 +2182,7 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get counsellor details
-	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and start_by < '" + UTIL.GetCurrentTime().String() + "' and '" + UTIL.GetCurrentTime().String() + "' < end_by ", r.FormValue("client_id"))
+	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by ", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

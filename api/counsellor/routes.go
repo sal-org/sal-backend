@@ -24,6 +24,9 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	counsellorRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+	counsellorRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
 	counsellorRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",
