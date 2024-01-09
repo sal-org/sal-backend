@@ -148,6 +148,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor := map[string]string{}
 	counsellor["first_name"] = body["first_name"]
 	counsellor["last_name"] = body["last_name"]
+	counsellor["pronoun"] = body["pronoun"]
 	counsellor["gender"] = body["gender"]
 	counsellor["phone"] = body["phone"]
 	counsellor["photo"] = body["photo"]
@@ -158,6 +159,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["price_5"] = body["price_5"]
 	counsellor["education"] = body["education"]
 	counsellor["experience"] = body["experience"]
+	counsellor["therapeutic_approach"] = body["therapeutic_approach"]
 	counsellor["about"] = body["about"]
 	counsellor["timezone"] = body["timezone"]
 	counsellor["resume"] = body["resume"]
@@ -231,22 +233,24 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:   CONFIG.MediaURL,
-		First_Name:  counsellor_details[0]["first_name"],
-		Last_Name:   counsellor_details[0]["last_name"],
-		Gender:      counsellor_details[0]["gender"],
-		Type:        "Counsellor",
-		Phone:       counsellor_details[0]["phone"],
-		Photo:       counsellor_details[0]["photo"],
-		Email:       counsellor_details[0]["email"],
-		Education:   counsellor_details[0]["education"],
-		Experience:  counsellor_details[0]["experience"],
-		About:       counsellor_details[0]["about"],
-		Resume:      counsellor_details[0]["resume"],
-		Certificate: counsellor_details[0]["certificate"],
-		Aadhar:      counsellor_details[0]["aadhar"],
-		Linkedin:    counsellor_details[0]["linkedin"],
-		Status:      counsellor_details[0]["status"],
+		Media_URL:           CONFIG.MediaURL,
+		First_Name:          counsellor_details[0]["first_name"],
+		Last_Name:           counsellor_details[0]["last_name"],
+		Pronoun:             counsellor_details[0]["pronoun"],
+		Gender:              counsellor_details[0]["gender"],
+		Type:                "Counsellor",
+		Phone:               counsellor_details[0]["phone"],
+		Photo:               counsellor_details[0]["photo"],
+		Email:               counsellor_details[0]["email"],
+		Education:           counsellor_details[0]["education"],
+		Experience:          counsellor_details[0]["experience"],
+		TherapeuticApproach: counsellor_details[0]["therapeutic_approach"],
+		About:               counsellor_details[0]["about"],
+		Resume:              counsellor_details[0]["resume"],
+		Certificate:         counsellor_details[0]["certificate"],
+		Aadhar:              counsellor_details[0]["aadhar"],
+		Linkedin:            counsellor_details[0]["linkedin"],
+		Status:              counsellor_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -256,7 +260,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AkshayEmailID,
+		CONSTANT.AkshayEmailID,  // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 
@@ -304,6 +308,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["last_name"]) > 0 {
 		counsellor["last_name"] = body["last_name"]
 	}
+	if len(body["pronoun"]) > 0 {
+		counsellor["pronoun"] = body["pronoun"]
+	}
 	if len(body["gender"]) > 0 {
 		counsellor["gender"] = body["gender"]
 	}
@@ -330,6 +337,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["about"]) > 0 {
 		counsellor["about"] = body["about"]
+	}
+	if len(body["therapeutic_approach"]) > 0 {
+		counsellor["therapeutic_approach"] = body["therapeutic_approach"]
 	}
 	if len(body["resume"]) > 0 {
 		counsellor["resume"] = body["resume"]

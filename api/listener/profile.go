@@ -144,6 +144,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener := map[string]string{}
 	listener["first_name"] = body["first_name"]
 	listener["last_name"] = body["last_name"]
+	listener["pronoun"] = body["pronoun"]
 	listener["gender"] = body["gender"]
 	listener["age_group"] = body["age_group"]
 	listener["phone"] = body["phone"]
@@ -198,6 +199,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		Media_URL:   CONFIG.MediaURL,
 		First_Name:  listeners[0]["first_name"],
 		Last_Name:   listeners[0]["last_name"],
+		Pronoun:     listeners[0]["pronoun"],
 		Gender:      listeners[0]["gender"],
 		Type:        "Listener",
 		Phone:       listeners[0]["phone"],
@@ -220,7 +222,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AkshayEmailID,
+		CONSTANT.AkshayEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 
@@ -282,6 +284,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["last_name"]) > 0 {
 		listener["last_name"] = body["last_name"]
+	}
+	if len(body["pronoun"]) > 0 {
+		listener["pronoun"] = body["pronoun"]
 	}
 	if len(body["gender"]) > 0 {
 		listener["gender"] = body["gender"]

@@ -108,6 +108,9 @@ func LoadClientRoutes(router *mux.Router) {
 		"access_code", "{access_code}",
 	).Methods("GET")
 
+	// check access token
+	clientRoutes.HandleFunc("/check_access_token", CheckIfAccessTokenExpired).Methods("GET")
+
 	// check phone and  email
 	clientRoutes.HandleFunc("/check_uniqueid", CheckEmailANDPhone).Methods("GET")
 

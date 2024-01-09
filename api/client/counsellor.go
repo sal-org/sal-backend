@@ -34,7 +34,7 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "multiple_sessions", "education", "experience", "about", "slot_type"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "price", "multiple_sessions", "education", "experience", "therapeutic_approach", "about", "slot_type"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

@@ -56,7 +56,7 @@ const (
 	ClientAppointmentFeedbackContent                  = "Your feedback is so important to us. Please rate your session with ###counsellor_name### to help us constantly improve our services"
 	ClientAppointmentFeedbackGivenContent             = "Thank you for rating our Counselling Services and helping us in making a difference! Kudos!"
 	ClientEventPaymentSucessClientContent             = "SAL Cafe ###cafe_name### has been booked successfully for Rs. ###paid_amount### on ###date### & ###time###."
-	ClientSelectSadMoodContent                        = "We sensed you are ###mood###. Talk to our compassionate listeners or speak with our expert therapist. Book your appointment to speak to somebody now."
+	ClientSelectSadMoodContent                        = "We sensed you are ###mood###. Tap here to book an appointment with our compassionate therapists."
 	ClientCompletedProfileContent                     = "Thank you for creating your profile with CLOVE"
 
 	// counsellor

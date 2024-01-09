@@ -124,6 +124,7 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 	content["category_id"] = body["category_id"]
 	content["training"] = body["training"]
 	content["mood_id"] = body["mood_id"]
+	content["duration"] = body["duration"]
 	content["status"] = CONSTANT.ContentActive
 	content["created_by"] = body["created_by"]
 	content["created_at"] = UTIL.GetCurrentTime().String()
@@ -163,6 +164,7 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 	content["training"] = body["training"]
 	content["mood_id"] = body["mood_id"]
 	content["created_by"] = body["created_by"]
+	content["duration"] = body["duration"]
 	content["status"] = body["status"]
 	content["modified_by"] = body["modified_by"]
 	content["modified_at"] = UTIL.GetCurrentTime().String()
@@ -203,5 +205,17 @@ func UploadContentFile(w http.ResponseWriter, r *http.Request) {
 
 	response["file"] = fileName
 	response["media_url"] = CONFIG.MediaURL
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PreSignedS3URLToUpload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, CONSTANT.ContentS3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
+
+	response["file_name"] = fileName
+	response["url"] = url
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

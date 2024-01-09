@@ -39,7 +39,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	therapistArgs := []interface{}{}
 
 	// build counsellor query
-	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions , education, experience, about, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
+	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
 
 	wheres := []string{}
 	if len(r.FormValue("topic")) > 0 { // get counsellors with specified topic
@@ -71,7 +71,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build listener query
-	listenerSQLQuery = "select listener_id as id, first_name, last_name, total_rating, average_rating, photo, 0 as price, 0 as multiple_sessions, occupation, age_group, about, " + CONSTANT.ListenerType + " as type, slot_type from " + CONSTANT.ListenersTable
+	listenerSQLQuery = "select listener_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, 0 as price, 0 as multiple_sessions, occupation, age_group, '' as therapeutic_approach, about, " + CONSTANT.ListenerType + " as type, slot_type from " + CONSTANT.ListenersTable
 
 	wheres = []string{}
 	if len(r.FormValue("topic")) > 0 { // get listeners with specified topic
@@ -94,7 +94,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	listenerSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build therapist query
-	therapistSQLQuery = "select therapist_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions, education, experience, about, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
+	therapistSQLQuery = "select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
 
 	wheres = []string{}
 	if len(r.FormValue("topic")) > 0 { // get therapists with specified topic
@@ -189,7 +189,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	for counsellorID, counsellorSlot := range counsellorSlots {
 		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
 		if len(filteredCounsellorSlots[counsellorID]) == 0 {
-			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1  and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0,0,15).Format("2006-01-02")+"' order by date asc", counsellorID)
+			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1  and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -249,7 +249,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	therapistArgs := []interface{}{}
 
 	// build counsellor query
-	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions , education, experience, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
+	counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
 	wheres := []string{}
 	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
 		// Param experience query string false "Experience range - 0,30 (min,max)"
@@ -263,7 +263,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	// build therapist query
-	therapistSQLQuery = "select therapist_id as id, first_name, last_name, total_rating, average_rating, photo, price, multiple_sessions, education, experience, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
+	therapistSQLQuery = "select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
 	wheres = []string{}
 	if len(r.FormValue("experience")) > 0 { // get counsellors available in specified price range
 		experiences := strings.Split(r.FormValue("experience"), ",") // min,max price range
@@ -312,7 +312,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	for counsellorID, counsellorSlot := range counsellorSlots {
 		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
 		if len(filteredCounsellorSlots[counsellorID]) == 0 {
-			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1 and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0,0,15).Format("2006-01-02")+"' order by date asc", counsellorID)
+			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1 and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return

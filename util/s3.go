@@ -9,14 +9,18 @@ import (
 	"os"
 	LOGGER "salbackend/logger"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 const randomIDdigits = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+const randomIDdigitsWithCap = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 func generateRandomID(n int) string {
 	b := make([]byte, n)
@@ -251,4 +255,41 @@ func getFileMIMEType(extension string) string {
 	default:
 		return ""
 	}
+}
+
+func generateRandomIDForSignedURl(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = randomIDdigitsWithCap[rand.Intn(len(randomIDdigitsWithCap))]
+	}
+	return string(b)
+}
+
+func PreSignedS3URLToUploadPut(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension string) (string, string) {
+
+	// // Initialize a session in us-west-2 that the SDK will use to load
+	// // credentials from the shared credentials file ~/.aws/credentials.
+	sess, _ := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+		Region:      aws.String(s3Region)},
+	)
+
+	// Create S3 service client
+	svc := s3.New(sess)
+
+	fileNameKey := path + "/" + generateRandomIDForSignedURl(30) + extension
+
+	req, _ := svc.PutObjectRequest(&s3.PutObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(fileNameKey),
+	})
+
+	q := req.HTTPRequest.URL.Query()
+	q.Add("x-amz-acl", "public-read")
+	req.HTTPRequest.URL.RawQuery = q.Encode()
+	// req.HTTPRequest.Header.Set("Content-MD5", checksum)
+	str, _ := req.Presign(5 * time.Minute)
+
+	return str, fileNameKey
+
 }

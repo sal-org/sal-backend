@@ -27,7 +27,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		heading = []string{"Client First Name", "Client Last Name", "Company Name", "Counsellor First Name", "Counsellor Last Name", "Counsellor Type", "Date & Time", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
+		heading = []string{"Client Name", "Company Name", "Counsellor Name", "Counsellor Type", "Date & Time", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -93,6 +93,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 					status = getAppointmentStatusInText("8")
 				} else if appointment["client_started_at"] == "" && appointment["client_ended_at"] == "" {
 					status = getAppointmentStatusInText("7")
+				} else if appointment["ended_at"] == "" || appointment["client_ended_at"] == "" {
+					status = getAppointmentStatusInText("14")
 				} else {
 					status = getAppointmentStatusInText("3")
 				}
@@ -101,6 +103,12 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 					status = getAppointmentStatusInText("12")
 				} else {
 					status = getAppointmentStatusInText("4")
+				}
+			} else if appointment["status"] == "5" {
+				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
+					status = getAppointmentStatusInText("13")
+				} else {
+					status = getAppointmentStatusInText("5")
 				}
 			} else {
 				status = getAppointmentStatusInText(appointment["status"])
@@ -117,11 +125,9 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			}
 
 			data = append(data, []string{
-				clientsMap[appointment["client_id"]]["first_name"],
-				clientsMap[appointment["client_id"]]["last_name"],
+				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
 				partnerName,
-				counsellorsMap[appointment["counsellor_id"]]["first_name"],
-				counsellorsMap[appointment["counsellor_id"]]["last_name"],
+				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
 				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
 				startTime,
@@ -417,6 +423,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 // utils for reports
 func getAppointmentStatusInText(status string) string {
 	switch status {
+	case CONSTANT.AppointmentToBeDuplicate:
+		return "Duplicate Appointment"
 	case CONSTANT.AppointmentToBeStarted:
 		return "Both no-show"
 	case CONSTANT.AppointmentStarted:
@@ -427,6 +435,10 @@ func getAppointmentStatusInText(status string) string {
 		return "Client cancelled"
 	case CONSTANT.AppointmentUserCancelledWithin4Hour:
 		return "Client cancelled(to be paid)"
+	case CONSTANT.AppointmentCounsellorCancelledWithin4Hour:
+		return "Counsellor cancelled(to be charge)"
+	case CONSTANT.AppointmentInTheReview:
+		return "To be reviewed"
 	case CONSTANT.AppointmentCounsellorCancelled:
 		return "Counsellor cancelled"
 	case CONSTANT.AppointmentAdminCancelled:

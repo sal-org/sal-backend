@@ -27,3 +27,9 @@ func getFileMD5Hash(savedFileName string) string {
 
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+
+func getMD5Hash(savedFileName string) string {
+	h := md5.New()
+	return hex.EncodeToString(h.Sum(nil))
+}

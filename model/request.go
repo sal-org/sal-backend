@@ -336,22 +336,24 @@ type EmailDataForEvent struct {
 }
 
 type EmailDataForCounsellorProfile struct {
-	Media_URL   string
-	First_Name  string
-	Last_Name   string
-	Gender      string
-	Type        string
-	Phone       string
-	Email       string
-	Photo       string
-	Education   string
-	Experience  string
-	About       string
-	Resume      string
-	Certificate string
-	Aadhar      string
-	Linkedin    string
-	Status      string
+	Media_URL           string
+	First_Name          string
+	Last_Name           string
+	Pronoun             string
+	Gender              string
+	Type                string
+	Phone               string
+	Email               string
+	Photo               string
+	Education           string
+	Experience          string
+	TherapeuticApproach string
+	About               string
+	Resume              string
+	Certificate         string
+	Aadhar              string
+	Linkedin            string
+	Status              string
 }
 
 type EmailDataForCounsellorRecord struct {

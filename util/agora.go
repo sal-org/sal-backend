@@ -50,7 +50,7 @@ func BasicAuthorization(channelName, uid string) (string, error) {
 		Uid:   uid,
 		ClientRequest: Model.ClientRequestS{
 			Region:              "AP",
-			ResourceExpiredHour: 24,
+			ResourceExpiredHour: 2,
 			Scene:               0,
 		},
 	}

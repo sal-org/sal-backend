@@ -134,19 +134,22 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	var typeOfService string
 
 	switch body["corporate_therpist"] {
-	case "Individual Clients": typeOfService = "0" 
-	case "Corporate Clients": typeOfService = "2"
-	case "Both" : typeOfService = "1"
+	case "Individual Clients":
+		typeOfService = "0"
+	case "Corporate Clients":
+		typeOfService = "2"
+	case "Both":
+		typeOfService = "1"
 	}
 
 	// add therapist details
 	therapist := map[string]string{}
 	therapist["first_name"] = body["first_name"]
 	therapist["last_name"] = body["last_name"]
+	therapist["pronoun"] = body["pronoun"]
 	therapist["gender"] = body["gender"]
 	therapist["phone"] = body["phone"]
 	therapist["photo"] = body["photo"]
@@ -157,6 +160,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["price_5"] = body["price_5"]
 	therapist["education"] = body["education"]
 	therapist["experience"] = body["experience"]
+	therapist["therapeutic_approach"] = body["therapeutic_approach"]
 	therapist["about"] = body["about"]
 	therapist["timezone"] = body["timezone"]
 	therapist["resume"] = body["resume"]
@@ -254,22 +258,24 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:   CONFIG.MediaURL,
-		First_Name:  therapist_details[0]["first_name"],
-		Last_Name:   therapist_details[0]["last_name"],
-		Gender:      therapist_details[0]["gender"],
-		Type:        "Therapist",
-		Phone:       therapist_details[0]["phone"],
-		Photo:       therapist_details[0]["photo"],
-		Email:       therapist_details[0]["email"],
-		Education:   therapist_details[0]["education"],
-		Experience:  therapist_details[0]["experience"],
-		About:       therapist_details[0]["about"],
-		Resume:      therapist_details[0]["resume"],
-		Certificate: therapist_details[0]["certificate"],
-		Aadhar:      therapist_details[0]["aadhar"],
-		Linkedin:    therapist_details[0]["linkedin"],
-		Status:      therapist_details[0]["status"],
+		Media_URL:           CONFIG.MediaURL,
+		First_Name:          therapist_details[0]["first_name"],
+		Last_Name:           therapist_details[0]["last_name"],
+		Pronoun:             therapist_details[0]["pronoun"],
+		Gender:              therapist_details[0]["gender"],
+		Type:                "Therapist",
+		Phone:               therapist_details[0]["phone"],
+		Photo:               therapist_details[0]["photo"],
+		Email:               therapist_details[0]["email"],
+		Education:           therapist_details[0]["education"],
+		Experience:          therapist_details[0]["experience"],
+		TherapeuticApproach: therapist_details[0]["therapeutic_approach"],
+		About:               therapist_details[0]["about"],
+		Resume:              therapist_details[0]["resume"],
+		Certificate:         therapist_details[0]["certificate"],
+		Aadhar:              therapist_details[0]["aadhar"],
+		Linkedin:            therapist_details[0]["linkedin"],
+		Status:              therapist_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -279,7 +285,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AkshayEmailID,
+		CONSTANT.AkshayEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 
@@ -351,6 +357,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["last_name"]) > 0 {
 		therapist["last_name"] = body["last_name"]
 	}
+	if len(body["pronoun"]) > 0 {
+		therapist["pronoun"] = body["pronoun"]
+	}
 	if len(body["gender"]) > 0 {
 		therapist["gender"] = body["gender"]
 	}
@@ -374,6 +383,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["experience"]) > 0 {
 		therapist["experience"] = body["experience"]
+	}
+	if len(body["therapeutic_approach"]) > 0 {
+		therapist["therapeutic_approach"] = body["therapeutic_approach"]
 	}
 	if len(body["about"]) > 0 {
 		therapist["about"] = body["about"]

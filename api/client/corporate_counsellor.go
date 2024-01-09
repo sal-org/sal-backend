@@ -344,7 +344,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-30*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-5*time.Hour).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)

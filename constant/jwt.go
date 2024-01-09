@@ -9,7 +9,7 @@ package constant
 // corporate app
 const (
 	JWTRefreshExpiry = 4320 // (3 day = 4320) jwt refresh token expiry in min // 90 day
-	JWTAccessExpiry  = 1440 // (1 day = 1440) jwt access token expiry in min // 30 day
+	JWTAccessExpiry  = 4320 // (3 day = 4320 e.g. 24*3*60) jwt access token expiry in min // 30 day
 )
 
 const (

@@ -4,7 +4,7 @@ const (
 	SameerEmailID = "sameer.littlemagix@gmail.com"
 	AnandEmailID  = "anand.shah@sal.foundation"
 	AkshayEmailID = "akshay.gandhi@clovemind.com"
-	ShivamEmailID = "tiwarisomprakash.2000@gmail.com"
+	ShivamEmailID = "shivam.tiwari@clovemind.com"
 )
 
 const (

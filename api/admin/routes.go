@@ -26,6 +26,9 @@ func LoadAdminRoutes(router *mux.Router) {
 		"content_id", "{content_id}",
 	).Methods("PUT")
 	adminRoutes.HandleFunc("/content/upload", UploadContentFile).Methods("POST")
+	adminRoutes.HandleFunc("/content/upload", PreSignedS3URLToUpload).Queries(
+		"fileName", "{fileName}",
+	).Methods("GET")
 
 	// partner
 	adminRoutes.HandleFunc("/partner", PartnerGet).Methods("GET")
