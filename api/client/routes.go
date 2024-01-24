@@ -42,7 +42,10 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("GET")
-
+	clientRoutes.HandleFunc("/appointment/request", AppointmentRequest).Methods("POST")
+	clientRoutes.HandleFunc("/appointment/request", GetAppointmentRequest).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
 	clientRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",

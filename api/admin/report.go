@@ -27,7 +27,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		heading = []string{"Client Name", "Company Name", "Counsellor Name", "Counsellor Type", "Date & Time", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
+		heading = []string{"Client Name", "Gender", "Age", "Company Name", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date & Time", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -38,7 +38,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
 		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -56,7 +56,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		for _, appointment := range appointments {
 
-			var startTime, endTime, modAt, clientStartTime, clientEndTime, partnerName, status string
+			var startTime, endTime, modAt, clientStartTime, clientEndTime, partnerName, status, location string
 
 			if appointment["started_at"] == "" {
 				startTime = ""
@@ -124,9 +124,19 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				partnerName = "None"
 			}
 
+			if clientsMap[appointment["client_id"]]["location"] == "40.04" {
+				location = ""
+			} else {
+				location = clientsMap[appointment["client_id"]]["location"]
+			}
+
 			data = append(data, []string{
 				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
+				clientsMap[appointment["client_id"]]["gender"],
+				clientsMap[appointment["client_id"]]["age"],
 				partnerName,
+				location,
+				clientsMap[appointment["client_id"]]["department"],
 				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
 				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
@@ -397,6 +407,169 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		for _, counsellor := range counsellors {
 			data = append(data, []string{counsellor["first_name"], counsellor["last_name"], counsellor["gender"], counsellor["email"], counsellor["phone"], counsellor["type"], UTIL.ConvertTimezone(UTIL.ConvertToTime(counsellor["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
+		}
+	case "11": // client onboarding report
+
+		var partnerName, location string
+
+		heading = []string{"Client Name", "Company Name", "Age", "Gender", "Location", "CreatedAt"}
+
+		clients, status, ok := DB.SelectProcess("select first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, created_at from " + CONSTANT.ClientsTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		for _, client := range clients {
+
+			domainName := strings.Split(client["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+			} else {
+				partnerName = "None"
+			}
+
+			if client["location"] == "40.04" {
+				location = ""
+			} else {
+				location = client["location"]
+			}
+
+			data = append(data, []string{client["first_name"] + " " + client["last_name"], partnerName, client["age"], client["gender"], location, UTIL.ConvertTimezone(UTIL.ConvertToTime(client["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
+		}
+
+	case "12": // client mood report
+
+		var partnerName, location string
+
+		heading = []string{"Client Name", "Mood", "Age", "Gender", "Company Name", "Location", "Department"}
+
+		moods, status, ok := DB.SelectProcess("select * from " + CONSTANT.MoodResultsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientIDs := UTIL.ExtractValuesFromArrayMap(moods, "client_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+
+		for _, mood := range moods {
+
+			domainName := strings.Split(clientsMap[mood["client_id"]]["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+			} else {
+				partnerName = "None"
+			}
+
+			if clientsMap[mood["client_id"]]["location"] == "40.04" {
+				location = ""
+			} else {
+				location = clientsMap[mood["client_id"]]["location"]
+			}
+
+			moodTitle := DB.QueryRowSQL("select title from "+CONSTANT.MoodsTable+" where id = ?", mood["mood_id"])
+
+			data = append(data, []string{mood["name"], moodTitle, mood["age"], mood["gender"], partnerName, location, clientsMap[mood["client_id"]]["department"]})
+		}
+	case "13": // client asessment report
+
+		var partnerName, location, department string
+
+		heading = []string{"Client Name", "Assessment", "Age", "Gender", "Company Name", "Location", "Department", "CreatedAt"}
+
+		assessments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultsTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientIDs := UTIL.ExtractValuesFromArrayMap(assessments, "user_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+
+		for _, assessment := range assessments {
+
+			if len(clientsMap[assessment["user_id"]]) != 0 {
+				domainName := strings.Split(clientsMap[assessment["user_id"]]["email"], "@")
+
+				title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+				if len(title) > 0 {
+					partnerName = title[0]["partner_name"]
+				} else {
+					partnerName = "None"
+				}
+
+				if clientsMap[assessment["user_id"]]["location"] == "40.04" {
+					location = ""
+				} else {
+					location = clientsMap[assessment["user_id"]]["location"]
+				}
+
+				department = clientsMap[assessment["user_id"]]["department"]
+
+			} else {
+				partnerName = "None"
+				location = ""
+				department = ""
+
+			}
+
+			assessmentTitle := DB.QueryRowSQL("select title from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", assessment["assessment_id"])
+
+			data = append(data, []string{assessment["name"], assessmentTitle, assessment["age"], assessment["gender"], partnerName, location, department, UTIL.ConvertTimezone(UTIL.ConvertToTime(assessment["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
+		}
+	case "14": // counsellor record report
+		var noShow string
+
+		heading = []string{"Counsellor Name", "Client Name", "Age", "Gender", "Location", "Department", "No Show", "Session Mode", "Session No", "Session Date", "In-Time", "Out-Time", "Mental Health Scale", "Therapeutic Goal"}
+
+		counsellorRecords, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordsTable + " where `session_date` >= '" + startBy.String() + "' and `session_date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellorRecords, "counsellor_id")
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, counsellorRecord := range counsellorRecords {
+			if counsellorRecord["noshow"] == "0" {
+				noShow = "No"
+			} else {
+				noShow = "Yes"
+			}
+			data = append(data, []string{counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["mental_health"], counsellorRecord["therapeutic_goal"]})
 		}
 
 	}
