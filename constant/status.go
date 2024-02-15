@@ -224,6 +224,12 @@ const (
 	AssessmentQuestionOptionActive   = "1"
 )
 
+// Appointment Request Option status
+const (
+	AppointmentRequestProgress  = "1"
+	AppointmentRequestCompleted = "2"
+)
+
 // assessment result status
 const (
 	AssessmentResultInactive = "0"

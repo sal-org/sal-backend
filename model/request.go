@@ -733,6 +733,21 @@ type AgoraCallStopResponseModel struct {
 	} `json:"Body"`
 }
 
+type OneSignalNotificatnData struct {
+	AppID          string            `json:"app_id"`
+	Headings       map[string]string `json:"headings"`
+	Contents       map[string]string `json:"contents"`
+	IncludeAliases IncludeAliase     `json:"include_aliases"`
+	Channels       []string          `json:"target_channel"`
+	Data           map[string]string `json:"data"`
+	// BigPicture       string            `json:"big_picture"`
+	// URL              string            `json:"url"`
+}
+
+type IncludeAliase struct {
+	ExternalID []string `json:"external_id"`
+}
+
 type EmailBodyMessageModel struct {
 	Name    string
 	Message string

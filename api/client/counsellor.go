@@ -485,14 +485,14 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.GetCurrentTime().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		invoiceID,
 	)
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -526,7 +526,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.CounsellorType,
-		UTIL.GetCurrentTime().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
 	)
@@ -564,7 +564,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		appointmentID,
 		CONSTANT.InstantSendEmailMessage,
 	)
@@ -622,7 +622,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		appointmentID,
 		CONSTANT.InstantSendEmailMessage,
 	)

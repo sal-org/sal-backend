@@ -66,6 +66,8 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	// var isDayWithin15Days = false
+	// var isSlotsAreActive = false
 
 	var dayInBool = false
 
@@ -406,6 +408,18 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 						return
 					}
+
+					// if day["availability_status"] == "1" && day["status"] == "1" {
+					// 	isSlotsAreActive = true
+					// }
+
+					// dateWithTimeStamp := UTIL.ConvertToTime(day["dates"])
+
+					// fifteenDaysAgo := UTIL.GetCurrentTime().AddDate(0, 0, 15)
+
+					// if fifteenDaysAgo.After(dateWithTimeStamp) {
+					// 	isDayWithin15Days = true
+					// }
 
 					slotsDate := map[string]string{}
 
@@ -1944,6 +1958,8 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 			}
 			if strings.EqualFold(day["status"], "1") && strings.EqualFold(day["availability_status"], "1") {
 
+				// isDayWithin15Days = true
+				// isSlotsAreActive = true
 				if len(availability) > 1 {
 					for _, slo := range availability {
 
@@ -2178,6 +2194,42 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+
+	// getAppointmentRequest, _, _ := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "status": "1"})
+
+	// if len(getAppointmentRequest) != 0 && isDayWithin15Days && isSlotsAreActive {
+
+	// 	for _, request := range getAppointmentRequest {
+	// 		client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name, last_name, phone"}, map[string]string{"client_id": request["client_id"], "status": "1"})
+	// 		UTIL.RemoveMessageForRequestAppointment(request["request_id"], client[0]["phone"])
+	// 		// send into client
+	// 		UTIL.SendMessage(
+	// 			UTIL.ReplaceNotificationContentInString(
+	// 				// need to change
+	// 				CONSTANT.CounsellorAppointmentRequestCreatedAvailabilityClientTextMessage,
+	// 				map[string]string{
+	// 					"###clientName###":     client[0]["first_name"],
+	// 					"###counsellorName###": DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", r.FormValue("listener_id")),
+	// 				},
+	// 			),
+	// 			CONSTANT.TransactionalRouteTextMessage,
+	// 			client[0]["phone"],
+	// 			UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+	// 			request["request_id"],
+	// 			CONSTANT.InstantSendTextMessage,
+	// 		)
+
+	// 		DB.UpdateSQL(CONSTANT.AppointmentRequestTable,
+	// 			map[string]string{
+	// 				"request_id": request["request_id"],
+	// 			},
+	// 			map[string]string{
+	// 				"status":      CONSTANT.AppointmentRequestCompleted,
+	// 				"modified_at": UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	}
+	// }
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

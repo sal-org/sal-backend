@@ -254,7 +254,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	// Booking confirmation
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,
 	)
 
 	// 15 min push notification before appointment start
@@ -288,7 +288,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		),
 		order[0]["counsellor_id"],
 		order[0]["type"],
-		UTIL.GetCurrentTime().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
 	)
@@ -325,11 +325,10 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
 	)
-
 
 	// 30 min reminder sms notification
 	UTIL.SendMessage(
@@ -369,7 +368,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	// Listener SMS
 
-	// confirmation for listener message
+	// confirmation for therapists message
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentConfirmationTextMessage,
@@ -382,7 +381,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
 	)
@@ -428,7 +427,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
-
 
 	// Counsellor Email
 

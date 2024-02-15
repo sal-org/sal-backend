@@ -278,17 +278,21 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		finalScore, _ := strconv.Atoi(assessment_result[0]["final_score"])
+
 		//assign := assessment_result[0]["assessment_id"]
 
 		if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp942" {
 
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "39" {
+			
+
+			if finalScore >= 0 && finalScore <= 39 {
 
 				filePath = "htmlfile/Assessment_AIS_Low.html"
 
-			} else if assessment_result[0]["final_score"] >= "40" && assessment_result[0]["final_score"] <= "69" {
+			} else if finalScore >= 40 && finalScore <= 69 {
 
 				fmt.Println(assessment_result[0]["score"])
 				filePath = "htmlfile/Assessment_AIS_Mid.html"
@@ -339,15 +343,15 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			}
 
-			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "10" {
+			if finalScore >= 0 && finalScore <= 10 {
 
 				filePath = "htmlfile/Assessment_BDI_II_Normal.html"
 
-			} else if assessment_result[0]["final_score"] >= "11" && assessment_result[0]["final_score"] <= "18" {
+			} else if finalScore >= 11 && finalScore <= 18 {
 
 				filePath = "htmlfile/Assessment_BDI_II_Mild.html"
 
-			} else if assessment_result[0]["final_score"] >= "19" && assessment_result[0]["final_score"] <= "25" {
+			} else if finalScore >= 19 && finalScore <= 25 {
 
 				filePath = "htmlfile/Assessment_BDI_II_Mod.html"
 
@@ -415,11 +419,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "13" {
+			if finalScore >= 0 && finalScore <= 13 {
 
 				filePath = "htmlfile/Assessment_PSS_Low.html"
 
-			} else if assessment_result[0]["final_score"] >= "14" && assessment_result[0]["final_score"] <= "26" {
+			} else if finalScore >= 14 && finalScore <= 26 {
 
 				filePath = "htmlfile/Assessment_PSS_Mid.html"
 
@@ -456,15 +460,15 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "49" {
+			if finalScore >= 0 && finalScore <= 49 {
 
 				filePath = "htmlfile/Assessment_SRS_Low.html"
 
-			} else if assessment_result[0]["final_score"] >= "50" && assessment_result[0]["final_score"] <= "69" {
+			} else if finalScore >= 50 && finalScore <= 69 {
 
 				filePath = "htmlfile/Assessment_SRS_Lower_Middle.html"
 
-			} else if assessment_result[0]["final_score"] >= "70" && assessment_result[0]["final_score"] <= "89" {
+			} else if finalScore >= 70 && finalScore <= 89 {
 
 				filePath = "htmlfile/Assessment_SRS_Upper_Middle.html"
 
@@ -510,11 +514,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp947" {
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "20" {
+			if finalScore >= 0 && finalScore <= 20 {
 
 				filePath = "htmlfile/GWB_Low.html"
 
-			} else if assessment_result[0]["final_score"] >= "21" && assessment_result[0]["final_score"] <= "23" {
+			} else if finalScore >= 21 && finalScore <= 23 {
 
 				filePath = "htmlfile/GWB_Mid.html"
 			} else {
@@ -547,15 +551,15 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp948" {
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "12" && assessment_result[0]["final_score"] <= "17" {
+			if finalScore >= 12 && finalScore <= 17 {
 
 				filePath = "htmlfile/CaregiverBurnoutIndex12_17.html"
 
-			} else if assessment_result[0]["final_score"] >= "18" && assessment_result[0]["final_score"] <= "29" {
+			} else if finalScore >= 18 && finalScore <= 29 {
 
 				filePath = "htmlfile/CaregiverBurnoutIndex18_29.html"
 
-			} else if assessment_result[0]["final_score"] >= "30" && assessment_result[0]["final_score"] <= "41" {
+			} else if finalScore >= 30 && finalScore <= 41 {
 
 				filePath = "htmlfile/CaregiverBurnoutIndex30_41.html"
 
@@ -592,11 +596,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp949" {
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "10" && assessment_result[0]["final_score"] <= "25" {
+			if finalScore >= 10 && finalScore <= 25 {
 
 				filePath = "htmlfile/SelfEsteemLow.html"
 
-			} else if assessment_result[0]["final_score"] >= "26" && assessment_result[0]["final_score"] <= "29" {
+			} else if finalScore >= 26 && finalScore <= 29 {
 
 				filePath = "htmlfile/SelfEsteemMedium.html"
 
@@ -628,19 +632,60 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				fmt.Println("html body not create ")
 			}
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp950" {
+
+			var filePath string
+
+			if finalScore >= 0 && finalScore <= 24 {
+
+				filePath = "htmlfile/RelationshipMangLow.html"
+
+			} else if finalScore >= 25 && finalScore <= 34 {
+
+				filePath = "htmlfile/RelationshipMangAvg.html"
+
+			} else {
+
+				filePath = "htmlfile/RelationshipMangHigh.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSelfEsteemModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
 		} else {
 
 			var filePath string
 
-			if assessment_result[0]["final_score"] >= "0" && assessment_result[0]["final_score"] <= "4" {
+			if finalScore >= 0 && finalScore <= 4 {
 
 				filePath = "htmlfile/Assessment_GAD7_Minimal.html"
 
-			} else if assessment_result[0]["final_score"] >= "5" && assessment_result[0]["final_score"] <= "9" {
+			} else if finalScore >= 5 && finalScore <= 9 {
 
 				filePath = "htmlfile/Assessment_GAD7_Mild.html"
 
-			} else if assessment_result[0]["final_score"] >= "10" && assessment_result[0]["final_score"] <= "14" {
+			} else if finalScore >= 10 && finalScore <= 14 {
 
 				filePath = "htmlfile/Assessment_GAD7_Mod.html"
 

@@ -23,6 +23,7 @@ const (
 	ClientCorEmailInvalid                  = "Email id is incorrect"
 	CorporateClientAccessCode              = "Invalid access code"
 	ClientCorLoginIfNotRegister            = "Client doesn't exist"
+	ClientAppointmentAlreadyExits          = "Your request has already been noted. We will revert to you shortly!"
 	ClientNotExistMessage                  = "Client doesn't exist"
 	ClientNotAllowedMessage                = "Your account has been blocked. Please contact our support team for further clarification."
 	ContentAlreadyLikedMessage             = "Content already liked"

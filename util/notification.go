@@ -83,26 +83,57 @@ func CheckNotificationEnableORDisable(id, idType string) string {
 
 func sendNotification(heading, content, notificationID, sentAt, usertype string) {
 	// sent to onesignal
-	var app_id string
+	var app_id, apiKey string
+	var byteData []byte
 
 	if usertype == "3" {
 		app_id = CONFIG.OneSignalAppIDForClient
+		apiKey = CONFIG.OneSignalApiKeyForClient
+
+		data := MODEL.OneSignalNotificationData{
+			AppID:            app_id,
+			Headings:         map[string]string{"en": heading},
+			Contents:         map[string]string{"en": content},
+			IncludePlayerIDs: []string{notificationID},
+			Data:             map[string]string{},
+		}
+		byteData, _ = json.Marshal(data)
 	} else {
 		app_id = CONFIG.OneSignalAppIDForTherapist
+		apiKey = CONFIG.OneSignalApiKeyForTherapist
+
+		data := MODEL.OneSignalNotificationData{
+			AppID:            app_id,
+			Headings:         map[string]string{"en": heading},
+			Contents:         map[string]string{"en": content},
+			IncludePlayerIDs: []string{notificationID},
+			Data:             map[string]string{},
+		}
+		byteData, _ = json.Marshal(data)
+
+		// data := MODEL.OneSignalNotificatnData{
+		// 	AppID:          app_id,
+		// 	Headings:       map[string]string{"en": heading},
+		// 	Contents:       map[string]string{"en": content},
+		// 	IncludeAliases: MODEL.IncludeAliase{ExternalID: []string{notificationID}},
+		// 	Channels:       []string{"push"},
+		// 	Data:           map[string]string{},
+		// }
+		// byteData, _ = json.Marshal(data)
 	}
 
-	data := MODEL.OneSignalNotificationData{
-		AppID:            app_id,
-		Headings:         map[string]string{"en": heading},
-		Contents:         map[string]string{"en": content},
-		IncludePlayerIDs: []string{notificationID},
-		Data:             map[string]string{},
-	}
-	byteData, _ := json.Marshal(data)
-	resp, err := http.Post("https://onesignal.com/api/v1/notifications", "application/json", bytes.NewBuffer(byteData))
+	// resp, err := http.Post("https://onesignal.com/api/v1/notifications", "application/json", bytes.NewBuffer(byteData))
+	// if err != nil {
+	// 	fmt.Println("sendNotification", err)
+	// 	return
+	// }
+	req, _ := http.NewRequest("POST", "https://onesignal.com/api/v1/notifications", bytes.NewBuffer(byteData))
+	req.Header.Add("Authorization", "Basic "+apiKey)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println("sendNotification", err)
-		return
+		fmt.Println("error", err)
 	}
 
 	defer resp.Body.Close()
@@ -112,5 +143,5 @@ func sendNotification(heading, content, notificationID, sentAt, usertype string)
 		return
 	}
 
-	fmt.Println(data, string(body))
+	fmt.Println(string(body))
 }

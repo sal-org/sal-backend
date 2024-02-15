@@ -66,6 +66,8 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	// var isDayWithin15Days = false
+	// var isSlotsAreActive = false
 
 	var dayInBool = false
 
@@ -82,7 +84,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, corporate_therpist, price, multiple_sessions"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -418,6 +420,18 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 						return
 					}
+
+					// if day["availability_status"] == "1" && day["status"] == "1" {
+					// 	isSlotsAreActive = true
+					// }
+
+					// dateWithTimeStamp := UTIL.ConvertToTime(day["dates"])
+
+					// fifteenDaysAgo := UTIL.GetCurrentTime().AddDate(0, 0, 15)
+
+					// if fifteenDaysAgo.After(dateWithTimeStamp) {
+					// 	isDayWithin15Days = true
+					// }
 
 					slotsDate := map[string]string{}
 
@@ -1217,7 +1231,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 
-		// date schedule availability 
+		// date schedule availability
 		availabilityDates, status, ok := DB.SelectProcess("select dates from "+CONSTANT.SchedulesDatesTable+" where counsellor_id = ? and dates >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by dates", r.FormValue("therapist_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -2175,6 +2189,9 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 			days[weekday]["available"] = availability
 		}
 
+		// isDayWithin15Days = true
+		// isSlotsAreActive = true
+
 		// update weekday availability to respective dates
 		// will run for 30 days * 24 * 2 hours = 1440 times - TODO needs to be optimised
 		for _, day := range days { // 7 times
@@ -2189,6 +2206,41 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
+	// getAppointmentRequest, _, _ := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "status": "1"})
+
+	// if len(getAppointmentRequest) != 0 && isDayWithin15Days && isSlotsAreActive {
+	// 	for _, request := range getAppointmentRequest {
+	// 		client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name, last_name, phone"}, map[string]string{"client_id": request["client_id"], "status": "1"})
+	// 		UTIL.RemoveMessageForRequestAppointment(request["request_id"], client[0]["phone"])
+	// 		// send into client
+	// 		UTIL.SendMessage(
+	// 			UTIL.ReplaceNotificationContentInString(
+	// 				// need to change
+	// 				CONSTANT.CounsellorAppointmentRequestCreatedAvailabilityClientTextMessage,
+	// 				map[string]string{
+	// 					"###clientName###":     client[0]["first_name"],
+	// 					"###counsellorName###": counsellor[0]["first_name"],
+	// 				},
+	// 			),
+	// 			CONSTANT.TransactionalRouteTextMessage,
+	// 			client[0]["phone"],
+	// 			UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+	// 			request["request_id"],
+	// 			CONSTANT.InstantSendTextMessage,
+	// 		)
+
+	// 		DB.UpdateSQL(CONSTANT.AppointmentRequestTable,
+	// 			map[string]string{
+	// 				"request_id": request["request_id"],
+	// 			},
+	// 			map[string]string{
+	// 				"status":      CONSTANT.AppointmentRequestCompleted,
+	// 				"modified_at": UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	}
+	// }
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

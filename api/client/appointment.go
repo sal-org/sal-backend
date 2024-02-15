@@ -2209,7 +2209,7 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 	var counsellor []map[string]string
 
-	//check if access token is valid, not expired
+	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
@@ -2235,22 +2235,33 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	getAppointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "counsellor_id": body["counsellor_id"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(getAppointmentRequest) != 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentAlreadyExits, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	switch body["type"] {
 	case CONSTANT.CounsellorType:
-		counsellor, status, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, phone"}, map[string]string{"counsellor_id": body["counsellor_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 	case CONSTANT.ListenerType:
-		counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": body["counsellor_id"]})
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, phone"}, map[string]string{"listener_id": body["counsellor_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
 	case CONSTANT.TherapistType:
-		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["counsellor_id"]})
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, phone"}, map[string]string{"therapist_id": body["counsellor_id"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -2262,33 +2273,64 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	appointmentRequest["counsellor_id"] = body["counsellor_id"]
 	appointmentRequest["type"] = body["type"]
 	appointmentRequest["client_id"] = body["client_id"]
-	appointmentRequest["status"] = CONSTANT.InvoiceInProgress
+	appointmentRequest["status"] = CONSTANT.AppointmentRequestProgress
 	appointmentRequest["created_at"] = UTIL.GetCurrentTime().String()
 
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.AppointmentRequestTable, CONSTANT.AppointmentRequestDigits, appointmentRequest, "request_id")
+	requestID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentRequestTable, CONSTANT.AppointmentRequestDigits, appointmentRequest, "request_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	fmt.Println(clients, counsellor)
+	// send to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentRequestSMSToCounsellorTextMessage,
+			map[string]string{
+				"###counsellorName###": counsellor[0]["first_name"],
+				"###clientName###":     clients[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.InstantSendEmailMessage,
+	)
 
-	// UTIL.SendMessage(
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		// need to change
-	// 		CONSTANT.ClientAppointmentReminderTextMessage,
-	// 		map[string]string{
-	// 			"###user_name###": client[0]["first_name"],
-	// 			"###userName###":  counsellor[0]["first_name"],
-	// 			"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-	// 		},
-	// 	),
-	// 	CONSTANT.TransactionalRouteTextMessage,
-	// 	client[0]["phone"],
-	// 	UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(+24*time.Hour).UTC().String(),
-	// 	appointmentID,
-	// 	CONSTANT.LaterSendTextMessage,
-	// )
+	// send into client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentRequestSMSToClientTextMessage,
+			map[string]string{
+				"###clientName###":     clients[0]["first_name"],
+				"###counsellorName###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		clients[0]["phone"],
+		UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	// send into client with 24 hours
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentRequestSMSToNotAcceptedClientTextMessage,
+			map[string]string{
+				"###counsellorName###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		clients[0]["phone"],
+		UTIL.GetCurrentTime().Add(1770*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.LaterSendEmailMessage,
+	)
 
 	// UTIL.SendMessage(
 	// 	UTIL.ReplaceNotificationContentInString(
@@ -2322,7 +2364,7 @@ func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id")})
+	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

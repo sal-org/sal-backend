@@ -15,6 +15,11 @@ func RemoveMessage(tagID, phone string) {
 	DB.DeleteSQL(CONSTANT.MessagesTable, map[string]string{"tag_id": tagID, "phone": phone})
 }
 
+func RemoveMessageForRequestAppointment(tagID, phone string) {
+	// delete any previous message, if any
+	DB.DeleteSQL(CONSTANT.MessagesTable, map[string]string{"tag_id": tagID, "phone": phone, "status": "1"})
+}
+
 // SendMessage - send text message using message provider. now : true - send now without background workers
 func SendMessage(text, route, phone, sent_at, tagID string, now bool) {
 	if strings.Contains(text, "###") { // check if message variables are replaced

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>Low Self Esteem Scale</title>
+      <style>
+        body{
+				  min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>Relationship Management Scale</b></p>
+          <p style="text-align: center;">This assessment has been extracted from a book on Emotional Intelligence by Daniel Goleman</p>
+          <p style="font-size:large;text-align: end;">Source: <a href="www.bantamdell.com">www.bantamdell.com</a></p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p>Emotional Intelligence (referred to as EQ) is your ability to be aware of, understand, and manage your emotions. Emotional Intelligence (EI) is the ability to manage both your own emotions and understand the emotions of people around you. There are five key elements to EI: self-awareness, self-regulation, motivation, empathy, and social skills.</p><br>
+          <p><b>What's your Relationship Management score?</b></p>
+          <p>Below, you can find your Relationship Management scores and comments for the 10 questions you have answered. Relationship Management is being able to manage one's social relationships by helping others regulate their emotions, manage their emotions. You may discuss this with your therapist in greater detail.</p>
+        </div><br><br><br> 
+        <div style="text-align: center; font-size: x-large;">
+          <p><b>Questionnaire</b></p>
+        </div>
+        <div>
+          <p><b>Scale</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Never</th> 
+              <th style="border: 1px solid black;">Rarely</th>
+              <th style="border: 1px solid black;">Sometimes</th>
+              <th style="border: 1px solid black;">Often</th>
+              <th style="border: 1px solid black;">Always</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">0</td>
+              <td style="border: 1px solid black;">1</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">4</td>
+            </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. I am able to show affection</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. My relationships are safe places for me</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. I find it easy to share my deep feelings with others</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. I am good at motivating others</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. I am a fairly cheerful person</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. It is easy for me to make friends</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">7. People tell me I am sociable and fun</td>
+                <td style="text-align: center;">{{.Answer7}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">8. I like helping people</td>
+                <td style="text-align: center;">{{.Answer8}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">9. Others can depend on me</td>
+                <td style="text-align: center;">{{.Answer9}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">10. I am able to talk someone down if they are very upset</td>
+                <td style="text-align: center;">{{.Answer10}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table>
+        </div><br><br><br><br>
+        <p><b>Score Interpretation:</b></p>
+        <table style="border: 1px solid black; width: 60%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">Score Range </th> 
+            <th style="border: 1px solid black;">Relationship Management</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">0 – 24</td>
+            <td style="border: 1px solid black;">Area for Enrichment</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">25 – 34</td>
+            <td style="border: 1px solid black;">Effective Functioning</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">35 – 40</td>
+            <td style="border: 1px solid black;">Enhanced Skills</td>
+          </tr>
+        </table>
+        <p>Your overall score is in the <b>Enhanced Skills (35 – 40)</b> range based on the assessment. The score suggests that Relationship Management can be used as a leverage to develop weaker areas.</p>
+        <p>Using your EQ strength − for your strongest EQ domain, give an example of how you demonstrate your strength in your daily life or work:</p><hr><hr>
+        <p>Effects of your EQ strength − for your weakest EQ domain, give an example of how this affects you AND others in your daily life or work:</p><hr><hr>
+        <p>Improving your EQ strength − for your weakest EQ domain, what steps can you take to strengthen yourself in this area? How will this benefit you in your daily life or work?</p><hr><hr> 
+      </div>
+    </body>
+</html>
