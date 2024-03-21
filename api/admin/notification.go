@@ -158,18 +158,22 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(UTIL.GetCurrentTime().String())
 	fmt.Println(devices)
 
-	// send all notifications
-	for _, device := range devices {
-		DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, map[string]string{
-			"user_id":             device["user_id"],
-			"onesignal_id":        device["device_id"],
-			"title":               notification["title"],
-			"body":                notification["body"],
-			"status":              CONSTANT.NotificationActive,
-			"notification_status": CONSTANT.NotificationInProgress,
-			"send_at":             UTIL.GetCurrentTime().Local().String(),
-			"created_at":          UTIL.GetCurrentTime().String(),
-		}, "notification_id")
+	if strings.EqualFold(notification["user_type"], CONSTANT.ClientType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
+		UTIL.SendBulkNotification(body["title"], body["body"])
+	} else {
+		// send all notifications
+		for _, device := range devices {
+			DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, map[string]string{
+				"user_id":             device["user_id"],
+				"onesignal_id":        device["device_id"],
+				"title":               notification["title"],
+				"body":                notification["body"],
+				"status":              CONSTANT.NotificationActive,
+				"notification_status": CONSTANT.NotificationInProgress,
+				"send_at":             UTIL.GetCurrentTime().Local().String(),
+				"created_at":          UTIL.GetCurrentTime().String(),
+			}, "notification_id")
+		}
 	}
 
 	// add notification

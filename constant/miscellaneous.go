@@ -12,6 +12,14 @@ const (
 	CounsellorPayoutPercentageColumns        = "50" // these only col to insert in database
 )
 
+// lastest version
+const (
+	ClientIOSVersion        = "2.15"
+	ClientAndroidVersion    = "1.16.0"
+	TherapistIOSVersion     = "2.11"
+	TherapistAndroidVersion = "1.15.0"
+)
+
 // urls
 var URLs = map[string]string{
 	"privacy": "https://salapp.sal-foundation.com/app_pp/",

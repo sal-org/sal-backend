@@ -285,7 +285,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AkshayEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
+		CONSTANT.AnandEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 

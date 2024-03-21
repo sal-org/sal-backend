@@ -374,6 +374,9 @@ type EmailDataForCounsellorRecord struct {
 	TherapeuticGoal string
 	TherapyPlan     string
 	AssessmentTool  string
+	ClientNotes     string
+	ClientAttach    string
+	SendingStatus   string
 }
 
 type EmailDataForCounsellorVisit struct {
@@ -753,6 +756,14 @@ type EmailBodyMessageModel struct {
 	Message string
 }
 
+type EmailBodyMessageModelWithDocu struct {
+	Name          string
+	TherapistName string
+	Date          string
+	Message       string
+	Message1      string
+}
+
 type EmailRecipientModel struct {
 	ToEmails  []string
 	CcEmails  []string
@@ -762,4 +773,17 @@ type EmailRecipientModel struct {
 type NotificationAllowSettingModel struct {
 	UserType string `json:"userType"`
 	Status   string `json:"status"`
+}
+
+type DocumentList struct {
+	DocumentName string
+	DocumentLink string
+}
+
+type OneSignalNotificationBulkData struct {
+	AppID            string            `json:"app_id"`
+	Headings         map[string]string `json:"headings"`
+	Contents         map[string]string `json:"contents"`
+	IncludedSegments []string          `json:"included_segments"`
+	Data             map[string]string `json:"data"`
 }

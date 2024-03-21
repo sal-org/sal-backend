@@ -641,35 +641,30 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
-		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
-		if err != nil {
-			fmt.Println("file is not created")
-		}
+		UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 
-		if fileNameInMP4 != "" {
-			DB.UpdateSQL(CONSTANT.AgoraTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"fileNameInMp4":  fileNameInMP4,
-					"fileNameInM3U8": fileNameInM3U8,
-					"status":         CONSTANT.AgoraCallStop1,
-					"modified_at":    UTIL.GetCurrentTime().String(),
-				},
-			)
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+				"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+				"status":         CONSTANT.AgoraCallStop1,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
 
-			DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"counsellor_mp4": fileNameInMP4,
-					"status":         CONSTANT.QualityCheckLinkInsert,
-					"modified_at":    UTIL.GetCurrentTime().String(),
-				},
-			)
-		}
+		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+				"status":         CONSTANT.QualityCheckLinkInsert,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
 
 	}
 

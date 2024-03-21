@@ -90,18 +90,22 @@ func sendNotification(heading, content, notificationID, sentAt, usertype string)
 		app_id = CONFIG.OneSignalAppIDForClient
 		apiKey = CONFIG.OneSignalApiKeyForClient
 
-		data := MODEL.OneSignalNotificationData{
-			AppID:            app_id,
-			Headings:         map[string]string{"en": heading},
-			Contents:         map[string]string{"en": content},
-			IncludePlayerIDs: []string{notificationID},
-			Data:             map[string]string{},
-		}
-		byteData, _ = json.Marshal(data)
+		// data := MODEL.OneSignalNotificationData{
+		// 	AppID:            app_id,
+		// 	Headings:         map[string]string{"en": heading},
+		// 	Contents:         map[string]string{"en": content},
+		// 	IncludePlayerIDs: []string{notificationID},
+		// 	Data:             map[string]string{},
+		// }
+		// byteData, _ = json.Marshal(data)
 	} else {
 		app_id = CONFIG.OneSignalAppIDForTherapist
 		apiKey = CONFIG.OneSignalApiKeyForTherapist
 
+	}
+
+	if strings.Contains(notificationID, "-") {
+
 		data := MODEL.OneSignalNotificationData{
 			AppID:            app_id,
 			Headings:         map[string]string{"en": heading},
@@ -111,15 +115,16 @@ func sendNotification(heading, content, notificationID, sentAt, usertype string)
 		}
 		byteData, _ = json.Marshal(data)
 
-		// data := MODEL.OneSignalNotificatnData{
-		// 	AppID:          app_id,
-		// 	Headings:       map[string]string{"en": heading},
-		// 	Contents:       map[string]string{"en": content},
-		// 	IncludeAliases: MODEL.IncludeAliase{ExternalID: []string{notificationID}},
-		// 	Channels:       []string{"push"},
-		// 	Data:           map[string]string{},
-		// }
-		// byteData, _ = json.Marshal(data)
+	} else {
+		data := MODEL.OneSignalNotificatnData{
+			AppID:          app_id,
+			Headings:       map[string]string{"en": heading},
+			Contents:       map[string]string{"en": content},
+			IncludeAliases: MODEL.IncludeAliase{ExternalID: []string{notificationID}},
+			Channels:       []string{"push"},
+			Data:           map[string]string{},
+		}
+		byteData, _ = json.Marshal(data)
 	}
 
 	// resp, err := http.Post("https://onesignal.com/api/v1/notifications", "application/json", bytes.NewBuffer(byteData))
@@ -142,6 +147,32 @@ func sendNotification(heading, content, notificationID, sentAt, usertype string)
 		fmt.Println("sendNotification", err)
 		return
 	}
+
+	fmt.Println(string(body))
+}
+
+func SendBulkNotification(heading, content string) {
+
+	data := MODEL.OneSignalNotificationBulkData{
+		AppID:            CONFIG.OneSignalAppIDForClient, // change according to client : OneSignalAppIDForClient , therpists : OneSignalAppIDForTherapist required
+		Headings:         map[string]string{"en": heading},
+		Contents:         map[string]string{"en": content},
+		IncludedSegments: []string{"Active Users", "Inactive Users"},
+		Data:             map[string]string{},
+	}
+
+	byteData, _ := json.Marshal(data)
+	req, _ := http.NewRequest("POST", "https://onesignal.com/api/v1/notifications", bytes.NewBuffer(byteData))
+	req.Header.Add("Authorization", "Basic "+CONFIG.OneSignalApiKeyForClient) // change according to client : ZDMxNGU3NTYtM2RkNS00NmMzLWJhMjMtYWUwYTAzYzg3Nzdk , therpists: N2RmZGRlNTMtYTM1MC00YmZmLTg3MjEtNzNkMDViMGZlNGEz required
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("error", err)
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
 
 	fmt.Println(string(body))
 }

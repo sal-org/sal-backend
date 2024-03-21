@@ -2,7 +2,7 @@ package constant
 
 const (
 	SameerEmailID = "sameer.littlemagix@gmail.com"
-	AnandEmailID  = "anand.shah@sal.foundation"
+	AnandEmailID  = "anand.shah@clovemind.com"
 	AkshayEmailID = "akshay.gandhi@clovemind.com"
 	ShivamEmailID = "shivam.tiwari@clovemind.com"
 )
@@ -50,6 +50,8 @@ const (
 	ClientPaymentSucessClientBody                       = "Hi ###client_name###, successful payment of Rs. ###paid_amount### has been received for your consultation booking. Manage your account anytime, anywhere from your SAL Mobile app on your phone. Click to view your Transaction ID #  and receipt"
 	CounsellorAccountSignupCounsellorEmailBody          = "Thank you for successfully completing the onboarding form. Our offline team will contact you shortly for Agreement signup."
 	AdminRefundAmonutForClientEmailBody                 = "Your refund of Rs. ###amount### has been initiated. This is for your appointment dated ###date### at ###time### and is being processed to your card/bank account. It will reflect in 7-10 working days."
+	CounsellorAppointmentWorkClientEmailBody            = "Your appointment completed. your therapist send some attachment please check and do neccessary action according to give into attachment to improve your well being journey."
+	RatingTitleForInternalReviewBody                    = "We are writing to inform you that ###therapistname### has received a rating of ###rating### for the session conducted on ###date### at ###time###. User Comment: ###content###"
 )
 
 // Event Approval For Sal Team to Send a Email
@@ -66,7 +68,9 @@ const (
 
 // counsellor - client record
 const (
-	CounsellorRecordForClientTitle = "Clove: New Client Record"
+	CounsellorRecordForClientTitle    = "Clove: New Client Record"
+	CounsellorDocumentForClientTitle  = "Clove: Self work materials"
+	RatingTitleForInternalReviewTitle = "Rating for ###therapistName### : ###sessionDate###"
 )
 
 // counsellor - client record

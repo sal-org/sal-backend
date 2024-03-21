@@ -380,7 +380,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	uidStr = generateRandomID()
+	uidStr = generateRandomID(6)
 
 	if r.FormValue("session") == "1" {
 		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -454,7 +454,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 		// Timestamp when the token expires.
 		expireTimestmp := currentTimestamp + expireTimeInSeconds
 
-		uidSt := generateRandomID()
+		uidSt := generateRandomID(9)
 		channelNa := r.FormValue("appointment_id")
 
 		tokenForResource, err := UTIL.GenerateAgoraRTCToken(channelNa, roleStr, uidSt, expireTimestmp)
@@ -552,9 +552,9 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func generateRandomID() string {
+func generateRandomID(maxlength int) string {
 	const randomIDdigits = "123456789"
-	b := make([]byte, 6)
+	b := make([]byte, maxlength)
 	for i := range b {
 		b[i] = randomIDdigits[rand.Intn(len(randomIDdigits))]
 	}
@@ -857,35 +857,29 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 
 	// cloud recording
 	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
-		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
-		if err != nil {
-			fmt.Println("file is not created")
-		}
 
-		if fileNameInMP4 != "" {
-			DB.UpdateSQL(CONSTANT.AgoraTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"fileNameInMp4":  fileNameInMP4,
-					"fileNameInM3U8": fileNameInM3U8,
-					"status":         CONSTANT.AgoraCallStop1,
-					"modified_at":    UTIL.GetCurrentTime().String(),
-				},
-			)
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+				"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+				"status":         CONSTANT.AgoraCallStop1,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
 
-			DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"counsellor_mp4": fileNameInMP4,
-					"status":         CONSTANT.QualityCheckLinkInsert,
-					"modified_at":    UTIL.GetCurrentTime().String(),
-				},
-			)
-		}
+		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+				"status":         CONSTANT.QualityCheckLinkInsert,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
 
 	}
 

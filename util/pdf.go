@@ -132,6 +132,30 @@ func GetHTMLTemplateForCounsellorProfileText(data Model.EmailBodyMessageModel, f
 	return templateBuffer.String()
 }
 
+func GetHTMLTemplateForWithDocument(data Model.EmailBodyMessageModelWithDocu, filepath string) string {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	return templateBuffer.String()
+}
+
 func GetHTMLTemplateForClientAppointmentConfirmation(data Model.ClientAppointmentConfirmation, filepath string) string {
 	var templateBuffer bytes.Buffer
 

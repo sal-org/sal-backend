@@ -152,6 +152,8 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["location"] = body["location"]
 	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
+	client["platform"] = body["platform"]
+	client["version"] = body["version"]
 	client["status"] = CONSTANT.ClientActive
 	client["notification_status"] = body["notification_status"]
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
@@ -313,6 +315,8 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	client["department"] = body["cor_darpartment"]
 	client["timezone"] = body["timezone"]
 	client["device_id"] = body["device_id"]
+	client["platform"] = body["platform"]
+	client["version"] = body["version"]
 	client["status"] = CONSTANT.ClientActive
 	client["notification_status"] = body["notification_status"]
 	client["last_login_time"] = UTIL.GetCurrentTime().String()

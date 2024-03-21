@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -240,7 +239,7 @@ func AgoraUpateRecordingSettingCallStart(uid, channelName, sid, resourceid, uid1
 	return mapp["sid"], mapp["resourceId"], nil
 }
 
-func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, string, error) {
+func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) {
 	customerKey := CONFIG.AGORA_Customer_Key
 	// Customer secret
 	customerSecret := CONFIG.AGORA_Customer_Secret
@@ -264,7 +263,7 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, s
 	req, err := http.NewRequest("POST", CONSTANT.AgoraURL+"/apps/"+CONFIG.AGORA_APP_ID+"/cloud_recording/resourceid/"+resourceid+"/sid/"+sid+"/mode/mix/stop", payloadBuf)
 
 	if err != nil {
-		return "", "", err
+		fmt.Println(err)
 	}
 	// Add Authorization header
 	req.Header.Add("Authorization", "Basic "+base64Credentials)
@@ -273,57 +272,57 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) (string, s
 	// Send HTTP request
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", "", err
+		fmt.Println(err)
 	}
 	defer resp.Body.Close()
 
-	var result Model.AgoraCallStopResponseModel
-	json.NewDecoder(resp.Body).Decode(&result)
+	// var result Model.AgoraCallStopResponseModel
+	// json.NewDecoder(resp.Body).Decode(&result)
 
-	codeStatus, _ := CallStatus(resourceid, sid)
-	fmt.Println(codeStatus)
-	fmt.Println(result)
+	// codeStatus, _ := CallStatus(resourceid, sid)
+	// fmt.Println(codeStatus)
+	// fmt.Println(result)
 
-	var fileNameInMP4, fileNameInM3U8 string
+	// var fileNameInMP4, fileNameInM3U8 string
 
-	if result.Code == 200 {
+	// if result.Code == 200 {
 
-		// fmt.Println(result)
-		// b, _ := json.Marshal(result)
-		// fmt.Println(string(b))
+	// 	// fmt.Println(result)
+	// 	// b, _ := json.Marshal(result)
+	// 	// fmt.Println(string(b))
 
-		bodyy, _ := io.ReadAll(resp.Body)
-		// if err != nil {
-		// 	return "", "", err
-		// }
-		fmt.Println(string(bodyy))
+	// 	bodyy, _ := io.ReadAll(resp.Body)
+	// 	// if err != nil {
+	// 	// 	return "", "", err
+	// 	// }
+	// 	fmt.Println(string(bodyy))
 
-		// var mapp Model.AgoraCallStopResponseModel
+	// 	// var mapp Model.AgoraCallStopResponseModel
 
-		// err = json.Unmarshal(b, &mapp)
-		// if err != nil {
-		// 	fmt.Println("eerror")
-		// 	return "", "", err
-		// }
+	// 	// err = json.Unmarshal(b, &mapp)
+	// 	// if err != nil {
+	// 	// 	fmt.Println("eerror")
+	// 	// 	return "", "", err
+	// 	// }
 
-		// fmt.Println(mapp)
+	// 	// fmt.Println(mapp)
 
-		if len(result.Body.ServerResponse.FileList[0].FileName) == 0 {
-			fileNameInM3U8 = ""
-			fileNameInMP4 = ""
-		} else {
-			fileNameInMP4 = result.Body.ServerResponse.FileList[0].FileName
-			// fmt.Println(fileNameInMP4)
-			fileNameInM3U8 = result.Body.ServerResponse.FileList[1].FileName
-			// fmt.Println(fileNameInM3U8)
-		}
+	// 	if len(result.Body.ServerResponse.FileList[0].FileName) == 0 {
+	// 		fileNameInM3U8 = ""
+	// 		fileNameInMP4 = ""
+	// 	} else {
+	// 		fileNameInMP4 = result.Body.ServerResponse.FileList[0].FileName
+	// 		// fmt.Println(fileNameInMP4)
+	// 		fileNameInM3U8 = result.Body.ServerResponse.FileList[1].FileName
+	// 		// fmt.Println(fileNameInM3U8)
+	// 	}
 
-	} else {
-		fileNameInM3U8 = ""
-		fileNameInMP4 = ""
-	}
+	// } else {
+	// 	fileNameInM3U8 = ""
+	// 	fileNameInMP4 = ""
+	// }
 
-	return fileNameInMP4, fileNameInM3U8, nil
+	// return fileNameInMP4, fileNameInM3U8, nil
 }
 
 func CallStatus(resourceid string, sid string) (Model.AgoraCallStatus, error) {

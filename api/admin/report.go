@@ -93,10 +93,13 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 					status = getAppointmentStatusInText("8")
 				} else if appointment["client_started_at"] == "" && appointment["client_ended_at"] == "" {
 					status = getAppointmentStatusInText("7")
-				} else if appointment["ended_at"] == "" || appointment["client_ended_at"] == "" {
-					status = getAppointmentStatusInText("14")
 				} else {
-					status = getAppointmentStatusInText("3")
+					if UTIL.BuildToDteTime(appointment["ended_at"]).Sub(UTIL.BuildToDteTime(appointment["started_at"])).Minutes() > 11 {
+						status = getAppointmentStatusInText("3")
+					} else {
+						status = getAppointmentStatusInText("14")
+					}
+
 				}
 			} else if appointment["status"] == "4" {
 				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
@@ -570,6 +573,142 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				noShow = "Yes"
 			}
 			data = append(data, []string{counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["mental_health"], counsellorRecord["therapeutic_goal"]})
+		}
+
+	case "15": // client rating
+		heading = []string{"Counsellor Name", "Client Name", "Gender", "Date", "Rate", "Rate Type", "Comment"}
+
+		appointments, status, ok := DB.SelectProcess("select counsellor_id, client_id, `date`, rating, rating_types, rating_comment  from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor, client ids to get details
+		clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, appointment := range appointments {
+			data = append(data, []string{
+				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
+				clientsMap[appointment["client_id"]]["first_name"],
+				clientsMap[appointment["client_id"]]["gender"],
+				appointment["date"],
+				appointment["rating"],
+				appointment["rating_types"],
+				appointment["rating_comment"],
+			})
+		}
+	case "16": // content
+		heading = []string{"Title", "Type", "Category", "Mood", "Is Training Content", "Created By", "Status"}
+
+		contents, status, ok := DB.SelectProcess("select *  from " + CONSTANT.ContentsTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor, client ids to get details
+		moodIDs := UTIL.ExtractValuesFromArrayMap(contents, "mood_id")
+		categoryIDs := UTIL.ExtractValuesFromArrayMap(contents, "category_id")
+
+		// get mood details
+		moods, status, ok := DB.SelectProcess("select * from " + CONSTANT.MoodsTable + " where id in ('" + strings.Join(moodIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get mood details
+		categorys, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentCategoriesTable + " where id in ('" + strings.Join(categoryIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		moodsMap := UTIL.ConvertMapToKeyMap(moods, "id")
+		categorysMap := UTIL.ConvertMapToKeyMap(categorys, "id")
+
+		for _, content := range contents {
+
+			var types, trainingType, status string
+			if content["type"] == "1" {
+				types = "Video"
+			} else if content["type"] == "2" {
+				types = "Audio"
+			} else {
+				types = "Article"
+			}
+
+			if content["training"] == "1" {
+				trainingType = "Yes"
+			} else {
+				trainingType = "No"
+			}
+
+			if content["status"] == "1" {
+				status = "Active"
+			} else {
+				status = "Inactive"
+			}
+
+			data = append(data, []string{
+				content["title"],
+				types,
+				categorysMap[content["category_id"]]["category"],
+				moodsMap[content["mood_id"]]["title"],
+				trainingType,
+				content["created_by"],
+				status,
+			})
+		}
+
+	case "17":
+		heading = []string{"Counsellor Name", "Company Name", "Location", "In-Time", "Out-Time"}
+
+		myTimeSheets, status, ok := DB.SelectProcess("select *  from " + CONSTANT.CounsellorMyTimeSheetTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(myTimeSheets, "counsellor_id")
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, timeSheet := range myTimeSheets {
+
+			data = append(data, []string{
+				counsellorsMap[timeSheet["counsellor_id"]]["first_name"] + " " + counsellorsMap[timeSheet["counsellor_id"]]["last_name"],
+				timeSheet["partner_name"],
+				timeSheet["location"],
+				timeSheet["inTime"],
+				timeSheet["outTime"],
+			})
 		}
 
 	}

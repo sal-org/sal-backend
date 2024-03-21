@@ -82,6 +82,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	// response["articles"] = articles
 	response["quote"] = quote[0]["quote"]
 	response["media_url"] = CONFIG.MediaURL
+	response["android_version"] = CONSTANT.ClientAndroidVersion
+	response["ios_version"] = CONSTANT.ClientIOSVersion
 	response["urls"] = CONSTANT.URLs
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

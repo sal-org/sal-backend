@@ -13,6 +13,14 @@ func LoadAdminRoutes(router *mux.Router) {
 		"refund_amount", "{refund_amount}",
 	).Methods("PUT")
 
+	// availability
+	adminRoutes.HandleFunc("/availability", AvailabilityGet).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+	adminRoutes.HandleFunc("/availability", AvailabilityUpdate).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("PUT")
+
 	// client
 	adminRoutes.HandleFunc("/client", ClientGet).Methods("GET")
 	adminRoutes.HandleFunc("/client", ClientUpdate).Queries(

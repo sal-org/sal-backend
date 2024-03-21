@@ -59,6 +59,7 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"client_id", "{client_id}",
 	).Methods("GET")
 	router.HandleFunc("/counsellor-record", CounsellorClientRecord).Methods("POST")
+	router.HandleFunc("/document-list", GetDocumentList).Methods("GET")
 
 	// login
 	router.HandleFunc("/sendotp", SendOTP).Queries(

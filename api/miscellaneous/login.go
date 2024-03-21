@@ -342,7 +342,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"email": r.FormValue("email")}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": counsellor[0]["therapist_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
