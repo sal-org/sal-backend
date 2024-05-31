@@ -14,11 +14,16 @@ func LoadAdminRoutes(router *mux.Router) {
 	).Methods("PUT")
 
 	// availability
-	adminRoutes.HandleFunc("/availability", AvailabilityGet).Queries(
-		"counsellor_id", "{counsellor_id}",
-	).Methods("GET")
+	adminRoutes.HandleFunc("/availability", AvailabilityGet).Methods("GET")
 	adminRoutes.HandleFunc("/availability", AvailabilityUpdate).Queries(
 		"counsellor_id", "{counsellor_id}",
+	).Methods("PUT")
+
+	// connect corporate counsellor
+	adminRoutes.HandleFunc("/corporate_counsellor", CounsellorConnectWithCorporateGet).Methods("GET")
+	adminRoutes.HandleFunc("/corporate_counsellor", CounsellorConnectWithCorporateAdd).Methods("POST")
+	adminRoutes.HandleFunc("/corporate_counsellor", CounsellorConnectWithCorporateUpdate).Queries(
+		"connect_id", "{connect_id}",
 	).Methods("PUT")
 
 	// client

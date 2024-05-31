@@ -130,6 +130,8 @@ const (
 	AppointmentStarted                        = "2"
 	AppointmentCompleted                      = "3"
 	AppointmentUserCancelled                  = "4"
+	InPersonAppointmentNoShowForCounsellor    = "17"
+	InPersonAppointmentNoShowForClient        = "18"
 	AppointmentUserCancelledWithin4Hour       = "12"
 	AppointmentCounsellorCancelledWithin4Hour = "13"
 	AppointmentInTheReview                    = "14"

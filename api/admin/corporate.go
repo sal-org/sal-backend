@@ -171,6 +171,9 @@ func PartnerAddressGet(w http.ResponseWriter, r *http.Request) {
 		case "id":
 			wheres = append(wheres, " add_id = ? ")
 			queryArgs = append(queryArgs, val[0])
+		case "name":
+			wheres = append(wheres, " partner_name = ? ")
+			queryArgs = append(queryArgs, val[0])
 		}
 	}
 

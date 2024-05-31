@@ -761,6 +761,7 @@ type EmailBodyMessageModelWithDocu struct {
 	TherapistName string
 	Date          string
 	Message       string
+	Message2      string
 	Message1      string
 }
 

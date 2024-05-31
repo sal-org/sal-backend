@@ -48,6 +48,7 @@ const (
 	ListenerAccountDeletedMessage          = "Your account is deleted. Please contact Clove team"
 	ListenerNotExistMessage                = "Listener doesn't exist"
 	AppointmentAlreadyBooked               = "You already have an upcoming appointment. Go to 'My Sessions' to know more."
+	InPersonAppointmentAlreadyBooked       = "You already have an upcoming appointment. Go to 'InPerson Sessions' to know more."
 	ListenerNotActiveMessage               = "Listener is not active"
 	ListenerSlotNotAvailableMessage        = "Listener not available in this hour. Book a different slot"
 	MoodAlreadyAddedMessage                = "Mood already added"

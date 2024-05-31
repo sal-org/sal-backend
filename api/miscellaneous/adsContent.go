@@ -74,6 +74,32 @@ func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func CheckCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// get last cleints
+	lastClient, status, ok := DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "client_id": r.FormValue("client_id"), "session_date": r.FormValue("date")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(lastClient) == 0 {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -210,40 +236,58 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	if len(body["client_id"]) != 0 && len(body["client_notes"]) != 0 {
-		client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "email"}, map[string]string{"client_id": body["client_id"]})
+	if len(body["client_id"]) != 0 {
 
-		var listofDocuments []Model.DocumentList
-		if len(body["client_documents"]) != 0 {
-			clientDocuments := strings.Split(body["client_documents"], ",")
+		if len(body["client_documents"]) != 0 || len(body["client_notes"]) != 0 {
 
-			for _, value := range clientDocuments {
-				document, _, _ := DB.SelectSQL(CONSTANT.CounsellorDocumentListTable, []string{"document"}, map[string]string{"document_name": value})
-				docu := Model.DocumentList{
-					DocumentName: value,
-					DocumentLink: document[0]["document"],
+			client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "email"}, map[string]string{"client_id": body["client_id"]})
+
+			var listofDocuments []Model.DocumentList
+			if len(body["client_documents"]) != 0 {
+				clientDocuments := strings.Split(body["client_documents"], ",")
+
+				for _, value := range clientDocuments {
+					document, _, _ := DB.SelectSQL(CONSTANT.CounsellorDocumentListTable, []string{"document"}, map[string]string{"document_name": value})
+					docu := Model.DocumentList{
+						DocumentName: value,
+						DocumentLink: document[0]["document"],
+					}
+					listofDocuments = append(listofDocuments, docu)
 				}
-				listofDocuments = append(listofDocuments, docu)
 			}
+
+			// re := regexp.MustCompile(`(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?`)
+
+			// message := re.ReplaceAllString(body["client_notes"], `<a href="$0">$0</a>`)
+
+			var emaildata Model.EmailBodyMessageModelWithDocu
+
+			if len(body["client_notes"]) != 0 {
+				emaildata = Model.EmailBodyMessageModelWithDocu{
+					Name:          client[0]["first_name"],
+					TherapistName: counsellor[0]["first_name"],
+					Date:          UTIL.BuildOnlyDate(body["session_date"]),
+					Message:       body["client_notes"],
+					Message1:      body["links"],
+					Message2:      "Your therapist has suggested the following guidelines:",
+				}
+			} else {
+				emaildata = Model.EmailBodyMessageModelWithDocu{
+					Name:          client[0]["first_name"],
+					TherapistName: counsellor[0]["first_name"],
+					Date:          UTIL.BuildOnlyDate(body["session_date"]),
+					Message:       body["client_notes"],
+					Message1:      body["links"],
+				}
+			}
+
+			filepath_text := "htmlfile/emailbodywithlink.html"
+
+			emailBy := UTIL.GetHTMLTemplateForWithDocument(emaildata, filepath_text)
+
+			UTIL.SendEmailWithDocument(client[0]["email"], emailBy, CONSTANT.CounsellorDocumentForClientTitle, listofDocuments)
 		}
 
-		// re := regexp.MustCompile(`(http|ftp|https):\/\/([\w\-_]+(?:(?:\.[\w\-_]+)+))([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?`)
-
-		// message := re.ReplaceAllString(body["client_notes"], `<a href="$0">$0</a>`)
-
-		emaildata := Model.EmailBodyMessageModelWithDocu{
-			Name:          client[0]["first_name"],
-			TherapistName: counsellor[0]["first_name"],
-			Date:          UTIL.BuildOnlyDate(body["session_date"]),
-			Message:       body["client_notes"],
-			Message1:      body["links"],
-		}
-
-		filepath_text := "htmlfile/emailbodywithlink.html"
-
-		emailBy := UTIL.GetHTMLTemplateForWithDocument(emaildata, filepath_text)
-
-		UTIL.SendEmailWithDocument(client[0]["email"], emailBy, CONSTANT.CounsellorDocumentForClientTitle, listofDocuments)
 	}
 
 	// UTIL.SendEmail(

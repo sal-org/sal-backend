@@ -10,6 +10,7 @@ var (
 	AppointmentRatingAddRequiredFields           = []string{"appointment_id", "rating", "client_id", "counsellor_id"}
 	AppointmentRequestRequiredFields             = []string{"counsellor_id", "type", "client_id"}
 	ContentAddRequiredFields                     = []string{"title", "photo", "content", "type"}
+	CorporateCounsellorAddRequiredFields         = []string{"counsellor_id", "partner_name", "partner_location"}
 	CounsellorOrderCreateRequiredFields          = []string{"client_id", "counsellor_id", "date", "time", "no_session"}
 	PartnersAddressAddRequiredFields             = []string{"partnerName", "domain", "address"}
 	PartnersAddRequiredFields                    = []string{"partnerName", "domain", "accessCode"}

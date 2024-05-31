@@ -689,6 +689,170 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("html body not create ")
 			}
 
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp951" {
+
+			var filePath string
+
+			if finalScore >= 0 && finalScore <= 24 {
+
+				filePath = "htmlfile/EmotionalAwareness0_24.html"
+
+			} else if finalScore >= 25 && finalScore <= 34 {
+
+				filePath = "htmlfile/EmotionalAwareness25_34.html"
+
+			} else {
+
+				filePath = "htmlfile/EmotionalAwareness35_40.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSelfEsteemModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp951" {
+
+			var filePath string
+
+			if finalScore >= 0 && finalScore <= 24 {
+
+				filePath = "htmlfile/EmotionalAwareness0_24.html"
+
+			} else if finalScore >= 25 && finalScore <= 34 {
+
+				filePath = "htmlfile/EmotionalAwareness25_34.html"
+
+			} else {
+
+				filePath = "htmlfile/EmotionalAwareness35_40.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSelfEsteemModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp952" {
+
+			var filePath string
+
+			if finalScore >= 0 && finalScore <= 24 {
+
+				filePath = "htmlfile/Social_Emotional_Awareness_0_24.html"
+
+			} else if finalScore >= 25 && finalScore <= 34 {
+
+				filePath = "htmlfile/Social_Emotional_Awareness_25_34.html"
+
+			} else {
+
+				filePath = "htmlfile/Social_Emotional_Awareness_35_40.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSelfEsteemModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp953" {
+
+			var filePath string
+
+			if finalScore >= 0 && finalScore <= 24 {
+
+				filePath = "htmlfile/Emotional_Management_0_24.html"
+
+			} else if finalScore >= 25 && finalScore <= 34 {
+
+				filePath = "htmlfile/Emotional_Management_25_34.html"
+
+			} else {
+
+				filePath = "htmlfile/Emotional_Management_35_40.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSelfEsteemModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
 		} else {
 
 			var filePath string

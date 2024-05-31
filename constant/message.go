@@ -38,4 +38,11 @@ const (
 	ClientAppointmentRequestSMSToClientTextMessage                   = "Hi ###clientName###, thank you for requesting an appointment with ###counsellorName### on the Clove Mind app. It has been duly noted. Team Salubrium"
 	ClientAppointmentRequestSMSToNotAcceptedClientTextMessage        = "Hello, your therapist ###counsellorName###, has still not updated the availability in Clove Mind app. You may choose to wait longer or select any other therapist. Team Salubrium"
 	CounsellorAppointmentRequestCreatedAvailabilityClientTextMessage = "Hello ###clientName###, your therapist ###counsellorName### has updated availability on the Clove Mind app. Login to book your session and continue your wellbeing journey. Team Salubrium"
+	ClientInPersonAppointmentConfirmationClientTextMeassage          = "Hey there, your in-person appointment with Clove therapist ###therapistName###, is confirmed for ###date### - Team Salubrium"
+	ClientInPersonAppointmentRescheduleClientTextMeassage            = "Hey ###clientName###, your request for rescheduling the session has been confirmed. Click the In-person session on Clovemind app for more details - Team Salubrium"
+	ClientInPersonAppointmentRescheduleTherapistTextMeassage         = "Hey ###therapistName###, your client ###clientName### has rescheduled your appointment. Please check the In-Person Session in Clovemind app for further details. - Team Salubrium"
+	ClientInPersonAppointmentCancellationTherapistTextMeassage       = "Hey there, your scheduled In-person session dated ###date### has been cancelled by ###clientName### - Team Salubrium"
+	ClientInPersonAppointmentCancellationClientTextMeassage          = "Hey ###clientName###, your request to cancel the scheduled In-person session with ###therapistName### has been accepted. The session is cancelled - Team Salubrium"
+	TherapistInPersonAppointmentCancellationClientTextMeassage       = "Hey there, your In-person session dated ###date### has been cancelled by ###therapistName### - Team Salubrium"
+	TherapistInPersonAppointmentCancellationTherapistTextMeassage    = "Hey there, all your scheduled In-person sessions dated ###date### for the location - ###location### have been cancelled successfully - Team Salubrium"
 )

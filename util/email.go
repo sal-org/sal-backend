@@ -83,7 +83,7 @@ func sendSESMail(title, body, email string) {
 }
 
 // SendEmail - send email using SES. now : true - send now without background workers
-func SendEmailForQuality(title string, body string, emailfrom string, emailto, emailcc, emailbcc []*string, todata string, now bool) {
+func SendEmailWithCcRefrence(title string, body string, emailfrom string, emailto, emailcc, emailbcc []*string, todata string, now bool) {
 	if strings.Contains(title, "###") || strings.Contains(body, "###") { // check if mail variables are replaced
 		return
 	}

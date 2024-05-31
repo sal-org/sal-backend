@@ -617,7 +617,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "16": // content
-		heading = []string{"Title", "Type", "Category", "Mood", "Is Training Content", "Created By", "Status"}
+		heading = []string{"Title", "Type", "Category", "Mood", "Is Training Content", "Created By", "Uploaded At", "Status"}
 
 		contents, status, ok := DB.SelectProcess("select *  from " + CONSTANT.ContentsTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -676,6 +676,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				moodsMap[content["mood_id"]]["title"],
 				trainingType,
 				content["created_by"],
+				UTIL.ConvertTimezone(UTIL.ConvertToTime(content["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat),
 				status,
 			})
 		}

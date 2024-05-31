@@ -10,26 +10,53 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/appointment/upcoming", AppointmentsUpcoming).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
+
+	clientRoutes.HandleFunc("/inperson_appointment/upcoming", InPersonAppointmentsUpcoming).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
 	clientRoutes.HandleFunc("/appointment/slots", AppointmentSlotsUnused).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("/appointment/past", AppointmentsPast).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
+
+	clientRoutes.HandleFunc("/inperson_appointment/past", InPersonAppointmentsPast).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
 	clientRoutes.HandleFunc("/appointment", AppointmentDetail).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("GET")
+
+	clientRoutes.HandleFunc("/inperson_appointment", InPersonAppointmentDetail).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
+
 	clientRoutes.HandleFunc("/appointment", AppointmentBook).Methods("POST")
 	clientRoutes.HandleFunc("/appointment", AppointmentReschedule).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("PUT")
+
+	clientRoutes.HandleFunc("/inperson_appointment", InPersonAppointmentReschedule).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
 	clientRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+
+	clientRoutes.HandleFunc("/inperson_appointment", InPersonAppointmentCancel).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("DELETE")
+
 	clientRoutes.HandleFunc("/appointment/bulk", AppointmentBulkCancel).Queries(
 		"appointment_slot_id", "{appointment_slot_id}",
 	).Methods("DELETE")
 	clientRoutes.HandleFunc("/appointment/rate", AppointmentRatingAdd).Methods("POST")
+
+	clientRoutes.HandleFunc("/inperson_appointment/rate", InPersonAppointmentRatingAdd).Methods("POST")
 
 	clientRoutes.HandleFunc("/appointment/download", DownloadReceipt).Queries(
 		"invoice_id", "{invoice_id}",
@@ -39,13 +66,29 @@ func LoadClientRoutes(router *mux.Router) {
 		"appointment_id", "{appointment_id}",
 	).Methods("PUT")
 
+	clientRoutes.HandleFunc("/inperson_appointment/cancellationreason", InPersonCancellationReason).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
+	clientRoutes.HandleFunc("/inperson_appointment/no_show", InPersonAppointmentNoShow).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
 	clientRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("/appointment/request", AppointmentRequest).Methods("POST")
+
+	clientRoutes.HandleFunc("/inperson_appointment/request", InPersonAppointmentRequest).Methods("POST")
+
 	clientRoutes.HandleFunc("/appointment/request", GetAppointmentRequest).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
+
+	clientRoutes.HandleFunc("/inperson_appointment/request", GetInPersonAppointmentRequest).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
 	clientRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",
@@ -79,6 +122,12 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/counsellor/slots", CounsellorSlots).Queries(
 		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
+
+	// In Person slots
+	clientRoutes.HandleFunc("/in_person_counsellor/slots", InPersonCounsellorSlots).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+
 	clientRoutes.HandleFunc("/counsellor/order", CounsellorOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/counsellor/paymentcomplete", CounsellorOrderPaymentComplete).Methods("POST")
 
@@ -178,11 +227,19 @@ func LoadClientRoutes(router *mux.Router) {
 	// corporate search
 	clientRoutes.HandleFunc("/corporate_search", ListSearchForCorporate).Methods("GET")
 
+	// corporate in person search
+	clientRoutes.HandleFunc("/corporate_inperson_search", ListSearchForCorporateInPerson).Methods("GET")
+
 	// therapist
 	clientRoutes.HandleFunc("/therapist", TherapistProfile).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("/therapist/slots", TherapistSlots).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
+	// In Person slots
+	clientRoutes.HandleFunc("/in_person_therapist/slots", InPersonTherapistSlots).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("/therapist/order", TherapistOrderCreate).Methods("POST")
@@ -192,5 +249,10 @@ func LoadClientRoutes(router *mux.Router) {
 
 	clientRoutes.HandleFunc("/corporateCounsellor/order", CorporateCounsellorOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/corporateCounsellor/paymentcomplete", CorporateCounsellorOrderPaymentComplete).Methods("POST")
+
+	// in person corporate clients
+
+	clientRoutes.HandleFunc("/inperson_corporateCounsellor/order", InPersonCorporateCounsellorOrderCreate).Methods("POST")
+	clientRoutes.HandleFunc("/inperson_corporateCounsellor/paymentcomplete", InPersonCorporateCounsellorOrderPaymentComplete).Methods("POST")
 
 }

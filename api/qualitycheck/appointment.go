@@ -308,7 +308,7 @@ func SendEmail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	UTIL.SendEmailForQuality(
+	UTIL.SendEmailWithCcRefrence(
 		body["title"],
 		body["body"],
 		body["email_from"],

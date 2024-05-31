@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strconv"
 	"strings"
 
@@ -132,6 +133,55 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) != 0 {
+
+			filepath_text := "htmlfile/emailmessagebody.html"
+			// send email for therapist
+			emaildata := Model.EmailBodyMessageModel{
+				Name: counsellor[0]["first_name"],
+				Message: UTIL.ReplaceNotificationContentInString(
+					CONSTANT.CounsellorApprovedContentBody,
+					map[string]string{
+						"###content_name###": body["title"],
+					},
+				),
+			}
+
+			emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+			// email for therapist
+			UTIL.SendEmail(
+				CONSTANT.CounsellorApprovedContentTitle,
+				emailBody,
+				counsellor[0]["email"],
+				CONSTANT.InstantSendEmailMessage,
+			)
+		}
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

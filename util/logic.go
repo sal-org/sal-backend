@@ -72,6 +72,13 @@ func CheckIfAppointmentSlotAvailable(counsellorID, date, time string) bool {
 	return len(data) > 0
 }
 
+
+// CheckIfAppointmentSlotAvailable - for both counsellor and listener, check if the specfied slot is available - date (2021-01-12), time (0-47 slots in IST)
+func CheckIfAppointmentzInPersonSlotAvailable(counsellorID, date, time string) bool {
+	data, _, _ := DB.SelectSQL(CONSTANT.InPersonSLotsTable, []string{"1"}, map[string]string{"counsellor_id": counsellorID, "date": date, time: CONSTANT.SlotAvailable}) // if the date time data is 1 in database
+	return len(data) > 0
+}
+
 // AssociateLanguagesAndTopics - add/update languages and topics for counsellor/listener
 func AssociateLanguagesAndTopics(topicIDs, languageIDs, id string) {
 	if len(topicIDs) > 0 {
