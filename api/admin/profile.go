@@ -126,6 +126,12 @@ func AddProfileForUsers(w http.ResponseWriter, r *http.Request) {
 		"pc_add":        body["pc_add"],
 		"pc_edit":       body["pc_edit"],
 		"pc_view":       body["pc_view"],
+		"slot_view":     body["slot_view"],
+		"slot_add":      body["slot_add"],
+		"slot_edit":     body["slot_edit"],
+		"link_add":      body["link_add"],
+		"link_edit":     body["link_edit"],
+		"link_view":     body["link_view"],
 		"noti_add":      body["noti_add"],
 		"noti_edit":     body["noti_edit"],
 		"noti_view":     body["noti_view"],
@@ -227,6 +233,30 @@ func UpdateProfileForUsers(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["pc_view"]) > 0 {
 		profile["pc_view"] = body["pc_view"]
+	}
+
+	if len(body["slot_view"]) > 0 {
+		profile["slot_view"] = body["slot_view"]
+	}
+
+	if len(body["slot_add"]) > 0 {
+		profile["slot_add"] = body["slot_add"]
+	}
+
+	if len(body["slot_edit"]) > 0 {
+		profile["slot_edit"] = body["slot_edit"]
+	}
+
+	if len(body["link_add"]) > 0 {
+		profile["link_add"] = body["link_add"]
+	}
+
+	if len(body["link_edit"]) > 0 {
+		profile["link_edit"] = body["link_edit"]
+	}
+
+	if len(body["link_view"]) > 0 {
+		profile["link_view"] = body["link_view"]
 	}
 
 	if len(body["noti_add"]) > 0 {

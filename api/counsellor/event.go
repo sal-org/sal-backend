@@ -643,7 +643,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.NewEventWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.SameerEmailID,
+		CONFIG.EventEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)
 

@@ -53,6 +53,15 @@ func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(availabilitys, "counsellor_id")
+
+	// get counsellor details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get total number of contents
 	availabilitysCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.InPersonSLotsScheduleTable+where, queryArgs...)
 	if !ok {
@@ -61,6 +70,7 @@ func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["availabilitys"] = availabilitys
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["availabilitys_count"] = availabilitysCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(availabilitysCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -107,6 +117,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	slotsDate["partner_location"] = body["companyLocation"]
 	slotsDate["counselling_room"] = body["roomNo"]
 	slotsDate["counselling_address"] = body["address"]
+	slotsDate["schedules_status"] = CONSTANT.InPersonSlotsInProgress
 	slotsDate["status"] = body["status"]
 	slotsDate["0"] = body["0"]
 	slotsDate["1"] = body["1"]
@@ -389,15 +400,15 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
+		for key, val := range slots {
+
+			DB.ExecuteSQL("update "+CONSTANT.InPersonSLotsTable+" set `"+key+"` = "+val+" where counsellor_id = ? and date = ? and company_name = ? and company_location = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", body["counsellor_id"], body["date"], body["companyName"], body["companyLocation"]) // dont update already booked slots
+
+		}
+
 	} else {
 		// newly added schedule
 		DB.InsertSQL(CONSTANT.InPersonSLotsScheduleTable, slotsDate)
-	}
-
-	for key, val := range slots {
-
-		DB.ExecuteSQL("update "+CONSTANT.InPersonSLotsTable+" set `"+key+"` = "+val+" where counsellor_id = ? and date = ? and  `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", body["counsellor_id"], body["date"]) // dont update already booked slots
-
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -456,6 +467,15 @@ func CounsellorConnectWithCorporateGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "counsellor_id")
+
+	// get counsellor details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get total number of contents
 	inPersonConnectCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+where, queryArgs...)
 	if !ok {
@@ -464,8 +484,32 @@ func CounsellorConnectWithCorporateGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["in_person_connect"] = inPersonConnect
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["in_person_connect_count"] = inPersonConnectCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(inPersonConnectCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func GetCounsellorName(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name from " + CONSTANT.CounsellorsTable + " where status = '1' and corporate_therpist != 0 ) union (select therapist_id as id, first_name, last_name from " + CONSTANT.TherapistsTable + " where status = '1' and corporate_therpist != 0 )")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

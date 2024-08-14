@@ -76,14 +76,20 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	appInfo, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppInfoTable+" where status = 1 ")
+	if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+	}
+
 	response["recommended"] = recommended
 	// response["videos"] = videos
 	// response["audios"] = audios
 	// response["articles"] = articles
 	response["quote"] = quote[0]["quote"]
 	response["media_url"] = CONFIG.MediaURL
-	response["android_version"] = CONSTANT.ClientAndroidVersion
-	response["ios_version"] = CONSTANT.ClientIOSVersion
+	response["android_version"] = appInfo[0]["client_android_version"]
+	response["ios_version"] = appInfo[0]["client_ios_version"]
 	response["urls"] = CONSTANT.URLs
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

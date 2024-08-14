@@ -358,6 +358,7 @@ type EmailDataForCounsellorProfile struct {
 
 type EmailDataForCounsellorRecord struct {
 	TherapistName   string
+	SessionFor      string
 	First_Name      string
 	Last_Name       string
 	Gender          string
@@ -366,7 +367,6 @@ type EmailDataForCounsellorRecord struct {
 	Location        string
 	NoShow          string
 	SessionMode     string
-	SessionNo       string
 	SessionDate     string
 	InTime          string
 	OutTime         string

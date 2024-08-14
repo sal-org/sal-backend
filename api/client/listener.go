@@ -324,7 +324,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
+	filepath_text := "htmlfile/appointmentConfirmation.html"
 
 	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
 	if !ok {

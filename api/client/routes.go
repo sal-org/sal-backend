@@ -133,13 +133,22 @@ func LoadClientRoutes(router *mux.Router) {
 
 	// event
 	clientRoutes.HandleFunc("/events", EventsList).Methods("GET")
+	clientRoutes.HandleFunc("/events_inperson", InPersonEventsList).Methods("GET")
 	clientRoutes.HandleFunc("/event", EventDetail).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/event_inperson", EventInPersonDetail).Queries(
 		"order_id", "{order_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("/event/booked", EventsBooked).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
+	clientRoutes.HandleFunc("/event_inperson/booked", EventsBookedInPerson).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/event_inperson/cancel", EventsInPersonCancel).Methods("PUT")
 	clientRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
+	clientRoutes.HandleFunc("/event_inperson/order", EventOrderInPersonCreate).Methods("POST")
 	clientRoutes.HandleFunc("/event/paymentcomplete", EventOrderPaymentComplete).Methods("POST")
 
 	// home
@@ -229,6 +238,9 @@ func LoadClientRoutes(router *mux.Router) {
 
 	// corporate in person search
 	clientRoutes.HandleFunc("/corporate_inperson_search", ListSearchForCorporateInPerson).Methods("GET")
+
+	// corporate in person search for testing
+	clientRoutes.HandleFunc("/corporate_test_inperson_search", ListSearchForCorporateInPersonDuplication).Methods("GET")
 
 	// therapist
 	clientRoutes.HandleFunc("/therapist", TherapistProfile).Queries(

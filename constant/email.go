@@ -1,10 +1,10 @@
 package constant
 
 const (
-	SameerEmailID = "sameer.littlemagix@gmail.com"
-	AnandEmailID  = "anand.shah@clovemind.com"
-	AkshayEmailID = "akshay.gandhi@clovemind.com"
-	ShivamEmailID = "shivam.tiwari@clovemind.com"
+	// SameerEmailID = "sameer.littlemagix@gmail.com"
+	// AnandEmailID  = "anand.shah@clovemind.com"
+	// AkshayEmailID = "akshay.gandhi@clovemind.com"
+	// ShivamEmailID = "shivam.tiwari@clovemind.com"
 )
 
 const (
@@ -51,7 +51,7 @@ const (
 	ClientAppointmentCancelCounsellorEmailBody            = "Your upcoming session with ###client_name### for ###date### on ###time### has been cancelled by the client."
 	ClientAppointmentBulkCancelClientEmailBody            = "You have cancelled all your pending sessions. Refund, if any, will be processed shortly as per the Cancellation & Refund Policy. We wish you good health and know that you can always come back to us for any support"
 	ClientAppointmentRescheduleClientEmailBody            = "Your request for a session reschedule has been confirmed for ###time### on ###date### with ###therpists_name###, Click 'My Sessions' for more details"
-	ClientAppointmentBookClientEmailBody                  = "Your appointment for private & confidential talk with ###therpist_name### is confirmed for ###date### at ###time###. Please note that the call may be recorded for quality and training purposes in accordance with the privacy policy."
+	ClientAppointmentBookClientEmailBody                  = "Your session is booked with ###therpist_name### on ###date### at ###time###. We appreciate your commitment to prioritising your wellbeing."
 	CounsellorAppointmentCancelCounsellorBodyEmailBody    = "You have now cancelled your scheduled session. Cancellation charges, if any, will be processed as per the Cancellation & Refund Policy."
 	ClientAppointmentFollowUpSessionClientEmailBody       = "Your follow-up appointment for one to one chat with ###therpist_name### is confirmed  for ###date_time###."
 	ClientAppointmentFollowUpSessionCounsellorEmailBody   = "You have a followup counselling session booked by ###client_name### for ###date_time###. Check 'Booking section' for details."
@@ -63,9 +63,9 @@ const (
 	RatingTitleForInternalReviewBody                      = "We are writing to inform you that ###therapistname### has received a rating of ###rating### for the session conducted on ###date### at ###time###. User Comment: ###content###"
 	CounsellorApprovedContentBody                         = "Congratulations, your content ###content_name### has been uploaded on the clovemind app. We appreciate your contribution."
 	ClientInPersonAppointmentBookTherapistBody            = "You have a new counselling session booked by ###clientName### for ###date### and ###time###. The appointment is booked for ###location###. Please ensure to Start and End the in-person meeting at the scheduled session time. For details, check 'In-Person Session' in the Clove app menu."
-	ClientInPersonAppointmentBookClientBody               = "Your appointment for private & confidential talk with Clove therapist ###therapistName### is confirmed for  ###date### and ###time###. Your in-person counselling session will be at ###location###. For details, check 'In-Person Session' in the Clove app menu."
+	ClientInPersonAppointmentBookClientBody               = "Your appointment for private & confidential talk with Clove therapist ###therapistName### is confirmed for  ###date### at ###time###. Your in-person counselling session will be at ###location###. For details, check 'In-Person Session' in the Clove app menu."
 	ClientInPersonAppointmentRescheduleTherapistBody      = "Your client, ###clientName### has rescheduled the appointment to ###date### on ###time###. Please check the Upcoming Sessions in the in-person Section for further details."
-	ClientInPersonAppointmentRescheduleClientBody         = "Your request for a counselling session rescheduled has been confirmed for ###time### on ###date### with Clove therapist ###therapistName###. Click in-person sessions on Clove app for more details."
+	ClientInPersonAppointmentRescheduleClientBody         = "Your request to reschedule an in-person counselling session has been confirmed for ###time### on ###date### with Clove therapist ###therapistName###. Click in-person sessions on Clove app for more details."
 	ClientInPersonAppointmentCancellationTherapistBody    = "Your upcoming session with ###clientName### for ###date### and ###time### at ###location### has been cancelled by the client."
 	ClientInPersonAppointmentCancellationClientBody       = "Your scheduled in-person counselling session with Clove therapist ###therapistName### on ###date### and ###time### at ###location### has been cancelled successfully. You may reschedule your counselling session for the next available slot with  thearpist again at your convenience."
 	TherapistInPersonAppointmentCancellationTherapistBody = "Due to your unavilability, all your scheduled in-person sessions for ###date### at ###location### have been cancelled successfully."

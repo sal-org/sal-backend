@@ -125,14 +125,14 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"),r.FormValue("companyName"),r.FormValue("companyLocation"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// remove times and dates with no availability
-	response["slots"] = UTIL.FilterAvailableSlots(slots)
+	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -738,7 +738,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		),
 	}
 
-	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, "htmlfile/appointmentConfirmation.html")
 	// email for client
 	UTIL.SendEmail(
 		CONSTANT.ClientAppointmentBookCounsellorTitle,

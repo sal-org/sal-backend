@@ -173,6 +173,16 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":         CONSTANT.AppointmentCounsellorCancelled,
+			"modified_at":    UTIL.GetCurrentTime().String(),
+		},
+	)
+
 	// send appointment cancel notification, email to client
 	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "email", "phone"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})

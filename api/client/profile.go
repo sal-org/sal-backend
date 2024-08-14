@@ -303,6 +303,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 
 	// add client details
 	client := map[string]string{}
+	client["emp_id"] = body["emp_id"]
 	client["first_name"] = body["first_name"]
 	client["last_name"] = body["last_name"]
 	client["phone"] = body["phone"]
@@ -424,6 +425,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// update client details
 	client := map[string]string{}
+	if len(body["emp_id"]) > 0 {
+		client["emp_id"] = body["emp_id"]
+	}
 	if len(body["first_name"]) > 0 {
 		client["first_name"] = body["first_name"]
 	}
@@ -432,6 +436,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["location"]) > 0 {
 		client["location"] = body["location"]
+	}
+	if len(body["department"]) > 0 {
+		client["department"] = body["department"]
 	}
 	if len(body["date_of_birth"]) > 0 {
 		client["date_of_birth"] = body["date_of_birth"]

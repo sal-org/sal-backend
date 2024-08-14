@@ -264,6 +264,16 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentCounsellorCancelled,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
 	// add a slot to appointments
 	DB.ExecuteSQL("update "+CONSTANT.AppointmentSlotsTable+" set slots_remaining = slots_remaining + 1 where order_id = ?", appointment[0]["order_id"])
 
@@ -726,7 +736,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if appointment[0]["started_at"] == "" {
+	if len(appointment[0]["started_at"]) == 0 {
 		// update appointment as started
 		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{

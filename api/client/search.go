@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -343,7 +344,13 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
-
+	var counsellorsCount []map[string]string
+	var counsellors []map[string]string
+	// filteredCounsellorSlots := map[string][]map[string]string{}
+	// filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+	var inPersonConnect []map[string]string
+	var slots []map[string]string
+	var nextSlots []map[string]string
 
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
@@ -351,103 +358,353 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	domainName := strings.Split(client[0]["email"], "@")
+	if client[0]["email"] == "shivam.tiwari@clovemind.com" {
 
-	partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"domain": domainName[1]})
+		partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"status": "1"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		inPersonConnect, status, ok = DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"status": "1"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorIds := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "counsellor_id")
+
+		mYSQL := "(select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0 ) union (select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0)"
+
+		counsellors, status, ok = DB.SelectProcess(mYSQL + " limit " + strconv.Itoa(CONSTANT.CounsellorsListPerPageClient) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// extract counsellors|therapists ids
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
+
+		companyName := UTIL.ExtractValuesFromArrayMap(partnerName, "partner_name")
+
+		companyLocation := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "partner_location")
+
+		// get counsellors|therapists slots
+		slots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and company_name in ('" + strings.Join(companyName, "','") + "') and company_location in ('" + strings.Join(companyLocation, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		nextSlots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and company_name in ('" + strings.Join(companyName, "','") + "') and company_location in ('" + strings.Join(companyLocation, "','") + "') and date > '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// // get counsellors|therapists slots
+		// slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and company_name in ('" + strings.Join(counsellorName, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+		// if !ok {
+		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		// // group counsellors|therapists slots
+		// counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
+		// // filteredCounsellorSlots := map[string][]map[string]string{}
+		// // filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+
+		// // var nextSlot []map[string]string
+		// for counsellorID, counsellorSlot := range counsellorSlots {
+		// 	filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableForInPersonSlots(counsellorSlot)
+		// 	if len(filteredCounsellorSlots[counsellorID]) == 0 {
+		// 		nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and company_name in ('"+strings.Join(counsellorName, "','")+"') and  date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+		// 		if !ok {
+		// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 			return
+		// 		}
+		// 		filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
+		// 	}
+		// }
+
+		// get counsellors|therapists count
+		counsellorsCount, status, ok = DB.SelectProcess("select count(*) as ctn from (" + mYSQL + ") as a")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	} else {
+
+		domainName := strings.Split(client[0]["email"], "@")
+
+		partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"domain": domainName[1]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		inPersonConnect, status, ok = DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"partner_name": partnerName[0]["partner_name"], "status": "1"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorIds := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "counsellor_id")
+
+		mYSQL := "(select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0 ) union (select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0)"
+
+		counsellors, status, ok = DB.SelectProcess(mYSQL + " limit " + strconv.Itoa(CONSTANT.CounsellorsListPerPageClient) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// extract counsellors|therapists ids
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
+
+		companyLocation := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "partner_location")
+
+		// get counsellors|therapists slots
+		slots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and company_name = '" + partnerName[0]["partner_name"] + "' and company_location in ('" + strings.Join(companyLocation, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		nextSlots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and company_name = '" + partnerName[0]["partner_name"] + "' and company_location in ('" + strings.Join(companyLocation, "','") + "') and date > '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and company_name = '"+partnerName[0]["partner_name"]+"' and  date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+		// if !ok {
+		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		// group counsellors|therapists slots
+		// counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "company_location")
+		// // filteredCounsellorSlots := map[string][]map[string]string{}
+		// // filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+
+		// // var nextSlot []map[string]string
+		// for counsellorID, counsellorSlot := range counsellorSlots {
+		// 	fmt.Println(counsellorSlot)
+		// 	filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableForInPersonSlots(counsellorSlot)
+		// 	if len(filteredCounsellorSlots[counsellorID]) == 0 {
+		// 		nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and company_name = '"+partnerName[0]["partner_name"]+"' and  date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+		// 		if !ok {
+		// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 			return
+		// 		}
+		// 		filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
+		// 	}
+		// }
+
+		// get counsellors|therapists count
+		counsellorsCount, status, ok = DB.SelectProcess("select count(*) as ctn from (" + mYSQL + ") as a")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	response["counsellors"] = counsellors
+	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
+	response["counsellors_count"] = counsellorsCount[0]["ctn"]
+	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
+	response["media_url"] = CONFIG.MediaURL
+	response["next_available"] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
+	response["location"] = inPersonConnect
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+// for test after testing we can remove this
+
+func ListSearchForCorporateInPersonDuplication(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+	var counsellorsCount []map[string]string
+	var counsellors []map[string]string
+	// filteredCounsellorSlots := map[string][]map[string]string{}
+	// filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+	var inPersonConnect []map[string]string
+	var slots []map[string]string
+	var nextSlots []map[string]string
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	inPersonConnect, status, ok := DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"partner_name": partnerName[0]["partner_name"], "status": "1"})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	fmt.Println(client)
 
-	counsellorIds := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "counsellor_id")
+	if client[0]["email"] == "shivam.tiwari@clovemind.com" {
 
-	mYSQL := "(select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0 ) union (select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0)"
+		partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"status": "1"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	counsellors, status, ok := DB.SelectProcess(mYSQL + " limit " + strconv.Itoa(CONSTANT.CounsellorsListPerPageClient) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+		inPersonConnect, status, ok = DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"status": "3"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	// // build counsellor query
-	// counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
-	// wheres := []string{}
-	// wheres = append(wheres, " status = "+CONSTANT.CounsellorActive+" and corporate_therpist != 0 and in_person_therapist = 1 ") // only active counsellors
-	// counsellorSQLQuery += " where " + strings.Join(wheres, " and ")
+		counsellorIds := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "counsellor_id")
 
-	// // build therapist query
-	// therapistSQLQuery = "select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
-	// wheres = []string{}
-	// wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != 0 and in_person_therapist = 1 ") // only active therapists
-	// therapistSQLQuery += " where " + strings.Join(wheres, " and ")
+		mYSQL := "(select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0 ) union (select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0)"
 
-	// // } else { // union if all needed
-	// SQLQuery = " ( " + counsellorSQLQuery + " ) union ( " + therapistSQLQuery + " ) "
-	// args = append(args, counsellorArgs...)
-	// args = append(args, therapistArgs...)
-	// // }
+		counsellors, status, ok = DB.SelectProcess(mYSQL + " limit " + strconv.Itoa(CONSTANT.CounsellorsListPerPageClient) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	// // sortBy := " average_rating " // default ordering by rating
-	// // orderBy := " desc "
-	// // if strings.EqualFold(r.FormValue("order_by"), "1") {
-	// // 	orderBy = " asc "
-	// // }
-	// // SQLQuery += " order by " + sortBy + orderBy
+		// extract counsellors|therapists ids
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
 
-	// // get counsellors|therapists
-	// counsellors, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.CounsellorsListPerPageClient)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient), args...)
-	// if !ok {
-	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+		companyName := UTIL.ExtractValuesFromArrayMap(partnerName, "partner_name")
 
-	// extract counsellors|therapists ids
-	counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
+		companyLocation := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "partner_location")
 
-	// get counsellors|therapists slots
-	slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+		// get counsellors|therapists slots
+		slots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and company_name in ('" + strings.Join(companyName, "','") + "') and available = 1 and company_location in ('" + strings.Join(companyLocation, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	// group counsellors|therapists slots
-	counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
-	filteredCounsellorSlots := map[string][]map[string]string{}
-	filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+		nextSlots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and company_name in ('" + strings.Join(companyName, "','") + "') and available = 1 and company_location in ('" + strings.Join(companyLocation, "','") + "') and date > '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	// var nextSlot []map[string]string
-	for counsellorID, counsellorSlot := range counsellorSlots {
-		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
-		if len(filteredCounsellorSlots[counsellorID]) == 0 {
-			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+		// // get counsellors|therapists slots
+		// slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and company_name in ('" + strings.Join(counsellorName, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+		// if !ok {
+		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		// // group counsellors|therapists slots
+		// counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
+		// // filteredCounsellorSlots := map[string][]map[string]string{}
+		// // filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+
+		// // var nextSlot []map[string]string
+		// for counsellorID, counsellorSlot := range counsellorSlots {
+		// 	filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableForInPersonSlots(counsellorSlot)
+		// 	if len(filteredCounsellorSlots[counsellorID]) == 0 {
+		// 		nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and company_name in ('"+strings.Join(counsellorName, "','")+"') and  date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+		// 		if !ok {
+		// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 			return
+		// 		}
+		// 		filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
+		// 	}
+		// }
+
+		// get counsellors|therapists count
+		counsellorsCount, status, ok = DB.SelectProcess("select count(*) as ctn from (" + mYSQL + ") as a")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	} else {
+
+		domainName := strings.Split(client[0]["email"], "@")
+
+		partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"domain": domainName[1]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		inPersonConnect, status, ok = DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"partner_name": partnerName[0]["partner_name"], "status": "3"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(inPersonConnect) != 0 {
+			counsellorIds := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "counsellor_id")
+
+			mYSQL := "(select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0 ) union (select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIds, "','") + "') and status = " + CONSTANT.CounsellorActive + " and corporate_therpist != 0)"
+
+			counsellors, status, ok = DB.SelectProcess(mYSQL + " limit " + strconv.Itoa(CONSTANT.CounsellorsListPerPageClient) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.CounsellorsListPerPageClient))
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
-		}
-	}
 
-	// get counsellors|therapists count
-	counsellorsCount, status, ok := DB.SelectProcess("select count(*) as ctn from (" + mYSQL + ") as a")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
+			// extract counsellors|therapists ids
+			counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
+
+			companyLocation := UTIL.ExtractValuesFromArrayMap(inPersonConnect, "partner_location")
+
+			// get counsellors|therapists slots
+			slots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and company_name = '" + partnerName[0]["partner_name"] + "' and company_location in ('" + strings.Join(companyLocation, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			nextSlots, status, ok = DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and company_name = '" + partnerName[0]["partner_name"] + "' and company_location in ('" + strings.Join(companyLocation, "','") + "') and date > '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "'")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			// nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and company_name = '"+partnerName[0]["partner_name"]+"' and  date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+			// if !ok {
+			// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			// 	return
+			// }
+
+			// group counsellors|therapists slots
+			// counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "company_location")
+			// // filteredCounsellorSlots := map[string][]map[string]string{}
+			// // filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
+
+			// // var nextSlot []map[string]string
+			// for counsellorID, counsellorSlot := range counsellorSlots {
+			// 	fmt.Println(counsellorSlot)
+			// 	filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableForInPersonSlots(counsellorSlot)
+			// 	if len(filteredCounsellorSlots[counsellorID]) == 0 {
+			// 		nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and available = 1 and company_name = '"+partnerName[0]["partner_name"]+"' and  date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
+			// 		if !ok {
+			// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			// 			return
+			// 		}
+			// 		filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
+			// 	}
+			// }
+
+			// get counsellors|therapists count
+			counsellorsCount, status, ok = DB.SelectProcess("select count(*) as ctn from (" + mYSQL + ") as a")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
 	}
 
 	response["counsellors"] = counsellors
-	response["slots"] = filteredCounsellorSlots
+	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
-	response["next_available"] = filteredCounsellorSlotsNextAvaliable
+	response["next_available"] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
 	response["location"] = inPersonConnect
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

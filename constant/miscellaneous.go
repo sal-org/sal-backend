@@ -14,10 +14,10 @@ const (
 
 // lastest version
 const (
-	ClientIOSVersion        = "2.15"
-	ClientAndroidVersion    = "1.16.0"
-	TherapistIOSVersion     = "2.11"
-	TherapistAndroidVersion = "1.15.0"
+	ClientIOSVersion        = "2.17"
+	ClientAndroidVersion    = "1.18.0"
+	TherapistIOSVersion     = "2.13"
+	TherapistAndroidVersion = "1.17.0"
 )
 
 // urls

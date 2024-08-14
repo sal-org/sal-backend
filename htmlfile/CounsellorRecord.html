@@ -10,6 +10,10 @@
     <h4 style="color: rgb(113, 113, 233);">Client Profile Details</h4>
     <table style="width: 80%;text-align: left;">
       <tr>
+        <th style="color:#808080; padding: 10px;">Session For:</th>
+        <td>{{.SessionFor}}</td>
+      </tr>
+      <tr>
         <th style="color:#808080; padding: 10px;">Client Name:</th>
         <td>{{.First_Name}}</td><td style="text-align: left;">{{.Last_Name}}</td>
       </tr>
@@ -39,10 +43,6 @@
           <tr>
             <th style="color:#808080; padding: 10px;">Session Mode:</th>
             <td>{{.SessionMode}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Session No:</th>
-            <td>{{.SessionNo}}</td>
           </tr>
           <tr>
             <th style="color:#808080; padding: 10px;">Session Date:</th>

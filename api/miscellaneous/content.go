@@ -31,49 +31,175 @@ func Content(w http.ResponseWriter, r *http.Request) {
 	if len(r.FormValue("category_id")) > 0 {
 		id, _ := strconv.Atoi(r.FormValue("category_id"))
 		if id > 0 {
-			categoryFilter = " and category_id = " + r.FormValue("category_id")
+			categoryFilter = " and category_id like '%" + r.FormValue("category_id") + "%'"
 		}
 	}
 
 	if len(r.FormValue("mood_id")) > 0 {
 		id, _ := strconv.Atoi(r.FormValue("mood_id"))
 		if id > 0 {
-			moodFilter = " and mood_id = " + r.FormValue("mood_id")
+			moodFilter = " and mood_id like '%" + r.FormValue("mood_id") + "%'"
 		}
 	}
 
-	// get latest videos
-	videos, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit 60")
+	if len(r.FormValue("liked")) != 0 {
+
+		likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		contentIDs := UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+		contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where content_id in ('" + strings.Join(contentIDs, "','") + "') and type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		videosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where content_id in ('" + strings.Join(contentIDs, "','") + "') and type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 ")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if r.FormValue("type") == "1" {
+			response["videos"] = contentType
+			response["videos_count"] = videosCount[0]["ctn"]
+			response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		} else if r.FormValue("type") == "2" {
+			response["audios"] = contentType
+			response["audios_count"] = videosCount[0]["ctn"]
+			response["no_pages_audios"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		} else {
+			response["articles"] = contentType
+			response["articles_count"] = videosCount[0]["ctn"]
+			response["no_pages_articles"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		}
+
+		response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+	} else if len(r.FormValue("type")) != 0 {
+		contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get liked content ids
+		likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		videosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if r.FormValue("type") == "1" {
+			response["videos"] = contentType
+			response["videos_count"] = videosCount[0]["ctn"]
+			response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		} else if r.FormValue("type") == "2" {
+			response["audios"] = contentType
+			response["audios_count"] = videosCount[0]["ctn"]
+			response["no_pages_audios"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		} else {
+			response["articles"] = contentType
+			response["articles_count"] = videosCount[0]["ctn"]
+			response["no_pages_articles"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		}
+
+		response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+	} else {
+		// get latest videos
+		videos, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get latest audios
+		audios, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get latest articles
+		articles, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get liked content ids
+		likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get total number of contents
+		videosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		audiosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		articlesCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		response["videos"] = videos
+		response["audios"] = audios
+		response["articles"] = articles
+		response["videos_count"] = videosCount[0]["ctn"]
+		response["audios_count"] = audiosCount[0]["ctn"]
+		response["articles_count"] = articlesCount[0]["ctn"]
+		response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		response["no_pages_audios"] = strconv.Itoa(UTIL.GetNumberOfPages(audiosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		response["no_pages_articles"] = strconv.Itoa(UTIL.GetNumberOfPages(articlesCount[0]["ctn"], CONSTANT.ContentPerPageUser))
+		response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+	}
+
+	response["media_url"] = CONFIG.MediaURL
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// get latest audios
-	audios, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit 60")
+	contentCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// get latest articles
-	articles, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit 60")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get liked content ids
-	likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	response["videos"] = videos
-	response["audios"] = audios
-	response["articles"] = articles
-	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+	response["contents_name"] = contentType
+	response["contents_count"] = contentCount[0]["ctn"]
+	response["no_pages_contents"] = strconv.Itoa(UTIL.GetNumberOfPages(contentCount[0]["ctn"], CONSTANT.ContentPerPageUser))
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -204,4 +330,40 @@ func ContentLikeDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func IncreaseContentViewCount(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	content, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where content_id = '" + r.FormValue("content_id") + "'")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(content) == 0 {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	view, _ := strconv.Atoi(content[0]["views"])
+
+	view = view + 1
+
+	viewsInString := strconv.Itoa(view)
+
+	DB.UpdateSQL(CONSTANT.ContentsTable,
+		map[string]string{
+			"content_id": content[0]["content_id"],
+		},
+		map[string]string{
+			"views": viewsInString,
+		},
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

@@ -56,20 +56,20 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["start_by"]) > 0 {
 		startBy, _ := time.Parse("2006-01-02", body["start_by"])
-		wheres = append(wheres, "created_at > ?")
-		queryArgs = append(queryArgs, startBy.UTC().String())
+		wheres = append(wheres, "`date` >= ?")
+		queryArgs = append(queryArgs, startBy.String())
 	}
 
 	if len(body["end_by"]) > 0 {
 		endBy, _ := time.Parse("2006-01-02", body["end_by"])
-		wheres = append(wheres, "created_at < ?")
-		queryArgs = append(queryArgs, endBy.UTC().String())
+		wheres = append(wheres, "`date` <= ?")
+		queryArgs = append(queryArgs, endBy.String())
 
 	}
 
 	where := ""
 	if len(wheres) > 0 {
-		where = " where " + strings.Join(wheres, " and ")
+		where = " where status in ('1','2') and " + strings.Join(wheres, " and ")
 	}
 
 	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.QualityCheckDetailsTable+where+" order by created_at desc ", queryArgs...)
@@ -126,14 +126,14 @@ func GetCounsellorRecord(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["start_by"]) > 0 {
 		startBy, _ := time.Parse("2006-01-02", body["start_by"])
-		wheres = append(wheres, "created_at > ?")
-		queryArgs = append(queryArgs, startBy.UTC().String())
+		wheres = append(wheres, "`session_date` >= ?")
+		queryArgs = append(queryArgs, startBy.String())
 	}
 
 	if len(body["end_by"]) > 0 {
 		endBy, _ := time.Parse("2006-01-02", body["end_by"])
-		wheres = append(wheres, "created_at < ?")
-		queryArgs = append(queryArgs, endBy.UTC().String())
+		wheres = append(wheres, "`session_date` <= ?")
+		queryArgs = append(queryArgs, endBy.String())
 
 	}
 
@@ -197,14 +197,14 @@ func GetCounsellorTimeSheet(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["start_by"]) > 0 {
 		startBy, _ := time.Parse("2006-01-02", body["start_by"])
-		wheres = append(wheres, "created_at > ?")
-		queryArgs = append(queryArgs, startBy.UTC().String())
+		wheres = append(wheres, "`created_at` >= ?")
+		queryArgs = append(queryArgs, startBy.String())
 	}
 
 	if len(body["end_by"]) > 0 {
 		endBy, _ := time.Parse("2006-01-02", body["end_by"])
-		wheres = append(wheres, "created_at < ?")
-		queryArgs = append(queryArgs, endBy.UTC().String())
+		wheres = append(wheres, "`created_at` <= ?")
+		queryArgs = append(queryArgs, endBy.String())
 
 	}
 

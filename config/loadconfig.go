@@ -41,4 +41,8 @@ func LoadConfig() {
 	AGORA_Customer_Key = os.Getenv("AGORA_CUSTOMER_KEY")
 	AGORA_Customer_Secret = os.Getenv("AGORA_CUSTOMER_SECRET")
 	FromEmailID = os.Getenv("FROM_EMAIL_ID")
+	QCEmailID1 = os.Getenv("QC_EMAIL_ID_1")
+	QCEmailID2 = os.Getenv("QC_EMAIL_ID_2")
+	OnboardingEmailID = os.Getenv("ONBOARDING_EMAIL_ID")
+	EventEmailID = os.Getenv("EVENT_EMAIL_ID")
 }

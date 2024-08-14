@@ -72,7 +72,6 @@ func CheckIfAppointmentSlotAvailable(counsellorID, date, time string) bool {
 	return len(data) > 0
 }
 
-
 // CheckIfAppointmentSlotAvailable - for both counsellor and listener, check if the specfied slot is available - date (2021-01-12), time (0-47 slots in IST)
 func CheckIfAppointmentzInPersonSlotAvailable(counsellorID, date, time string) bool {
 	data, _, _ := DB.SelectSQL(CONSTANT.InPersonSLotsTable, []string{"1"}, map[string]string{"counsellor_id": counsellorID, "date": date, time: CONSTANT.SlotAvailable}) // if the date time data is 1 in database
@@ -120,6 +119,42 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 		if len(filteredSlot) > 0 { // atleast 1 slot is available
 			//filteredSlot["date"] = slot["date"]
 			filteredSlot["date"] = slot["date"]
+			filteredSlots = append(filteredSlots, filteredSlot)
+		}
+	}
+
+	return filteredSlots
+}
+
+// FilterAvailableSlots - show only available slots and dates
+func FilterAvailableForInPersonSlots(slots []map[string]string) []map[string]string {
+	// remove dates with no availability
+	filteredSlots := []map[string]string{}
+	for _, slot := range slots {
+		filteredSlot := map[string]string{}
+		startSlot := 0
+		if strings.EqualFold(GetCurrentTime().Format("2006-01-02"), slot["date"]) {
+			// use from next hour and multiply by 2 to get 30 min slots
+			startSlot = (GetCurrentTime().Add(330 * time.Minute).Hour()) * 2 // use next slot for removing expired time for today
+
+			if (GetCurrentTime().Add(330 * time.Minute).Minute()) >= 30 {
+				startSlot = startSlot + 1
+			}
+		}
+
+		for i := startSlot; i < 48; i++ { // 48 - 30 min slots
+			// show only times with availability
+			if strings.EqualFold(slot[strconv.Itoa(i)], "1") {
+				filteredSlot[strconv.Itoa(i)] = "1"
+			}
+		}
+
+		if len(filteredSlot) > 0 { // atleast 1 slot is available
+			//filteredSlot["date"] = slot["date"]
+			filteredSlot["date"] = slot["date"]
+			filteredSlot["company_name"] = slot["company_name"]
+			filteredSlot["company_location"] = slot["company_location"]
+			filteredSlot["counsellor_id"] = slot["counsellor_id"]
 			filteredSlots = append(filteredSlots, filteredSlot)
 		}
 	}

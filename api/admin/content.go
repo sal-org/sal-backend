@@ -111,6 +111,39 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var counsellor []map[string]string
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	counsellorPhoto := ""
+
+	if len(counsellor) != 0 {
+		counsellorPhoto = counsellor[0]["photo"]
+	}
+
 	// add content
 	content := map[string]string{}
 	content["counsellor_id"] = body["counsellor_id"]
@@ -126,6 +159,7 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 	content["training"] = body["training"]
 	content["mood_id"] = body["mood_id"]
 	content["duration"] = body["duration"]
+	content["counsellor_photo"] = counsellorPhoto
 	content["status"] = CONSTANT.ContentActive
 	content["created_by"] = body["created_by"]
 	content["created_at"] = UTIL.GetCurrentTime().String()
@@ -135,53 +169,28 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body["counsellor_id"]) != 0 {
-		// get client details
-		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email"}, map[string]string{"counsellor_id": body["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
+	if len(counsellor) != 0 {
+
+		filepath_text := "htmlfile/emailmessagebody.html"
+		// send email for therapist
+		emaildata := Model.EmailBodyMessageModel{
+			Name: counsellor[0]["first_name"],
+			Message: UTIL.ReplaceNotificationContentInString(
+				CONSTANT.CounsellorApprovedContentBody,
+				map[string]string{
+					"###content_name###": body["title"],
+				},
+			),
 		}
 
-		if len(counsellor) == 0 {
-			counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email"}, map[string]string{"listener_id": body["counsellor_id"]})
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
-		}
-
-		if len(counsellor) == 0 {
-			counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email"}, map[string]string{"therapist_id": body["counsellor_id"]})
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
-		}
-
-		if len(counsellor) != 0 {
-
-			filepath_text := "htmlfile/emailmessagebody.html"
-			// send email for therapist
-			emaildata := Model.EmailBodyMessageModel{
-				Name: counsellor[0]["first_name"],
-				Message: UTIL.ReplaceNotificationContentInString(
-					CONSTANT.CounsellorApprovedContentBody,
-					map[string]string{
-						"###content_name###": body["title"],
-					},
-				),
-			}
-
-			emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-			// email for therapist
-			UTIL.SendEmail(
-				CONSTANT.CounsellorApprovedContentTitle,
-				emailBody,
-				counsellor[0]["email"],
-				CONSTANT.InstantSendEmailMessage,
-			)
-		}
+		emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+		// email for therapist
+		UTIL.SendEmail(
+			CONSTANT.CounsellorApprovedContentTitle,
+			emailBody,
+			counsellor[0]["email"],
+			CONSTANT.InstantSendEmailMessage,
+		)
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -199,6 +208,39 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var counsellor []map[string]string
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	counsellorPhoto := ""
+
+	if len(counsellor) != 0 {
+		counsellorPhoto = counsellor[0]["photo"]
+	}
+
 	// add content
 	content := map[string]string{}
 	content["counsellor_id"] = body["counsellor_id"]
@@ -212,6 +254,7 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 	content["redirection"] = body["redirection"]
 	content["category_id"] = body["category_id"]
 	content["training"] = body["training"]
+	content["counsellor_photo"] = counsellorPhoto
 	content["mood_id"] = body["mood_id"]
 	content["created_by"] = body["created_by"]
 	content["duration"] = body["duration"]

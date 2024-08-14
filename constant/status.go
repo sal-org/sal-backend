@@ -121,6 +121,7 @@ const (
 	OrderWaiting    = "0"
 	OrderInProgress = "1"
 	OrderCompleted  = "2"
+	OrderCancel     = "4"
 )
 
 // appointment status
@@ -146,6 +147,11 @@ const (
 // appointment slots status
 const (
 	AppointmentSlotsActive = "1"
+)
+
+// in person slots status
+const (
+	InPersonSlotsInProgress = "1"
 )
 
 // invoice status

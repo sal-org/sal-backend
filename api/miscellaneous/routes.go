@@ -7,6 +7,7 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 
 	// content
 	router.HandleFunc("/content", Content).Methods("GET")
+	router.HandleFunc("/content/name", GetContentUsedTitle).Methods("GET")
 	router.HandleFunc("/content/like", ContentLikeGet).Queries(
 		"user_id", "{user_id}",
 	).Methods("GET")
@@ -21,6 +22,10 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"user_id", "{user_id}",
 		"content_id", "{content_id}",
 	).Methods("DELETE")
+
+	router.HandleFunc("/content/count", IncreaseContentViewCount).Queries(
+		"content_id", "{content_id}",
+	).Methods("PUT")
 
 	// categories of content
 	router.HandleFunc("/content-category", ListContentCategory).Methods("GET")
@@ -55,7 +60,6 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 
 	// counsellor record
 	router.HandleFunc("/counsellor-record", GetCounsellorClientRecord).Queries(
-		"counsellor_id", "{counsellor_id}",
 		"client_id", "{client_id}",
 	).Methods("GET")
 
@@ -76,6 +80,8 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"phone", "{phone}",
 		"otp", "{otp}",
 	).Methods("GET")
+
+	router.HandleFunc("/app_info", AppInfo).Methods("GET")
 
 	// mood
 	router.HandleFunc("/mood", ListMood).Methods("GET")

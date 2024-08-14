@@ -360,3 +360,21 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
+
+
+func AppInfo(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	appInfo, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppInfoTable+" where status = 1 ")
+	if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+	}
+
+	response["app_info"] = appInfo[0]
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}

@@ -23,6 +23,10 @@ func LoadTherapistRoutes(router *mux.Router) {
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
+	therapistRoutes.HandleFunc("/appointment/past", AppointmentsPast).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
 	therapistRoutes.HandleFunc("/inperson_appointment/past", InPersonAppointmentsPast).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")

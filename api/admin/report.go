@@ -27,7 +27,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		heading = []string{"Client Name", "Gender", "Age", "Company Name", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date & Time", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
+		heading = []string{"Client Name", "Gender", "Age", "Company Name", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date & Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Client Start", "Client End", "Mod. At", "Status"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -143,6 +143,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
 				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
+				appointment["times_rescheduled"],
 				startTime,
 				endTime,
 				clientStartTime,
@@ -711,6 +712,89 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				timeSheet["outTime"],
 			})
 		}
+	case "18":
+		heading = []string{"Client Name", "Total Number Of Session"}
+
+		appointments, status, ok := DB.SelectProcess("select client_id, count(client_id) as total from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' and type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null) group by client_id ")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
+
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+
+		for _, appointment := range appointments {
+
+			data = append(data, []string{
+				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
+				appointment["total"],
+			})
+		}
+
+	case "19":
+		heading = []string{"Counsellor Name", "Total Number Of Session"}
+
+		appointments, status, ok := DB.SelectProcess("select counsellor_id, count(counsellor_id) as total from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' and type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null) group by counsellor_id ")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, appointment := range appointments {
+
+			data = append(data, []string{
+				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
+				appointment["total"],
+			})
+		}
+
+	case "20":
+		heading = []string{"Client Name", "Total Number Of Session", "Month", "Year"}
+
+		appointments, status, ok := DB.SelectProcess("select client_id, count(client_id) as total, monthname(date) as month, year(date) as year from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' and type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null) group by client_id having count(client_id) = 1")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
+
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+
+		for _, appointment := range appointments {
+
+			data = append(data, []string{
+				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
+				appointment["total"],
+				appointment["month"],
+				appointment["year"],
+			})
+		}
 
 	}
 
@@ -769,4 +853,487 @@ func getAppointmentStatusInText(status string) string {
 func getInt(input string) float64 {
 	out, _ := strconv.ParseFloat(input, 64)
 	return out
+}
+
+func GetAppReport(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get contents
+	wheresAppointment := []string{}
+	wheresClient := []string{}
+	wheresSession := []string{}
+
+	appointmentTotal, clientTotal, appointmentsInPersonTotal, emeCaseVirtualTotal, emeCaseInPersonTotal, contentsTotal, moodsTotal, assessmentsTotal, totalRatingTotal, avgRatingTotal, appointmentsCancellationTotal, appointmentsNoShowTotal, companyName := "", "", "", "", "", "", "", "", "", "", "", "", ""
+
+	queryArgs := []interface{}{}
+	for key, val := range r.URL.Query() {
+		switch key {
+		case "start_by":
+			if len(val[0]) > 0 {
+				wheresAppointment = append(wheresAppointment, " `date` >= ? ")
+				wheresClient = append(wheresClient, " `created_at` >= ? ")
+				wheresSession = append(wheresSession, " `session_date` >= ? ")
+				startBy, _ := time.Parse("2006-01-02", val[0])
+				queryArgs = append(queryArgs, startBy)
+			}
+		case "end_by":
+			if len(val[0]) > 0 {
+				wheresAppointment = append(wheresAppointment, " `date` <= ? ")
+				wheresClient = append(wheresClient, " `created_at` <= ? ")
+				wheresSession = append(wheresSession, " `session_date` <= ? ")
+				endBy, _ := time.Parse("2006-01-02", val[0])
+				queryArgs = append(queryArgs, endBy)
+			}
+		case "company":
+			if len(val[0]) > 0 {
+				companyName = val[0]
+			}
+
+		}
+	}
+
+	whereAppointment := ""
+	if len(wheresAppointment) > 0 {
+		whereAppointment = " where " + strings.Join(wheresAppointment, " and ")
+	}
+
+	whereClient := ""
+	if len(wheresAppointment) > 0 {
+		whereClient = " where " + strings.Join(wheresClient, " and ")
+	}
+
+	whereSession := ""
+	if len(wheresAppointment) > 0 {
+		whereSession = " where " + strings.Join(wheresSession, " and ")
+	}
+
+	if companyName != "" {
+
+		clientIDsWithArray, status, ok := DB.SelectProcess("select client_id from " + CONSTANT.ClientsTable + " where email like '%" + companyName + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientIDs := UTIL.ExtractValuesFromArrayMap(clientIDsWithArray, "client_id")
+
+		if whereAppointment != "" && whereClient != "" && whereSession != "" {
+
+			appointments, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and status = '3' and client_id in ('"+strings.Join(clientIDs, "','")+"') and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentTotal = appointments[0]["total"]
+
+			clients, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.ClientsTable+whereClient+" and status = 1 and email like '%"+companyName+"'", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			clientTotal = clients[0]["total"]
+
+			appointmentsInPerson, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.InPersonAppointmentsTable+whereAppointment+" and  type = '4' and status = '3' and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentsInPersonTotal = appointmentsInPerson[0]["total"]
+
+			appointmentsCancellation, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and status = '4' and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentsCancellationTotal = appointmentsCancellation[0]["total"]
+
+			appointmentsNoShow, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and client_id in ('"+strings.Join(clientIDs, "','")+"') and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) ", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentsNoShowTotal = appointmentsNoShow[0]["total"]
+
+			emeCaseVirtual, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.CounsellorRecordsTable+whereSession+" and session_mode = 'Virtual' and mental_health >= '8' and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			emeCaseVirtualTotal = emeCaseVirtual[0]["total"]
+
+			emeCaseInPerson, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.CounsellorRecordsTable+whereSession+" and session_mode = 'In Person' and mental_health >= '8' and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			emeCaseInPersonTotal = emeCaseInPerson[0]["total"]
+
+			contents, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.ContentsTable+whereClient+" and status = '1'", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			contentsTotal = contents[0]["total"]
+
+			moods, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.MoodResultsTable+whereAppointment+" and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			moodsTotal = moods[0]["total"]
+
+			assessments, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AssessmentResultsTable+whereClient+" and user_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			assessmentsTotal = assessments[0]["total"]
+
+			totalRating, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and rating is not null and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			totalRatingTotal = totalRating[0]["total"]
+
+			totalAvg, status, ok := DB.SelectProcess("select avg(rating) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and rating is not null and client_id in ('"+strings.Join(clientIDs, "','")+"')", queryArgs...)
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			avgRating, _ := strconv.ParseFloat(totalAvg[0]["total"], 64)
+
+			avgRatingTotal = strconv.FormatFloat(avgRating, 'f', 2, 64)
+
+		} else {
+
+			appointments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '3' and client_id in ('"+strings.Join(clientIDs, "','")+"') and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentTotal = appointments[0]["total"]
+
+			clients, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ClientsTable + " where status = 1 and email like '%"+companyName+"'")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			clientTotal = clients[0]["total"]
+
+			appointmentsInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.InPersonAppointmentsTable + " where  type = '4' and status = '3' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentsInPersonTotal = appointmentsInPerson[0]["total"]
+
+			appointmentsCancellation, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '4' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentsCancellationTotal = appointmentsCancellation[0]["total"]
+
+			appointmentsNoShow, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			appointmentsNoShowTotal = appointmentsNoShow[0]["total"]
+
+			emeCaseVirtual, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'Virtual' and mental_health >= '8' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			emeCaseVirtualTotal = emeCaseVirtual[0]["total"]
+
+			emeCaseInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'In Person' and mental_health >= '8' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			emeCaseInPersonTotal = emeCaseInPerson[0]["total"]
+
+			contents, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ContentsTable + " where status = '1'")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			contentsTotal = contents[0]["total"]
+
+			moods, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.MoodResultsTable+" where client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			moodsTotal = moods[0]["total"]
+
+			assessments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AssessmentResultsTable+" where user_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			assessmentsTotal = assessments[0]["total"]
+
+			totalRating, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			totalRatingTotal = totalRating[0]["total"]
+
+			totalAvg, status, ok := DB.SelectProcess("select avg(rating) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			avgRating, _ := strconv.ParseFloat(totalAvg[0]["total"], 64)
+
+			avgRatingTotal = strconv.FormatFloat(avgRating, 'f', 2, 64)
+		}
+	} else if whereAppointment != "" && whereClient != "" && whereSession != "" {
+
+		appointments, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentTotal = appointments[0]["total"]
+
+		clients, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.ClientsTable+whereClient+" and status = 1", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientTotal = clients[0]["total"]
+
+		appointmentsInPerson, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.InPersonAppointmentsTable+whereAppointment+" and  type = '4' and status = '3'", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentsInPersonTotal = appointmentsInPerson[0]["total"]
+
+		appointmentsCancellation, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and status = '4'", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentsCancellationTotal = appointmentsCancellation[0]["total"]
+
+		appointmentsNoShow, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) ", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentsNoShowTotal = appointmentsNoShow[0]["total"]
+
+		emeCaseVirtual, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.CounsellorRecordsTable+whereSession+" and session_mode = 'Virtual' and mental_health >= '8'", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		emeCaseVirtualTotal = emeCaseVirtual[0]["total"]
+
+		emeCaseInPerson, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.CounsellorRecordsTable+whereSession+" and session_mode = 'In Person' and mental_health >= '8'", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		emeCaseInPersonTotal = emeCaseInPerson[0]["total"]
+
+		contents, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.ContentsTable+whereClient+" and status = '1'", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		contentsTotal = contents[0]["total"]
+
+		moods, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.MoodResultsTable+whereAppointment, queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		moodsTotal = moods[0]["total"]
+
+		assessments, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AssessmentResultsTable+whereClient, queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		assessmentsTotal = assessments[0]["total"]
+
+		totalRating, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and rating is not null", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		totalRatingTotal = totalRating[0]["total"]
+
+		totalAvg, status, ok := DB.SelectProcess("select avg(rating) as total from "+CONSTANT.AppointmentsTable+whereAppointment+" and type = '4' and rating is not null", queryArgs...)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		avgRating, _ := strconv.ParseFloat(totalAvg[0]["total"], 64)
+
+		avgRatingTotal = strconv.FormatFloat(avgRating, 'f', 2, 64)
+
+	} else {
+
+		appointments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentTotal = appointments[0]["total"]
+
+		clients, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ClientsTable + " where status = 1")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientTotal = clients[0]["total"]
+
+		appointmentsInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.InPersonAppointmentsTable + " where  type = '4' and status = '3'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentsInPersonTotal = appointmentsInPerson[0]["total"]
+
+		appointmentsCancellation, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '4'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentsCancellationTotal = appointmentsCancellation[0]["total"]
+
+		appointmentsNoShow, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) ")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		appointmentsNoShowTotal = appointmentsNoShow[0]["total"]
+
+		emeCaseVirtual, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'Virtual' and mental_health >= '8'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		emeCaseVirtualTotal = emeCaseVirtual[0]["total"]
+
+		emeCaseInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'In Person' and mental_health >= '8'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		emeCaseInPersonTotal = emeCaseInPerson[0]["total"]
+
+		contents, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ContentsTable + " where status = '1'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		contentsTotal = contents[0]["total"]
+
+		moods, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.MoodResultsTable)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		moodsTotal = moods[0]["total"]
+
+		assessments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AssessmentResultsTable)
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		assessmentsTotal = assessments[0]["total"]
+
+		totalRating, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		totalRatingTotal = totalRating[0]["total"]
+
+		totalAvg, status, ok := DB.SelectProcess("select avg(rating) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		avgRating, _ := strconv.ParseFloat(totalAvg[0]["total"], 64)
+
+		avgRatingTotal = strconv.FormatFloat(avgRating, 'f', 2, 64)
+	}
+
+	response["total_appointment"] = appointmentTotal
+	response["total_client"] = clientTotal
+	response["total_inperson_appointment"] = appointmentsInPersonTotal
+	response["total_appointment_cancel"] = appointmentsCancellationTotal
+	response["total_appointment_noshow"] = appointmentsNoShowTotal
+	response["total_emecase_virtual"] = emeCaseVirtualTotal
+	response["total_emecase_inperson"] = emeCaseInPersonTotal
+	response["total_content"] = contentsTotal
+	response["total_mood"] = moodsTotal
+	response["total_assessment"] = assessmentsTotal
+	response["total_rating"] = totalRatingTotal
+	response["total_avg"] = avgRatingTotal
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

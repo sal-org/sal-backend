@@ -468,7 +468,7 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")}, map[string]string{"last_login_time": UTIL.GetCurrentTime().String(),"device_id": r.FormValue("device_id"),"platform":r.FormValue("platform"),"version":r.FormValue("version")})
+	status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")}, map[string]string{"last_login_time": UTIL.GetCurrentTime().String(),"device_id": r.FormValue("device_id"),"platform":r.FormValue("platform"),"version":r.FormValue("version"), "timezone":r.FormValue("timezone")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

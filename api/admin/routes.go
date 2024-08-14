@@ -26,6 +26,9 @@ func LoadAdminRoutes(router *mux.Router) {
 		"connect_id", "{connect_id}",
 	).Methods("PUT")
 
+	// get counsellor Name
+	adminRoutes.HandleFunc("/counsellor_name", GetCounsellorName).Methods("GET")
+
 	// client
 	adminRoutes.HandleFunc("/client", ClientGet).Methods("GET")
 	adminRoutes.HandleFunc("/client", ClientUpdate).Queries(
@@ -76,6 +79,17 @@ func LoadAdminRoutes(router *mux.Router) {
 	).Methods("PUT")
 	adminRoutes.HandleFunc("/event/book", EventBookGet).Methods("GET")
 
+	// inperson event
+	adminRoutes.HandleFunc("/event_inperson", EventInPersonAdd).Methods("POST")
+	adminRoutes.HandleFunc("/event_inperson", EventInPersonGet).Methods("GET")
+	adminRoutes.HandleFunc("/event_inperson", EventInPersonUpdate).Queries(
+		"order_id", "{order_id}",
+	).Methods("PUT")
+	adminRoutes.HandleFunc("/event_inperson/book", EventBookGet).Methods("GET")
+	adminRoutes.HandleFunc("/event_inperson/upload", PreSignedS3URLToUploadEvent).Queries(
+		"fileName", "{fileName}",
+	).Methods("GET")
+
 	// listener
 	adminRoutes.HandleFunc("/listener", ListenerGet).Methods("GET")
 	adminRoutes.HandleFunc("/listener", ListenerUpdate).Queries(
@@ -117,6 +131,7 @@ func LoadAdminRoutes(router *mux.Router) {
 	adminRoutes.HandleFunc("/report", ReportGet).Queries(
 		"id", "{id}",
 	).Methods("GET")
+	adminRoutes.HandleFunc("/app_report", GetAppReport).Methods("GET")
 
 	// therapist
 	adminRoutes.HandleFunc("/therapist", TherapistGet).Methods("GET")

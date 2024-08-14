@@ -610,7 +610,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
+	filepath_text := "htmlfile/appointmentConfirmation.html"
 
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: client[0]["first_name"],
@@ -1082,8 +1082,10 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update counsellor availability
 	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
 		map[string]string{
-			"counsellor_id": appointment[0]["counsellor_id"],
-			"date":          appointment[0]["date"],
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             appointment[0]["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
 		},
 		map[string]string{
 			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
@@ -1094,8 +1096,10 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update slot
 	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
 		map[string]string{
-			"counsellor_id": appointment[0]["counsellor_id"],
-			"date":          body["date"],
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             body["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
 		},
 		map[string]string{
 			body["time"]: CONSTANT.SlotBooked,
@@ -1377,6 +1381,11 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	if time.Until(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Add(-time.Minute*330)).Hours() <= 1 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancellationAllowedWithIn1Hour, CONSTANT.ShowDialog, response)
+		return
+	}
 	// // appointment can cancelled only after min reschedules
 	// reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
 	// if reschedules < CONSTANT.MaximumAppointmentReschedule {
@@ -1409,6 +1418,16 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 
 	// update appointment date and time
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentUserCancelled,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
 		map[string]string{
 			"appointment_id": r.FormValue("appointment_id"),
 		},
@@ -1583,7 +1602,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelClientBody,
 			map[string]string{
 				"###therapist_name###": counsellor[0]["first_name"],
-				"###date###":           appointment[0]["date"],
+				"###date###":           UTIL.BuildDate(appointment[0]["date"]),
 				"###time###":           UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1625,7 +1644,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date###":        appointment[0]["date"],
+				"###date###":        UTIL.BuildDate(appointment[0]["date"]),
 				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1647,7 +1666,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  counsellor[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
-				"###date###":      appointment[0]["date"],
+				"###date###":      UTIL.BuildDate(appointment[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1664,7 +1683,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
 				"###user_Name###": counsellor[0]["first_name"],
-				"###date###":      appointment[0]["date"],
+				"###date###":      UTIL.BuildDate(appointment[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1716,8 +1735,10 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// update counsellor availability
 	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
 		map[string]string{
-			"counsellor_id": appointment[0]["counsellor_id"],
-			"date":          appointment[0]["date"],
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             appointment[0]["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
 		},
 		map[string]string{
 			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
@@ -1787,7 +1808,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientInPersonAppointmentCancellationClientBody,
 			map[string]string{
 				"###therapistName###": counsellor[0]["first_name"],
-				"###date###":          appointment[0]["date"],
+				"###date###":          UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 				"###location###":      appointment[0]["counselling_room"] + ", " + appointment[0]["counselling_address"],
 			},
@@ -2188,7 +2209,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 				},
 			),
 			emailBody1,
-			CONSTANT.AnandEmailID,
+			CONFIG.OnboardingEmailID,
 			CONSTANT.InstantSendEmailMessage,
 		)
 	}
@@ -2337,7 +2358,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 				},
 			),
 			emailBody1,
-			CONSTANT.AnandEmailID,
+			CONFIG.OnboardingEmailID,
 			CONSTANT.InstantSendEmailMessage,
 		)
 	}
@@ -2948,7 +2969,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if appointment[0]["client_started_at"] == "" {
+	if len(appointment[0]["client_started_at"]) == 0 {
 		// update appointment as started
 		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
@@ -2959,6 +2980,26 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 				"client_started_at": UTIL.GetCurrentTime().String(),
 			},
 		)
+	}
+
+	if len(agora[0]["sid"]) == 0 {
+
+		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+		if err != nil {
+			fmt.Println("cloud recording not started")
+		}
+
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"agora_id": agora[0]["agora_id"],
+			},
+			map[string]string{
+				"sid":         sid,
+				"status":      CONSTANT.AgoraCallStart1,
+				"modified_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+
 	}
 
 	// if len(agora[0]["sid"]) == 0 {
@@ -3046,11 +3087,11 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
-	// if !ok {
-	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// update appointment as completed
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
@@ -3066,6 +3107,34 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	if appointment[0]["client_ended_at"] != "" {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
 		return
+	}
+
+	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
+		UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+
+		DB.UpdateSQL(CONSTANT.AgoraTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+				"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+				"status":         CONSTANT.AgoraCallStop1,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
+
+		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+				"status":         CONSTANT.QualityCheckLinkInsert,
+				"modified_at":    UTIL.GetCurrentTime().String(),
+			},
+		)
+
 	}
 
 	// type 2 is listerner
@@ -3388,7 +3457,7 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRequestRequiredFields)
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.InPersonAppointmentRequestRequiredFields)
 	if len(fieldCheck) > 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 		return
@@ -3400,7 +3469,7 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	getAppointmentRequest, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "counsellor_id": body["counsellor_id"], "status": "1"})
+	getAppointmentRequest, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "counsellor_id": body["counsellor_id"], "company_name": body["companyName"], "company_location": body["companyLocation"], "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -3438,6 +3507,8 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	appointmentRequest["counsellor_id"] = body["counsellor_id"]
 	appointmentRequest["type"] = body["type"]
 	appointmentRequest["client_id"] = body["client_id"]
+	appointmentRequest["company_name"] = body["companyName"]
+	appointmentRequest["company_location"] = body["companyLocation"]
 	appointmentRequest["status"] = CONSTANT.AppointmentRequestProgress
 	appointmentRequest["created_at"] = UTIL.GetCurrentTime().String()
 
@@ -3447,28 +3518,28 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// send to counsellor
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			// need to change
-			CONSTANT.ClientAppointmentRequestSMSToCounsellorTextMessage,
-			map[string]string{
-				"###counsellorName###": counsellor[0]["first_name"],
-				"###clientName###":     clients[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		counsellor[0]["phone"],
-		UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
-		requestID,
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// // send to counsellor
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentRequestSMSToCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###counsellorName###": counsellor[0]["first_name"],
+	// 			"###clientName###":     clients[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+	// 	requestID,
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
 
 	// send into client
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			// need to change
-			CONSTANT.ClientAppointmentRequestSMSToClientTextMessage,
+			CONSTANT.ClientInPersonRequestSMSToClientTextMessage,
 			map[string]string{
 				"###clientName###":     clients[0]["first_name"],
 				"###counsellorName###": counsellor[0]["first_name"],
@@ -3481,21 +3552,21 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendTextMessage,
 	)
 
-	// send into client with 24 hours
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			// need to change
-			CONSTANT.ClientAppointmentRequestSMSToNotAcceptedClientTextMessage,
-			map[string]string{
-				"###counsellorName###": counsellor[0]["first_name"],
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		clients[0]["phone"],
-		UTIL.GetCurrentTime().Add(1770*time.Minute).UTC().String(),
-		requestID,
-		CONSTANT.LaterSendEmailMessage,
-	)
+	// // send into client with 24 hours
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentRequestSMSToNotAcceptedClientTextMessage,
+	// 		map[string]string{
+	// 			"###counsellorName###": counsellor[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	clients[0]["phone"],
+	// 	UTIL.GetCurrentTime().Add(1770*time.Minute).UTC().String(),
+	// 	requestID,
+	// 	CONSTANT.LaterSendEmailMessage,
+	// )
 
 	// UTIL.SendMessage(
 	// 	UTIL.ReplaceNotificationContentInString(

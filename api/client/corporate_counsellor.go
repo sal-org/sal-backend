@@ -217,7 +217,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
+	filepath_text := "htmlfile/appointmentConfirmation.html"
 
 	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
 	if !ok {
@@ -274,7 +274,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###Date###": order[0]["date"],
+				"###Date###": UTIL.BuildOnlyDate(order[0]["date"]),
 				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
@@ -311,7 +311,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
 				"###user_Name###": counsellor[0]["first_name"],
-				"###date###":      order[0]["date"],
+				"###date###":      UTIL.BuildOnlyDate(order[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
@@ -367,7 +367,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###userName###":  counsellor[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
-				"###date###":      order[0]["date"],
+				"###date###":      UTIL.BuildOnlyDate(order[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
@@ -405,7 +405,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": counsellor[0]["first_name"],
-				"###date###":          order[0]["date"],
+				"###date###":          UTIL.BuildOnlyDate(order[0]["date"]),
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
@@ -429,13 +429,13 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": client[0]["first_name"],
-				"###date###":          order[0]["date"],
+				"###date###":          UTIL.BuildOnlyDate(order[0]["date"]),
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 	}
 
-	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, "htmlfile/appointmentConfirmation.html")
 	// email for client
 	UTIL.SendEmail(
 		CONSTANT.ClientAppointmentBookClientTitle,
@@ -620,6 +620,8 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 	appointment["type"] = order[0]["type"]
 	appointment["date"] = order[0]["date"]
 	appointment["time"] = order[0]["time"]
+	appointment["company_name"] = address[0]["partner_name"]
+	appointment["company_location"] = address[0]["partner_location"]
 	appointment["counselling_room"] = address[0]["counselling_room"]
 	appointment["counselling_address"] = address[0]["counselling_address"]
 	appointment["status"] = CONSTANT.AppointmentToBeStarted
@@ -661,8 +663,10 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 
 	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
 		map[string]string{
-			"counsellor_id": order[0]["counsellor_id"],
-			"date":          order[0]["date"],
+			"counsellor_id":    order[0]["counsellor_id"],
+			"date":             order[0]["date"],
+			"company_name":     address[0]["partner_name"],
+			"company_location": address[0]["partner_location"],
 		},
 		map[string]string{
 			order[0]["time"]: CONSTANT.SlotBooked,

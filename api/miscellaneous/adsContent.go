@@ -63,14 +63,13 @@ func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get last cleints
-	lastClient, status, ok := DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"session_date", "mental_health"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "client_id": r.FormValue("client_id")})
+	lastClient, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and session_for = 'Self'  order by session_date desc limit 5", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	response["last_client"] = lastClient
+	response["lastest_record"] = lastClient
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -119,7 +118,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var noshow, mentalHealth, sendStatus string
+	var noshow, mentalHealth, sendStatus, sessionFor string
 
 	if len(body["mental_health"]) > 0 {
 		mentalHealth = body["mental_health"]
@@ -134,6 +133,13 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	} else {
 		noshow = "0"
 	}
+
+	if len(body["session_for"]) > 0 {
+		sessionFor = body["session_for"]
+	} else {
+		sessionFor = ""
+	}
+
 	// add counsellorRecord details
 	counsellorRecord := map[string]string{}
 	counsellorRecord["counsellor_id"] = body["counsellor_id"]
@@ -144,9 +150,9 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	counsellorRecord["client_age"] = body["client_age"]
 	counsellorRecord["client_department"] = body["client_department"]
 	counsellorRecord["client_location"] = body["client_location"]
+	counsellorRecord["session_for"] = sessionFor
 	counsellorRecord["noshow"] = noshow
 	counsellorRecord["session_mode"] = body["session_mode"]
-	counsellorRecord["session_no"] = body["session_no"]
 	counsellorRecord["session_date"] = body["session_date"]
 	counsellorRecord["in_time"] = body["in_time"]
 	counsellorRecord["out_time"] = body["out_time"]
@@ -195,6 +201,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 	data := Model.EmailDataForCounsellorRecord{
 		TherapistName:   counsellor[0]["first_name"] + " " + counsellor[0]["last_name"],
+		SessionFor:      body["session_for"],
 		First_Name:      body["client_first_name"],
 		Last_Name:       body["client_last_name"],
 		Gender:          body["client_gender"],
@@ -203,7 +210,6 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		Location:        body["client_location"],
 		NoShow:          noshow,
 		SessionMode:     body["session_mode"],
-		SessionNo:       body["session_no"],
 		SessionDate:     body["session_date"],
 		InTime:          body["in_time"],
 		OutTime:         body["out_time"],
@@ -227,11 +233,13 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	if mentalStatus > 6 {
-		UTIL.SendEmail(
+	if mentalStatus > 7 {
+
+		UTIL.SendEmailWithCCBB(
 			CONSTANT.CounselloRecordClientEmergencyCaseTitle,
 			emailbody,
-			"shambhavi.alve@clovemind.com",
+			CONFIG.QCEmailID2,
+			CONFIG.QCEmailID1,
 			CONSTANT.InstantSendEmailMessage,
 		)
 	}

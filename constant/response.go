@@ -3,6 +3,7 @@ package constant
 // pagination constants
 const (
 	ResultsPerPageAdmin              = 10
+	ContentPerPageUser               = 65
 	CorporateNamePerPageAdmin        = 20
 	CounsellorsListPerPageClient     = 25
 	CounsellorsPaymentsPerPageClient = 10
