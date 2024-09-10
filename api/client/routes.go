@@ -146,7 +146,19 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/event_inperson/booked", EventsBookedInPerson).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
+	clientRoutes.HandleFunc("/event_inperson/past", PastEventsInPerson).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/event_inperson/request", EventsInPersonRequest).Methods("POST")
+	clientRoutes.HandleFunc("/event_inperson/request", GetEventInPersonRequest).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
 	clientRoutes.HandleFunc("/event_inperson/cancel", EventsInPersonCancel).Methods("PUT")
+	clientRoutes.HandleFunc("/event_inperson/rate", GetEventsInPersonRate).Queries(
+		"user_id", "{user_id}",
+		"order_id", "{order_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/event_inperson/rate", EventsInPersonRate).Methods("POST")
 	clientRoutes.HandleFunc("/event/order", EventOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/event_inperson/order", EventOrderInPersonCreate).Methods("POST")
 	clientRoutes.HandleFunc("/event/paymentcomplete", EventOrderPaymentComplete).Methods("POST")

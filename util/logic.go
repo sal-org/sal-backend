@@ -50,13 +50,13 @@ func GetDiscount(price, discount string) map[string]string {
 	return billing
 }
 
-func AvgRatingFromula(rating []map[string]string, totalCount string) string {
+func AvgRatingFromula(rating []map[string]string, totalCount string,paramName string) string {
 
 	totalCnt, _ := strconv.ParseFloat(totalCount, 32)
 
 	var sum float64
 	for i := 0; i < len(rating); i++ {
-		rating, _ := strconv.ParseFloat(rating[i]["rating"], 64)
+		rating, _ := strconv.ParseFloat(rating[i][paramName], 64)
 		sum = sum + rating
 	}
 

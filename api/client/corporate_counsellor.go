@@ -426,19 +426,19 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: counsellor[0]["first_name"],
 		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentBookClientEmailBody,
+			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
 			map[string]string{
-				"###therpist_name###": client[0]["first_name"],
+				"###client_name###": client[0]["first_name"],
 				"###date###":          UTIL.BuildOnlyDate(order[0]["date"]),
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 	}
 
-	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, "htmlfile/appointmentConfirmation.html")
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, "htmlfile/emailmessagebody.html")
 	// email for client
 	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentBookClientTitle,
+		CONSTANT.ClientAppointmentBookCounsellorTitle,
 		emailBody1,
 		counsellor[0]["email"],
 		CONSTANT.InstantSendEmailMessage,

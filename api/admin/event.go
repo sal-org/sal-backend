@@ -274,10 +274,14 @@ func EventInPersonAdd(w http.ResponseWriter, r *http.Request) {
 	event["counsellor_id"] = body["counsellor_id"]
 	event["title"] = body["title"]
 	event["description"] = body["description"]
+	event["total_seat"] = body["total_seat"]
+	event["remaining_seat"] = body["total_seat"]
+	event["carry_things"] = body["carry_things"]
 	event["company_name"] = body["company_name"]
 	event["company_location"] = body["company_location"]
 	event["address"] = body["address"]
 	event["photo"] = body["photo"]
+	event["background_photo"] = body["background_photo"]
 	event["date"] = body["date"]
 	event["time"] = body["time"]
 	event["type"] = type1
@@ -316,11 +320,11 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["counsellor_id"]) != 0 {
 		// get client details
-		counsellor, _, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "type"}, map[string]string{"counsellor_id": body["counsellor_id"]})
-		if !ok {
-			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
-			return
-		}
+		counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "type"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		// if !ok {
+		// 	UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
 
 		if len(counsellor) == 0 {
 			type1 = "4"
@@ -334,10 +338,12 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 	event["counsellor_id"] = body["counsellor_id"]
 	event["title"] = body["title"]
 	event["description"] = body["description"]
+	event["carry_things"] = body["carry_things"]
 	event["company_name"] = body["company_name"]
 	event["company_location"] = body["company_location"]
 	event["address"] = body["address"]
 	event["photo"] = body["photo"]
+	event["background_photo"] = body["background_photo"]
 	event["date"] = body["date"]
 	event["time"] = body["time"]
 	event["type"] = type1

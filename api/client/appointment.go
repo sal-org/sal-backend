@@ -729,10 +729,11 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check if appointment is alteast after 4 hours
-	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now().Add(330*time.Minute).UTC()).Hours() < 4 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now().Add(330*time.Minute).UTC()).Hours() < 4 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -1666,7 +1667,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  counsellor[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
-				"###date###":      UTIL.BuildDate(appointment[0]["date"]),
+				"###date###":      UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1683,7 +1684,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
 				"###user_Name###": counsellor[0]["first_name"],
-				"###date###":      UTIL.BuildDate(appointment[0]["date"]),
+				"###date###":      UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -2124,7 +2125,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 	counsellorCount, _, _ := DB.SelectProcess("select count(rating) as cnt from "+CONSTANT.AppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
 
-	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"])
+	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"],"rating")
 
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
@@ -2273,7 +2274,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 	counsellorCount, _, _ := DB.SelectProcess("select count(rating) as cnt from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
 
-	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"])
+	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"],"rating")
 
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
@@ -2958,16 +2959,16 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	if len(agora) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if len(agora) == 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	if len(appointment[0]["client_started_at"]) == 0 {
 		// update appointment as started
@@ -2982,25 +2983,25 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	if len(agora[0]["sid"]) == 0 {
+	// if len(agora[0]["sid"]) == 0 {
 
-		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
-		if err != nil {
-			fmt.Println("cloud recording not started")
-		}
+	// 	sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+	// 	if err != nil {
+	// 		fmt.Println("cloud recording not started")
+	// 	}
 
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"agora_id": agora[0]["agora_id"],
-			},
-			map[string]string{
-				"sid":         sid,
-				"status":      CONSTANT.AgoraCallStart1,
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"agora_id": agora[0]["agora_id"],
+	// 		},
+	// 		map[string]string{
+	// 			"sid":         sid,
+	// 			"status":      CONSTANT.AgoraCallStart1,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
 
-	}
+	// }
 
 	// if len(agora[0]["sid"]) == 0 {
 
@@ -3087,11 +3088,11 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// update appointment as completed
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
@@ -3104,38 +3105,38 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	if appointment[0]["client_ended_at"] != "" {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if appointment[0]["client_ended_at"] != "" {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
-		UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+	// if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
+	// 	UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
-				"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
-				"status":         CONSTANT.AgoraCallStop1,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+	// 			"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+	// 			"status":         CONSTANT.AgoraCallStop1,
+	// 			"modified_at":    UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
 
-		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
-				"status":         CONSTANT.QualityCheckLinkInsert,
-				"modified_at":    UTIL.GetCurrentTime().String(),
-			},
-		)
+	// 	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+	// 			"status":         CONSTANT.QualityCheckLinkInsert,
+	// 			"modified_at":    UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
 
-	}
+	// }
 
 	// type 2 is listerner
 	// if appointment[0]["type"] != "2" {

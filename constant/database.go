@@ -10,6 +10,7 @@ const (
 	AppointmentsTable                           = "appointments"
 	InPersonAppointmentsTable                   = "appointments_inperson"
 	AppointmentRequestTable                     = "request_appointment"
+	EventInPersonRequestTable                   = "request_inperson_cafe"
 	InPersonAppointmentRequestTable             = "request_appointment_inperson"
 	AppointmentSlotsTable                       = "appointment_slots"
 	AssessmentsTable                            = "assessments"

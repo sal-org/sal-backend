@@ -309,6 +309,13 @@ type AssessmentAddRequest struct {
 	} `json:"details"`
 }
 
+type CafeAttendedAddRequest struct {
+	OrderID   string `json:"order_id"`
+	ClientIDs []struct {
+		UserID string `json:"user_id"`
+	} `json:"clientids"`
+}
+
 // MoodAddRequest .
 type MoodAddRequest struct {
 	ClientID string `json:"client_id"`

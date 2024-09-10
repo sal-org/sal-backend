@@ -1,12 +1,15 @@
 package therapist
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
@@ -528,6 +531,342 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func EventInPersonStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"status": "1", "counsellor_id": r.FormValue("therapist_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id = ? and status = "+CONSTANT.EventToBeStarted+"", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if event is valid
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.OrderCounsellorEventInPersonTable,
+		map[string]string{
+			"order_id": event[0]["order_id"],
+		},
+		map[string]string{
+			"status":     CONSTANT.AppointmentStarted,
+			"started_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func UpcomingEventsInPerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming booked events
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where counsellor_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc, time asc", r.FormValue("therapist_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	response["upcoming_events"] = events
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonEventsPersonList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	eventsAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 1", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	eventsNotAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 0", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	userAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsAttended, "user_id")
+	userNotAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsNotAttended, "user_id")
+
+	clientsAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientsNotAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userNotAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["booked_clients_attended"] = clientsAttended
+	response["booked_clients_not_attended"] = clientsNotAttended
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.CafeAttendedAddRequest{}
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	defer r.Body.Close()
+	err = json.Unmarshal(b, &body)
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	for _, clientID := range body.ClientIDs {
+		DB.UpdateSQL(CONSTANT.OrderEventInPersonTable,
+			map[string]string{
+				"event_order_id": body.OrderID,
+				"user_id":  clientID.UserID,
+				"status" : "1",
+			},
+			map[string]string{
+				"attended": "1",
+			},
+		)
+	}
+
+	eventsAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 1", body.OrderID)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	eventsNotAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 0", body.OrderID)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	userAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsAttended, "user_id")
+	userNotAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsNotAttended, "user_id")
+
+	clientsAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientsNotAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userNotAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["booked_clients_attended"] = clientsAttended
+	response["booked_clients_not_attended"] = clientsNotAttended
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+
+func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get event details
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": r.FormValue("order_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// // get event topics
+	// topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id = ?", event[0]["topic_id"])
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// get event counsellor details
+	var counsellor []map[string]string
+	switch event[0]["type"] {
+	case CONSTANT.CounsellorType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about"}, map[string]string{"counsellor_id": event[0]["counsellor_id"]})
+
+	case CONSTANT.TherapistType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about"}, map[string]string{"therapist_id": event[0]["counsellor_id"]})
+
+	}
+	if len(counsellor) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", event[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor topics
+	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", event[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["event"] = event[0]
+	response["counsellor"] = counsellor[0]
+	response["languages"] = languages
+	response["topics"] = topics
+	response["media_url"] = CONFIG.MediaURL
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming booked events
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where counsellor_id = ? and status = 3 order by date desc, time desc", r.FormValue("therapist_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	response["past_events"] = events
+
+	// // get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))
+	// events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("client_id"))
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// response["past_events"] = events
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func EventInPersonEnd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	//check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"status": "2", "counsellor_id": r.FormValue("therapist_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id = ? and status = "+CONSTANT.EventStarted+"", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if appointment is valid
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming booked events
+	orderClientEvent, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = '1' ", event[0]["order_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.OrderCounsellorEventInPersonTable,
+		map[string]string{
+			"order_id": event[0]["order_id"],
+		},
+		map[string]string{
+			"status":   CONSTANT.AppointmentCompleted,
+			"ended_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	for _, value := range orderClientEvent {
+		UTIL.SendNotification(
+			CONSTANT.TherapistEndSessionAskRatingHeading,
+			CONSTANT.TherapistEndSessionAskRatingContent,
+			value["user_id"],
+			CONSTANT.ClientType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationSent,
+			value["order_id"],
+		)
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

@@ -26,11 +26,16 @@ const (
 	ClientAppointmentHasBeenStartedHeading                = "Your session has started!"
 	ClientAppointmentGivenFeedbackHeading                 = "Thanks for your Feedback!"
 	ClientEventPaymentSucessClientHeading                 = "Cafe booked successfully!"
+	ClientInPersonEventSucessClientHeading                = "In-Person Clove Café booked!"
+	TherapistEndSessionAskRatingHeading                   = "In-Person Clove Café Feedback"
+	ClientEventRatingHeading                              = "We appreciate your Feedback!"
+	ClientInPersonEventCancellationClientHeading          = "In-Person Clove Café Cancelled!"
 	ClientSelectSadMoodHeading                            = "Want to speak to somebody now?"
 	ClientCompletedProfileHeading                         = "Congratulations, you are registered."
 
 	// counsellor
 	ClientAppointmentReminderCounsellorHeading   = "Session about to begin"
+	ClientEventInPersonReminderClientHeading     = "In-Person Clove Café Session about to begin!"
 	CounsellorAppointmentHasBeenStartedHeading   = "Your session has started!"
 	CounsellorEventReminderCounsellorHeading     = "Event Reminder"
 	CounsellorAccountSignupCounsellorHeading     = "Registration successful"
@@ -47,6 +52,7 @@ const (
 	// client
 	ClientAppointmentHasBeenStartedContent            = "Hey ###clientname###, ###therapistname### has joined the session. Please join"
 	ClientAppointmentRemiderClientContent             = "Hi ###user_name###, your session is starting soon at ###time###. Tap here to know more."
+	ClientEventInPersonRemiderClientContent           = "Your In-Person Clove Café session on ###topic### is starting at ###time###. Tap here to know more."
 	ClientAppointmentFollowUpRemiderClientContent     = "Hi ###client_name###, your follow-up session with ###therapistname### is starting in 15 minutes. Please do find a quite place for yourself to take it."
 	ClientAppointmentFollowUpRemiderCounsellorContent = "You have a scheduled follow-up session starting in 15 minutes with ###client_name### at ###time###. Check 'My sessions' within the app for details."
 	ClientEventRemiderClientContent                   = "Event with ###counsellor_name### starts in 15 min. Please check your internet connectivity and get ready."
@@ -62,6 +68,10 @@ const (
 	ClientAppointmentFeedbackContent                  = "Your feedback is so important to us. Please rate your session with ###counsellor_name### to help us constantly improve our services"
 	ClientAppointmentFeedbackGivenContent             = "Thank you for rating our Counselling Services and helping us in making a difference! Kudos!"
 	ClientEventPaymentSucessClientContent             = "SAL Cafe ###cafe_name### has been booked successfully for Rs. ###paid_amount### on ###date### & ###time###."
+	ClientInPersonEventSucessClientContent            = "Your In-Person Clove Café session on ###topic### has been booked successfully."
+	TherapistEndSessionAskRatingContent               = "Tap here to share your feedback on the just concluded In-Person Clove Café session"
+	ClientEventRatingContent                          = "Your feedback is invaluable to help us plan future sessions."
+	ClientInPersonEventCancellationClientContent      = "Your In-Person Clove Café session on ###topic### has been cancelled successfully."
 	ClientSelectSadMoodContent                        = "We sensed you are ###mood###. Tap here to book an appointment with our compassionate therapists."
 	ClientCompletedProfileContent                     = "Thank you for creating your profile with CLOVE"
 
