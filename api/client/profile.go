@@ -24,30 +24,30 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	if len(r.FormValue("device_id")) < 0 {
-		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
-		return
-	}
+	// if len(r.FormValue("device_id")) < 0 {
+	// 	UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"phone": r.FormValue("phone")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"phone": r.FormValue("phone")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("email")}, map[string]string{"device_id": r.FormValue("device_id")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("email")}, map[string]string{"device_id": r.FormValue("device_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
-	client, status, ok = DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

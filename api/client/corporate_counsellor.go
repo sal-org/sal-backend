@@ -2,6 +2,7 @@ package client
 
 import (
 	"net/http"
+
 	// CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -56,6 +57,82 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotAllowedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// this is for limit number of session client
+	// domainName := strings.Split(client[0]["email"], "@")
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	appointmentUnLimit, status, ok := DB.SelectProcess("select * from "+CONSTANT.ClientCounsellingUnLimitTable+" where client_id = ? and status = 1 ", client[0]["client_id"])
+	// 	if !ok {
+	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+
+	// 	if len(appointmentUnLimit) == 0 {
+
+	// 		appointmentLimit, status, ok := DB.SelectProcess("select * from "+CONSTANT.ClientCounsellingLimitTable+" where client_id = ? and status = 3 order by date desc", client[0]["client_id"])
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 		if len(appointmentLimit) != 0 {
+
+	// 			limit := len(appointmentLimit)
+
+	// 			if limit%3 == 0 {
+
+	// 				lastAppointmentDate, _ := time.Parse("2006-01-02", appointmentLimit[0]["date"])
+
+	// 				startYear, startMonth, startDay := lastAppointmentDate.Date()
+	// 				endYear, endMonth, endDay := time.Now().Date()
+
+	// 				day := 0
+
+	// 				if int(endDay-startDay) < 0 {
+	// 					day = 1
+	// 				}
+
+	// 				// Calculate total months
+	// 				totalMonths := (endYear-startYear)*12 + int(endMonth-startMonth) - day
+	// 				if totalMonths <= 3 {
+	// 					UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentBookLimitOver, CONSTANT.ShowDialog, response)
+	// 					return
+	// 				}
+
+	// 			}
+	// 		}
+	// 	}
+
+	// 	// startSlot := (UTIL.GetCurrentTime().Add(330 * time.Minute).Hour()) * 2 // use next slot for removing expired time for today
+
+	// 	// if (UTIL.GetCurrentTime().Add(330 * time.Minute).Minute()) >= 30 {
+	// 	// 	startSlot = startSlot + 1
+	// 	// }
+
+	// 	upcomingAppointment, status, ok := DB.SelectProcess("select * from "+CONSTANT.ClientCounsellingLimitTable+" where client_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and status = 1 order by date desc", client[0]["client_id"])
+	// 	if !ok {
+	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+
+	// 	if len(upcomingAppointment) != 0 {
+	// 		timeInInt, _ := strconv.Atoi(upcomingAppointment[0]["time"])
+	// 		timeInInt = timeInInt + 2
+
+	// 		timeInString := strconv.Itoa(timeInInt)
+	// 		appointmentTime := UTIL.BuildDateTime(upcomingAppointment[0]["date"], timeInString)
+
+	// 		isUpcomingAppointment := appointmentTime.After(UTIL.GetCurrentTime().Add(330 * time.Minute))
+
+	// 		if isUpcomingAppointment {
+	// 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientUpcomingAppointmentAlreadyExits, CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+	// 	}
+
+	// }
 
 	// get counsellor details
 	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["listener_id"]})
@@ -143,6 +220,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
 	// check if order is valid
 	if len(order) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.OrderNotFoundMessage, CONSTANT.ShowDialog, response)
@@ -159,6 +237,15 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": order[0]["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	domainName := strings.Split(client[0]["email"], "@")
+
 	// create appointment between listener and client
 	appointment := map[string]string{}
 	appointment["order_id"] = body["order_id"]
@@ -174,6 +261,24 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	limitAppointment := map[string]string{}
+	// 	limitAppointment["client_id"] = order[0]["client_id"]
+	// 	limitAppointment["counsellor_id"] = order[0]["counsellor_id"]
+	// 	limitAppointment["appointment_id"] = appointmentID
+	// 	limitAppointment["date"] = order[0]["date"]
+	// 	limitAppointment["time"] = order[0]["time"]
+	// 	limitAppointment["status"] = CONSTANT.AppointmentToBeStarted
+	// 	limitAppointment["created_at"] = UTIL.GetCurrentTime().String()
+
+	// 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientCounsellingLimitTable, CONSTANT.LimitAppointmentDigits, limitAppointment, "order_id")
+	// 	if !ok {
+	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// }
 
 	var counsellor []map[string]string
 
@@ -214,7 +319,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+	// client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send email to client
 	filepath_text := "htmlfile/appointmentConfirmation.html"
@@ -398,8 +503,18 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	// Client Email
 
+	// domainName := strings.Split(client[0]["email"], "@")
+
+	accessCode := ""
+
+	if domainName[1] == "db.com" {
+		accessCode = "2332"
+	} else {
+		accessCode = "1234"
+	}
+
 	// Payment receipt
-	emaildata := Model.EmailBodyMessageModel{
+	emaildata := Model.EmailBodyWithAccessCodeMessageModel{
 		Name: client[0]["first_name"],
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentBookClientEmailBody,
@@ -409,9 +524,10 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
+		AccessCode: accessCode,
 	}
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	emailBody := UTIL.GetHTMLTemplateForClientConfirmationWithAccessCodeText(emaildata, filepath_text)
 	// email for client
 	UTIL.SendEmail(
 		CONSTANT.ClientAppointmentBookClientTitle,
@@ -429,8 +545,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date###":          UTIL.BuildOnlyDate(order[0]["date"]),
-				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":        UTIL.BuildOnlyDate(order[0]["date"]),
+				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 	}

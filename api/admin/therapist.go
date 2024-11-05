@@ -2,6 +2,7 @@ package admin
 
 import (
 	"net/http"
+	"path/filepath"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
@@ -104,6 +105,11 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 	therapist["education"] = body["education"]
 	therapist["experience"] = body["experience"]
 	therapist["about"] = body["about"]
+	therapist["start_date"] = body["start_date"]
+	therapist["gap_years"] = body["gap_years"]
+	therapist["gap_months"] = body["gap_months"]
+	therapist["location"] = body["location"]
+	therapist["video"] = body["video"]
 	therapist["payout_percentage"] = body["payout_percentage"]
 	therapist["payee_name"] = body["payee_name"]
 	therapist["bank_account_no"] = body["bank_account_no"]
@@ -122,5 +128,29 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PreSignedS3URLToUploadContent(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	s3Path := CONSTANT.MiscellaneousS3Path
+	switch r.FormValue("type") {
+	case CONSTANT.CounsellorType:
+		s3Path = CONSTANT.CounsellorS3Path
+	case CONSTANT.ListenerType:
+		s3Path = CONSTANT.ListenerS3Path
+	case CONSTANT.ClientType:
+		s3Path = CONSTANT.ClientS3Path
+	case CONSTANT.TherapistType:
+		s3Path = CONSTANT.TherapistS3Path
+	}
+
+	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
+
+	response["file_name"] = fileName
+	response["url"] = url
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

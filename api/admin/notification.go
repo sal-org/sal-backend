@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"fmt"
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -101,31 +100,41 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 		status  string
 	)
 	if strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
-		if strings.EqualFold(notification["user_type"], CONSTANT.CounsellorType) {
-			devices, status, ok = DB.SelectProcess("select counsellor_id as user_id, device_id from " + CONSTANT.CounsellorsTable)
+		if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) {
+			devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id from " + CONSTANT.ClientsTable + " where email like '%" + body["domain"] + "'")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-		} else if strings.EqualFold(notification["user_type"], CONSTANT.ListenerType) {
-			devices, status, ok = DB.SelectProcess("select listener_id as user_id, device_id from " + CONSTANT.ListenersTable)
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
-		} else if strings.EqualFold(notification["user_type"], CONSTANT.ClientType) {
-			devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id from " + CONSTANT.ClientsTable)
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
+
 		} else {
-			devices, status, ok = DB.SelectProcess("select therapist_id as user_id, device_id from " + CONSTANT.TherapistsTable)
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
+			if strings.EqualFold(notification["user_type"], CONSTANT.CounsellorType) {
+				devices, status, ok = DB.SelectProcess("select counsellor_id as user_id, device_id from " + CONSTANT.CounsellorsTable)
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+			} else if strings.EqualFold(notification["user_type"], CONSTANT.ListenerType) {
+				devices, status, ok = DB.SelectProcess("select listener_id as user_id, device_id from " + CONSTANT.ListenersTable)
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+			} else if strings.EqualFold(notification["user_type"], CONSTANT.ClientType) {
+				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id from " + CONSTANT.ClientsTable)
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+			} else {
+				devices, status, ok = DB.SelectProcess("select therapist_id as user_id, device_id from " + CONSTANT.TherapistsTable)
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
 			}
 		}
+
 	} else {
 		if strings.EqualFold(notification["user_type"], CONSTANT.CounsellorType) {
 			devices, status, ok = DB.SelectProcess("select counsellor_id as user_id, device_id from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(strings.Split(notification["user_ids"], ","), "','") + "')")
@@ -154,25 +163,26 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println(UTIL.GetCurrentTime().Local().String())
-	fmt.Println(UTIL.GetCurrentTime().String())
-	fmt.Println(devices)
-
 	if strings.EqualFold(notification["user_type"], CONSTANT.ClientType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
 		UTIL.SendBulkNotification(body["title"], body["body"])
+	} else if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
+		for _, device := range devices {
+			UTIL.SendNotification(body["title"], body["body"], device["user_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, device["user_id"])
+		}
 	} else {
 		// send all notifications
 		for _, device := range devices {
-			DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, map[string]string{
-				"user_id":             device["user_id"],
-				"onesignal_id":        device["device_id"],
-				"title":               notification["title"],
-				"body":                notification["body"],
-				"status":              CONSTANT.NotificationActive,
-				"notification_status": CONSTANT.NotificationInProgress,
-				"send_at":             UTIL.GetCurrentTime().Local().String(),
-				"created_at":          UTIL.GetCurrentTime().String(),
-			}, "notification_id")
+			UTIL.SendNotification(body["title"], body["body"], device["user_id"], notification["user_type"], UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, device["user_id"])
+			// DB.InsertWithUniqueID(CONSTANT.NotificationsTable, CONSTANT.NotificationsDigits, map[string]string{
+			// 	"user_id":             device["user_id"],
+			// 	"onesignal_id":        device["device_id"],
+			// 	"title":               notification["title"],
+			// 	"body":                notification["body"],
+			// 	"status":              CONSTANT.NotificationActive,
+			// 	"notification_status": CONSTANT.NotificationInProgress,
+			// 	"send_at":             UTIL.GetCurrentTime().Local().String(),
+			// 	"created_at":          UTIL.GetCurrentTime().String(),
+			// }, "notification_id")
 		}
 	}
 

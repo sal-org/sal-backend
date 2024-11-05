@@ -92,4 +92,12 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// upload
 	router.HandleFunc("/upload", UploadFile).Methods("POST")
 
+	// check access token
+	router.HandleFunc("/check_access_token", CheckIfAccessTokenExpired).Methods("GET")
+
+	// upload file using
+	router.HandleFunc("/pre_signed_url", PreSignedS3URLToUpload).Queries(
+		"fileName", "{fileName}",
+	).Methods("GET")
+
 }

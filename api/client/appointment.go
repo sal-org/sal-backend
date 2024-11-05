@@ -733,7 +733,16 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
 	// 	return
 	// }
-	
+
+	// // get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -787,6 +796,20 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	)
 	// update rescheduled times
 	DB.ExecuteSQL("update "+CONSTANT.AppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"date":        body["date"],
+	// 			"time":        body["time"],
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
 
 	// send notifications
 	// get counsellor name
@@ -898,10 +921,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// send appointment reschedule notification to counsellor
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRescheduleCounsellorContent,
-			map[string]string{},
-		),
+		CONSTANT.ClientAppointmentRescheduleCounsellorContent,
 		appointment[0]["counsellor_id"],
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
@@ -1387,6 +1407,16 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancellationAllowedWithIn1Hour, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// // appointment can cancelled only after min reschedules
 	// reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
 	// if reschedules < CONSTANT.MaximumAppointmentReschedule {
@@ -1437,6 +1467,19 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status":      CONSTANT.AppointmentUserCancelled,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
 
 	// refund amount
 	// check if appointment is alteast after 4 hours
@@ -1603,7 +1646,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelClientBody,
 			map[string]string{
 				"###therapist_name###": counsellor[0]["first_name"],
-				"###date###":           UTIL.BuildDate(appointment[0]["date"]),
+				"###date###":           UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":           UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1645,7 +1688,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date###":        UTIL.BuildDate(appointment[0]["date"]),
+				"###date###":        UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -2125,7 +2168,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 	counsellorCount, _, _ := DB.SelectProcess("select count(rating) as cnt from "+CONSTANT.AppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
 
-	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"],"rating")
+	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"], "rating")
 
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
@@ -2274,7 +2317,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 	counsellorCount, _, _ := DB.SelectProcess("select count(rating) as cnt from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
 
-	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"],"rating")
+	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"], "rating")
 
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
@@ -2959,6 +3002,15 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
 	// if !ok {
 	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -2982,6 +3034,18 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 			},
 		)
 	}
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status": CONSTANT.AppointmentStarted,
+	// 		},
+	// 	)
+	// }
 
 	// if len(agora[0]["sid"]) == 0 {
 
@@ -3088,6 +3152,15 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
 	// if !ok {
 	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -3104,6 +3177,18 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			"client_ended_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status": CONSTANT.AppointmentCompleted,
+	// 		},
+	// 	)
+	// }
 
 	// if appointment[0]["client_ended_at"] != "" {
 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)

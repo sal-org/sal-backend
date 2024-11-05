@@ -50,7 +50,7 @@ func GetDiscount(price, discount string) map[string]string {
 	return billing
 }
 
-func AvgRatingFromula(rating []map[string]string, totalCount string,paramName string) string {
+func AvgRatingFromula(rating []map[string]string, totalCount string, paramName string) string {
 
 	totalCnt, _ := strconv.ParseFloat(totalCount, 32)
 
@@ -170,4 +170,43 @@ func CheckIfScheduleAvailable(schedules []map[string]string, time string) string
 		}
 	}
 	return CONSTANT.SlotUnavailable
+}
+
+func CalculateExperience(startDate,nowDate, gapYears, gapMonth string) string {
+	layout := "2006-01-02"
+     
+	start, _ := time.Parse(layout, startDate)
+	
+	end, _ := time.Parse(layout,  nowDate)
+	
+
+	gapyears,_ := strconv.Atoi(gapYears)
+	gapmonths,_ := strconv.Atoi(gapMonth)
+
+	years := end.Year() - start.Year()
+	years = years - gapyears
+	months := int(end.Month()) - int(start.Month())
+	months = months - gapmonths
+	days := end.Day() - start.Day()
+
+	if days < 0 {
+		months--
+		days += 30 // Approximation, adjust as needed
+	}
+	if months < 0 {
+		years--
+		months += 12
+	}
+	
+	exprience := ""
+	
+	if months >= 6 {
+	    exprience = strconv.Itoa(years) + ".5"
+	} else {
+	    exprience = strconv.Itoa(years)
+	}
+	
+	
+	return exprience;
+
 }

@@ -106,7 +106,7 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 		ClientRequest: Model.ClientRequestForStartCall{
 			Token: token,
 			RecordingConfig: Model.RecordingConfigModel{
-				MaxIdleTime:     660,
+				MaxIdleTime:     100,
 				StreamTypes:     2,
 				ChannelType:     0,
 				VideoStreamType: 0,

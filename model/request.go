@@ -343,24 +343,42 @@ type EmailDataForEvent struct {
 }
 
 type EmailDataForCounsellorProfile struct {
-	Media_URL           string
-	First_Name          string
-	Last_Name           string
-	Pronoun             string
-	Gender              string
-	Type                string
-	Phone               string
-	Email               string
-	Photo               string
-	Education           string
-	Experience          string
-	TherapeuticApproach string
-	About               string
-	Resume              string
-	Certificate         string
-	Aadhar              string
-	Linkedin            string
-	Status              string
+	Media_URL            string
+	First_Name           string
+	Last_Name            string
+	Pronoun              string
+	Gender               string
+	Location             string
+	Type                 string
+	Phone                string
+	Email                string
+	Photo                string
+	Education            string
+	CounsellingStartDate string
+	CounsellingGap       string
+	Experience           string
+	TherapeuticApproach  string
+	About                string
+	Resume               string
+	Certificate          string
+	Aadhar               string
+	Linkedin             string
+	Status               string
+}
+
+type AppSummaryReport struct {
+	AppointmentTotal              string `json:"appointment_total"`
+	ClientTotal                   string `json:"client_total"`
+	AppointmentsInPersonTotal     string `json:"appointments_inperson_total"`
+	EmeCaseVirtualTotal           string `json:"emecase_virtual_total"`
+	EmeCaseInPersonTotal          string `json:"emecase_inperson_total"`
+	ContentsTotal                 string `json:"contents_total"`
+	MoodsTotal                    string `json:"moods_total"`
+	AssessmentsTotal              string `json:"assessments_total"`
+	TotalRatingTotal              string `json:"total_rating_total"`
+	AvgRatingTotal                string `json:"avgrating_total"`
+	AppointmentsCancellationTotal string `json:"appointments_cancellation_total"`
+	AppointmentsNoShowTotal       string `json:"appointments_noshow_total"`
 }
 
 type EmailDataForCounsellorRecord struct {
@@ -761,6 +779,12 @@ type IncludeAliase struct {
 type EmailBodyMessageModel struct {
 	Name    string
 	Message string
+}
+
+type EmailBodyWithAccessCodeMessageModel struct {
+	Name       string
+	Message    string
+	AccessCode string
 }
 
 type EmailBodyMessageModelWithDocu struct {

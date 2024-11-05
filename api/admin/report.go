@@ -2,9 +2,12 @@ package admin
 
 import (
 	"encoding/csv"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strconv"
 	"strings"
 	"time"
@@ -573,7 +576,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			} else {
 				noShow = "Yes"
 			}
-			data = append(data, []string{ counsellorRecord["session_for"],counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["mental_health"], counsellorRecord["therapeutic_goal"], counsellorRecord["therapeutic_plan"]})
+			data = append(data, []string{counsellorRecord["session_for"], counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["mental_health"], counsellorRecord["therapeutic_goal"], counsellorRecord["therapy_plan"]})
 		}
 
 	case "15": // client rating
@@ -1022,7 +1025,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 
-			appointments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '3' and client_id in ('"+strings.Join(clientIDs, "','")+"') and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
+			appointments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '3' and client_id in ('" + strings.Join(clientIDs, "','") + "') and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1030,7 +1033,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			appointmentTotal = appointments[0]["total"]
 
-			clients, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ClientsTable + " where status = 1 and email like '%"+companyName+"'")
+			clients, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ClientsTable + " where status = 1 and email like '%" + companyName + "'")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1038,7 +1041,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			clientTotal = clients[0]["total"]
 
-			appointmentsInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.InPersonAppointmentsTable + " where  type = '4' and status = '3' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			appointmentsInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.InPersonAppointmentsTable + " where  type = '4' and status = '3' and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1046,7 +1049,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			appointmentsInPersonTotal = appointmentsInPerson[0]["total"]
 
-			appointmentsCancellation, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '4' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			appointmentsCancellation, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '4' and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1054,7 +1057,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			appointmentsCancellationTotal = appointmentsCancellation[0]["total"]
 
-			appointmentsNoShow, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			appointmentsNoShow, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1062,7 +1065,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			appointmentsNoShowTotal = appointmentsNoShow[0]["total"]
 
-			emeCaseVirtual, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'Virtual' and mental_health >= '8' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			emeCaseVirtual, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'Virtual' and mental_health >= '8' and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1070,7 +1073,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			emeCaseVirtualTotal = emeCaseVirtual[0]["total"]
 
-			emeCaseInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'In Person' and mental_health >= '8' and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			emeCaseInPerson, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'In Person' and mental_health >= '8' and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1086,7 +1089,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			contentsTotal = contents[0]["total"]
 
-			moods, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.MoodResultsTable+" where client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			moods, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.MoodResultsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1094,7 +1097,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			moodsTotal = moods[0]["total"]
 
-			assessments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AssessmentResultsTable+" where user_id in ('"+strings.Join(clientIDs, "','")+"')")
+			assessments, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AssessmentResultsTable + " where user_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1102,7 +1105,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			assessmentsTotal = assessments[0]["total"]
 
-			totalRating, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			totalRating, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1110,7 +1113,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			totalRatingTotal = totalRating[0]["total"]
 
-			totalAvg, status, ok := DB.SelectProcess("select avg(rating) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null and client_id in ('"+strings.Join(clientIDs, "','")+"')")
+			totalAvg, status, ok := DB.SelectProcess("select avg(rating) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null and client_id in ('" + strings.Join(clientIDs, "','") + "')")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -1336,4 +1339,92 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 
+}
+
+func GetAppSummaryReport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+		return
+	}
+
+	for {
+
+		appointmentTotal, clientTotal, appointmentsInPersonTotal, emeCaseVirtualTotal, emeCaseInPersonTotal, contentsTotal, moodsTotal, assessmentsTotal, totalRatingTotal, avgRatingTotal, appointmentsCancellationTotal, appointmentsNoShowTotal := "", "", "", "", "", "", "", "", "", "", "", ""
+
+		appointments, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
+
+		appointmentTotal = appointments[0]["total"]
+
+		clients, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.ClientsTable + " where status = 1")
+
+		clientTotal = clients[0]["total"]
+
+		appointmentsInPerson, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.InPersonAppointmentsTable + " where  type = '4' and status = '3'")
+
+		appointmentsInPersonTotal = appointmentsInPerson[0]["total"]
+
+		appointmentsCancellation, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and status = '4'")
+
+		appointmentsCancellationTotal = appointmentsCancellation[0]["total"]
+
+		appointmentsNoShow, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and (status = '1' or status = '3')  and (client_started_at is null and client_ended_at is null) ")
+
+		appointmentsNoShowTotal = appointmentsNoShow[0]["total"]
+
+		emeCaseVirtual, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'Virtual' and mental_health >= '8'")
+
+		emeCaseVirtualTotal = emeCaseVirtual[0]["total"]
+
+		emeCaseInPerson, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.CounsellorRecordsTable + " where session_mode = 'In Person' and mental_health >= '8'")
+
+		emeCaseInPersonTotal = emeCaseInPerson[0]["total"]
+
+		contents, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.ContentsTable + " where status = '1'")
+
+		contentsTotal = contents[0]["total"]
+
+		moods, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.MoodResultsTable)
+
+		moodsTotal = moods[0]["total"]
+
+		assessments, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.AssessmentResultsTable)
+
+		assessmentsTotal = assessments[0]["total"]
+
+		totalRating, _, _ := DB.SelectProcess("select count(*) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null")
+
+		totalRatingTotal = totalRating[0]["total"]
+
+		totalAvg, _, _ := DB.SelectProcess("select avg(rating) as total from " + CONSTANT.AppointmentsTable + " where type = '4' and rating is not null")
+
+		avgRating, _ := strconv.ParseFloat(totalAvg[0]["total"], 64)
+
+		avgRatingTotal = strconv.FormatFloat(avgRating, 'f', 2, 64)
+
+		event := Model.AppSummaryReport{
+			AppointmentTotal:              appointmentTotal,
+			ClientTotal:                   clientTotal,
+			AppointmentsInPersonTotal:     appointmentsInPersonTotal,
+			EmeCaseVirtualTotal:           emeCaseVirtualTotal,
+			EmeCaseInPersonTotal:          emeCaseInPersonTotal,
+			ContentsTotal:                 contentsTotal,
+			MoodsTotal:                    moodsTotal,
+			AssessmentsTotal:              assessmentsTotal,
+			TotalRatingTotal:              totalRatingTotal,
+			AvgRatingTotal:                avgRatingTotal,
+			AppointmentsCancellationTotal: appointmentsCancellationTotal,
+			AppointmentsNoShowTotal:       appointmentsNoShowTotal,
+		}
+		data, _ := json.Marshal(event)
+		fmt.Println(event)
+		fmt.Fprintf(w, "data: %s\n\n", data)
+		flusher.Flush()
+		time.Sleep(2 * time.Second)
+	}
 }

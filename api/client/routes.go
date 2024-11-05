@@ -181,6 +181,11 @@ func LoadClientRoutes(router *mux.Router) {
 		"access_code", "{access_code}",
 	).Methods("GET")
 
+	// get address
+	clientRoutes.HandleFunc("/get_address", GetAddressForCorporateClient).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
 	// check access token
 	clientRoutes.HandleFunc("/check_access_token", CheckIfAccessTokenExpired).Methods("GET")
 
@@ -189,6 +194,18 @@ func LoadClientRoutes(router *mux.Router) {
 
 	clientRoutes.HandleFunc("/coremail/verifyotp", VerifyOTPWithCorporateEmail).Queries(
 		"cor_email", "{cor_email}",
+		"otp", "{otp}",
+		"device_id", "{device_id}",
+	).Methods("GET")
+
+	// depandent client send otp
+	clientRoutes.HandleFunc("/depandent_client/sendotp", GetDenpendantClientOTP).Queries(
+		"phone", "{phone}",
+	).Methods("GET")
+
+
+	clientRoutes.HandleFunc("/depandent_client/verifyotp", VerifyOTPWithDependantClientEmail).Queries(
+		"phone", "{phone}",
 		"otp", "{otp}",
 		"device_id", "{device_id}",
 	).Methods("GET")
@@ -234,13 +251,16 @@ func LoadClientRoutes(router *mux.Router) {
 	// profile
 	clientRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",
-		"device_id", "{device_id}",
 	).Methods("GET")
 	clientRoutes.HandleFunc("", ProfileAdd).Methods("POST")
 	clientRoutes.HandleFunc("/corporate", ProfileAddForCor).Methods("POST")
 	clientRoutes.HandleFunc("", ProfileUpdate).Queries(
 		"client_id", "{client_id}",
 	).Methods("PUT")
+	clientRoutes.HandleFunc("/corporate_get_relation", RelativeProfileAdd).Methods("POST")
+	clientRoutes.HandleFunc("/corporate_get_relation", GetRelativeProfile).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
 
 	// search
 	clientRoutes.HandleFunc("/search", ListSearch).Methods("GET")

@@ -132,9 +132,14 @@ func LoadAdminRoutes(router *mux.Router) {
 		"id", "{id}",
 	).Methods("GET")
 	adminRoutes.HandleFunc("/app_report", GetAppReport).Methods("GET")
+	adminRoutes.HandleFunc("/app_report_deshborad", GetAppSummaryReport)
 
 	// therapist
 	adminRoutes.HandleFunc("/therapist", TherapistGet).Methods("GET")
+	adminRoutes.HandleFunc("/therapist/upload", PreSignedS3URLToUploadContent).Queries(
+		"fileName", "{fileName}",
+		"type","{type}",
+	).Methods("GET")
 	adminRoutes.HandleFunc("/therapist", TherapistUpdate).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("PUT")

@@ -7,6 +7,7 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	"strings"
+	"time"
 
 	UTIL "salbackend/util"
 )
@@ -145,12 +146,25 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		typeOfService = "1"
 	}
 
+	joinDate := body["start_date"]
+
+	currentTime := time.Now()
+
+	nowDate := currentTime.Format("2006-01-02")
+
+	gapYears := body["gap_years"]
+
+	gapMonths := body["gap_months"]
+
+	experience := UTIL.CalculateExperience(joinDate, nowDate, gapYears, gapMonths)
+
 	// add therapist details
 	therapist := map[string]string{}
 	therapist["first_name"] = body["first_name"]
 	therapist["last_name"] = body["last_name"]
 	therapist["pronoun"] = body["pronoun"]
 	therapist["gender"] = body["gender"]
+	therapist["location"] = body["location"]
 	therapist["phone"] = body["phone"]
 	therapist["photo"] = body["photo"]
 	therapist["email"] = body["email"]
@@ -159,7 +173,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["price_3"] = body["price_3"]
 	therapist["price_5"] = body["price_5"]
 	therapist["education"] = body["education"]
-	therapist["experience"] = body["experience"]
+	therapist["experience"] = experience
+	therapist["start_date"] = joinDate
+	therapist["gap_years"] = gapYears
+	therapist["gap_months"] = gapMonths
 	therapist["therapeutic_approach"] = body["therapeutic_approach"]
 	therapist["about"] = body["about"]
 	therapist["timezone"] = body["timezone"]
@@ -258,24 +275,27 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:           CONFIG.MediaURL,
-		First_Name:          therapist_details[0]["first_name"],
-		Last_Name:           therapist_details[0]["last_name"],
-		Pronoun:             therapist_details[0]["pronoun"],
-		Gender:              therapist_details[0]["gender"],
-		Type:                "Therapist",
-		Phone:               therapist_details[0]["phone"],
-		Photo:               therapist_details[0]["photo"],
-		Email:               therapist_details[0]["email"],
-		Education:           therapist_details[0]["education"],
-		Experience:          therapist_details[0]["experience"],
-		TherapeuticApproach: therapist_details[0]["therapeutic_approach"],
-		About:               therapist_details[0]["about"],
-		Resume:              therapist_details[0]["resume"],
-		Certificate:         therapist_details[0]["certificate"],
-		Aadhar:              therapist_details[0]["aadhar"],
-		Linkedin:            therapist_details[0]["linkedin"],
-		Status:              therapist_details[0]["status"],
+		Media_URL:            CONFIG.MediaURL,
+		First_Name:           therapist_details[0]["first_name"],
+		Last_Name:            therapist_details[0]["last_name"],
+		Pronoun:              therapist_details[0]["pronoun"],
+		Gender:               therapist_details[0]["gender"],
+		Location:             therapist_details[0]["location"],
+		Type:                 "Therapist",
+		Phone:                therapist_details[0]["phone"],
+		Photo:                therapist_details[0]["photo"],
+		Email:                therapist_details[0]["email"],
+		Education:            therapist_details[0]["education"],
+		CounsellingStartDate: UTIL.BuildOnlyDate(therapist_details[0]["start_date"]),
+		CounsellingGap:       therapist_details[0]["gap_years"] + "Y" + " " + therapist_details[0]["gap_months"] + "M",
+		Experience:           therapist_details[0]["experience"],
+		TherapeuticApproach:  therapist_details[0]["therapeutic_approach"],
+		About:                therapist_details[0]["about"],
+		Resume:               therapist_details[0]["resume"],
+		Certificate:          therapist_details[0]["certificate"],
+		Aadhar:               therapist_details[0]["aadhar"],
+		Linkedin:             therapist_details[0]["linkedin"],
+		Status:               therapist_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -362,6 +382,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["gender"]) > 0 {
 		therapist["gender"] = body["gender"]
+	}
+	if len(body["location"]) > 0 {
+		therapist["location"] = body["location"]
 	}
 	if len(body["photo"]) > 0 {
 		therapist["photo"] = body["photo"]

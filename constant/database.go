@@ -8,6 +8,8 @@ const (
 	QualityCheckTable                           = "qualitycheck"
 	QualityCheckDetailsTable                    = "qualitycheck_details"
 	AppointmentsTable                           = "appointments"
+	ClientCounsellingLimitTable                 = "client_counselling_limit"
+	ClientCounsellingUnLimitTable               = "client_counselling_unlimit"
 	InPersonAppointmentsTable                   = "appointments_inperson"
 	AppointmentRequestTable                     = "request_appointment"
 	EventInPersonRequestTable                   = "request_inperson_cafe"
@@ -78,6 +80,7 @@ const RandomIDDigits = "abcdefghijklmnopqrstuvwxyz0123456789"
 const (
 	AdminDigits              = 4
 	AppointmentDigits        = 12
+	LimitAppointmentDigits   = 12
 	AppointmentRequestDigits = 17
 	AppointmentSlotDigits    = 11
 	AssessmentResultsDigits  = 16

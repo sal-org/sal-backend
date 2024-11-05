@@ -8,6 +8,7 @@ import (
 	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strings"
+	"time"
 )
 
 // ProfileGet godoc
@@ -144,6 +145,18 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		typeOfService = "1"
 	}
 
+	joinDate := body["start_date"]
+
+	currentTime := time.Now()
+
+	nowDate := currentTime.Format("2006-01-02")
+
+	gapYears := body["gap_years"]
+
+	gapMonths := body["gap_months"]
+
+	experience := UTIL.CalculateExperience(joinDate, nowDate, gapYears, gapMonths)
+
 	// add counsellor details
 	counsellor := map[string]string{}
 	counsellor["first_name"] = body["first_name"]
@@ -153,12 +166,16 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["phone"] = body["phone"]
 	counsellor["photo"] = body["photo"]
 	counsellor["email"] = body["email"]
+	counsellor["location"] = body["location"]
 	counsellor["price"] = body["price"]
 	counsellor["multiple_sessions"] = body["multiple_sessions"]
 	counsellor["price_3"] = body["price_3"]
 	counsellor["price_5"] = body["price_5"]
 	counsellor["education"] = body["education"]
-	counsellor["experience"] = body["experience"]
+	counsellor["experience"] = experience
+	counsellor["start_date"] = joinDate
+	counsellor["gap_years"] = gapYears
+	counsellor["gap_months"] = gapMonths
 	counsellor["therapeutic_approach"] = body["therapeutic_approach"]
 	counsellor["about"] = body["about"]
 	counsellor["timezone"] = body["timezone"]
@@ -233,24 +250,27 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:           CONFIG.MediaURL,
-		First_Name:          counsellor_details[0]["first_name"],
-		Last_Name:           counsellor_details[0]["last_name"],
-		Pronoun:             counsellor_details[0]["pronoun"],
-		Gender:              counsellor_details[0]["gender"],
-		Type:                "Counsellor",
-		Phone:               counsellor_details[0]["phone"],
-		Photo:               counsellor_details[0]["photo"],
-		Email:               counsellor_details[0]["email"],
-		Education:           counsellor_details[0]["education"],
-		Experience:          counsellor_details[0]["experience"],
-		TherapeuticApproach: counsellor_details[0]["therapeutic_approach"],
-		About:               counsellor_details[0]["about"],
-		Resume:              counsellor_details[0]["resume"],
-		Certificate:         counsellor_details[0]["certificate"],
-		Aadhar:              counsellor_details[0]["aadhar"],
-		Linkedin:            counsellor_details[0]["linkedin"],
-		Status:              counsellor_details[0]["status"],
+		Media_URL:            CONFIG.MediaURL,
+		First_Name:           counsellor_details[0]["first_name"],
+		Last_Name:            counsellor_details[0]["last_name"],
+		Pronoun:              counsellor_details[0]["pronoun"],
+		Gender:               counsellor_details[0]["gender"],
+		Location:             counsellor_details[0]["location"],
+		Type:                 "Counsellor",
+		Phone:                counsellor_details[0]["phone"],
+		Photo:                counsellor_details[0]["photo"],
+		Email:                counsellor_details[0]["email"],
+		Education:            counsellor_details[0]["education"],
+		CounsellingStartDate: UTIL.BuildOnlyDate(counsellor_details[0]["start_date"]),
+		CounsellingGap:       counsellor_details[0]["gap_years"] + "Y" + " " + counsellor_details[0]["gap_months"] + "M",
+		Experience:           counsellor_details[0]["experience"],
+		TherapeuticApproach:  counsellor_details[0]["therapeutic_approach"],
+		About:                counsellor_details[0]["about"],
+		Resume:               counsellor_details[0]["resume"],
+		Certificate:          counsellor_details[0]["certificate"],
+		Aadhar:               counsellor_details[0]["aadhar"],
+		Linkedin:             counsellor_details[0]["linkedin"],
+		Status:               counsellor_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -260,7 +280,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONFIG.OnboardingEmailID,  // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
+		CONFIG.OnboardingEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 

@@ -44,6 +44,7 @@ const (
 	ListenerType   = "2"
 	ClientType     = "3"
 	TherapistType  = "4"
+	CompanyType    = "5"
 )
 
 // counsellor status

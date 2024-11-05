@@ -238,6 +238,14 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// update counsellor slots
 	// remove previous slot
 	date, _ := time.Parse("2006-01-02", appointment[0]["date"])
@@ -276,10 +284,23 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"status":         CONSTANT.AppointmentCounsellorCancelled,
-			"modified_at":    UTIL.GetCurrentTime().String(),
+			"status":      CONSTANT.AppointmentCounsellorCancelled,
+			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status":      CONSTANT.AppointmentUserCancelled,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
 
 	// add a slot to appointments
 	DB.ExecuteSQL("update "+CONSTANT.AppointmentSlotsTable+" set slots_remaining = slots_remaining + 1 where order_id = ?", appointment[0]["order_id"])

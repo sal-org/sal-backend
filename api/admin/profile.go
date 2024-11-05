@@ -122,54 +122,60 @@ func AddProfileForUsers(w http.ResponseWriter, r *http.Request) {
 
 	// add assessment result
 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.RolesTable, CONSTANT.AssessmentResultsDigits, map[string]string{
-		"profile_name":  body["profile_name"],
-		"pc_add":        body["pc_add"],
-		"pc_edit":       body["pc_edit"],
-		"pc_view":       body["pc_view"],
-		"slot_view":     body["slot_view"],
-		"slot_add":      body["slot_add"],
-		"slot_edit":     body["slot_edit"],
-		"link_add":      body["link_add"],
-		"link_edit":     body["link_edit"],
-		"link_view":     body["link_view"],
-		"noti_add":      body["noti_add"],
-		"noti_edit":     body["noti_edit"],
-		"noti_view":     body["noti_view"],
-		"cont_add":      body["cont_add"],
-		"cont_edit":     body["cont_edit"],
-		"cont_view":     body["cont_view"],
-		"mq_view":       body["mq_view"],
-		"mq_add":        body["mq_add"],
-		"mq_edit":       body["mq_edit"],
-		"cent_add":      body["cent_add"],
-		"cent_edit":     body["cent_edit"],
-		"cent_view":     body["cent_view"],
-		"coun_view":     body["coun_view"],
-		"coun_edit":     body["coun_edit"],
-		"coun_add":      body["coun_add"],
-		"part_add":      body["part_add"],
-		"part_edit":     body["part_edit"],
-		"part_view":     body["part_view"],
-		"part_loc_add":  body["part_loc_add"],
-		"part_loc_edit": body["part_loc_edit"],
-		"part_loc_view": body["part_loc_view"],
-		"list_add":      body["list_add"],
-		"list_edit":     body["list_edit"],
-		"list_view":     body["list_view"],
-		"ther_view":     body["ther_view"],
-		"ther_add":      body["ther_add"],
-		"ther_edit":     body["ther_edit"],
-		"appoint_add":   body["appoint_add"],
-		"appoint_edit":  body["appoint_edit"],
-		"appoint_view":  body["appoint_view"],
-		"cafe_add":      body["cafe_add"],
-		"cafe_view":     body["cafe_view"],
-		"cafe_edit":     body["cafe_edit"],
-		"rept_view":     body["rept_view"],
-		"rept_edit":     body["rept_edit"],
-		"rept_add":      body["rept_add"],
-		"status":        CONSTANT.ClientActive,
-		"created_at":    UTIL.GetCurrentTime().UTC().String(),
+		"profile_name":       body["profile_name"],
+		"pc_add":             body["pc_add"],
+		"pc_edit":            body["pc_edit"],
+		"pc_view":            body["pc_view"],
+		"home_add":           body["home_add"],
+		"home_edit":          body["home_edit"],
+		"home_view":          body["home_view"],
+		"slot_view":          body["slot_view"],
+		"slot_add":           body["slot_add"],
+		"slot_edit":          body["slot_edit"],
+		"inperson_cafe_add":  body["inperson_cafe_add"],
+		"inperson_cafe_edit": body["inperson_cafe_edit"],
+		"inperson_cafe_view": body["inperson_cafe_view"],
+		"link_add":           body["link_add"],
+		"link_edit":          body["link_edit"],
+		"link_view":          body["link_view"],
+		"noti_add":           body["noti_add"],
+		"noti_edit":          body["noti_edit"],
+		"noti_view":          body["noti_view"],
+		"cont_add":           body["cont_add"],
+		"cont_edit":          body["cont_edit"],
+		"cont_view":          body["cont_view"],
+		"mq_view":            body["mq_view"],
+		"mq_add":             body["mq_add"],
+		"mq_edit":            body["mq_edit"],
+		"cent_add":           body["cent_add"],
+		"cent_edit":          body["cent_edit"],
+		"cent_view":          body["cent_view"],
+		"coun_view":          body["coun_view"],
+		"coun_edit":          body["coun_edit"],
+		"coun_add":           body["coun_add"],
+		"part_add":           body["part_add"],
+		"part_edit":          body["part_edit"],
+		"part_view":          body["part_view"],
+		"part_loc_add":       body["part_loc_add"],
+		"part_loc_edit":      body["part_loc_edit"],
+		"part_loc_view":      body["part_loc_view"],
+		"list_add":           body["list_add"],
+		"list_edit":          body["list_edit"],
+		"list_view":          body["list_view"],
+		"ther_view":          body["ther_view"],
+		"ther_add":           body["ther_add"],
+		"ther_edit":          body["ther_edit"],
+		"appoint_add":        body["appoint_add"],
+		"appoint_edit":       body["appoint_edit"],
+		"appoint_view":       body["appoint_view"],
+		"cafe_add":           body["cafe_add"],
+		"cafe_view":          body["cafe_view"],
+		"cafe_edit":          body["cafe_edit"],
+		"rept_view":          body["rept_view"],
+		"rept_edit":          body["rept_edit"],
+		"rept_add":           body["rept_add"],
+		"status":             CONSTANT.ClientActive,
+		"created_at":         UTIL.GetCurrentTime().UTC().String(),
 	}, "role_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -223,185 +229,107 @@ func UpdateProfileForUsers(w http.ResponseWriter, r *http.Request) {
 		profile["profile_name"] = body["profile_name"]
 	}
 
-	if len(body["pc_add"]) > 0 {
-		profile["pc_add"] = body["pc_add"]
-	}
+	profile["pc_add"] = body["pc_add"]
 
-	if len(body["pc_edit"]) > 0 {
-		profile["pc_edit"] = body["pc_edit"]
-	}
+	profile["pc_edit"] = body["pc_edit"]
 
-	if len(body["pc_view"]) > 0 {
-		profile["pc_view"] = body["pc_view"]
-	}
+	profile["pc_view"] = body["pc_view"]
 
-	if len(body["slot_view"]) > 0 {
-		profile["slot_view"] = body["slot_view"]
-	}
+	profile["home_view"] = body["home_view"]
 
-	if len(body["slot_add"]) > 0 {
-		profile["slot_add"] = body["slot_add"]
-	}
+	profile["home_edit"] = body["home_edit"]
 
-	if len(body["slot_edit"]) > 0 {
-		profile["slot_edit"] = body["slot_edit"]
-	}
+	profile["home_add"] = body["home_add"]
 
-	if len(body["link_add"]) > 0 {
-		profile["link_add"] = body["link_add"]
-	}
+	profile["inperson_cafe_add"] = body["inperson_cafe_add"]
 
-	if len(body["link_edit"]) > 0 {
-		profile["link_edit"] = body["link_edit"]
-	}
+	profile["inperson_cafe_edit"] = body["inperson_cafe_edit"]
 
-	if len(body["link_view"]) > 0 {
-		profile["link_view"] = body["link_view"]
-	}
+	profile["inperson_cafe_view"] = body["inperson_cafe_view"]
 
-	if len(body["noti_add"]) > 0 {
-		profile["noti_add"] = body["noti_add"]
-	}
+	profile["slot_view"] = body["slot_view"]
 
-	if len(body["noti_edit"]) > 0 {
-		profile["noti_edit"] = body["noti_edit"]
-	}
+	profile["slot_add"] = body["slot_add"]
 
-	if len(body["noti_view"]) > 0 {
-		profile["noti_view"] = body["noti_view"]
-	}
+	profile["slot_edit"] = body["slot_edit"]
 
-	if len(body["cont_add"]) > 0 {
-		profile["cont_add"] = body["cont_add"]
-	}
+	profile["link_add"] = body["link_add"]
 
-	if len(body["cont_edit"]) > 0 {
-		profile["cont_edit"] = body["cont_edit"]
-	}
+	profile["link_edit"] = body["link_edit"]
 
-	if len(body["cont_view"]) > 0 {
-		profile["cont_view"] = body["cont_view"]
-	}
+	profile["link_view"] = body["link_view"]
 
-	if len(body["mq_view"]) > 0 {
-		profile["mq_view"] = body["mq_view"]
-	}
+	profile["noti_add"] = body["noti_add"]
 
-	if len(body["mq_edit"]) > 0 {
-		profile["mq_edit"] = body["mq_edit"]
-	}
+	profile["noti_edit"] = body["noti_edit"]
 
-	if len(body["mq_add"]) > 0 {
-		profile["mq_add"] = body["mq_add"]
-	}
+	profile["noti_view"] = body["noti_view"]
 
-	if len(body["cent_add"]) > 0 {
-		profile["cent_add"] = body["cent_add"]
-	}
+	profile["cont_add"] = body["cont_add"]
 
-	if len(body["cent_view"]) > 0 {
-		profile["cent_view"] = body["cent_view"]
-	}
+	profile["cont_edit"] = body["cont_edit"]
 
-	if len(body["cent_edit"]) > 0 {
-		profile["cent_edit"] = body["cent_edit"]
-	}
+	profile["cont_view"] = body["cont_view"]
 
-	if len(body["coun_view"]) > 0 {
-		profile["coun_view"] = body["coun_view"]
-	}
+	profile["mq_view"] = body["mq_view"]
 
-	if len(body["coun_add"]) > 0 {
-		profile["coun_add"] = body["coun_add"]
-	}
+	profile["mq_edit"] = body["mq_edit"]
 
-	if len(body["coun_edit"]) > 0 {
-		profile["coun_edit"] = body["coun_edit"]
-	}
+	profile["mq_add"] = body["mq_add"]
 
-	if len(body["part_add"]) > 0 {
-		profile["part_add"] = body["part_add"]
-	}
+	profile["cent_add"] = body["cent_add"]
 
-	if len(body["part_edit"]) > 0 {
-		profile["part_edit"] = body["part_edit"]
-	}
+	profile["cent_view"] = body["cent_view"]
 
-	if len(body["part_view"]) > 0 {
-		profile["part_view"] = body["part_view"]
-	}
+	profile["cent_edit"] = body["cent_edit"]
 
-	if len(body["part_loc_add"]) > 0 {
-		profile["part_loc_add"] = body["part_loc_add"]
-	}
+	profile["coun_view"] = body["coun_view"]
 
-	if len(body["part_loc_edit"]) > 0 {
-		profile["part_loc_edit"] = body["part_loc_edit"]
-	}
+	profile["coun_add"] = body["coun_add"]
 
-	if len(body["part_loc_view"]) > 0 {
-		profile["part_loc_view"] = body["part_loc_view"]
-	}
+	profile["coun_edit"] = body["coun_edit"]
 
-	if len(body["list_view"]) > 0 {
-		profile["list_view"] = body["list_view"]
-	}
+	profile["part_add"] = body["part_add"]
 
-	if len(body["list_add"]) > 0 {
-		profile["list_add"] = body["list_add"]
-	}
+	profile["part_edit"] = body["part_edit"]
 
-	if len(body["list_edit"]) > 0 {
-		profile["list_edit"] = body["list_edit"]
-	}
+	profile["part_view"] = body["part_view"]
 
-	if len(body["ther_view"]) > 0 {
-		profile["ther_view"] = body["ther_view"]
-	}
+	profile["part_loc_add"] = body["part_loc_add"]
 
-	if len(body["ther_edit"]) > 0 {
-		profile["ther_edit"] = body["ther_edit"]
-	}
+	profile["part_loc_edit"] = body["part_loc_edit"]
 
-	if len(body["ther_add"]) > 0 {
-		profile["ther_add"] = body["ther_add"]
-	}
+	profile["part_loc_view"] = body["part_loc_view"]
 
-	if len(body["appoint_view"]) > 0 {
-		profile["appoint_view"] = body["appoint_view"]
-	}
+	profile["list_view"] = body["list_view"]
 
-	if len(body["appoint_add"]) > 0 {
-		profile["appoint_add"] = body["appoint_add"]
-	}
+	profile["list_add"] = body["list_add"]
 
-	if len(body["appoint_edit"]) > 0 {
-		profile["appoint_edit"] = body["appoint_edit"]
-	}
+	profile["list_edit"] = body["list_edit"]
 
-	if len(body["cafe_add"]) > 0 {
-		profile["cafe_add"] = body["cafe_add"]
-	}
+	profile["ther_view"] = body["ther_view"]
 
-	if len(body["cafe_view"]) > 0 {
-		profile["cafe_view"] = body["cafe_view"]
-	}
+	profile["ther_edit"] = body["ther_edit"]
 
-	if len(body["cafe_edit"]) > 0 {
-		profile["cafe_edit"] = body["cafe_edit"]
-	}
+	profile["ther_add"] = body["ther_add"]
 
-	if len(body["rept_view"]) > 0 {
-		profile["rept_view"] = body["rept_view"]
-	}
+	profile["appoint_view"] = body["appoint_view"]
 
-	if len(body["rept_edit"]) > 0 {
-		profile["rept_edit"] = body["rept_edit"]
-	}
+	profile["appoint_add"] = body["appoint_add"]
 
-	if len(body["rept_add"]) > 0 {
-		profile["rept_add"] = body["rept_add"]
-	}
+	profile["appoint_edit"] = body["appoint_edit"]
+
+	profile["cafe_add"] = body["cafe_add"]
+
+	profile["cafe_view"] = body["cafe_view"]
+
+	profile["cafe_edit"] = body["cafe_edit"]
+
+	profile["rept_view"] = body["rept_view"]
+
+	profile["rept_edit"] = body["rept_edit"]
+
+	profile["rept_add"] = body["rept_add"]
 
 	profile["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.RolesTable, map[string]string{"role_id": r.FormValue("id")}, profile)
