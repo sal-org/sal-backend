@@ -27,7 +27,14 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	if len(r.FormValue("client_id")) > 0 {
 
-		client, status, ok := DB.SelectProcess("select topic_ids from "+CONSTANT.ClientsTable+" where client_id = ? ", r.FormValue("client_id"))
+		active := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"status": "1", "client_id": r.FormValue("client_id")})
+
+		if !active {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		client, status, ok := DB.SelectProcess("select topic_ids from "+CONSTANT.ClientsTable+" where client_id = ? and status = 1", r.FormValue("client_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -76,10 +83,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appInfo, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppInfoTable+" where status = 1 ")
+	appInfo, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppInfoTable + " where status = 1 ")
 	if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
 	}
 
 	response["recommended"] = recommended

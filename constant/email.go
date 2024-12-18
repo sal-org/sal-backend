@@ -74,6 +74,10 @@ const (
 	ClientInPersonAppointmentCancellationClientBody       = "Your scheduled in-person counselling session with Clove therapist ###therapistName### on ###date### and ###time### at ###location### has been cancelled successfully. You may reschedule your counselling session for the next available slot with  thearpist again at your convenience."
 	TherapistInPersonAppointmentCancellationTherapistBody = "Due to your unavilability, all your scheduled in-person sessions for ###date### at ###location### have been cancelled successfully."
 	TherapistInPersonAppointmentCancellationClientBody    = "We regret to inform you that your scheduled session with Clove therapist ###therapist### for ###date### and ###time### at ###location### has been cancelled due to therapist unavailbility. We request you to rebook a new appointment for the next available date and slot time."
+	TherapistAttachDocumentsWithClientBody                = "This is with reference to your recent session with ###TherapistName### on ###Date###. Your therapist has advised you to go through the attached exercise/worksheet for a meaningful outcome from the session."
+	TherapistAttachDocumentsWithOutClientBody             = "This is with reference to your recent session with ###TherapistName### on ###Date###."
+	TherapistAttachDocumentsWithFooterClientBody          = "Please use these self work tools to your advantage and book your follow-up session on the Clovemind mobile application."
+	TherapistAttachDocumentsWithOutFooterClientBody       = "As guided by your therapist, you may book your follow-up session on the Clovemind mobile application."
 )
 
 // Event Approval For Sal Team to Send a Email

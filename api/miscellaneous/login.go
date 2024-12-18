@@ -278,7 +278,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellor[0]["counsellor_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellor[0]["counsellor_id"]}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -311,7 +311,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": counsellor[0]["listener_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": counsellor[0]["listener_id"]}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -342,7 +342,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": counsellor[0]["therapist_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": counsellor[0]["therapist_id"]}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return

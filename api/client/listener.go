@@ -56,8 +56,8 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get last 10 listener apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 10 ", r.FormValue("listener_id"))
+	// get last 20 listener apppointment reviews
+	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.rating_types, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 20 ", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

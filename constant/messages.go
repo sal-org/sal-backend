@@ -24,6 +24,7 @@ const (
 	ClientCorEmailInvalid                      = "Email id is incorrect"
 	CorporateClientAccessCode                  = "Invalid access code"
 	CorporateClientDependantInvaildPhoneNumber = "Invalid phone number, kindly contact to main member"
+	CorporateClientNotDependant                = "Your are not family member"
 	ClientCorLoginIfNotRegister                = "Client doesn't exist"
 	ClientAppointmentAlreadyExits              = "Your request has already been noted. We will revert to you shortly!"
 	ClientNotExistMessage                      = "Client doesn't exist"

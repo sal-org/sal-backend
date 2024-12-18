@@ -788,12 +788,12 @@ type EmailBodyWithAccessCodeMessageModel struct {
 }
 
 type EmailBodyMessageModelWithDocu struct {
-	Name          string
-	TherapistName string
-	Date          string
-	Message       string
-	Message2      string
-	Message1      string
+	Name     string
+	Message  string
+	Message1 string
+	Message2 string
+	Message3 string
+	Message4 string
 }
 
 type EmailRecipientModel struct {

@@ -151,10 +151,19 @@ func sendNotification(heading, content, notificationID, sentAt, usertype string)
 	fmt.Println(string(body))
 }
 
-func SendBulkNotification(heading, content string) {
+func SendBulkNotification(heading, content string, userType string) {
+
+	appID,apiKey := "", ""
+	if userType == "3" {
+		appID = CONFIG.OneSignalAppIDForClient
+		apiKey = CONFIG.OneSignalApiKeyForClient
+	} else {
+		appID = CONFIG.OneSignalAppIDForTherapist
+		apiKey = CONFIG.OneSignalApiKeyForTherapist
+	}
 
 	data := MODEL.OneSignalNotificationBulkData{
-		AppID:            CONFIG.OneSignalAppIDForClient, // change according to client : OneSignalAppIDForClient , therpists : OneSignalAppIDForTherapist required
+		AppID:            appID, // change according to client : OneSignalAppIDForClient , therpists : OneSignalAppIDForTherapist required
 		Headings:         map[string]string{"en": heading},
 		Contents:         map[string]string{"en": content},
 		IncludedSegments: []string{"Active Users", "Inactive Users"},
@@ -163,7 +172,7 @@ func SendBulkNotification(heading, content string) {
 
 	byteData, _ := json.Marshal(data)
 	req, _ := http.NewRequest("POST", "https://onesignal.com/api/v1/notifications", bytes.NewBuffer(byteData))
-	req.Header.Add("Authorization", "Basic "+CONFIG.OneSignalApiKeyForClient) // change according to client : ZDMxNGU3NTYtM2RkNS00NmMzLWJhMjMtYWUwYTAzYzg3Nzdk , therpists: N2RmZGRlNTMtYTM1MC00YmZmLTg3MjEtNzNkMDViMGZlNGEz required
+	req.Header.Add("Authorization", "Basic "+apiKey) // change according to client : ZDMxNGU3NTYtM2RkNS00NmMzLWJhMjMtYWUwYTAzYzg3Nzdk , therpists: N2RmZGRlNTMtYTM1MC00YmZmLTg3MjEtNzNkMDViMGZlNGEz required
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := http.DefaultClient.Do(req)

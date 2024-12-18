@@ -227,7 +227,7 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}*/
 
-	for i, _ := range assessmentResultIDs {
+	for i := range assessmentResultIDs {
 		result := DB.QueryRowSQL("select result from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? and min <= ? and max >=  ? ", assessmentResults[i]["assessment_id"], assessmentResults[i]["final_score"], assessmentResults[i]["final_score"])
 
 		results = append(results, result)
@@ -830,6 +830,46 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				fmt.Println("html body not create ")
 			}
+
+		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp955" {
+			var filePath string
+
+			if finalScore >= 6 && finalScore <= 24 {
+
+				filePath = "htmlfile/GQ6_below_24.html"
+
+			} else if finalScore >= 25 && finalScore <= 34 {
+
+				filePath = "htmlfile/GQ6_below_25_To_34.html"
+			} else if finalScore >= 35 && finalScore <= 40 {
+
+				filePath = "htmlfile/GQ6_below_35_To_40.html"
+			} else {
+				filePath = "htmlfile/GQ6_below_41_To_42.html"
+			}
+
+			assessment_data := MODEL.AssessmentDownloadGWBModel{
+				Name:    assessment_result[0]["name"],
+				Date:    UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:     assessment_result[0]["age"],
+				Gender:  assessment_result[0]["gender"],
+				Score:   assessment_result[0]["final_score"],
+				Answer1: assessment_result_details[0]["score"],
+				Answer2: assessment_result_details[1]["score"],
+				Answer3: assessment_result_details[2]["score"],
+				Answer4: assessment_result_details[3]["score"],
+				Answer5: assessment_result_details[4]["score"],
+				Answer6: assessment_result_details[5]["score"],
+			}
+
+			fmt.Println(assessment_data)
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGWB(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+
+			fmt.Println(emailbody)
 
 		} else {
 

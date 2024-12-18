@@ -161,7 +161,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+")", r.FormValue("therapist_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+") order by date desc", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

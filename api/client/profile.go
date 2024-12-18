@@ -408,13 +408,14 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"client_id", "relation", "first_name", "last_name"}, map[string]string{"asscoiate_id": r.FormValue("client_id"), "status": "1"})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"client_id", "relation", "first_name", "last_name", "date_of_birth", "location", "phone", "photo"}, map[string]string{"asscoiate_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	response["relation_list"] = client
+	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

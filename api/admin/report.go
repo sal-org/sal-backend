@@ -799,6 +799,209 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 
+	case "21": // in-person appointment report
+
+		heading = []string{"Client Name", "Gender", "Age", "Company Name", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date & Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Mod. At", "Status"}
+		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonAppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		// get counsellor, client ids to get details
+		clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, appointment := range appointments {
+
+			var startTime, endTime, modAt, partnerName, status, location string
+
+			if appointment["started_at"] == "" {
+				startTime = ""
+			} else {
+				startTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["ended_at"] == "" {
+				endTime = ""
+			} else {
+				endTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["modified_at"] == "" {
+				modAt = ""
+			} else {
+				modAt = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["status"] == "3" {
+				if appointment["started_at"] == "" && appointment["ended_at"] == "" {
+					status = getAppointmentStatusInText("8")
+				} else if appointment["started_at"] != "" && appointment["ended_at"] == "" {
+					status = getAppointmentStatusInText("14")
+				} else {
+					status = getAppointmentStatusInText("3")
+				}
+			} else if appointment["status"] == "4" {
+				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
+					status = getAppointmentStatusInText("12")
+				} else {
+					status = getAppointmentStatusInText("4")
+				}
+			} else if appointment["status"] == "5" {
+				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
+					status = getAppointmentStatusInText("13")
+				} else {
+					status = getAppointmentStatusInText("5")
+				}
+			} else {
+				status = getAppointmentStatusInText(appointment["status"])
+			}
+
+			domainName := strings.Split(clientsMap[appointment["client_id"]]["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+			} else {
+				partnerName = "None"
+			}
+
+			if clientsMap[appointment["client_id"]]["location"] == "40.04" {
+				location = ""
+			} else {
+				location = clientsMap[appointment["client_id"]]["location"]
+			}
+
+			data = append(data, []string{
+				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
+				clientsMap[appointment["client_id"]]["gender"],
+				clientsMap[appointment["client_id"]]["age"],
+				partnerName,
+				location,
+				clientsMap[appointment["client_id"]]["department"],
+				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
+				counsellorsMap[appointment["counsellor_id"]]["type"],
+				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
+				appointment["times_rescheduled"],
+				startTime,
+				endTime,
+				modAt,
+				status,
+			})
+		}
+
+	case "22": // inperson request appointment
+		heading = []string{"Client Name", "Counsellor Name", "Company Name", "Location", "Status"}
+		inPersonAppointmentsRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonAppointmentRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status1 := ""
+
+		// get counsellor, client ids to get details
+		clientIDs := UTIL.ExtractValuesFromArrayMap(inPersonAppointmentsRequests, "client_id")
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(inPersonAppointmentsRequests, "counsellor_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, inpersonappointmentRequest := range inPersonAppointmentsRequests {
+
+			if inpersonappointmentRequest["status"] == "1" {
+				status1 = "InProgress"
+			} else if inpersonappointmentRequest["status"] == "2" {
+				status1 = "Completed"
+			}
+
+			data = append(data, []string{
+				clientsMap[inpersonappointmentRequest["client_id"]]["first_name"] + " " + clientsMap[inpersonappointmentRequest["client_id"]]["last_name"],
+				counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["first_name"] + " " + counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["last_name"],
+				inpersonappointmentRequest["company_name"],
+				inpersonappointmentRequest["company_location"],
+				status1,
+			})
+		}
+
+		case "23": // appointment request 
+		heading = []string{"Client Name", "Counsellor Name", "Status"}
+		appointmentsRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status1 := ""
+
+		// get counsellor, client ids to get details
+		clientIDs := UTIL.ExtractValuesFromArrayMap(appointmentsRequests, "client_id")
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointmentsRequests, "counsellor_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, inpersonappointmentRequest := range appointmentsRequests {
+
+			if inpersonappointmentRequest["status"] == "1" {
+				status1 = "InProgress"
+			} else if inpersonappointmentRequest["status"] == "2" {
+				status1 = "Completed"
+			}
+
+			data = append(data, []string{
+				clientsMap[inpersonappointmentRequest["client_id"]]["first_name"] + " " + clientsMap[inpersonappointmentRequest["client_id"]]["last_name"],
+				counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["first_name"] + " " + counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["last_name"],
+				status1,
+			})
+		}
+
 	}
 
 	if strings.EqualFold(r.FormValue("type"), "json") {

@@ -68,6 +68,9 @@ const (
 	ReceiptTable                                = "receipts"
 	AssessmentPdfTable                          = "assessment_pdf"
 	AgoraTable                                  = "agora"
+	CorporateClientFamilyAccessControlTable     = "corporate_client_family_access_control"
+	CompanyAccessControlTable                   = "company_access_control"
+	ClientAccessControlTable                    = "client_access_control"
 )
 
 // NumberOfTimesUniqueInserts - number of times insert statement should get executed for unqiue id

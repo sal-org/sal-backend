@@ -6,12 +6,15 @@ import "github.com/gorilla/mux"
 func LoadAdminRoutes(router *mux.Router) {
 	adminRoutes := router.PathPrefix("/admin").Subrouter()
 
-	// content
+	// appointment
 	adminRoutes.HandleFunc("/appointment", AppointmentGet).Methods("GET")
 	adminRoutes.HandleFunc("/appointment/refund", AppointmentRefund).Queries(
 		"appointment_id", "{appointment_id}",
 		"refund_amount", "{refund_amount}",
 	).Methods("PUT")
+
+	// in-person appointment
+	adminRoutes.HandleFunc("/inperson_appointment", InPersonAppointmentGet).Methods("GET")
 
 	// availability
 	adminRoutes.HandleFunc("/availability", AvailabilityGet).Methods("GET")

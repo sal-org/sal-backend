@@ -86,7 +86,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	if len(r.FormValue("device_id")) < 0 {
+	if len(r.FormValue("device_id")) == 0 {
 		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 		return
 	}
@@ -160,10 +160,17 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
+		// if !ok {
+		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
+		// response["access_control"] = givenAccess[0]
 		response["media_url"] = CONFIG.MediaURL
 	}
 
@@ -437,6 +444,11 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(client[0]["asscoiate_id"]) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientNotDependant, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	mainClient, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": client[0]["asscoiate_id"], "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -476,6 +488,8 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 		mainClient[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
+
+	response["corporate_client_email"] = mainClient[0]["email"]
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -557,7 +571,19 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	topics, status, ok := DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+	var topics []map[string]string
+
+	if len(client[0]["topic_ids"]) != 0 {
+		topics, status, ok = DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	domainName := strings.Split(mainClient[0]["email"], "@")
+
+	givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.CorporateClientFamilyAccessControlTable + " where domain = '" + domainName[1] + "'")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -567,6 +593,7 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 	response["refresh_token"] = refreshToken
 	response["topic"] = topics
 	response["client"] = client[0]
+	response["access_control"] = givenAccess[0]
 	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -685,10 +712,19 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	domainName := strings.Split(r.FormValue("cor_email"), "@")
+
+	givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.CompanyAccessControlTable + " where domain = '" + domainName[1] + "'")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 	response["topic"] = topics
 	response["client"] = client[0]
+	response["access_control"] = givenAccess[0]
 	response["media_url"] = CONFIG.MediaURL
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

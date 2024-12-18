@@ -270,22 +270,45 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 			var emaildata Model.EmailBodyMessageModelWithDocu
 
+			message, message1 := "", ""
+
+			if len(body["client_documents"]) != 0 {
+				message = UTIL.ReplaceNotificationContentInString(
+					CONSTANT.TherapistAttachDocumentsWithClientBody,
+					map[string]string{
+						"###TherapistName###": counsellor[0]["first_name"],
+						"###Date###":          UTIL.BuildOnlyDate(body["session_date"]),
+					},
+				)
+				message1 = CONSTANT.TherapistAttachDocumentsWithFooterClientBody
+			} else {
+				message = UTIL.ReplaceNotificationContentInString(
+					CONSTANT.TherapistAttachDocumentsWithOutClientBody,
+					map[string]string{
+						"###TherapistName###": counsellor[0]["first_name"],
+						"###Date###":          UTIL.BuildOnlyDate(body["session_date"]),
+					},
+				)
+				message1 = CONSTANT.TherapistAttachDocumentsWithOutFooterClientBody
+			}
+
 			if len(body["client_notes"]) != 0 {
 				emaildata = Model.EmailBodyMessageModelWithDocu{
-					Name:          client[0]["first_name"],
-					TherapistName: counsellor[0]["first_name"],
-					Date:          UTIL.BuildOnlyDate(body["session_date"]),
-					Message:       body["client_notes"],
-					Message1:      body["links"],
-					Message2:      "Your therapist has suggested the following guidelines:",
+					Name:     client[0]["first_name"],
+					Message:  message,
+					Message1: "Your therapist has suggested the following guidelines:",
+					Message2: body["client_notes"],
+					Message4: message1,
+					Message3: body["links"],
 				}
 			} else {
 				emaildata = Model.EmailBodyMessageModelWithDocu{
-					Name:          client[0]["first_name"],
-					TherapistName: counsellor[0]["first_name"],
-					Date:          UTIL.BuildOnlyDate(body["session_date"]),
-					Message:       body["client_notes"],
-					Message1:      body["links"],
+					Name:     client[0]["first_name"],
+					Message:  message,
+					Message1: "Your therapist has suggested the following guidelines:",
+					Message2: body["client_notes"],
+					Message4: message1,
+					Message3: body["links"],
 				}
 			}
 
