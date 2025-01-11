@@ -6,6 +6,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
+	"strconv"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -408,7 +409,7 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"client_id", "relation", "first_name", "last_name", "date_of_birth", "location", "phone", "photo"}, map[string]string{"asscoiate_id": r.FormValue("client_id"), "status": "1"})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"client_id", "relation", "first_name", "last_name", "gender", "email", "date_of_birth", "location", "phone", "photo"}, map[string]string{"asscoiate_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -446,7 +447,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": body["client_id"]})
+	clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -473,6 +474,18 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if phone is verfied by OTP
+	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.VerifyPhoneRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"domain": domainName[1]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	if len(body["notification_status"]) == 0 {
 		body["notification_status"] = "1"
 	}
@@ -483,6 +496,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["relation"] = body["relation"]
 	client["first_name"] = body["first_name"]
 	client["last_name"] = body["last_name"]
+	client["photo"] = body["photo"]
 	client["phone"] = body["phone"]
 	client["email"] = body["email"]
 	client["date_of_birth"] = body["date_of_birth"]
@@ -500,30 +514,73 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send notification to client
-	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
+	// UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
 
 	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
+	filepath_text := "htmlfile/family_registration_confirmation.html"
 
-	emaildata := Model.EmailBodyMessageModel{
-		Name:    body["first_name"],
-		Message: CONSTANT.ClientSignupClientEmailBody,
+	age, _ := UTIL.CalculateAge(body["date_of_birth"])
+
+	emaildata := Model.EmailBodyMessageModelWithDocu{
+		Name: body["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientSignupClientTpFamilyMemeberCorEmailBody,
+			map[string]string{
+				"###familymembername###": body["first_name"],
+				"###age###":              strconv.Itoa(age),
+				"###gender###":           body["gender"],
+			},
+		),
+		Message1: "They would receive all futher communications on their registered email id.",
+		Message2: "For any queries, you can write to us on customercare@clovemind.com.",
+		Message3: "Please note: if you are adding a minor dependent, the guardian responsibility would be with you.",
+		Message4: "We practice high standards of privacy and confidentiality as mentioned in the privacy policy. Their interactions with us will be confidential and will not be shared with anyone unless there is a risk of harm to self or others.",
 	}
 
-	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	emailBody := UTIL.GetHTMLTemplateForWithDocument(emaildata, filepath_text)
 	// email for client
 	UTIL.SendEmail(
-		CONSTANT.ClientSignupProfileTitle,
+		CONSTANT.ClientFamilyMemberSingupToCorEmpTitle,
 		emailBody,
+		clientD[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	htmlFileForFamilyMember := "htmlfile/family_registration_login_step.html"
+
+	emaildata1 := Model.EmailBodyMessageModelWithDocu{
+		Name: body["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientSignupClientTpFamilyMemeberToLoginStepCorEmailBody,
+			map[string]string{
+				"###employee_name###": clientD[0]["first_name"] + " " + clientD[0]["last_name"],
+				"###company_name###":  partnerName[0]["partner_name"],
+			},
+		),
+		Message1: "Such services include virtual counselling, self-help assessments, mood journaling and self-care resources. At Clove, we practice high standards of privacy and confidentiality as mentioned in the privacy policy. Yours interactions with us will be confidential and will not be shared with anyone unless there is a risk of harm to self or others.",
+		Message2: "Please follow the below steps to download and login on the mobile application:",
+		Message3: "Once you complete this process, you can explore the application and book counselling sessions with the therapist of your choice.",
+		Message4: "If you face any issues, please write to us on customercare@clovemind.com or call on +917977075872 (Mon-Fri: 10am to 7pm IST)",
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForWithDocument(emaildata1, htmlFileForFamilyMember)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientFamilyMemberStepLoginToCorEmpTitle,
+		emailBody1,
 		body["email"],
 		CONSTANT.InstantSendEmailMessage,
 	)
 
+	email := UTIL.EncodeEmailID(body["email"])
+
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientProfileTitleMessage,
+			CONSTANT.ClientFamilyMemeberProfileAddedSuccessfullyTextMessage,
 			map[string]string{
-				"###client_name###": body["first_name"],
+				"###family_member_name###": body["first_name"],
+				"###client_name###":		clientD[0]["first_name"],
+				"###family_member_email_id###": email,
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,

@@ -5,7 +5,7 @@ package constant
 const (
 	// client
 	ClientAppointmentReminderClientHeading                           = "Session about to begin"
-	ClientAppointmentFollowUpSessionToSuggestedReminderClientHeading = "Reminder for follow-up session"
+	ClientAppointmentFollowUpSessionToSuggestedReminderClientHeading = "Follow-up Appointment"
 	ClientAppointmentFollowUpSessionReminderClientHeading            = "Follow-up session about to begin"
 	ClientEventReminderClientHeading                                 = "Event Reminder"
 	ClientAppointmentScheduleClientHeading                           = "Virtual Session confirmed!"
@@ -46,6 +46,7 @@ const (
 	Client1AppointmentBookCounsellorHeading      = "Payment Confirmation"
 	Client3AppointmentBookCounsellorHeading      = "Payment Confirmation"
 	Client5AppointmentBookCounsellorHeading      = "Payment Confirmation"
+	ClientCorFamilyMemberLoginToClientOTPHeading = "Check your Corporate email"
 )
 
 // notification contents
@@ -53,7 +54,7 @@ const (
 	// client
 	ClientAppointmentHasBeenStartedContent                   = "Hey ###clientname###, ###therapistname### has joined the session. Please join"
 	ClientAppointmentRemiderClientContent                    = "Hi ###user_name###, your session is starting soon at ###time###. Tap here to know more."
-	ClientAppointmentFollowUpToSuggestedRemiderClientContent = "Hi ###clientname###, your therapist ###therapistname### suggested to book appointment today to enhance your well being journey"
+	ClientAppointmentFollowUpToSuggestedRemiderClientContent = "Your therapist ###therapist_name### has recommended your next follow up date as ###follow_up_date###. Tap here to book now"
 	ClientEventInPersonRemiderClientContent                  = "Your In-Person Clove Café session on ###topic### is starting at ###time###. Tap here to know more."
 	ClientAppointmentFollowUpRemiderClientContent            = "Hi ###client_name###, your follow-up session with ###therapistname### is starting in 15 minutes. Please do find a quite place for yourself to take it."
 	ClientAppointmentFollowUpRemiderCounsellorContent        = "You have a scheduled follow-up session starting in 15 minutes with ###client_name### at ###time###. Check 'My sessions' within the app for details."
@@ -98,4 +99,5 @@ const (
 	Client1AppointmentBookCounsellorContent      = "Payment of Rs. ###paid_amount### has been successful. You can manage your account anytime, anywhere from your phone. Click on 'My sessions' to view details "
 	Client3AppointmentBookCounsellorContent      = "Hi. ###client_name### has made a payment of Rs. ###paid_amount### for 3 consultation sessions with you.  Manage your account anytime, anywhere from your phone. Click on 'My Sessions' to view Date and Time."
 	Client5AppointmentBookCounsellorContent      = "Hi. ###client_name### has made a payment of Rs. ###paid_amount### for 5 consultation sessions with you.  Manage your account anytime, anywhere from your phone. Click on 'My Sessions' to view Date and Time."
+	ClientCorFamilyMemberLoginToClientOTPContent = "Pls share the OTP triggered by ###familymembername### on your corporate email ID."
 )

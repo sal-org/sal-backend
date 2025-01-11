@@ -69,7 +69,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		// return
 	}
 
-	if !(body["mood_id"] == "1") {
+	if !(body["mood_id"] == "1" || body["mood_id"] == "7" || body["mood_id"] == "8") {
 
 		moodTitle, status, ok := DB.SelectProcess("select title from "+CONSTANT.MoodsTable+" where id = ?", body["mood_id"])
 		if !ok {

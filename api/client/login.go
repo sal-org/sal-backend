@@ -66,6 +66,71 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	if len(r.FormValue("family_phone_no")) < 8 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"phone": r.FormValue("family_phone_no")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// using phone verified table to check if phone has been really verified by OTP
+	// currently deleting if phone number is already present
+	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": r.FormValue("family_phone_no")})
+
+	// get client details
+	mainClient, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(mainClient) > 0 && !strings.EqualFold(mainClient[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send otp
+	otp, ok := UTIL.GenerateOTP(r.FormValue("family_phone_no"))
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	email := UTIL.EncodeEmailID(r.FormValue("family_email_id"))
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientSendOTPToRegisterFamilyMemeberMessage,
+			map[string]string{
+				"###otp###":        otp,
+				"###clientName###": mainClient[0]["first_name"],
+				"###emailId###":    email,
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		r.FormValue("family_phone_no"),
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 // VerifyOTP godoc
 // @Tags Client Login
 // @Summary Verify OTP sent to specified phone
@@ -134,6 +199,81 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// generate access and refresh token
+		// access token - jwt token with short expiry added in header for authorization
+		// refresh token - jwt token with long expiry to get new access token if expired
+		// if refresh token expired, need to login
+		accessToken, ok := UTIL.CreateAccessToken(client[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		refreshToken, ok := UTIL.CreateRefreshToken(client[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		topics, status, ok := DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
+		// if !ok {
+		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		response["access_token"] = accessToken
+		response["refresh_token"] = refreshToken
+		response["topic"] = topics
+		response["client"] = client[0]
+		// response["access_control"] = givenAccess[0]
+		response["media_url"] = CONFIG.MediaURL
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	//check if otp is correct
+	if !UTIL.VerifyOTP(r.FormValue("family_phone_no"), r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("family_phone_no")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(client) == 0 {
+		// client is first time signing up
+
+		// using phone verified table to check if phone has been really verified by OTP
+		// currently inserting after phone is really verified
+		DB.InsertSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": r.FormValue("family_phone_no"), "created_at": UTIL.GetCurrentTime().String()})
+	} else {
+		// client already signed up
+		// check if client is active
+		if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("family_phone_no")}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -465,12 +605,29 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
 
-	emaildata1 := Model.EmailBodyMessageModel{
-		Name: "",
-		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientCorLoginOTPBody,
+	// send appointment booking notification to therapist
+	UTIL.SendNotification(
+		CONSTANT.ClientCorFamilyMemberLoginToClientOTPHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorFamilyMemberLoginToClientOTPContent,
 			map[string]string{
-				"###otp###": otp,
+				"###familymembername###": client[0]["first_name"],
+			},
+		),
+		mainClient[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		mainClient[0]["client_id"],
+	)
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: mainClient[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorFamilyMemberLoginOTPBody,
+			map[string]string{
+				"###otp###":              otp,
+				"###familymembername###": client[0]["first_name"] + " " + client[0]["last_name"],
 			},
 		),
 	}
@@ -479,9 +636,10 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 	// email for client
 	UTIL.SendEmail(
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientCorLoginOTPTitle,
+			CONSTANT.ClientCorFamilyMemberLoginOTPTitle,
 			map[string]string{
-				"###otp###": otp,
+				"###familymembername###": client[0]["first_name"] + " " + client[0]["last_name"],
+				"###otp###":              otp,
 			},
 		),
 		emailBody1,
@@ -599,6 +757,26 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+		return
+	}
+	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, map[string]string{"status": CONSTANT.ListenerBlocked, "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 func CheckEmailANDPhone(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -643,6 +821,12 @@ func CheckEmailANDPhone(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+	} else if len(r.FormValue("email")) > 0 {
+		ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("email")})
+		if ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

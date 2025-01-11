@@ -9,6 +9,7 @@ import (
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // ListMood godoc
@@ -52,6 +53,45 @@ func GetDocumentList(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func GetCounsellorRecordFromMainCategory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	category, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordFormCategoryTable + " where status = 1")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	emotionalState, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordFormEmotionalState + " where status = 1")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["main_category"] = category
+	response["emotional_state"] = emotionalState
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func GetCounsellorRecordFromSubCategory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	subCategory, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordFormSubCategoryTable+" where status = 1 and category_id = ? ", r.FormValue("category_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["sub_category"] = subCategory
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
 func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -63,10 +103,23 @@ func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lastClient, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and session_for = 'Self'  order by session_date desc limit 5", r.FormValue("client_id"))
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
+	var lastClient []map[string]string
+
+	var status string
+	var ok bool
+
+	if len(r.FormValue("counsellor_id")) != 0 {
+		lastClient, status, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and counsellor_id = ?  order by session_date desc", r.FormValue("client_id"), r.FormValue("counsellor_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	} else {
+		lastClient, status, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ?  order by session_date desc limit 5", r.FormValue("client_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	response["lastest_record"] = lastClient
@@ -118,7 +171,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var noshow, mentalHealth, sendStatus, sessionFor string
+	var noshow, psychiatricIntervention, mentalHealth, sendStatus, sessionFor, sessionType string
 
 	if len(body["mental_health"]) > 0 {
 		mentalHealth = body["mental_health"]
@@ -136,14 +189,17 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["session_for"]) > 0 {
 		sessionFor = body["session_for"]
+		sessionType = body["session_type"]
 	} else {
 		sessionFor = ""
+		sessionType = ""
 	}
 
 	// add counsellorRecord details
 	counsellorRecord := map[string]string{}
 	counsellorRecord["counsellor_id"] = body["counsellor_id"]
 	counsellorRecord["client_id"] = body["client_id"]
+	counsellorRecord["appointment_id"] = body["appointment_id"]
 	counsellorRecord["client_first_name"] = body["client_first_name"]
 	counsellorRecord["client_last_name"] = body["client_last_name"]
 	counsellorRecord["client_gender"] = body["client_gender"]
@@ -151,11 +207,19 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	counsellorRecord["client_department"] = body["client_department"]
 	counsellorRecord["client_location"] = body["client_location"]
 	counsellorRecord["session_for"] = sessionFor
+	counsellorRecord["session_type"] = sessionType
 	counsellorRecord["noshow"] = noshow
 	counsellorRecord["session_mode"] = body["session_mode"]
 	counsellorRecord["session_date"] = body["session_date"]
 	counsellorRecord["in_time"] = body["in_time"]
 	counsellorRecord["out_time"] = body["out_time"]
+	counsellorRecord["presenting_concerns"] = body["presenting_concerns"]
+	counsellorRecord["psychiatric_intervention"] = body["psychiatric_intervention"]
+	counsellorRecord["psychiatric_intervention_reason"] = body["psychiatric_intervention_reason"]
+	counsellorRecord["therapy_notes"] = body["therapy_notes"]
+	counsellorRecord["sub_category"] = body["sub_category"]
+	counsellorRecord["emotional_state"] = body["emotional_state"]
+	counsellorRecord["next_follow_date"] = body["next_follow_date"]
 	counsellorRecord["mental_health"] = mentalHealth
 	counsellorRecord["client_notes"] = body["client_notes"]
 	counsellorRecord["client_documents"] = body["client_documents"]
@@ -187,10 +251,24 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	sessionDate := UTIL.BuildOnlyDate(body["session_date"])
+
+	nextFollowDate := ""
+
+	if len(body["next_follow_date"]) != 0 {
+		nextFollowDate = UTIL.BuildOnlyDate(body["next_follow_date"])
+	}
+
 	if noshow == "1" {
 		noshow = "Yes"
 	} else {
 		noshow = "No"
+	}
+
+	if body["psychiatric_intervention"] == "1" {
+		psychiatricIntervention = "Yes"
+	} else {
+		psychiatricIntervention = "No"
 	}
 
 	if len(body["client_id"]) != 0 && len(body["client_notes"]) != 0 {
@@ -200,26 +278,31 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := Model.EmailDataForCounsellorRecord{
-		TherapistName:   counsellor[0]["first_name"] + " " + counsellor[0]["last_name"],
-		SessionFor:      body["session_for"],
-		First_Name:      body["client_first_name"],
-		Last_Name:       body["client_last_name"],
-		Gender:          body["client_gender"],
-		Age:             body["client_age"],
-		Department:      body["client_department"],
-		Location:        body["client_location"],
-		NoShow:          noshow,
-		SessionMode:     body["session_mode"],
-		SessionDate:     body["session_date"],
-		InTime:          body["in_time"],
-		OutTime:         body["out_time"],
-		MentalHealth:    mentalHealth,
-		TherapeuticGoal: body["therapeutic_goal"],
-		TherapyPlan:     body["therapy_plan"],
-		AssessmentTool:  body["assessment_tool"],
-		ClientNotes:     body["client_notes"],
-		ClientAttach:    body["client_documents"],
-		SendingStatus:   sendStatus,
+		TherapistName:                 counsellor[0]["first_name"] + " " + counsellor[0]["last_name"],
+		SessionFor:                    body["session_for"],
+		First_Name:                    body["client_first_name"],
+		Last_Name:                     body["client_last_name"],
+		Gender:                        body["client_gender"],
+		Age:                           body["client_age"],
+		NoShow:                        noshow,
+		PresentingConcerns:            body["presenting_concerns"],
+		PsychiatricIntervention:       psychiatricIntervention,
+		PsychiatricInterventionReason: body["psychiatric_intervention_reason"],
+		TherapyNotes:                  body["therapy_notes"],
+		SubCategory:                   body["sub_category"],
+		EmotionalState:                body["emotional_state"],
+		NextFollowDate:                nextFollowDate,
+		SessionMode:                   body["session_mode"],
+		SessionDate:                   sessionDate,
+		InTime:                        body["in_time"],
+		OutTime:                       body["out_time"],
+		MentalHealth:                  mentalHealth,
+		TherapeuticGoal:               body["therapeutic_goal"],
+		TherapyPlan:                   body["therapy_plan"],
+		AssessmentTool:                body["assessment_tool"],
+		ClientNotes:                   body["client_notes"],
+		ClientAttach:                  body["client_documents"],
+		SendingStatus:                 sendStatus,
 	}
 
 	filepath := "htmlfile/CounsellorRecord.html"
@@ -244,9 +327,37 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	message, message1, message2 := "", "", ""
+
+	if len(body["next_follow_date"]) != 0 {
+		// 15 min push notification before appointment start
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentFollowUpSessionToSuggestedReminderClientHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentFollowUpToSuggestedRemiderClientContent,
+				map[string]string{
+					"###therapist_name###": counsellor[0]["first_name"],
+					"###follow_up_date###": nextFollowDate,
+				},
+			),
+			body["client_id"],
+			CONSTANT.ClientType,
+			UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
+			CONSTANT.NotificationInProgress,
+			body["client_id"],
+		)
+
+		message1 = UTIL.ReplaceNotificationContentInString(
+			CONSTANT.TherapistAttachDocumentsFollowDateFooterClientBody,
+			map[string]string{
+				"###followupdate###": nextFollowDate,
+			},
+		)
+	}
+
 	if len(body["client_id"]) != 0 {
 
-		if len(body["client_documents"]) != 0 || len(body["client_notes"]) != 0 {
+		if len(body["client_documents"]) != 0 || len(body["client_notes"]) != 0 || len(body["assessment_tool"]) != 0 {
 
 			client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "email"}, map[string]string{"client_id": body["client_id"]})
 
@@ -270,26 +381,32 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 
 			var emaildata Model.EmailBodyMessageModelWithDocu
 
-			message, message1 := "", ""
-
 			if len(body["client_documents"]) != 0 {
 				message = UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistAttachDocumentsWithClientBody,
 					map[string]string{
 						"###TherapistName###": counsellor[0]["first_name"],
-						"###Date###":          UTIL.BuildOnlyDate(body["session_date"]),
+						"###Date###":          sessionDate,
 					},
 				)
-				message1 = CONSTANT.TherapistAttachDocumentsWithFooterClientBody
+
 			} else {
 				message = UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistAttachDocumentsWithOutClientBody,
 					map[string]string{
 						"###TherapistName###": counsellor[0]["first_name"],
-						"###Date###":          UTIL.BuildOnlyDate(body["session_date"]),
+						"###Date###":          sessionDate,
 					},
 				)
-				message1 = CONSTANT.TherapistAttachDocumentsWithOutFooterClientBody
+			}
+
+			if len(body["assessment_tool"]) != 0 {
+				message2 = UTIL.ReplaceNotificationContentInString(
+					CONSTANT.TherapistAttachAssessmentWithClientBody,
+					map[string]string{
+						"###assessment_name###": body["assessment_tool"],
+					},
+				)
 			}
 
 			if len(body["client_notes"]) != 0 {
@@ -298,8 +415,8 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 					Message:  message,
 					Message1: "Your therapist has suggested the following guidelines:",
 					Message2: body["client_notes"],
+					Message3: message2,
 					Message4: message1,
-					Message3: body["links"],
 				}
 			} else {
 				emaildata = Model.EmailBodyMessageModelWithDocu{
@@ -307,16 +424,21 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 					Message:  message,
 					Message1: "Your therapist has suggested the following guidelines:",
 					Message2: body["client_notes"],
-					Message4: message1,
 					Message3: body["links"],
+					Message4: message1,
 				}
 			}
 
-			filepath_text := "htmlfile/emailbodywithlink.html"
+			filepath_text := "htmlfile/emailbodywithassessment.html"
 
 			emailBy := UTIL.GetHTMLTemplateForWithDocument(emaildata, filepath_text)
 
-			UTIL.SendEmailWithDocument(client[0]["email"], emailBy, CONSTANT.CounsellorDocumentForClientTitle, listofDocuments)
+			UTIL.SendEmailWithDocument(client[0]["email"], emailBy, UTIL.ReplaceNotificationContentInString(
+				CONSTANT.CounsellorDocumentForClientTitle,
+				map[string]string{
+					"###date###": sessionDate,
+				},
+			), listofDocuments)
 		}
 
 	}

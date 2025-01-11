@@ -203,11 +203,21 @@ func LoadClientRoutes(router *mux.Router) {
 		"phone", "{phone}",
 	).Methods("GET")
 
-
 	clientRoutes.HandleFunc("/depandent_client/verifyotp", VerifyOTPWithDependantClientEmail).Queries(
 		"phone", "{phone}",
 		"otp", "{otp}",
 		"device_id", "{device_id}",
+	).Methods("GET")
+
+	// phone number verification for corporate client family member
+	clientRoutes.HandleFunc("/family_member/sendotp", SendOTPForForFamilyRegister).Queries(
+		"family_phone_no", "{family_phone_no}",
+		"family_email_id", "{family_email_id}",
+		"client_id", "{client_id}",
+	).Methods("GET")
+	clientRoutes.HandleFunc("/family_member/verifyotp", VerifyOTPForRegisterFamilyMember).Queries(
+		"family_phone_no", "{family_phone_no}",
+		"otp", "{otp}",
 	).Methods("GET")
 
 	// login
@@ -245,6 +255,11 @@ func LoadClientRoutes(router *mux.Router) {
 
 	// notification
 	clientRoutes.HandleFunc("/notification", NotificationsGet).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
+	// delete
+	clientRoutes.HandleFunc("/family_member/delete", DeleteAccountForFamilyMember).Queries(
 		"client_id", "{client_id}",
 	).Methods("GET")
 

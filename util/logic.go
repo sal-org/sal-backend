@@ -33,6 +33,68 @@ func GetBillingDetails(price, discount string) map[string]string {
 	return billing
 }
 
+func CalculateAge(birthdateStr string) (int, error) {
+	// Define the format of the birthdate string (e.g., "YYYY-MM-DD")
+	const dateFormat = "2006-01-02"
+
+	// Parse the birthdate string to time.Time
+	birthdate, err := time.Parse(dateFormat, birthdateStr)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the current date
+	currentDate := time.Now()
+
+	// Calculate the age based on the year difference
+	age := currentDate.Year() - birthdate.Year()
+
+	// Adjust if the current date is before the birthday this year
+	if currentDate.YearDay() < birthdate.YearDay() {
+		age--
+	}
+
+	return age, nil
+}
+
+func EncodeEmailID(email string) string {
+	// Find the position of the '@' symbol
+	atIndex := strings.Index(email, "@")
+	if atIndex == -1 {
+		// Return the email as is if '@' is not found (invalid email format)
+		return email
+	}
+
+	// Split the email into the local part and domain part
+	localPart := email[:atIndex]
+	domainPart := email[atIndex:]
+
+	// Check if the local part has at least 1 characters
+	if len(localPart) <= 1 {
+		// Replace the first 1 characters with 'x'
+		localPart = strings.Repeat("x", len(localPart))
+	} else if len(localPart) == 2 {
+		// Replace the first 2 characters with 'x'
+		localPart = localPart[:1] + "x"
+	} else if len(localPart) == 3 {
+		// Replace the first 3 characters with 'x'
+		localPart = localPart[:1] + "x" + localPart[2:]
+	} else if len(localPart) > 3 && len(localPart) <= 6 {
+		localPart = localPart[:1] + "xx"+ localPart[3:]
+	} else if len(localPart) > 6 && len(localPart) <= 9 {
+		localPart = localPart[:2] + "xxx"+ localPart[5:]
+	} else if len(localPart) > 9 && len(localPart) <= 12 {
+		localPart = localPart[:3] + "xxxx"+ localPart[8:]
+	} else if len(localPart) > 12 && len(localPart) <= 15 {
+		localPart = localPart[:3] + "xxxxx"+ localPart[8:]
+	} else {
+		localPart = localPart[:5] + "xxxxxxx"+ localPart[12:]
+	}
+
+	// Reconstruct the email with modified local part
+	return localPart + domainPart
+}
+
 // GetBillingDetails - calculate tax, paid amount
 func GetDiscount(price, discount string) map[string]string {
 	billing := map[string]string{}
@@ -172,16 +234,15 @@ func CheckIfScheduleAvailable(schedules []map[string]string, time string) string
 	return CONSTANT.SlotUnavailable
 }
 
-func CalculateExperience(startDate,nowDate, gapYears, gapMonth string) string {
+func CalculateExperience(startDate, nowDate, gapYears, gapMonth string) string {
 	layout := "2006-01-02"
-     
-	start, _ := time.Parse(layout, startDate)
-	
-	end, _ := time.Parse(layout,  nowDate)
-	
 
-	gapyears,_ := strconv.Atoi(gapYears)
-	gapmonths,_ := strconv.Atoi(gapMonth)
+	start, _ := time.Parse(layout, startDate)
+
+	end, _ := time.Parse(layout, nowDate)
+
+	gapyears, _ := strconv.Atoi(gapYears)
+	gapmonths, _ := strconv.Atoi(gapMonth)
 
 	years := end.Year() - start.Year()
 	years = years - gapyears
@@ -197,16 +258,15 @@ func CalculateExperience(startDate,nowDate, gapYears, gapMonth string) string {
 		years--
 		months += 12
 	}
-	
+
 	exprience := ""
-	
+
 	if months >= 6 {
-	    exprience = strconv.Itoa(years) + ".5"
+		exprience = strconv.Itoa(years) + ".5"
 	} else {
-	    exprience = strconv.Itoa(years)
+		exprience = strconv.Itoa(years)
 	}
-	
-	
-	return exprience;
+
+	return exprience
 
 }

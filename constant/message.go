@@ -19,12 +19,14 @@ const (
 
 // text messages
 const (
-	CounsellorAccountSignupTextMessage   = "Hey ###counsellor_name###, the onboarding process has been completed successfully. We will contact you shortly to discuss the next steps. - Team Clove"
-	CounsellorOTPTextMessage             = "###otp### is the OTP to access the Mobile App. Please do not share it with anyone. - Team SAL"
-	ClientOTPTextMessage                 = "###otp### is the OTP to register yourself on the Clove Mobile App. Please do not share it with anyone.  - Team Clove"
-	ClientProfileTitleMessage            = "Hey ###client_name###, welcome to Clove! Access self-care assessments and content, daily mood diaries and book counselling sessions with Listeners & Therapists.  - Team Clove"
-	ListenerOTPTextMessage               = "###otp### is the OTP to register yourself on SAL Mobile App. You are only few steps away from your taking your 1st listening session."
-	ClientAppointmentReminderTextMessage = "Hey ###user_name###, just a quick reminder for your upcoming session starting soon at ###time### with ###userName###. - Team Salubrium" //"Hey ###user_name###, just a quick appointment reminder for your upcoming session with ###userName### in the Clove mobile app. It is starting soon at ###time###. - Team Salubrium."
+	CounsellorAccountSignupTextMessage                     = "Hey ###counsellor_name###, the onboarding process has been completed successfully. We will contact you shortly to discuss the next steps. - Team Clove"
+	CounsellorOTPTextMessage                               = "###otp### is the OTP to access the Mobile App. Please do not share it with anyone. - Team SAL"
+	ClientOTPTextMessage                                   = "###otp### is the OTP to register yourself on the Clove Mobile App. Please do not share it with anyone.  - Team Clove"
+	ClientProfileTitleMessage                              = "Hey ###client_name###, welcome to Clove! Access self-care assessments and content, daily mood diaries and book counselling sessions with Listeners & Therapists.  - Team Clove"
+	ClientFamilyMemeberProfileAddedSuccessfullyTextMessage = "Hey ###family_member_name###,  your profile has been successfully added by ###client_name###. Pls check your email ###family_member_email_id### for further details - Team Salubrium"
+	ClientSendOTPToRegisterFamilyMemeberMessage            = "###otp### is the OTP to access the Clove Mobile App. Please share it with ###clientName###. Your registered email ID is ###emailId###, where you would be receiving further details - Team Salubrium"
+	ListenerOTPTextMessage                                 = "###otp### is the OTP to register yourself on SAL Mobile App. You are only few steps away from your taking your 1st listening session."
+	ClientAppointmentReminderTextMessage                   = "Hey ###user_name###, just a quick reminder for your upcoming session starting soon at ###time### with ###userName###. - Team Salubrium" //"Hey ###user_name###, just a quick appointment reminder for your upcoming session with ###userName### in the Clove mobile app. It is starting soon at ###time###. - Team Salubrium."
 	// ClientAppointmentScheduleCounsellorTextMessage           = "Hi ###counsellor_name###, you have a new counselling session booked by ###client_name### for ###date_time###. Please visit My sessions in the SAL Mobile app menu for more details."
 	ClientAppointmentConfirmationTextMessage   = "Hi ###userName###, your appointment with ###user_Name### is confirmed in the Clove mobile app. Date: ###date### Time: ###time### - Team Salubrium"
 	ClientInPersonEventConfirmationTextMessage = "Hey there, your In-person Clove Café on ###topic### is booked for ###date### at ###time### - Team Salubrium"

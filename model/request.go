@@ -309,6 +309,30 @@ type AssessmentAddRequest struct {
 	} `json:"details"`
 }
 
+// AssessmentAddRequest .
+type AssessmentAddRequestInAdminPanel struct {
+	Title      string `json:"title"`
+	SubTitles  string `json:"subtitles"`
+	Photo      string `json:"photo"`
+	Duration   string `json:"duration"`
+	Type       string `json:"type"`
+	Intruction string `json:"intruction"`
+	Feedback   string `json:"feedback"`
+	Order      string `json:"order"`
+	Status     string `json:"status"`
+	Questions  []struct {
+		Question string `json:"question"`
+		Order    string `json:"order"`
+		Status   string `json:"status"`
+		Options  []struct {
+			Option string `json:"option"`
+			Score  string `json:"score"`
+			Order  string `json:"order"`
+			Status string `json:"status"`
+		}
+	} `json:"questions"`
+}
+
 type CafeAttendedAddRequest struct {
 	OrderID   string `json:"order_id"`
 	ClientIDs []struct {
@@ -382,26 +406,31 @@ type AppSummaryReport struct {
 }
 
 type EmailDataForCounsellorRecord struct {
-	TherapistName   string
-	SessionFor      string
-	First_Name      string
-	Last_Name       string
-	Gender          string
-	Age             string
-	Department      string
-	Location        string
-	NoShow          string
-	SessionMode     string
-	SessionDate     string
-	InTime          string
-	OutTime         string
-	MentalHealth    string
-	TherapeuticGoal string
-	TherapyPlan     string
-	AssessmentTool  string
-	ClientNotes     string
-	ClientAttach    string
-	SendingStatus   string
+	TherapistName                 string
+	SessionFor                    string
+	First_Name                    string
+	Last_Name                     string
+	Gender                        string
+	Age                           string
+	NoShow                        string
+	PresentingConcerns            string
+	PsychiatricIntervention       string
+	PsychiatricInterventionReason string
+	TherapyNotes                  string
+	SubCategory                   string
+	EmotionalState                string
+	NextFollowDate                string
+	SessionMode                   string
+	SessionDate                   string
+	InTime                        string
+	OutTime                       string
+	MentalHealth                  string
+	TherapeuticGoal               string
+	TherapyPlan                   string
+	AssessmentTool                string
+	ClientNotes                   string
+	ClientAttach                  string
+	SendingStatus                 string
 }
 
 type EmailDataForCounsellorVisit struct {
