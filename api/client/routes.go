@@ -304,6 +304,13 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/therapist/order", TherapistOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/therapist/paymentcomplete", TherapistOrderPaymentComplete).Methods("POST")
 
+	clientRoutes.HandleFunc("/therapist/getHashData", GenerateHashForPayment).Queries(
+		"hashData", "{hashData}",
+	).Methods("GET")
+
+
+	clientRoutes.HandleFunc("/restore-user-account", RestoreUserProfile).Methods("PUT")
+
 	// corporate client
 
 	clientRoutes.HandleFunc("/corporateCounsellor/order", CorporateCounsellorOrderCreate).Methods("POST")

@@ -1,125 +1,47 @@
 package util
 
 import (
-	"bytes"
-	"crypto/hmac"
-	"crypto/sha256"
-	"crypto/subtle"
+	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	CONFIG "salbackend/config"
-	CONSTANT "salbackend/constant"
 	MODEL "salbackend/model"
+	"strings"
 )
 
-// Verify Payment Signature
-func GenerateSignature(signature, orderID, paymentID string) bool {
-	data := orderID + "|" + paymentID
-	fmt.Println(data)
-	// Create a new HMAC by defining the hash type and the key (as byte array)
-	h := hmac.New(sha256.New, []byte(CONFIG.RazorpaySecret))
-	fmt.Println(CONFIG.RazorpaySecret)
-	// Write Data to it
-	_, err := h.Write([]byte(data))
+// GetPayUPayment - get razorpay transaction details
+func GetPayUPayment(transactionID string) bool {
 
-	if err != nil {
-		return false
-	}
+	isRecordVaild := false
 
-	// Get result and encode as hexadecimal string
-	sha := hex.EncodeToString(h.Sum(nil))
-	if subtle.ConstantTimeCompare([]byte(sha), []byte(signature)) == 1 {
-		return true
-	}
-	return false
+	url := CONFIG.PayUURL
 
-}
+	data := CONFIG.PayUKey + "|" + "verify_payment" + "|" + transactionID + "|" + CONFIG.PayUSalt
+	hash := sha512.New()
+	hash.Write([]byte(data))
+	hashInString := hex.EncodeToString(hash.Sum(nil))
 
-// func CreateOrderID(orderID, user_id string, amount float64) {
+	payload := strings.NewReader("key=" + CONFIG.PayUKey + "&command=verify_payment&var1=" + transactionID + "&hash=" + hashInString)
 
-// 	createOrderBodyBytes, _ := json.Marshal(map[string]interface{}{
-// 		"amount":   amount,
-// 		"currency": "INR",
-// 		"receipt":  "OrderId_" + orderID,
-// 		"notes": map[string]interface{}{
-// 			"userId": user_id, "paymentOrder": "Created",
-// 		},
-// 	})
+	req, _ := http.NewRequest("POST", url, payload)
 
-// 	req, _ := http.NewRequest("POST", CONSTANT.RazorPayURL+"/orders", bytes.NewBuffer(createOrderBodyBytes))
-// 	req.Header.Add("Authorization", CONFIG.RazorpayAuth)
+	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 
-// 	res, err := http.DefaultClient.Do(req)
-// 	if err != nil {
-// 		return MODEL.RazorPayTransaction{}
-// 	}
-
-// 	defer res.Body.Close()
-// 	body, _ := ioutil.ReadAll(res.Body)
-
-// 	razorPayTransaction := MODEL.RazorPayTransaction{}
-// 	json.Unmarshal(body, &razorPayTransaction)
-
-// 	return razorPayTransaction
-
-// }
-
-// GetRazorpayPayment - get razorpay transaction details
-func GetRazorpayPayment(transactionID string) MODEL.RazorPayTransaction {
-	req, _ := http.NewRequest("GET", CONSTANT.RazorPayURL+"/payments/"+transactionID, nil)
-	req.Header.Add("Authorization", CONFIG.RazorpayAuth)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return MODEL.RazorPayTransaction{}
-	}
+	res, _ := http.DefaultClient.Do(req)
 
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
-	razorPayTransaction := MODEL.RazorPayTransaction{}
-	json.Unmarshal(body, &razorPayTransaction)
+	payUTransaction := MODEL.PaymentVerify{}
+	json.Unmarshal(body, &payUTransaction)
 
-	return razorPayTransaction
-}
-
-// CaptureRazorpayPayment - capture razorpay transaction
-func CaptureRazorpayPayment(transactionID string, amount float64) {
-	refundBodyBytes, _ := json.Marshal(map[string]interface{}{
-		"amount":   amount,
-		"currency": "INR",
-	})
-
-	req, _ := http.NewRequest("POST", CONSTANT.RazorPayURL+"/payments/"+transactionID+"/capture", bytes.NewBuffer(refundBodyBytes))
-	req.Header.Add("Authorization", CONFIG.RazorpayAuth)
-	req.Header.Add("Content-Type", "application/json")
-
-	http.DefaultClient.Do(req)
-}
-
-// RefundRazorpayPayment - refund amount from razorpay transaction
-func RefundRazorpayPayment(transactionID string, amount float64) {
-	amount = amount * 100
-	refundBodyBytes, _ := json.Marshal(map[string]interface{}{
-		"amount": amount,
-	})
-
-	req, _ := http.NewRequest("POST", CONSTANT.RazorPayURL+"/payments/"+transactionID+"/refund", bytes.NewBuffer(refundBodyBytes))
-	req.Header.Add("Authorization", CONFIG.RazorpayAuth)
-	req.Header.Add("Content-Type", "application/json")
-
-	// http.DefaultClient.Do(req)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("error", err)
+	if payUTransaction.Status == 1 {
+		if payUTransaction.TransactionDetails[transactionID]["status"] == "success" {
+			isRecordVaild = true
+		}
 	}
 
-	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
-
-	fmt.Println(string(body))
+	return isRecordVaild
 }

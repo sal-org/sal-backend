@@ -316,7 +316,9 @@ type AssessmentAddRequestInAdminPanel struct {
 	Photo      string `json:"photo"`
 	Duration   string `json:"duration"`
 	Type       string `json:"type"`
-	Intruction string `json:"intruction"`
+	Instruction string `json:"instruction"`
+	Source     string `json:"source"`
+	Reference  string `json:"reference"`
 	Feedback   string `json:"feedback"`
 	Order      string `json:"order"`
 	Status     string `json:"status"`
@@ -331,6 +333,11 @@ type AssessmentAddRequestInAdminPanel struct {
 			Status string `json:"status"`
 		}
 	} `json:"questions"`
+	Scores []struct {
+		MinScore string `json:"min_score"`
+		MaxScore string `json:"max_score"`
+		Result   string `json:"result"`
+	} `json:"scores"`
 }
 
 type CafeAttendedAddRequest struct {
@@ -403,6 +410,21 @@ type AppSummaryReport struct {
 	AvgRatingTotal                string `json:"avgrating_total"`
 	AppointmentsCancellationTotal string `json:"appointments_cancellation_total"`
 	AppointmentsNoShowTotal       string `json:"appointments_noshow_total"`
+}
+
+type PaymentRequest struct {
+	MerchantKey string `json:"merchant_key"`
+	Amount      string `json:"amount"`
+	OrderId     string `json:"order_id"`
+	ProductInfo string `json:"product_info"`
+	FirstName   string `json:"first_name"`
+	Email       string `json:"email"`
+}
+
+type PaymentVerify struct {
+	Status             int                          `json:"status"`
+	Msg                string                       `json:"msg"`
+	TransactionDetails map[string]map[string]string `json:"transaction_details"`
 }
 
 type EmailDataForCounsellorRecord struct {

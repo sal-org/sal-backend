@@ -190,6 +190,12 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// send notification to client
 	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
 
@@ -226,7 +232,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
-
+	response["access_control"] = givenAccess[0]
 	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
@@ -578,8 +584,8 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientFamilyMemeberProfileAddedSuccessfullyTextMessage,
 			map[string]string{
-				"###family_member_name###": body["first_name"],
-				"###client_name###":		clientD[0]["first_name"],
+				"###family_member_name###":     body["first_name"],
+				"###client_name###":            clientD[0]["first_name"],
 				"###family_member_email_id###": email,
 			},
 		),

@@ -316,7 +316,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	if mentalStatus > 7 {
+	if mentalStatus > 7 || body["psychiatric_intervention"] == "1" {
 
 		UTIL.SendEmailWithCCBB(
 			CONSTANT.CounselloRecordClientEmergencyCaseTitle,
@@ -327,25 +327,48 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	message, message1, message2 := "", "", ""
+	message, message1, message2,subjectLine := "", "", "", ""
 
 	if len(body["next_follow_date"]) != 0 {
 		// 15 min push notification before appointment start
-		UTIL.SendNotification(
-			CONSTANT.ClientAppointmentFollowUpSessionToSuggestedReminderClientHeading,
-			UTIL.ReplaceNotificationContentInString(
-				CONSTANT.ClientAppointmentFollowUpToSuggestedRemiderClientContent,
-				map[string]string{
-					"###therapist_name###": counsellor[0]["first_name"],
-					"###follow_up_date###": nextFollowDate,
-				},
-			),
-			body["client_id"],
-			CONSTANT.ClientType,
-			UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
-			CONSTANT.NotificationInProgress,
-			body["client_id"],
-		)
+
+		if body["session_mode"] == "In-Person" {
+			UTIL.SendNotification(
+				CONSTANT.ClientInPersonAppointmentFollowUpSessionToSuggestedReminderClientHeading,
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.ClientAppointmentFollowUpToSuggestedRemiderClientContent,
+					map[string]string{
+						"###therapist_name###": counsellor[0]["first_name"],
+						"###follow_up_date###": nextFollowDate,
+					},
+				),
+				body["client_id"],
+				CONSTANT.ClientType,
+				UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
+				CONSTANT.NotificationInProgress,
+				body["client_id"],
+			)
+
+			subjectLine = CONSTANT.CounsellorInPersonAppointmentDocumentForClientTitle
+		} else {
+			UTIL.SendNotification(
+				CONSTANT.ClientVirtualAppointmentFollowUpSessionToSuggestedReminderClientHeading,
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.ClientAppointmentFollowUpToSuggestedRemiderClientContent,
+					map[string]string{
+						"###therapist_name###": counsellor[0]["first_name"],
+						"###follow_up_date###": nextFollowDate,
+					},
+				),
+				body["client_id"],
+				CONSTANT.ClientType,
+				UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
+				CONSTANT.NotificationInProgress,
+				body["client_id"],
+			)
+
+			subjectLine = CONSTANT.CounsellorVirtualAppointmentDocumentForClientTitle
+		}
 
 		message1 = UTIL.ReplaceNotificationContentInString(
 			CONSTANT.TherapistAttachDocumentsFollowDateFooterClientBody,
@@ -434,7 +457,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 			emailBy := UTIL.GetHTMLTemplateForWithDocument(emaildata, filepath_text)
 
 			UTIL.SendEmailWithDocument(client[0]["email"], emailBy, UTIL.ReplaceNotificationContentInString(
-				CONSTANT.CounsellorDocumentForClientTitle,
+				subjectLine,
 				map[string]string{
 					"###date###": sessionDate,
 				},

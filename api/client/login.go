@@ -34,8 +34,13 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientBlocked {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -82,8 +87,14 @@ func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientBlocked {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -225,17 +236,17 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
-		// if !ok {
-		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		// 	return
-		// }
+		givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
-		// response["access_control"] = givenAccess[0]
+		response["access_control"] = givenAccess[0]
 		response["media_url"] = CONFIG.MediaURL
 	}
 
@@ -387,8 +398,14 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientBlocked {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -768,7 +785,7 @@ func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
 		return
 	}
-	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, map[string]string{"status": CONSTANT.ListenerBlocked, "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, map[string]string{"asscoiate_id": "", "modified_at": UTIL.GetCurrentTime().String()})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -925,4 +942,117 @@ func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+
+
+
+func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if len(r.FormValue("phone")) == 0 {
+		userType := "3"
+		userID := ""
+		user, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(user) == 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+
+		if userType == CONSTANT.ClientType {
+
+			userID = user[0]["client_id"]
+			// get counsellor details
+			client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": user[0]["client_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(client) == 0 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+
+			status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": user[0]["client_id"]}, map[string]string{"status": CONSTANT.ClientActive, "deletion_reason": "", "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		UTIL.SendNotification(
+			CONSTANT.ClientRestoreAccountClientHeading,
+			CONSTANT.ClientRestoreAccountClientContent,
+			userID,
+			userType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationInProgress,
+			userID,
+		)
+
+	} else {
+		userType := "3"
+
+		userID := ""
+
+		user, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(user) == 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if userType == CONSTANT.ClientType {
+
+			userID = user[0]["client_id"]
+			// get counsellor details
+			client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": user[0]["client_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(client) == 0 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+
+			status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": user[0]["client_id"]}, map[string]string{"status": CONSTANT.ClientActive, "deletion_reason": "", "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		UTIL.SendNotification(
+			CONSTANT.ClientRestoreAccountClientHeading,
+			CONSTANT.ClientRestoreAccountClientContent,
+			userID,
+			userType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationInProgress,
+			userID,
+		)
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

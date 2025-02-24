@@ -76,6 +76,11 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if len(partnerName) == 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientInPersonEventModelNotExistMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
 		eventsBooked, status, ok := DB.SelectProcess("select order_id from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and company_name = '"+partnerName[0]["partner_name"]+"' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and status = '1'", r.FormValue("client_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1042,15 +1047,15 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
-	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
+	// if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// capture razorpay payment
-	amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
-	UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
+	// // capture razorpay payment
+	// amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
+	// UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
 
 	// create invoice for the order
 	invoice := map[string]string{}

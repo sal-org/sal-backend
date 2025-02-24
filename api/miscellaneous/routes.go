@@ -30,11 +30,14 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// categories of content
 	router.HandleFunc("/content-category", ListContentCategory).Methods("GET")
 
-	// counsellor account delete
+	// user account delete
 	router.HandleFunc("/delete-user", DeleteUserProfile).Queries(
 		"user_id", "{user_id}",
 		"type", "{type}",
 	).Methods("DELETE")
+
+	// user account restore
+	router.HandleFunc("/restore-user-account", RestoreUserProfile).Methods("PUT")
 
 	// counsellor content
 	router.HandleFunc("/counsellor-content", ListCounsellorContent).Queries(

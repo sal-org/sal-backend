@@ -56,7 +56,7 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 	if len(wheres) > 0 {
 		where = " where " + strings.Join(wheres, " and ")
 	}
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+where+" order by created_at desc limit "+strconv.Itoa(CONSTANT.ResultsPerPageAdmin)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ResultsPerPageAdmin), queryArgs...)
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+where+" order by date desc limit "+strconv.Itoa(CONSTANT.ResultsPerPageAdmin)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ResultsPerPageAdmin), queryArgs...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -158,7 +158,7 @@ func InPersonAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	if len(wheres) > 0 {
 		where = " where " + strings.Join(wheres, " and ")
 	}
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+where+" order by created_at desc limit "+strconv.Itoa(CONSTANT.ResultsPerPageAdmin)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ResultsPerPageAdmin), queryArgs...)
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+where+" order by date desc limit "+strconv.Itoa(CONSTANT.ResultsPerPageAdmin)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ResultsPerPageAdmin), queryArgs...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -241,7 +241,7 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 
 		if refundAmount <= refundedAmount {
 
-			UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
+			// UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
 
 			// update appointment status to refunded
 			DB.UpdateSQL(CONSTANT.RefundsTable,
@@ -321,7 +321,7 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 
 		if refundAmount+refundedAmount <= paidAmount {
 
-			UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
+			// UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
 
 			DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
 				"invoice_id":             invoice[0]["invoice_id"],
@@ -399,7 +399,7 @@ func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 	if boo {
 		if refundAmount+refundedAmount <= paidAmount {
 
-			UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
+			// UTIL.RefundRazorpayPayment(invoice[0]["payment_id"], refundAmount)
 			// refunded amount will be less than paid amount
 			DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
 				"invoice_id":             invoice[0]["invoice_id"],

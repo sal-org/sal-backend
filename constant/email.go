@@ -101,9 +101,10 @@ const (
 
 // counsellor - client record
 const (
-	CounsellorRecordForClientTitle    = "Clove: New Client Record"
-	CounsellorDocumentForClientTitle  = "Clove: Appointment Notes - ###date###"
-	RatingTitleForInternalReviewTitle = "Rating for ###therapistName### : ###sessionDate###"
+	CounsellorRecordForClientTitle                      = "Clove: New Client Record"
+	CounsellorVirtualAppointmentDocumentForClientTitle  = "Clove: Virtual Appointment Notes - ###date###"
+	CounsellorInPersonAppointmentDocumentForClientTitle = "Clove: In-Person Appointment Notes - ###date###"
+	RatingTitleForInternalReviewTitle                   = "Rating for ###therapistName### : ###sessionDate###"
 )
 
 // counsellor - client record

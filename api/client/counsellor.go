@@ -359,21 +359,21 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	verifyPaymentSignature := UTIL.GenerateSignature(body["signature"], body["razor_order_id"], body["payment_id"])
-	if !verifyPaymentSignature {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// verifyPaymentSignature := UTIL.GenerateSignature(body["signature"], body["razor_order_id"], body["payment_id"])
+	// if !verifyPaymentSignature {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
-	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
+	// if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	//capture razorpay payment
-	amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
-	UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
+	// //capture razorpay payment
+	// amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
+	// UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
 
 	// create invoice for the order
 	invoice := map[string]string{}

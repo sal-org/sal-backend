@@ -551,7 +551,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	case "14": // counsellor record report
 		var noShow string
 
-		heading = []string{"Session For", "Counsellor Name", "Client Name", "Age", "Gender", "Location", "Department", "No Show", "Session Mode", "Session No", "Session Date", "In-Time", "Out-Time", "Mental Health Scale", "Therapeutic Goal", "Therapeutic Plan"}
+		heading = []string{"Session For", "Session Type", "Counsellor Name", "Client Name", "Age", "Gender", "Location", "Department", "No Show", "Session Mode", "Session No", "Session Date", "In-Time", "Out-Time", "Presenting Concerns", "Mental Health Scale", "Psychiatric Intervention", "Psychiatric Intervention Reason", "Therapy Notes", "Category", "Sub Category", "Emotional State", "Next Follow Date", "Client Notes", "Client Self-Work", "Client Assessment", "Therapeutic Plan"}
 
 		counsellorRecords, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordsTable + " where `session_date` >= '" + startBy.String() + "' and `session_date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -576,7 +576,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			} else {
 				noShow = "Yes"
 			}
-			data = append(data, []string{counsellorRecord["session_for"], counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["mental_health"], counsellorRecord["therapeutic_goal"], counsellorRecord["therapy_plan"]})
+			data = append(data, []string{counsellorRecord["session_for"], counsellorRecord["session_type"], counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["presenting_concerns"], counsellorRecord["mental_health"], counsellorRecord["psychiatric_intervention"], counsellorRecord["psychiatric_intervention_reason"], counsellorRecord["therapy_notes"], counsellorRecord["therapeutic_goal"], counsellorRecord["sub_category"], counsellorRecord["emotional_state"], counsellorRecord["next_follow_date"], counsellorRecord["client_notes"], counsellorRecord["client_documents"], counsellorRecord["assessment_tool"],  counsellorRecord["therapy_plan"]})
 		}
 
 	case "15": // client rating

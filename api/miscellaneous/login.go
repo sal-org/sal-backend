@@ -41,8 +41,13 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -120,10 +122,24 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	assessmentName := DB.QueryRowSQL("select title from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", body.AssessmentID)
+
 	finalScore := 0
+	finalScoreInFloat := 0.0
 	for _, detail := range body.Details {
 		score, _ := strconv.Atoi(detail.Score)
 		finalScore += score
+	}
+
+	assessmentName = strings.ToUpper(assessmentName)
+
+	bol, _ := regexp.MatchString(assessmentName, "GRIT SCALE")
+
+	if bol {
+		finalScoreInFloat = float64(finalScore) / 12
+		finalScoreInFloat = math.Round(finalScoreInFloat*100) / 100
+	} else {
+		finalScoreInFloat = math.Round(float64(finalScore)*100) / 100
 	}
 
 	// add assessment result
@@ -134,7 +150,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 		"gender":        body.Gender,
 		"phone":         body.Phone,
 		"assessment_id": body.AssessmentID,
-		"final_score":   strconv.Itoa(finalScore),
+		"final_score":   strconv.FormatFloat(finalScoreInFloat, 'f', 2, 64),
 		"feedback":      body.Feedback,
 		"status":        CONSTANT.AssessmentResultActive,
 		"created_at":    UTIL.GetCurrentTime().UTC().String(),
@@ -155,7 +171,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	response["result"] = DB.QueryRowSQL("select result from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? and min <= "+strconv.Itoa(finalScore)+" and max >= "+strconv.Itoa(finalScore), body.AssessmentID)
+	response["result"] = DB.QueryRowSQL("select result from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? and min <= "+strconv.FormatFloat(finalScoreInFloat, 'f', 2, 64)+" and max >= "+strconv.FormatFloat(finalScoreInFloat, 'f', 2, 64), body.AssessmentID)
 	response["assessment_result_id"] = assessmentResultID
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

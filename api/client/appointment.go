@@ -610,7 +610,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	// send email to client
-	filepath_text := "htmlfile/appointmentConfirmation.html"
+	filepath_text := "htmlfile/b2cAppointmentConfirmation.html"
 
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: client[0]["first_name"],
