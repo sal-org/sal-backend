@@ -311,18 +311,18 @@ type AssessmentAddRequest struct {
 
 // AssessmentAddRequest .
 type AssessmentAddRequestInAdminPanel struct {
-	Title      string `json:"title"`
-	SubTitles  string `json:"subtitles"`
-	Photo      string `json:"photo"`
-	Duration   string `json:"duration"`
-	Type       string `json:"type"`
+	Title       string `json:"title"`
+	SubTitles   string `json:"subtitles"`
+	Photo       string `json:"photo"`
+	Duration    string `json:"duration"`
+	Type        string `json:"type"`
 	Instruction string `json:"instruction"`
-	Source     string `json:"source"`
-	Reference  string `json:"reference"`
-	Feedback   string `json:"feedback"`
-	Order      string `json:"order"`
-	Status     string `json:"status"`
-	Questions  []struct {
+	Source      string `json:"source"`
+	Reference   string `json:"reference"`
+	Feedback    string `json:"feedback"`
+	Order       string `json:"order"`
+	Status      string `json:"status"`
+	Questions   []struct {
 		Question string `json:"question"`
 		Order    string `json:"order"`
 		Status   string `json:"status"`
@@ -395,6 +395,16 @@ type EmailDataForCounsellorProfile struct {
 	Aadhar               string
 	Linkedin             string
 	Status               string
+}
+
+type EmailDataForWebClientB2CProfile struct {
+	Name            string
+	Phone           string
+	Email           string
+	CompanyName     string
+	CompanyLocation string
+	CompanySize     string
+	Message         string
 }
 
 type AppSummaryReport struct {
@@ -647,6 +657,16 @@ type AssessmentDownloadBDIModel struct {
 	Response19 string `json:"response19"`
 	Response20 string `json:"response20"`
 	Response21 string `json:"response21"`
+}
+
+type TokenRequest struct {
+	UserUUID string `json:"user_uuid,omitempty"` // Optional for App Token
+	Expire   uint32 `json:"expire"`
+}
+
+type TokenResponse struct {
+	Token string `json:"token"`
+	Error string `json:"error,omitempty"`
 }
 
 type ClientAppointmentConfirmation struct {

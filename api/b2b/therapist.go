@@ -1,4 +1,4 @@
-package client
+package b2b
 
 import (
 	"net/http"
@@ -20,10 +20,12 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func TherapistProfile(w http.ResponseWriter, r *http.Request) {
+func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	lang := []string{}
 	expert := []string{}
@@ -36,11 +38,11 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get therapist details
 	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "video", "education", "experience", "therapeutic_approach", "about", "slot_type"}, map[string]string{"therapist_id": body["therapist_id"]})
@@ -94,7 +96,16 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 
 	response["therapist"] = counsellor
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // TherapistSlots godoc
@@ -105,10 +116,12 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func TherapistSlots(w http.ResponseWriter, r *http.Request) {
+func TherapistSlots(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -117,11 +130,11 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get therapist slots
 	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", body["therapist_id"])
@@ -132,13 +145,24 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 
 	// remove times and dates with no availability
 	response["slots"] = UTIL.FilterAvailableSlots(slots)
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
+func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 	// get counsellor details
 	var counsellorType string
 
@@ -149,11 +173,11 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderCreateForCorporateRequiredFields)
@@ -290,10 +314,19 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["order_id"] = orderID
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -305,11 +338,11 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderPaymentCompleteRequiredFields)

@@ -10,8 +10,10 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	Model "salbackend/model"
+	"strconv"
 
 	rtctokenbuilder "github.com/AgoraIO-Community/go-tokenbuilder/rtctokenbuilder"
+	"github.com/AgoraIO/Tools/DynamicKey/AgoraDynamicKey/go/src/chatTokenBuilder" // Import the chatTokenBuilder package
 )
 
 func GenerateAgoraRTCToken(channelName string, roleStr string, uidStr string, expireTime uint32) (result string, err error) {
@@ -358,4 +360,43 @@ func CallStatus(resourceid string, sid string) (Model.AgoraCallStatus, error) {
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(bodyBytes))
 	return result, nil
+}
+
+func BuildUserTokenHandler(userUUID, expire string) (string, bool) {
+
+
+	expireUint, err := strconv.ParseUint(expire, 10, 32)
+	if err != nil {
+		return "Invalid expire value", false
+	}
+
+	token, err := chatTokenBuilder.BuildChatUserToken(CONFIG.AGORA_APP_ID, CONFIG.AGORA_APP_CERTIFICATE, userUUID, uint32(expireUint))
+	if err != nil {
+		return err.Error(), false
+	}
+
+	response := Model.TokenResponse{Token: token}
+
+	if response.Error != "" {
+		return response.Error, false
+	}
+	return response.Token, true
+}
+
+func BuildAppTokenHandler(expire string) (string, bool) {
+	expireUint, err := strconv.ParseUint(expire, 10, 32)
+	if err != nil {
+		return "Invalid expire value", false
+	}
+
+	token, err := chatTokenBuilder.BuildChatAppToken(CONFIG.AGORA_APP_ID, CONFIG.AGORA_APP_CERTIFICATE, uint32(expireUint))
+	if err != nil {
+		return err.Error(), false
+	}
+
+	response := Model.TokenResponse{Token: token}
+	if response.Error != "" {
+		return response.Error, false
+	}
+	return response.Token, true
 }

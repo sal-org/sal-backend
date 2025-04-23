@@ -294,7 +294,13 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		finalScore, _ := strconv.Atoi(assessment_result[0]["final_score"])
+		title := DB.QueryRowSQL("select title from "+CONSTANT.AssessmentsTable+" where assessment_id = ? ", assessment_result[0]["assessment_id"])
+
+		// finalScore, _ := strconv.Atoi(assessment_result[0]["final_score"])
+
+		final, _ := strconv.ParseFloat(assessment_result[0]["final_score"], 64)
+
+		finalScore := math.Round(final*100) / 100
 
 		//assign := assessment_result[0]["assessment_id"]
 
@@ -887,6 +893,51 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			fmt.Println(emailbody)
 
+		} else if title == "GRIT SCALE" {
+			var filePath string
+
+			if finalScore >= 1.0 && finalScore <= 2.0 {
+
+				filePath = "htmlfile/GRIT_1.0_2.0.html"
+
+			} else if finalScore >= 2.1 && finalScore <= 3.0 {
+
+				filePath = "htmlfile/GRIT_2.1_3.0.html"
+
+			} else if finalScore >= 3.1 && finalScore <= 4.0 {
+
+				filePath = "htmlfile/GRIT_3.1_4.0.html"
+
+			} else {
+
+				filePath = "htmlfile/GRIT_4.1_5.0.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadBurnOutModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+				Answer11: assessment_result_details[10]["score"],
+				Answer12: assessment_result_details[11]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBurnOut(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
 		} else {
 
 			var filePath string

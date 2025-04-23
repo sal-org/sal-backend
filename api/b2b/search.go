@@ -1,4 +1,4 @@
-package client
+package b2b
 
 import (
 	"net/http"
@@ -11,27 +11,29 @@ import (
 	UTIL "salbackend/util"
 )
 
-func ListSearch(w http.ResponseWriter, r *http.Request) {
+func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	var SQLQuery, therapistSQLQuery string
 	args := []interface{}{}
 	therapistArgs := []interface{}{}
 	counsellorlist := []map[string]interface{}{}
 
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
-
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// build therapist query
 	therapistSQLQuery = "select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
@@ -64,7 +66,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		max, _ := strconv.ParseFloat(experiences[1], 64)
 		therapistArgs = append(therapistArgs, min, max)
 	}
-	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != '2' ") // only active therapists
+	wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != '2' and in_house_therapist = 1 ") // only active therapists
 	therapistSQLQuery += " where " + strings.Join(wheres, " and ")
 
 	if len(body["type"]) > 0 { // get only certain types
@@ -187,5 +189,14 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }

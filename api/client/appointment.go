@@ -59,6 +59,39 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Time Zone Conversion
+
+	// for i := 0; i < len(appointments); i++ {
+	// 	counsellorTimeZone := "330" // IST
+
+	// 	clientTimeZone := "-300" // IST
+
+	// 	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+
+	// 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	// 	counsellorTimeInInt = counsellorTimeInInt / 30
+	// 	clientTimeInInt = clientTimeInInt / 30
+
+	// 	index, _ := strconv.Atoi(appointments[i]["time"])
+	// 	index = index - counsellorTimeInInt
+	// 	index = index + clientTimeInInt
+	// 	if index < 0 {
+	// 		index = index + 47
+	// 		date, _ := time.Parse("2006-01-02", appointments[i]["date"])
+
+	// 		previousDate := date.AddDate(0, 0, -1)
+
+	// 		// Format the resulting date back to a string
+	// 		previousDateStr := previousDate.Format("2006-01-02")
+	// 		appointments[i]["date"] = previousDateStr
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	} else {
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	}
+
+	// }
+
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -188,6 +221,39 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// Time Zone Conversion
+
+	// for i := 0; i < len(appointments); i++ {
+	// 	counsellorTimeZone := "330" // IST
+
+	// 	clientTimeZone := "-300" // IST
+
+	// 	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+
+	// 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	// 	counsellorTimeInInt = counsellorTimeInInt / 30
+	// 	clientTimeInInt = clientTimeInInt / 30
+
+	// 	index, _ := strconv.Atoi(appointments[i]["time"])
+	// 	index = index - counsellorTimeInInt
+	// 	index = index + clientTimeInInt
+	// 	if index < 0 {
+	// 		index = index + 47
+	// 		date, _ := time.Parse("2006-01-02", appointments[i]["date"])
+
+	// 		previousDate := date.AddDate(0, 0, -1)
+
+	// 		// Format the resulting date back to a string
+	// 		previousDateStr := previousDate.Format("2006-01-02")
+	// 		appointments[i]["date"] = previousDateStr
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	} else {
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	}
+
+	// }
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments

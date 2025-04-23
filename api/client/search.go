@@ -537,7 +537,7 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "shivam.tiwari@clovemind.com" {
+	if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "shivam.tiwari@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" {
 
 		partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"status": "1"})
 		if !ok {

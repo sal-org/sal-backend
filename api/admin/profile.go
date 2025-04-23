@@ -126,6 +126,9 @@ func AddProfileForUsers(w http.ResponseWriter, r *http.Request) {
 		"pc_add":             body["pc_add"],
 		"pc_edit":            body["pc_edit"],
 		"pc_view":            body["pc_view"],
+		"assessment_add":     body["assessment_add"],
+		"assessment_edit":    body["assessment_edit"],
+		"assessment_view":    body["assessment_view"],
 		"home_add":           body["home_add"],
 		"home_edit":          body["home_edit"],
 		"home_view":          body["home_view"],
@@ -234,6 +237,12 @@ func UpdateProfileForUsers(w http.ResponseWriter, r *http.Request) {
 	profile["pc_edit"] = body["pc_edit"]
 
 	profile["pc_view"] = body["pc_view"]
+
+	profile["assessment_add"] = body["assessment_add"]
+
+	profile["assessment_edit"] = body["assessment_edit"]
+
+	profile["assessment_view"] = body["assessment_view"]
 
 	profile["home_view"] = body["home_view"]
 

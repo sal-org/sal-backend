@@ -859,6 +859,28 @@ func AppointmentInPersonStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get upcoming appointments both to be started and started
+	isAppointmentsStarted, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and status = "+CONSTANT.AppointmentStarted+" and date = '"+UTIL.GetCurrentTime().Format("2006-01-02")+"'", appointment[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(isAppointmentsStarted) > 0 {
+		for _, v := range isAppointmentsStarted {
+			// update appointment as ended
+			DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
+				map[string]string{
+					"appointment_id": v["appointment_id"],
+				},
+				map[string]string{
+					"status":   CONSTANT.AppointmentCompleted,
+					"ended_at": UTIL.BuildToDteTime(v["started_at"]).Add(time.Minute * 60).String(), // one hour is added in the started_at time
+				},
+			)
+		}
+	}
+
 	// get counsellor type
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	if !strings.EqualFold(counsellorType, CONSTANT.TherapistType) {
@@ -1252,6 +1274,23 @@ func AppointmentInPersonEnd(w http.ResponseWriter, r *http.Request) {
 			"ended_at": UTIL.GetCurrentTime().String(),
 		},
 	)
+
+	// send client for rating
+
+	// UTIL.SendNotification(
+	// 	CONSTANT.ClientAppointmentFeedbackHeading,
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.ClientAppointmentFeedbackContent,
+	// 		map[string]string{
+	// 			"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"]),
+	// 		},
+	// 	),
+	// 	appointment[0]["client_id"],
+	// 	CONSTANT.ClientType,
+	// 	UTIL.GetCurrentTime().String(),
+	// 	CONSTANT.NotificationSent,
+	// 	r.FormValue("appointment_id"),
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

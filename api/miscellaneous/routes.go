@@ -7,7 +7,10 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 
 	// content
 	router.HandleFunc("/content", Content).Methods("GET")
-	router.HandleFunc("/content/name", GetContentUsedTitle).Methods("GET")
+	router.HandleFunc("/content/name", GetContentUsedTitle).Queries(
+		"content_name","{content_name}",
+		"type","{type}",
+	).Methods("GET")
 	router.HandleFunc("/content/like", ContentLikeGet).Queries(
 		"user_id", "{user_id}",
 	).Methods("GET")

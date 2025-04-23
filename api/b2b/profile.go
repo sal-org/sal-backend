@@ -1,4 +1,4 @@
-package client
+package b2b
 
 import (
 	"net/http"
@@ -19,10 +19,12 @@ import (
 // @Param device_id query string true "Device ID of client - to get details, if signed up already"
 // @Produce json
 // @Success 200
-func ProfileGet(w http.ResponseWriter, r *http.Request) {
+func ProfileGet(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -31,11 +33,11 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": body["email"]})
@@ -79,7 +81,15 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 		response["media_url"] = CONFIG.MediaURL
 	}
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // ProfileAdd godoc
@@ -89,17 +99,19 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 // @Param body body model.ClientProfileAddRequest true "Request Body"
 // @Produce json
 // @Success 200
-func ProfileAdd(w http.ResponseWriter, r *http.Request) {
+func ProfileAdd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
+	var encryptedResponse = make(map[string]interface{})
+
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientProfileAddRequiredFields)
@@ -212,7 +224,15 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // ProfileUpdate godoc
@@ -224,7 +244,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
+func ProfileUpdate(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -236,11 +256,11 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// update client details
 	client := map[string]string{}

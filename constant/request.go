@@ -7,6 +7,7 @@ var (
 	AdminUserProfileRequiredFields                  = []string{"profile_name"}
 	AppointmentBookRequiredFields                   = []string{"appointment_slot_id", "date", "time"}
 	AppointmentRescheduleRequiredFields             = []string{"date", "time"}
+	AppTokenForChatRequiredFields                   = []string{"expire"}
 	AppointmentRatingAddRequiredFields              = []string{"appointment_id", "rating", "client_id", "counsellor_id"}
 	AppointmentRequestRequiredFields                = []string{"counsellor_id", "type", "client_id"}
 	EventInPersonRequestRequiredFields              = []string{"order_id", "client_id"}
@@ -26,6 +27,7 @@ var (
 	CounsellorOrderPaymentCompleteRequiredFields    = []string{"order_id", "payment_method", "payment_id", "signature", "razor_order_id"}
 	ListenerOrderPaymentCompleteRequiredFields      = []string{"order_id"}
 	ClientProfileAddRequiredFields                  = []string{"phone", "email"}
+	ClientBookDemoInWebsiteAddRequiredFields        = []string{"name", "email", "phone", "company_name", "location", "size", "message"}
 	CorporateClientProfileAddRequiredFields         = []string{"phone", "email", "otp"}
 	CorporateClientRelativeProfileAddRequiredFields = []string{"phone", "email", "client_id"}
 	QualityCheckEmailRequiredFields                 = []string{"email_from", "email_to", "body", "title"}

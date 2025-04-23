@@ -1,11 +1,13 @@
 package therapist
 
 import (
+	"encoding/csv"
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
 	"strings"
+	"time"
 
 	UTIL "salbackend/util"
 )
@@ -56,4 +58,50 @@ func PaymentsGet(w http.ResponseWriter, r *http.Request) {
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(paymentsCount[0]["ctn"], CONSTANT.CounsellorsPaymentsPerPageClient))
 	response["payments"] = payments
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+
+func PaymentsDownload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+	data := [][]string{}
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	startBy, _ := time.Parse("2006-01-02", r.FormValue("start_by"))
+	endBy, _ := time.Parse("2006-01-02", r.FormValue("end_by"))
+
+	heading := []string{"Client Name", "Description", "Amount"}
+
+	orderBy := " desc "
+
+	if strings.EqualFold(r.FormValue("order_by"), "1") {
+		orderBy = " asc "
+	}
+
+	// get payments for therapist
+	payments, status, ok := DB.SelectProcess("select * from "+CONSTANT.PaymentsTable+" where counsellor_id = ? and status = "+CONSTANT.PaymentValid+" and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at "+orderBy+"", r.FormValue("therapist_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	for _, payment := range payments {
+		data = append(data, []string{payment["heading"], payment["description"], payment["amount"]})
+	}
+
+	writer := csv.NewWriter(w)
+
+	writer.Write(heading)
+
+	for _, d := range data {
+		writer.Write(d)
+	}
+
+	writer.Flush()
 }

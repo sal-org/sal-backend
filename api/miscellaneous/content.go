@@ -185,13 +185,13 @@ func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+	contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '"+r.FormValue("type")+"' and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	contentCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+	contentCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '"+r.FormValue("type")+"' and status = 1")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -355,6 +355,12 @@ func IncreaseContentViewCount(w http.ResponseWriter, r *http.Request) {
 
 	viewsInString := strconv.Itoa(view)
 
+	userID := ""
+
+	if len(r.FormValue("user_id")) != 0 {
+		userID = r.FormValue("user_id")
+	}
+
 	DB.UpdateSQL(CONSTANT.ContentsTable,
 		map[string]string{
 			"content_id": content[0]["content_id"],
@@ -363,6 +369,13 @@ func IncreaseContentViewCount(w http.ResponseWriter, r *http.Request) {
 			"views": viewsInString,
 		},
 	)
+
+	DB.InsertSQL(CONSTANT.ContentUserViewsTable, map[string]string{
+		"content_id": content[0]["content_id"],
+		"user_id":    userID,
+		"status":     "1",
+		"created_at": UTIL.GetCurrentTime().String(),
+	})
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 

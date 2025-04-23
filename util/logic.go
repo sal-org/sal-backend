@@ -80,15 +80,15 @@ func EncodeEmailID(email string) string {
 		// Replace the first 3 characters with 'x'
 		localPart = localPart[:1] + "x" + localPart[2:]
 	} else if len(localPart) > 3 && len(localPart) <= 6 {
-		localPart = localPart[:1] + "xx"+ localPart[3:]
+		localPart = localPart[:1] + "xx" + localPart[3:]
 	} else if len(localPart) > 6 && len(localPart) <= 9 {
-		localPart = localPart[:2] + "xxx"+ localPart[5:]
+		localPart = localPart[:2] + "xxx" + localPart[5:]
 	} else if len(localPart) > 9 && len(localPart) <= 12 {
-		localPart = localPart[:3] + "xxxx"+ localPart[8:]
+		localPart = localPart[:3] + "xxxx" + localPart[8:]
 	} else if len(localPart) > 12 && len(localPart) <= 15 {
-		localPart = localPart[:3] + "xxxxx"+ localPart[8:]
+		localPart = localPart[:3] + "xxxxx" + localPart[8:]
 	} else {
-		localPart = localPart[:5] + "xxxxxxx"+ localPart[12:]
+		localPart = localPart[:5] + "xxxxxxx" + localPart[12:]
 	}
 
 	// Reconstruct the email with modified local part
@@ -161,7 +161,7 @@ func AssociateLanguagesAndTopics(topicIDs, languageIDs, id string) {
 
 // FilterAvailableSlots - show only available slots and dates
 func FilterAvailableSlots(slots []map[string]string) []map[string]string {
-	// remove dates with no availability
+
 	filteredSlots := []map[string]string{}
 	for _, slot := range slots {
 		filteredSlot := map[string]string{}
@@ -184,6 +184,64 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 			filteredSlots = append(filteredSlots, filteredSlot)
 		}
 	}
+
+	// Time Zone Conversion
+
+	// counsellorTimeZone := "330" // IST
+
+	// clientTimeZone := "-300" // IST
+
+	// counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+
+	// clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	// counsellorTimeInInt = counsellorTimeInInt / 30
+	// clientTimeInInt = clientTimeInInt / 30
+
+	// remove dates with no availability
+	// filteredSlots := []map[string]string{}
+	// for _, slot := range slots {
+	// 	filteredSlot := map[string]string{}
+	// 	privousSlot := map[string]string{}
+	// 	startSlot := 0
+	// 	if strings.EqualFold(GetCurrentTime().Format("2006-01-02"), slot["date"]) {
+	// 		// use from next hour and multiply by 2 to get 30 min slots
+	// 		startSlot = (GetCurrentTime().Add(330*time.Minute).Hour()+1)*2 + 2 // use next slot for removing expired time for today
+	// 	}
+
+	// 	for i := startSlot; i < 48; i++ { // 48 - 30 min slots
+	// 		// show only times with availability
+	// 		if strings.EqualFold(slot[strconv.Itoa(i)], "1") {
+	// 			index := i
+	// 			index = index - counsellorTimeInInt
+	// 			index = index + clientTimeInInt
+	// 			if index < 0 {
+	// 				index = index + 47
+	// 				privousSlot[strconv.Itoa(index)] = "1"
+	// 			} else {
+	// 				filteredSlot[strconv.Itoa(index)] = "1"
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if len(filteredSlot) > 0 { // atleast 1 slot is available
+	// 		//filteredSlot["date"] = slot["date"]
+	// 		filteredSlot["date"] = slot["date"]
+	// 		filteredSlots = append(filteredSlots, filteredSlot)
+	// 	}
+
+	// 	if len(privousSlot) > 0 { // atleast 1 slot is available
+	// 		//filteredSlot["date"] = slot["date"]
+	// 		date, _ := time.Parse("2006-01-02", slot["date"])
+
+	// 		previousDate := date.AddDate(0, 0, -1)
+
+	// 		// Format the resulting date back to a string
+	// 		previousDateStr := previousDate.Format("2006-01-02")
+	// 		privousSlot["date"] = previousDateStr
+	// 		filteredSlots = append(filteredSlots, privousSlot)
+	// 	}
+	// }
 
 	return filteredSlots
 }

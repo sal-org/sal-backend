@@ -1,4 +1,4 @@
-package client
+package b2b
 
 import (
 	"net/http"
@@ -10,20 +10,21 @@ import (
 	"strings"
 )
 
-func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
+func CheckAccessCode(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
-	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"access_code": body["access_code"], "status": "1"})
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"access_code": body["access_code"], "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientAccessCode, CONSTANT.ShowDialog, response)
 		return
@@ -45,20 +46,28 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
 
 	response["title"] = title[0]
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
+func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	is_valid_email := UTIL.IsValidEmail(body["email"])
 	if is_valid_email == "" {
@@ -69,7 +78,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 	domainName := strings.Split(body["email"], "@")
 
 	// get client details
-	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
@@ -135,17 +144,19 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
+func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
+	var encryptedResponse = make(map[string]interface{})
+
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	//check if otp is correct
 	if !UTIL.VerifyOTPWithCorporateEmail(body["email"], body["otp"]) {
@@ -153,7 +164,7 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]})
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
 		return
@@ -200,5 +211,13 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 	response["client"] = client[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }

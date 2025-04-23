@@ -162,6 +162,37 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		counsellorType = CONSTANT.CounsellorType
 	}
 
+	// Timezone conversion
+
+	// counsellorTimeZone := "330" // IST
+
+	// clientTimeZone := "-300" // IST
+
+	// counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+
+	// clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	// counsellorTimeInInt = counsellorTimeInInt / 30
+	// clientTimeInInt = clientTimeInInt / 30
+
+	// index, _ := strconv.Atoi(body["time"])
+	// index = index - clientTimeInInt
+	// index = index + counsellorTimeInInt
+
+	// if index > 47 {
+	// 	index = index - 47
+	// 	date, _ := time.Parse("2006-01-02", body["date"])
+
+	// 	lastestDate := date.AddDate(0, 0, 1)
+
+	// 	// Format the resulting date back to a string
+	// 	lastestDateStr := lastestDate.Format("2006-01-02")
+	// 	body["date"] = lastestDateStr
+	// 	body["time"] = strconv.Itoa(index)
+	// } else {
+	// 	body["time"] = strconv.Itoa(index)
+	// }
+
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -509,6 +540,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	if domainName[1] == "db.com" {
 		accessCode = "2332"
+	} else if domainName[1] == "ageasfederal.com" {
+		accessCode = "2523"
 	} else {
 		accessCode = "1234"
 	}
@@ -649,6 +682,25 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	if len(appointment2nd) != 0 {
+
+		// for _, app := range appointment2nd {
+
+		// 	var localTime int
+		// 	timeNow := UTIL.GetCurrentTime().Local()
+		// 	if timeNow.Minute() >= 30 {
+		// 		localTime = timeNow.Hour()*2 + 3
+		// 	} else {
+		// 		localTime = timeNow.Hour()*2 + 2
+		// 	}
+		// 	appomtmentTime, _ := strconv.Atoi(app["time"])
+
+		// 	if appomtmentTime+2 < localTime {
+		// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InPersonAppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 		return
+		// 	}
+
+		// }
+
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InPersonAppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
 		return
 	}

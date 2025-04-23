@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	"strings"
 
 	UTIL "salbackend/util"
 )
@@ -25,6 +26,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	var ok bool
 	var status string
 
+	accessCode := ""
+
 	if len(r.FormValue("client_id")) > 0 {
 
 		active := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"status": "1", "client_id": r.FormValue("client_id")})
@@ -34,7 +37,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		client, status, ok := DB.SelectProcess("select topic_ids from "+CONSTANT.ClientsTable+" where client_id = ? and status = 1", r.FormValue("client_id"))
+		client, status, ok := DB.SelectProcess("select topic_ids, email from "+CONSTANT.ClientsTable+" where client_id = ? and status = 1", r.FormValue("client_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -45,6 +48,16 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
+		}
+
+		domainName := strings.Split(client[0]["email"], "@")
+
+		if domainName[1] == "db.com" {
+			accessCode = "2332"
+		} else if domainName[1] == "ageasfederal.com" {
+			accessCode = "2523"
+		} else {
+			accessCode = "1234"
 		}
 	} else {
 		recommended, status, ok = DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where training = 0 and status = 1 order by created_at desc limit 20")
@@ -90,6 +103,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["recommended"] = recommended
+	response["access_code"] = accessCode
 	// response["videos"] = videos
 	// response["audios"] = audios
 	// response["articles"] = articles
