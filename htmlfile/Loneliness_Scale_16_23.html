@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>UCLA Loneliness Scale (ULS-8)</title>
+      <style>
+        body{
+		    min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>UCLA Loneliness Scale (ULS-8)</b></p>
+          <p style="text-align: center;">ULS-8 is a brief version of the original UCLA Loneliness Scale, created to quickly understand how lonely
+            or socially disconnected someone feels, without taking too much time. <br>Hays, R. D., & DiMatteo, M. R. (1987). A short-form measure of loneliness.
+            Journal of Personality Assessment, 51(1), 69–81.</p>
+          <p style="font-size:large;text-align: end;">Source: <a href="https://doi.org/10.1207/s15327752jpa5101_6">https://doi.org/10.1207/s15327752jpa5101_6</a></p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p>What is Loneliness Scale?</p>
+          <p>This scale is designed to measure one’s subjective feelings of loneliness as well as feelings of
+            social isolation. Chronic perceived loneliness has been linked to an increased risk of a variety of
+            health concerns, including heart disease, stroke, dementia, depression, early mortality, and many
+            others. Having a scientific, reliable way to measure loneliness allows researchers to gauge levels
+            of this feeling among populations in order to take action to address it.</p>
+          <p><b>What is your ULS-8 Scale?</b></p><br>
+          <p>ULS-8 has been used to evaluate severity of feelings of loneliness in individuals, from
+            adolescence to adulthood. Scale consists of 8 items which were loaded into a single factor.</p><br>
+          <p>ULS-8 is a Likert-type scale. Sum of 8 items reveal general loneliness score. Minimum and
+            maximum possible scores are 8 and 32, respectively. Higher scores from USL-8 correspond
+            to severe loneliness in adolescents.</p>
+        </div><br><br><br> 
+        <div>
+          <p><b>SCALE</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Question Numbers</th>
+              <th style="border: 1px solid black;">Never</th>
+              <th style="border: 1px solid black;">Rarely</th>
+              <th style="border: 1px solid black;">Sometimes</th>
+              <th style="border: 1px solid black;">Always</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">1, 2, 4, 5, 7 and 8</td>
+              <td style="border: 1px solid black;">1</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">4</td>
+            </tr>
+            <tr style="text-align: center;">
+                <td style="border: 1px solid black;">3 and 6</td>
+                <td style="border: 1px solid black;">4</td>
+                <td style="border: 1px solid black;">3</td>
+                <td style="border: 1px solid black;">2</td>
+                <td style="border: 1px solid black;">1</td>
+              </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. I lack companionship</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. There is no one I can turn to</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. I am an outgoing person</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. I feel left out</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. I feel isolated from others</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. I can find companionship when I want it</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">7. I am unhappy being so withdrawn</td>
+                <td style="text-align: center;">{{.Answer7}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">8. People are around me but not with me</td>
+                <td style="text-align: center;">{{.Answer8}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table><br>
+          <ul>
+            <li>The maximum score on this scale is 32 for extremely loneliness.</li>
+            <li>The lowest score on this scale is 8 for not at all lonely.</li>
+          </ul>
+        </div><br>
+        <p><b>Score Interpretation:</b></p>
+        <p>If you score low: You appear to feel connected and emotionally supported in your relationships.
+            Maintaining these bonds and continuing to invest in meaningful interactions is key.</p>
+        <p>If you score in moderate range: You may sometimes feel emotionally distant or socially
+            disconnected. Reflecting on your needs and gently nurturing deeper connections could help.</p>
+        <p>If you score high: You may often feel isolated or unsupported. You’re not alone in this feeling.
+            Consider taking small steps to reconnect or reach out for support. Resources or community spaces
+            might be helpful.</p><br><br><br>
+        <table style="border: 1px solid black; width: 60%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">SCORE</th> 
+            <th style="border: 1px solid black;">Loneliness Scale</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">8 to 15</td>
+            <td style="border: 1px solid black;">Low Loneliness</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">16 to 23</td>
+            <td style="border: 1px solid black;">Moderate Loneliness</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">24 to 32</td>
+            <td style="border: 1px solid black;">High Loneliness</td>
+          </tr>
+        </table>
+        <p><b>Inference:</b></p>
+        <p>Your overall score range is 16-23, based on the assessment.</p><br>
+        <p><b>What it suggests:</b></p>
+        <p>This range indicates some level of disconnection or emotional distance. The person may feel supported at times but also occasionally feel alone, misunderstood, or socially unfulfilled.</p>
+        <p><b>How to reflect:</b></p>
+        <p>“Are there times or places where you feel especially disconnected?”</p>
+        <p>“What kind of connections are you seeking more of—deeper friendships, community, or shared purpose?”</p>
+        <p>“What small steps can you take to feel more included or understood?”</p>
+        <p>Consider exploring ideas like safe spaces, group belonging, or therapy referral if needed.</p>
+      </div>
+    </body>
+</html>

@@ -958,6 +958,46 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				fmt.Println("html body not create ")
 			}
+		} else if title == "UCLA Loneliness Scale" {
+			var filePath string
+
+			if finalScore >= 8.0 && finalScore <= 15.0 {
+
+				filePath = "htmlfile/Loneliness_Scale_8_15.html"
+
+			} else if finalScore >= 16.0 && finalScore <= 23.0 {
+
+				filePath = "htmlfile/Loneliness_Scale_16_23.html"
+
+			} else if finalScore >= 24.0 && finalScore <= 32.0 {
+
+				filePath = "htmlfile/Loneliness_Scale_24_32.html"
+
+			} else {
+
+				filePath = "htmlfile/Loneliness_Scale_24_32.html"
+			}
+
+			assessment_data := MODEL.AssessmentDownloadGAD7Model{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
 		} else {
 
 			var filePath string
@@ -1003,10 +1043,18 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		created, ok := UTIL.GeneratePdfHeaderAndFooterFixted(emailbody, "pdffile/assessment1.pdf") // name created,
+		// created, ok := UTIL.GeneratePdfHeaderAndFooterFixted(emailbody, "pdffile/assessment1.pdf") // name created,
 
-		if !ok {
+		// if !ok {
+		// 	fmt.Println("Pdf is not created")
+		// }
+
+		created := UTIL.HtmlToPDFAssessment(emailbody)
+
+		if created == nil {
 			fmt.Println("Pdf is not created")
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
 		}
 
 		s3Path := "assessment"

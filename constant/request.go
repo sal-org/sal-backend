@@ -30,6 +30,7 @@ var (
 	ClientBookDemoInWebsiteAddRequiredFields        = []string{"name", "email", "phone", "company_name", "location", "size", "message"}
 	CorporateClientProfileAddRequiredFields         = []string{"phone", "email", "otp"}
 	CorporateClientRelativeProfileAddRequiredFields = []string{"phone", "email", "client_id"}
+	ClientAppFeedbackRequiredFields                 = []string{"user_id", "type", "concern_area", "details"}
 	QualityCheckEmailRequiredFields                 = []string{"email_from", "email_to", "body", "title"}
 	SMSServicesRequiredFields                       = []string{"phone", "body"}
 	QualityCheckLoginIDAndPassword                  = []string{"username", "password"}

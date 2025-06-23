@@ -22,6 +22,7 @@ const (
 	AssessmentResultsTable                      = "assessment_results"
 	AssessmentResultDetailsTable                = "assessment_result_details"
 	ClientsTable                                = "clients"
+	FeedbackTable                               = "feedback"
 	WebB2BBookDemoTable                         = "web_b2b_book_demo"
 	AppInfoTable                                = "app_info"
 	CounsellorDocumentListTable                 = "counsellor_documnets_list"
@@ -97,6 +98,7 @@ const (
 	AssessmentQuestionOptionDigits = 18
 	MoodResultsDigits              = 17
 	ClientDigits                   = 13
+	FeedbackDigits                 = 17
 	ContentDigits                  = 10
 	CorporateDigits                = 8
 	CorporateAddressDigits         = 10

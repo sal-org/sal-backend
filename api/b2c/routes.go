@@ -214,8 +214,46 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	decrypted, _ := DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 
 	switch decrypted["path"] {
-	case "/book_demo":
-		ClientBookDemo(w, r, decrypted)
+	case "/access_code":
+		CheckAccessCode(w, r, decrypted)
+	case "/send_otp":
+		SendOTPWithCorporateEmail(w, r, decrypted)
+	case "/verify_otp":
+		VerifyOTPWithCorporateEmail(w, r, decrypted)
+	case "/profile/get":
+		ProfileGet(w, r, decrypted)
+	case "/profile/add":
+		ProfileAdd(w, r, decrypted)
+	case "/profile/update":
+		ProfileUpdate(w, r, decrypted)
+	case "/search":
+		ListSearch(w, r, decrypted)
+	case "/appointment/upcoming":
+		AppointmentsUpcoming(w, r, decrypted)
+	case "/appointment/past":
+		AppointmentsPast(w, r, decrypted)
+	case "/appointment/detail":
+		AppointmentDetail(w, r, decrypted)
+	case "/appointment/reschedule":
+		AppointmentReschedule(w, r, decrypted)
+	case "/appointment/cancel":
+		AppointmentCancel(w, r, decrypted)
+	case "/appointment/rate":
+		AppointmentRatingAdd(w, r, decrypted)
+	case "/appointment/start":
+		AppointmentStart(w, r, decrypted)
+	case "/appointment/end":
+		AppointmentEnd(w, r, decrypted)
+	case "/agora/token":
+		GenerateAgoraToken(w, r, decrypted)
+	case "/therapist/get":
+		TherapistProfile(w, r, decrypted)
+	case "/therapist/slots":
+		TherapistSlots(w, r, decrypted)
+	case "/therapist/order":
+		CorporateCounsellorOrderCreate(w, r, decrypted)
+	case "/therapist/complete":
+		CorporateCounsellorOrderPaymentComplete(w, r, decrypted)
 	default:
 		w.Header().Set("Status", "200")
 		w.WriteHeader(200)

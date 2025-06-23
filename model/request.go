@@ -687,6 +687,10 @@ type PostRequestForAgora struct {
 	ClientRequest ClientRequestS `json:"clientRequest"`
 }
 
+type PostRequestForHTMLToPDF struct {
+	HtmlContent         string         `json:"html_content"`
+}
+
 type RecordingConfigModel struct {
 	MaxIdleTime int `json:"maxIdleTime"`
 	// StreamMode         string `json:"streamMode"`

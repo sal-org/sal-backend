@@ -5,3 +5,5 @@ var Log bool
 
 // Migrate - enable if you want to stop api when migrating api/database
 var Migrate bool
+
+var PDFURL string // URL to access PDF API

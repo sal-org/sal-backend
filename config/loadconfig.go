@@ -12,7 +12,7 @@ import (
 func LoadConfig() {
 	// load .env file from given path for local, else will be getting from env var
 	if !strings.EqualFold(os.Getenv("prod"), "true") {
-		err := godotenv.Load(".test-env")
+		err := godotenv.Load()
 		if err != nil {
 			panic("Error loading .env file")
 		}
@@ -25,6 +25,7 @@ func LoadConfig() {
 	PayUKey = os.Getenv("PAYU_KEY")
 	PayUSalt = os.Getenv("PAYU_SALT")
 	PayUURL = os.Getenv("PAYU_URL")
+	PDFURL = os.Getenv("PDF_URL")
 	OneSignalAppIDForClient = os.Getenv("ONESIGNAL_APP_ID_FOR_CLIENT")
 	OneSignalApiKeyForClient = os.Getenv("ONESIGNAL_API_KEY_FOR_CLIENT")
 	OneSignalAppIDForTherapist = os.Getenv("ONESIGNAL_APP_ID_FOR_THERAPIST")

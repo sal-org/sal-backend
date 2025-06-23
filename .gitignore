@@ -1,6 +1,8 @@
 tmp/*
 main
 *.zip
+.env
+*.env.local
 .test-env
 wkhtmltopdf
 *.sql

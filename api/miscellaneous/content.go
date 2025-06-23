@@ -65,7 +65,12 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.FormValue("type") == "1" {
-			response["videos"] = contentType
+			contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			response["videos"] = contentVideo
 			response["videos_count"] = videosCount[0]["ctn"]
 			response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
 		} else if r.FormValue("type") == "2" {
@@ -101,7 +106,12 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.FormValue("type") == "1" {
-			response["videos"] = contentType
+			contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			response["videos"] = contentVideo
 			response["videos_count"] = videosCount[0]["ctn"]
 			response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
 		} else if r.FormValue("type") == "2" {
@@ -118,7 +128,7 @@ func Content(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		// get latest videos
-		videos, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+		videos, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -185,13 +195,13 @@ func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]interface{})
 
-	contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '"+r.FormValue("type")+"' and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+	contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '" + r.FormValue("type") + "' and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	contentCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '"+r.FormValue("type")+"' and status = 1")
+	contentCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '" + r.FormValue("type") + "' and status = 1")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

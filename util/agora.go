@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -25,13 +26,11 @@ func GenerateAgoraRTCToken(channelName string, roleStr string, uidStr string, ex
 		role = rtctokenbuilder.RolePublisher
 	} else if roleStr == "subscriber" {
 		role = rtctokenbuilder.RoleSubscriber
-	} else {
-		role = rtctokenbuilder.RoleAttendee
 	}
 
 	// appID = CONSTANT.AGORA_APP_ID
 	// appCertificate = CONSTANT.AGORA_APP_CERTIFICATE
-	result, err = rtctokenbuilder.BuildTokenWithUserAccount(CONFIG.AGORA_APP_ID, CONFIG.AGORA_APP_CERTIFICATE, channelName, uidStr, role, expireTime)
+	result, err = rtctokenbuilder.BuildTokenWithAccount(CONFIG.AGORA_APP_ID, CONFIG.AGORA_APP_CERTIFICATE, channelName, uidStr, role, expireTime)
 
 	return result, err
 
@@ -78,7 +77,7 @@ func BasicAuthorization(channelName, uid string) (string, error) {
 	}
 	defer res.Body.Close()
 
-	bodyy, err := ioutil.ReadAll(res.Body)
+	bodyy, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 		return "", err
@@ -363,7 +362,6 @@ func CallStatus(resourceid string, sid string) (Model.AgoraCallStatus, error) {
 }
 
 func BuildUserTokenHandler(userUUID, expire string) (string, bool) {
-
 
 	expireUint, err := strconv.ParseUint(expire, 10, 32)
 	if err != nil {

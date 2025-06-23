@@ -193,6 +193,37 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	// 	body["time"] = strconv.Itoa(index)
 	// }
 
+	// check 2nd appoimtent with the same listener
+	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(appointment2nd) != 0 {
+
+		// for _, app := range appointment2nd {
+
+		// 	var localTime int
+		// 	timeNow := UTIL.GetCurrentTime().Local()
+		// 	if timeNow.Minute() >= 30 {
+		// 		localTime = timeNow.Hour()*2 + 3
+		// 	} else {
+		// 		localTime = timeNow.Hour()*2 + 2
+		// 	}
+		// 	appomtmentTime, _ := strconv.Atoi(app["time"])
+
+		// 	if appomtmentTime+2 < localTime {
+		// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InPersonAppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 		return
+		// 	}
+
+		// }
+
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -675,7 +706,7 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// check 2nd appoimtent with the same listener
-	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
+	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

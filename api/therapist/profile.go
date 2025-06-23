@@ -86,6 +86,18 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		inPersonConnect, status, ok := DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"counsellor_id": therapist[0]["therapist_id"], "status": "1"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(inPersonConnect) > 0 {
+			therapist[0]["in_person_connect"] = inPersonConnect[0]["status"]
+		} else {
+			therapist[0]["in_person_connect"] = "0"
+		}
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["languages"] = languages

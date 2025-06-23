@@ -2601,10 +2601,11 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("html body not create ")
 		}
 
-		created, ok := UTIL.GeneratePdf(emailbody, "pdffile/example1.pdf") // name created,
+		created := UTIL.HtmlToPDFInvoice(emailbody) // name created,
 
-		if !ok {
-			fmt.Println("Pdf is not created")
+		if created == nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pdf is not created", CONSTANT.ShowDialog, response)
+			return
 		}
 
 		s3Path := "receipt"
