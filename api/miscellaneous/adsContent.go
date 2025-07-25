@@ -145,6 +145,14 @@ func CheckCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(lastClient) == 0 {
+
+		// check if appointment is not created
+		// for _, value := range lastClient {
+		// 	if value["appointment_id"] == r.FormValue("appointment_id") {
+		// 		UTIL.SetReponse(w, "400", "Appointment not created", CONSTANT.ShowDialog, response)
+		// 		return
+		// 	}
+		// }
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
 	}
@@ -327,7 +335,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	message, message1, message2,subjectLine := "", "", "", ""
+	message, message1, message2, subjectLine := "", "", "", ""
 
 	if len(body["next_follow_date"]) != 0 {
 		// 15 min push notification before appointment start
@@ -347,6 +355,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 				UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
 				CONSTANT.NotificationInProgress,
 				body["client_id"],
+				"",
 			)
 
 			subjectLine = CONSTANT.CounsellorInPersonAppointmentDocumentForClientTitle
@@ -365,6 +374,7 @@ func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 				UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
 				CONSTANT.NotificationInProgress,
 				body["client_id"],
+				"",
 			)
 
 			subjectLine = CONSTANT.CounsellorVirtualAppointmentDocumentForClientTitle

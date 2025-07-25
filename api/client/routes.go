@@ -280,6 +280,14 @@ func LoadClientRoutes(router *mux.Router) {
 	// search
 	clientRoutes.HandleFunc("/search", ListSearch).Methods("GET")
 
+	// search
+	clientRoutes.HandleFunc("/webinar", WebinarList).Queries(
+		"client_id", "{client_id}",
+	).Methods("GET")
+
+	// search
+	clientRoutes.HandleFunc("/webinar", WebinarOrderCreate).Methods("POST")
+
 	// corporate search
 	clientRoutes.HandleFunc("/corporate_search", ListSearchForCorporate).Methods("GET")
 

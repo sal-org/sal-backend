@@ -47,6 +47,10 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
+
+	// counsellor content
+	router.HandleFunc("/app-feedback", AppFeedback).Methods("POST")
+
 	// notification change status
 	router.HandleFunc("/notification-status", NotificationInactiveORActive).Queries(
 		"user_id", "{user_id}",

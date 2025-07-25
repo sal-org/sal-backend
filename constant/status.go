@@ -78,6 +78,13 @@ const (
 	TherapistBlocked     = "3"
 )
 
+// appointment status
+const (
+	AppointmentTransitionActive    = "1"
+	AppointmentTransitionBooked    = "2"
+	AppointmentTransitionCompleted = "3"
+)
+
 // admin status
 const (
 	AdminActive  = "1"

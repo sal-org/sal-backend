@@ -109,13 +109,13 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 			domain := DB.QueryRowSQL("select domain from "+CONSTANT.CorporatePartnersTable+" where partner_name = ? ", body["partner_name"])
 
 			if body["partner_location"] != "" {
-				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id, '3' as type from " + CONSTANT.ClientsTable + " where email like '%" + domain + "' and location = '" + body["partner_location"] + "'")
+				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id, '3' as type from " + CONSTANT.ClientsTable + " where email like '%" + domain + "' and location = '" + body["partner_location"] + "' and push_notification_status = '1'")
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
 				}
 			} else {
-				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id, '3' as type from " + CONSTANT.ClientsTable + " where email like '%" + domain + "'")
+				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id, '3' as type from " + CONSTANT.ClientsTable + " where email like '%" + domain + "' and push_notification_status = '1'")
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return

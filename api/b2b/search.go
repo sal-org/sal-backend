@@ -28,6 +28,24 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 		return
 	}
 
+	// get client details
+	transitions, status, ok := DB.SelectSQL(CONSTANT.B2B2CAppointmentTransitionsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment transitions
+	if len(transitions) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if transitions[0]["status"] == CONSTANT.AppointmentTransitionCompleted {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// read request body
 	// body, ok := UTIL.ReadRequestBody(r)
 	// if !ok {
@@ -190,7 +208,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return

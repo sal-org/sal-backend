@@ -636,6 +636,7 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		mainClient[0]["client_id"],
+		"",
 	)
 
 	emaildata1 := Model.EmailBodyMessageModel{
@@ -1015,6 +1016,7 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 			UTIL.GetCurrentTime().String(),
 			CONSTANT.NotificationInProgress,
 			userID,
+			"",
 		)
 
 	} else {
@@ -1062,6 +1064,7 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 			UTIL.GetCurrentTime().String(),
 			CONSTANT.NotificationInProgress,
 			userID,
+			"",
 		)
 	}
 

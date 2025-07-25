@@ -5,4 +5,4 @@ var FromEmailID string
 
 var QCEmailID1, QCEmailID2 string
 
-var OnboardingEmailID, EventEmailID string
+var OnboardingEmailID, EventEmailID, CustomerCareEmailID string

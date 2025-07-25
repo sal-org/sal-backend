@@ -62,6 +62,30 @@ func GetHTMLTemplateForProfile(data Model.EmailDataForCounsellorProfile, filepat
 	return templateBuffer.String()
 }
 
+func GetHTMLTemplateForAppFeedBack(data Model.EmailDataForFeedback, filepath string) string {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+{}
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	return templateBuffer.String()
+}
+
 func GetHTMLTemplateForWebB2CClientProfile(data Model.EmailDataForWebClientB2CProfile, filepath string) string {
 	var templateBuffer bytes.Buffer
 
@@ -74,9 +98,9 @@ func GetHTMLTemplateForWebB2CClientProfile(data Model.EmailDataForWebClientB2CPr
 		return ""
 	}
 
-	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+	htmlTemplate := template.Must(template.New("email1.html").Parse(string(htmlData)))
 
-	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email1.html", data)
 
 	if err != nil {
 		log.Fatal(err)

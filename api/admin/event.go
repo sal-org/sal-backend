@@ -157,6 +157,7 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("order_id"),
+		"",
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -379,6 +380,7 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("order_id"),
+		"",
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

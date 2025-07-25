@@ -89,6 +89,13 @@ func LoadAdminRoutes(router *mux.Router) {
 	).Methods("PUT")
 	adminRoutes.HandleFunc("/event/book", EventBookGet).Methods("GET")
 
+	// webinar event
+	adminRoutes.HandleFunc("/webinar", WebinarsAdd).Methods("POST")
+	adminRoutes.HandleFunc("/webinar", WebinarsGet).Methods("GET")
+	adminRoutes.HandleFunc("/webinar", WebinarsUpdate).Queries(
+		"webinar_id", "{webinar_id}",
+	).Methods("PUT")
+
 	// inperson event
 	adminRoutes.HandleFunc("/event_inperson", EventInPersonAdd).Methods("POST")
 	adminRoutes.HandleFunc("/event_inperson", EventInPersonGet).Methods("GET")

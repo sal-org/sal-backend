@@ -2,6 +2,7 @@ package client
 
 import (
 	"net/http"
+	"strconv"
 
 	// CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -193,35 +194,38 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	// 	body["time"] = strconv.Itoa(index)
 	// }
 
-	// check 2nd appoimtent with the same listener
-	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
+	// check 2nd appointment with the same listener
+	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if len(appointment2nd) != 0 {
+	if len(appointment2nd) >= 1 {
 
-		// for _, app := range appointment2nd {
+		if appointment2nd[0]["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
+			// check if appointment time is already booked
+			localTime := 0
+			timeNow := UTIL.GetCurrentTime()
+			timeNow = timeNow.Add(330 * time.Minute)
+			if timeNow.Minute() >= 30 {
+				localTime = timeNow.Hour()*2 + 1
+			} else {
+				localTime = timeNow.Hour() * 2
+			}
+			appointmentTime, _ := strconv.Atoi(appointment2nd[0]["time"])
 
-		// 	var localTime int
-		// 	timeNow := UTIL.GetCurrentTime().Local()
-		// 	if timeNow.Minute() >= 30 {
-		// 		localTime = timeNow.Hour()*2 + 3
-		// 	} else {
-		// 		localTime = timeNow.Hour()*2 + 2
-		// 	}
-		// 	appomtmentTime, _ := strconv.Atoi(app["time"])
-
-		// 	if appomtmentTime+2 < localTime {
-		// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InPersonAppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-		// 		return
-		// 	}
-
-		// }
-
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-		return
+			if appointmentTime >= localTime+1 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+				return
+			} else if len(appointment2nd) >= 2 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+				return
+			}
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// check if slots available
@@ -413,7 +417,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	// Booking confirmation
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// 15 min push notification before appointment start
@@ -431,6 +435,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// Counsellor Notification
@@ -450,6 +455,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -467,6 +473,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// Client SMS
@@ -712,28 +719,31 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if len(appointment2nd) != 0 {
+	if len(appointment2nd) >= 1 {
 
-		// for _, app := range appointment2nd {
+		if appointment2nd[0]["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
+			// check if appointment time is already booked
+			localTime := 0
+			timeNow := UTIL.GetCurrentTime()
+			timeNow = timeNow.Add(330 * time.Minute)
+			if timeNow.Minute() >= 30 {
+				localTime = timeNow.Hour()*2 + 1
+			} else {
+				localTime = timeNow.Hour() * 2
+			}
+			appointmentTime, _ := strconv.Atoi(appointment2nd[0]["time"])
 
-		// 	var localTime int
-		// 	timeNow := UTIL.GetCurrentTime().Local()
-		// 	if timeNow.Minute() >= 30 {
-		// 		localTime = timeNow.Hour()*2 + 3
-		// 	} else {
-		// 		localTime = timeNow.Hour()*2 + 2
-		// 	}
-		// 	appomtmentTime, _ := strconv.Atoi(app["time"])
-
-		// 	if appomtmentTime+2 < localTime {
-		// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InPersonAppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-		// 		return
-		// 	}
-
-		// }
-
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InPersonAppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-		return
+			if appointmentTime >= localTime+1 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+				return
+			} else if len(appointment2nd) >= 2 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+				return
+			}
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// order object to be inserted
@@ -763,10 +773,10 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -884,7 +894,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 				"###location###":  address[0]["counselling_room"] + ", " + address[0]["counselling_address"],
 			},
-		), order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,
+		), order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// 15 min push notification before appointment start
@@ -902,6 +912,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// Counsellor Notification
@@ -923,6 +934,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -940,6 +952,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// Client SMS

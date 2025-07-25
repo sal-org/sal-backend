@@ -296,6 +296,24 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request, body
 		return
 	}
 
+	// get client details
+	transitions, status, ok := DB.SelectSQL(CONSTANT.B2B2CAppointmentTransitionsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment transitions
+	if len(transitions) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if transitions[0]["status"] == CONSTANT.AppointmentTransitionCompleted {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// order object to be inserted
 	order := map[string]string{}
 	order["client_id"] = body["client_id"]

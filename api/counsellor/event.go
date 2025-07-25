@@ -401,6 +401,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		order[0]["event_order_id"],
+		"",
 	)
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])

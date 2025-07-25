@@ -211,9 +211,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decrypted, _ := DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	decrypted, _ := DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB_PROD, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB_PROD)
 
 	switch decrypted["path"] {
+	case "/book_demo":
+		ClientBookDemo(w,r, decrypted)
 	case "/access_code":
 		CheckAccessCode(w, r, decrypted)
 	case "/send_otp":

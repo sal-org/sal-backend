@@ -62,36 +62,16 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 
 	var response = make(map[string]interface{})
 
-	// // read request body
-	// body, ok := UTIL.ReadRequestBody(r)
-	// if !ok {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
-
-	is_valid_email := UTIL.IsValidEmail(body["email"])
-	if is_valid_email == "" {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	domainName := strings.Split(body["email"], "@")
 
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// get client details
-	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]})
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
 		return
 	}
+
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"email": body["email"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status", "company_name","client_id"}, map[string]string{"email": body["email"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -104,6 +84,29 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 
 	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if client[0]["company_name"] == "" || client[0]["company_name"] != "prosculpt" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	transitions, status, ok := DB.SelectSQL(CONSTANT.B2B2CAppointmentTransitionsTable, []string{"*"}, map[string]string{"client_id": client[0]["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment transitions
+	if len(transitions) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if transitions[0]["status"] == CONSTANT.AppointmentTransitionCompleted {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
 		return
 	}
 

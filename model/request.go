@@ -465,6 +465,19 @@ type EmailDataForCounsellorRecord struct {
 	SendingStatus                 string
 }
 
+type EmailDataForFeedback struct {
+	ClientFirstName string
+	ClientLastName  string
+	ClientEmail     string
+	ConcernsType    string
+	ConcernArea     string
+	Details         string
+	Attach1         string
+	Attach2         string
+	Attach3         string
+	MediaURL        string
+}
+
 type EmailDataForCounsellorVisit struct {
 	Client_Name     string
 	Client_Location string
@@ -688,7 +701,7 @@ type PostRequestForAgora struct {
 }
 
 type PostRequestForHTMLToPDF struct {
-	HtmlContent         string         `json:"html_content"`
+	HtmlContent string `json:"html_content"`
 }
 
 type RecordingConfigModel struct {
@@ -834,21 +847,6 @@ type AgoraCallStopResponseModel struct {
 			UploadingStatus string `json:"uploadingStatus"`
 		} `json:"serverResponse"`
 	} `json:"Body"`
-}
-
-type OneSignalNotificatnData struct {
-	AppID          string            `json:"app_id"`
-	Headings       map[string]string `json:"headings"`
-	Contents       map[string]string `json:"contents"`
-	IncludeAliases IncludeAliase     `json:"include_aliases"`
-	Channels       []string          `json:"target_channel"`
-	Data           map[string]string `json:"data"`
-	// BigPicture       string            `json:"big_picture"`
-	// URL              string            `json:"url"`
-}
-
-type IncludeAliase struct {
-	ExternalID []string `json:"external_id"`
 }
 
 type EmailBodyMessageModel struct {

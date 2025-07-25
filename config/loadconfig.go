@@ -47,4 +47,5 @@ func LoadConfig() {
 	QCEmailID2 = os.Getenv("QC_EMAIL_ID_2")
 	OnboardingEmailID = os.Getenv("ONBOARDING_EMAIL_ID")
 	EventEmailID = os.Getenv("EVENT_EMAIL_ID")
+	CustomerCareEmailID = os.Getenv("CUSTOMER_CARE_EMAIL_ID")
 }

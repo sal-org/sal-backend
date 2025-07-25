@@ -295,7 +295,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 				max, _ := strconv.ParseFloat(experiences[1], 64)
 				therapistArgs = append(therapistArgs, min, max)
 			}
-			wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != 0 and in_house_therapist = 1") // only active therapists
+			wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and in_house_therapist = 1") // only active therapists
 			therapistSQLQuery += " where " + strings.Join(wheres, " and ")
 
 			// } else { // union if all needed

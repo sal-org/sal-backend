@@ -90,6 +90,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 			UTIL.GetCurrentTime().String(),
 			CONSTANT.NotificationSent,
 			moodResultID,
+			"",
 		)
 
 	}

@@ -19,6 +19,7 @@ const (
 	ClientFamilyMemberSingupToCorEmpTitle                  = "Family member added Successfully!"
 	ClientFamilyMemberStepLoginToCorEmpTitle               = "Congratulations and Welcome to Clove!"
 	ClientSignupProfileTitle                               = "Congratulations on your Clove registration"
+	ClientB2BRegistrationForDemoProfileTitle               = "B2B client registration for demo"
 	ClientAppointmentBookCounsellorTitle                   = "Clove: You have a new booking"
 	ClientAppointmentBookClientTitle                       = "Clove: Your appointment has been confirmed"
 	ClientInPersonEventConfrimationTitle                   = "Clove: In-person Café booking confirmation!"

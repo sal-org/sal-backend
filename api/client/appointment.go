@@ -545,6 +545,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
 	// // send appointment reminder notification to therapist before 15 min
@@ -578,6 +579,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -595,6 +597,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -612,6 +615,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -918,6 +922,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -935,6 +940,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -993,6 +999,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -1010,6 +1017,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// Send to appointment Reminder SMS to counsellor
@@ -1247,6 +1255,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -1264,6 +1273,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -1327,6 +1337,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -1344,6 +1355,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// Send to appointment Reminder SMS to counsellor
@@ -1700,6 +1712,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send email
@@ -1745,6 +1758,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send email for therapist
@@ -1906,6 +1920,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send email
@@ -1953,6 +1968,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send email for therapist
@@ -2123,6 +2139,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_slot_id"),
+		"",
 	)
 
 	// send email to client
@@ -2256,6 +2273,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	rate, _ := strconv.Atoi(body["rating"])
@@ -2405,6 +2423,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	rate, _ := strconv.Atoi(body["rating"])
@@ -3182,6 +3201,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -3412,6 +3432,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

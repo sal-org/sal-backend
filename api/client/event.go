@@ -49,7 +49,7 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if client[0]["email"] == "anand.shah@clovemind.com" {
+	if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" {
 
 		eventsBooked, status, ok := DB.SelectProcess("select order_id from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and status = '1'", r.FormValue("client_id"))
 		if !ok {
@@ -348,6 +348,7 @@ func EventsInPersonCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		events[0]["order_id"],
+		"",
 	)
 
 	UTIL.SendMessage(
@@ -570,6 +571,7 @@ func EventsInPersonRate(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		events[0]["order_id"],
+		"",
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -933,6 +935,7 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		orderID,
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 30 min
@@ -950,6 +953,7 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(event[0]["date"], event[0]["time"]).Add(-30*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		orderID,
+		"",
 	)
 
 	UTIL.SendMessage(
@@ -991,6 +995,175 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 		emailBody,
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,
+	)
+
+	response["order_id"] = orderID
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func WebinarList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	var events = []map[string]string{}
+
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	eventsOrder, status, ok := DB.SelectProcess("select * from "+CONSTANT.WebinarsBookTable+" where status = 1 and client_id = ? ", r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	domainName := strings.Split(client[0]["email"], "@")
+
+	partnerName, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"*"}, map[string]string{"domain": domainName[1]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(partnerName) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientInPersonAppointmentModelNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if r.FormValue("webinar_id") == "" {
+		// get upcoming events
+		events, status, ok = DB.SelectProcess("select * from " + CONSTANT.WebinarsTable + " where status = " + CONSTANT.EventToBeStarted + " and partner_name = ? and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' order by date desc, time desc", partnerName[0]["partner_name"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	} else {
+		// get event by id
+		events, status, ok = DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and partner_name = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("webinar_id"), partnerName[0]["partner_name"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	response["events"] = events
+	response["events_order"] = eventsOrder
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.WebinarOrderCreateRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if client is valid
+	if len(client) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if client is active
+	if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotAllowedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get event details
+	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["webinar_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if event is valid
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if event is active
+	if !strings.EqualFold(event[0]["status"], CONSTANT.EventToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	ordertoCheck, status, ok := DB.SelectSQL(CONSTANT.WebinarsBookTable, []string{"*"}, map[string]string{"webinar_id": body["webinar_id"], "client_id": body["client_id"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if order is valid
+	if len(ordertoCheck) != 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.OrderAlreadyExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// order object to be inserted
+	order := map[string]string{}
+	order["client_id"] = body["client_id"]
+	order["webinar_id"] = body["webinar_id"]
+	order["status"] = CONSTANT.OrderInProgress
+	order["created_at"] = UTIL.GetCurrentTime().String()
+
+	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.WebinarsBookTable, CONSTANT.OrderEventDigits, order, "order_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send appointment reminder notification to counsellor before 30 min
+	UTIL.SendNotification(
+		CONSTANT.ClientWebinarReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientWebinarRemiderClientContent,
+			map[string]string{
+				"###topic###": event[0]["title"],
+				"###time###":  UTIL.GetTimeFromTimeSlotIN12Hour(event[0]["time"]),
+			},
+		),
+		body["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(event[0]["date"], event[0]["time"]).Add(-60*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
+		orderID,
+		event[0]["photo"],
 	)
 
 	response["order_id"] = orderID
@@ -1115,6 +1288,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		order[0]["event_order_id"],
+		"",
 	)
 
 	// send event reminder notification to client before 15 min
@@ -1131,6 +1305,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(orderdetails[0]["date"], orderdetails[0]["time"]).Add(-15*time.Minute).String(),
 		CONSTANT.NotificationInProgress,
 		order[0]["event_order_id"],
+		"",
 	)
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])

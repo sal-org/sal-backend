@@ -23,6 +23,9 @@ const (
 	AssessmentResultDetailsTable                = "assessment_result_details"
 	ClientsTable                                = "clients"
 	FeedbackTable                               = "feedback"
+	WebinarsTable                               = "webinars"
+	WebinarsBookTable                           = "webinars_book"
+	B2B2CAppointmentTransitionsTable            = "b2b2c_appointment_transition"
 	WebB2BBookDemoTable                         = "web_b2b_book_demo"
 	AppInfoTable                                = "app_info"
 	CounsellorDocumentListTable                 = "counsellor_documnets_list"
@@ -109,6 +112,7 @@ const (
 	EmailsDigits                   = 13
 	NotificationsDigits            = 15
 	EventDigits                    = 7
+	WebinarsDigits                 = 10
 	InvoiceDigits                  = 8
 	ReceiptDigits                  = 10
 	PaymentsDigits                 = 10

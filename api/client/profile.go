@@ -197,7 +197,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send notification to client
-	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID,"")
 
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -361,7 +361,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send notification to client
-	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID)
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID,"")
 
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -499,6 +499,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// add client details
 	client := map[string]string{}
 	client["asscoiate_id"] = body["client_id"]
+	client["emp_id"] = clientD[0]["emp_id"]
 	client["relation"] = body["relation"]
 	client["first_name"] = body["first_name"]
 	client["last_name"] = body["last_name"]
@@ -528,7 +529,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	age, _ := UTIL.CalculateAge(body["date_of_birth"])
 
 	emaildata := Model.EmailBodyMessageModelWithDocu{
-		Name: body["first_name"],
+		Name: clientD[0]["first_name"],
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientSignupClientTpFamilyMemeberCorEmailBody,
 			map[string]string{

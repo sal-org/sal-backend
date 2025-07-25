@@ -416,6 +416,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	UTIL.SendNotification(
@@ -432,6 +433,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -831,6 +833,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

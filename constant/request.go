@@ -19,6 +19,7 @@ var (
 	PartnersAddRequiredFields                       = []string{"partnerName", "domain", "accessCode"}
 	CouponAddRequiredFields                         = []string{"coupon_code", "discount", "minimum_order_value", "type", "start_by", "end_by"}
 	EventOrderCreateRequiredFields                  = []string{"user_id", "event_order_id"}
+	WebinarOrderCreateRequiredFields                = []string{"client_id", "webinar_id"}
 	EventBlockOrderCreateRequiredFields             = []string{"counsellor_id", "title", "description", "topic_id", "date", "time", "price"}
 	EventOrderPaymentCompleteRequiredFields         = []string{"order_id", "payment_method", "payment_id"}
 	EventBlockOrderPaymentCompleteRequiredFields    = []string{"order_id", "payment_method", "payment_id"}
@@ -30,7 +31,7 @@ var (
 	ClientBookDemoInWebsiteAddRequiredFields        = []string{"name", "email", "phone", "company_name", "location", "size", "message"}
 	CorporateClientProfileAddRequiredFields         = []string{"phone", "email", "otp"}
 	CorporateClientRelativeProfileAddRequiredFields = []string{"phone", "email", "client_id"}
-	ClientAppFeedbackRequiredFields                 = []string{"user_id", "type", "concern_area", "details"}
+	ClientAppFeedbackRequiredFields                 = []string{"user_id", "type", "details"}
 	QualityCheckEmailRequiredFields                 = []string{"email_from", "email_to", "body", "title"}
 	SMSServicesRequiredFields                       = []string{"phone", "body"}
 	QualityCheckLoginIDAndPassword                  = []string{"username", "password"}

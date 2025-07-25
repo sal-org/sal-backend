@@ -302,6 +302,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 						UTIL.GetCurrentTime().String(),
 						CONSTANT.NotificationSent,
 						appoint["appointment_id"],
+						"",
 					)
 
 					// therapist Cancel the Appointment to send text message to client
@@ -360,6 +361,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 				UTIL.GetCurrentTime().String(),
 				CONSTANT.NotificationSent,
 				body["id"],
+				"",
 			)
 
 			// therapist Cancel the Appointment to send text message to therpaist

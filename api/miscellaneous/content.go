@@ -58,7 +58,7 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		videosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where content_id in ('" + strings.Join(contentIDs, "','") + "') and type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 ")
+		videosCount, status, ok := DB.SelectProcess("select count(content_id) as ctn from " + CONSTANT.ContentsTable + " where content_id in ('" + strings.Join(contentIDs, "','") + "') and type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 ")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -99,7 +99,7 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		videosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		videosCount, status, ok := DB.SelectProcess("select count(content_id) as ctn from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -156,19 +156,19 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get total number of contents
-		videosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		videosCount, status, ok := DB.SelectProcess("select count(content_id) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.VideoContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		audiosCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		audiosCount, status, ok := DB.SelectProcess("select count(content_id) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.AudioContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		articlesCount, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
+		articlesCount, status, ok := DB.SelectProcess("select count(content_id) as ctn from " + CONSTANT.ContentsTable + " where type = " + CONSTANT.ArticleContentType + categoryFilter + moodFilter + " and training = 0 and status = 1")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return

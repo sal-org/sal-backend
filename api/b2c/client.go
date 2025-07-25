@@ -76,7 +76,7 @@ func ClientBookDemo(w http.ResponseWriter, r *http.Request, body map[string]stri
 
 	// email for client
 	UTIL.SendEmail(
-		CONSTANT.ClientSignupProfileTitle,
+		CONSTANT.ClientB2BRegistrationForDemoProfileTitle,
 		emailbody,
 		CONFIG.EventEmailID,
 		CONSTANT.InstantSendEmailMessage,
