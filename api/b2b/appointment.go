@@ -21,7 +21,7 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -56,15 +56,22 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string
 		case CONSTANT.CounsellorType:
 			counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "photo"}, map[string]string{"counsellor_id": appointments[i]["counsellor_id"]})
 			appointments[i]["counsellor_name"] = counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-			appointments[i]["counsellor_photo"] = counsellor[0]["photo"]
+
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+			appointments[i]["counsellor_photo"] = url
 		case CONSTANT.ListenerType:
 			counsellor, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "photo"}, map[string]string{"listener_id": appointments[i]["counsellor_id"]})
 			appointments[i]["counsellor_name"] = counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-			appointments[i]["counsellor_photo"] = counsellor[0]["photo"]
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+			appointments[i]["counsellor_photo"] = url
 		case CONSTANT.TherapistType:
 			counsellor, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "photo"}, map[string]string{"therapist_id": appointments[i]["counsellor_id"]})
 			appointments[i]["counsellor_name"] = counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-			appointments[i]["counsellor_photo"] = counsellor[0]["photo"]
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+			appointments[i]["counsellor_photo"] = url
 
 		}
 	}
@@ -81,9 +88,8 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string
 
 	// response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -102,7 +108,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func AppointmentsPast(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -122,8 +128,15 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]str
 	// 	return
 	// }
 
-	// get past completed appointments
-	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "status": CONSTANT.AppointmentCompleted})
+	// // get past completed appointments
+	// appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "status": CONSTANT.AppointmentCompleted})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// get upcoming appointments both to be started and started
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentCompleted+" order by date desc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -137,31 +150,36 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]str
 		case CONSTANT.CounsellorType:
 			counsellor, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "photo"}, map[string]string{"counsellor_id": appointments[i]["counsellor_id"]})
 			appointments[i]["counsellor_name"] = counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-			appointments[i]["counsellor_photo"] = counsellor[0]["photo"]
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+			appointments[i]["counsellor_photo"] = url
 		case CONSTANT.ListenerType:
 			counsellor, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "photo"}, map[string]string{"listener_id": appointments[i]["counsellor_id"]})
 			appointments[i]["counsellor_name"] = counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-			appointments[i]["counsellor_photo"] = counsellor[0]["photo"]
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+			appointments[i]["counsellor_photo"] = url
 		case CONSTANT.TherapistType:
 			counsellor, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "photo"}, map[string]string{"therapist_id": appointments[i]["counsellor_id"]})
 			appointments[i]["counsellor_name"] = counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-			appointments[i]["counsellor_photo"] = counsellor[0]["photo"]
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+			appointments[i]["counsellor_photo"] = url
 
 		}
 	}
 
 	// response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	encryptedResponse["data"] = encrypt
-	
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
@@ -173,7 +191,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]str
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentDetail(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func AppointmentDetail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -217,7 +235,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request,body map[string]st
 	response["order"] = order[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -351,6 +369,10 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request, body map[stri
 	// remove all previous message for therpist
 	UTIL.RemoveMessage(body["appointment_id"], counsellor[0]["phone"])
 
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["counsellor_id"])
+
 	// Send to appointment Reminder SMS to client
 	// send at 15 min before of appointment
 	UTIL.SendMessage(
@@ -460,6 +482,37 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request, body map[stri
 	)
 
 	//send to counsellor
+
+	// send appointment reschedule notification to counsellor
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
+		CONSTANT.ClientAppointmentRescheduleCounsellorContent,
+		appointment[0]["counsellor_id"],
+		counsellorType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		"",
+	)
+
+	// send appointment reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###user_name###": counsellor[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
+		r.FormValue("appointment_id"),
+		"",
+	)
+
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentRescheduleClientToCounsellorTextMeassge,
@@ -906,7 +959,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 	response["token"] = agora_token
 	response["UID"] = uidStr
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -979,6 +1032,16 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request, body map[string]st
 		)
 	}
 
+	DB.UpdateSQL(CONSTANT.B2B2CAppointmentTransitionsTable,
+		map[string]string{
+			"appointment_id": body["appointment_id"],
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentTransitionCompleted,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -1021,15 +1084,59 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request, body map[string]stri
 		return
 	}
 
-	// update appointment as completed
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": body["appointment_id"],
-		},
-		map[string]string{
-			"status":          CONSTANT.AppointmentCompleted,
-			"client_ended_at": UTIL.GetCurrentTime().String(),
-		},
+	client_name, status, ok := DB.SelectProcess("select first_name , last_name, email from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(body["noshow"]) > 0 {
+		DB.UpdateSQL(CONSTANT.B2B2CAppointmentTransitionsTable,
+			map[string]string{
+				"appointment_id": body["appointment_id"],
+			},
+			map[string]string{
+				"status":      CONSTANT.AppointmentTransitionCompleted,
+				"modified_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+	} else {
+		// update appointment as completed
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": body["appointment_id"],
+			},
+			map[string]string{
+				"status":          CONSTANT.AppointmentCompleted,
+				"client_ended_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+
+		DB.UpdateSQL(CONSTANT.B2B2CAppointmentTransitionsTable,
+			map[string]string{
+				"appointment_id": body["appointment_id"],
+			},
+			map[string]string{
+				"status":      CONSTANT.AppointmentTransitionCompleted,
+				"modified_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+	}
+
+	filePath := "htmlfile/afterAppointmentCompletedInWeb.html"
+
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: client_name[0]["first_name"],
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filePath)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientWebAppointmentCompletedEmailTitle,
+		emailBody1,
+		client_name[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

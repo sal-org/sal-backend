@@ -388,6 +388,54 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// 	}
 	// }
 
+	// appointment cancel 7 gays gap for email trigger
+	appointmentCancel, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status = '"+CONSTANT.AppointmentCounsellorCancelled+"' order by date desc", appointment[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(appointmentCancel) > 1 {
+		format := "2006-01-02 15:04:05"
+		previousDate, _ := time.Parse(format, appointmentCancel[1]["date"]+" 00:00:00")
+		lastestDate, _ := time.Parse(format, appointmentCancel[0]["date"]+" 00:00:00")
+
+		diff := lastestDate.Sub(previousDate)
+
+		days := int(diff.Hours() / 24)
+
+		if days < 8 {
+
+			therapistC, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "email", "phone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+
+			previousClient, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[1]["client_id"]})
+
+			latestClient, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
+
+			htmlPath := "htmlfile/appointment7daysgap.html"
+
+			data := Model.EmailDataForCounsellorCancellation{
+				First_Name:            therapistC[0]["first_name"],
+				Last_Name:             therapistC[0]["last_name"],
+				Previous_Date:         appointmentCancel[1]["date"],
+				Previous_Client_Name:  previousClient[1]["first_name"] + " " + previousClient[1]["last_name"],
+				Previous_Client_Email: latestClient[0]["email"],
+				Latest_Date:           appointmentCancel[0]["date"],
+				Lastest_Client_Name:   latestClient[0]["first_name"] + " " + latestClient[0]["last_name"],
+				Lastest_Client_Email:  latestClient[0]["email"],
+			}
+
+			emailbody := UTIL.GetHTMLTemplateForCounsellorCancellation(data, htmlPath)
+
+			UTIL.SendEmail(
+				CONSTANT.CounsellorCancelAppointmentTitle,
+				emailbody,
+				"corp.wellness@clovemind.com",
+				CONSTANT.InstantSendEmailMessage,
+			)
+		}
+	}
+
 	// send appointment cancel notification, email to client
 	therapist, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "phone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})

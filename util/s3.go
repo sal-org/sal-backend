@@ -293,3 +293,32 @@ func PreSignedS3URLToUploadPut(s3Bucket, path, s3AccessKey, s3SecretKey, s3Regio
 	return str, fileNameKey
 
 }
+
+func PreSignedS3URLToGetTheData(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region string) string {
+
+	// // credentials from the shared credentials file ~/.aws/credentials.
+	// Create AWS session
+	sess, _ := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+		Region:      aws.String(s3Region)},
+	)
+
+	// Create S3 client
+	svc := s3.New(sess)
+
+	// Create a GetObject request
+	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(path),
+	})
+
+	// Generate pre-signed URL valid for 15 minutes
+	urlStr, err := req.Presign(15 * time.Minute)
+
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+
+	return urlStr
+}

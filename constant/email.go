@@ -21,6 +21,7 @@ const (
 	ClientSignupProfileTitle                               = "Congratulations on your Clove registration"
 	ClientB2BRegistrationForDemoProfileTitle               = "B2B client registration for demo"
 	ClientAppointmentBookCounsellorTitle                   = "Clove: You have a new booking"
+	ClientWebAppointmentCompletedEmailTitle                = "Thank you, how was your experience?"
 	ClientAppointmentBookClientTitle                       = "Clove: Your appointment has been confirmed"
 	ClientInPersonEventConfrimationTitle                   = "Clove: In-person Café booking confirmation!"
 	ClientInPersonEventCancellationTitle                   = "Clove: In-person Café booking cancelled!"
@@ -28,6 +29,7 @@ const (
 	ClientAppointmentCancelClientTitle                     = "Clove: Your appointment has been cancelled successfully"
 	ClientAppointmentBulkCancelClientTitle                 = "Clove: All your scheduled appointment sessions have been cancelled successfully"
 	ClientCorLoginOTPTitle                                 = "Clove: Your Mobile App OTP is ###otp###"
+	ClientWebApplicationOTPTitle                           = "OTP Email | Clovemind"
 	ClientCorFamilyMemberLoginOTPTitle                     = "Clove: Mobile App OTP for ###familymembername### is ###otp###"
 	ClientAppointmentCancelCounsellorTitle                 = "Clove: Your session has been cancelled"
 	CounsellorAppointmentCancelCounsellorTitle             = "Clove: Your appointment has been cancelled successfully"
@@ -51,6 +53,7 @@ const (
 	// client
 	ClientAppointmentCancelClientBody                        = "Your scheduled session with ###therapist_name### on ###date### at ###time### has been cancelled successfully."
 	ClientCorLoginOTPBody                                    = "###otp### is the OTP to login/register yourself on the Clove Mobile App. Please do not share it with anyone."
+	ClientWebApplicationOTPBody                              = "###otp### is the OTP to log in to the Clovemind platform. Please do not share it with anyone."
 	ClientCorFamilyMemberLoginOTPBody                        = "###otp### is the OTP to login ###familymembername### on the Clove Mobile App. Please share the same with them. OTP is valid for 5 minutes."
 	ClientSignupClientEmailBody                              = "Welcome to Clove mobile app! You can now access self-care audios, relevant articles, daily journaling, self-assessments and book your sessions seamlessly."
 	ClientSignupClientTpFamilyMemeberCorEmailBody            = "Thank you for prioritizing wellbeing for ###familymembername###, ###age### yrs | ###gender### as below. We appreciate your care and concern for your family member and your efforts in prioritizing their mental health."
@@ -98,6 +101,11 @@ const (
 
 const (
 	CounsellorProfileWaitingForApprovalTitle = "Clove successful sign in"
+)
+
+// counsellor cancel the appointment within 7 days twice
+const (
+	CounsellorCancelAppointmentTitle = "Counsellor cancel appointment twice within 7 days"
 )
 
 // counsellor - client record

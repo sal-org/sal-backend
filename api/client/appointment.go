@@ -49,6 +49,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+	
 	// get counsellor ids to get details
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
@@ -62,6 +63,9 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	// Time Zone Conversion
 
 	// for i := 0; i < len(appointments); i++ {
+
+	// 	// dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(appointments[i]["date"],appointments[i]["time"])
+
 	// 	counsellorTimeZone := "330" // IST
 
 	// 	clientTimeZone := "-300" // IST

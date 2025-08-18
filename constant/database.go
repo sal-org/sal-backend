@@ -111,6 +111,7 @@ const (
 	MessagesDigits                 = 10
 	EmailsDigits                   = 13
 	NotificationsDigits            = 15
+	OrderTransitionsDigits         = 19
 	EventDigits                    = 7
 	WebinarsDigits                 = 10
 	InvoiceDigits                  = 8

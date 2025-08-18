@@ -407,6 +407,17 @@ type EmailDataForWebClientB2CProfile struct {
 	Message         string
 }
 
+type EmailDataForCounsellorCancellation struct {
+	First_Name            string
+	Last_Name             string
+	Previous_Date         string
+	Previous_Client_Name  string
+	Previous_Client_Email string
+	Latest_Date           string
+	Lastest_Client_Name   string
+	Lastest_Client_Email  string
+}
+
 type AppSummaryReport struct {
 	AppointmentTotal              string `json:"appointment_total"`
 	ClientTotal                   string `json:"client_total"`

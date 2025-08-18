@@ -80,12 +80,18 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]st
 		expert = append(expert, value)
 	}
 
+	urlImage := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+	urlVideo := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["video"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
+
+
 	counsellor["name"] = therapist[0]["first_name"] + " " + therapist[0]["last_name"]
 	counsellor["pronoun"] = therapist[0]["pronoun"]
 	counsellor["total_rate"] = therapist[0]["total_rating"]
 	counsellor["average_rate"] = therapist[0]["average_rating"]
-	counsellor["photo"] = therapist[0]["photo"]
-	counsellor["video"] = therapist[0]["video"]
+	counsellor["photo"] = urlImage
+	counsellor["video"] = urlVideo
 	counsellor["education"] = therapist[0]["education"]
 	counsellor["experience"] = therapist[0]["experience"]
 	counsellor["therapeutic_approach"] = therapist[0]["therapeutic_approach"]
@@ -95,9 +101,8 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]st
 	counsellor["topics"] = expert
 
 	response["therapist"] = counsellor
-	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -146,7 +151,7 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request, body map[string]stri
 	// remove times and dates with no availability
 	response["slots"] = UTIL.FilterAvailableSlots(slots)
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -297,7 +302,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request, body
 	}
 
 	// get client details
-	transitions, status, ok := DB.SelectSQL(CONSTANT.B2B2CAppointmentTransitionsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	transitions, status, ok := DB.SelectProcess("select * from "+CONSTANT.B2B2CAppointmentTransitionsTable+" where client_id = ? and status = "+CONSTANT.AppointmentTransitionActive+" order by created_at asc", client[0]["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -309,10 +314,10 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request, body
 		return
 	}
 
-	if transitions[0]["status"] == CONSTANT.AppointmentTransitionCompleted {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if transitions[0]["status"] == CONSTANT.AppointmentTransitionCompleted || transitions[0]["status"] == CONSTANT.AppointmentTransitionBooked {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// order object to be inserted
 	order := map[string]string{}
@@ -333,7 +338,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request, body
 
 	response["order_id"] = orderID
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -399,8 +404,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	domainName := strings.Split(client[0]["email"], "@")
-
 	// create appointment between listener and client
 	appointment := map[string]string{}
 	appointment["order_id"] = body["order_id"]
@@ -456,17 +459,34 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		},
 	)
 
+	// get client details
+	transitions, status, ok := DB.SelectProcess("select * from "+CONSTANT.B2B2CAppointmentTransitionsTable+" where client_id = ? and status = "+CONSTANT.AppointmentTransitionActive+" order by created_at asc", client[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	DB.UpdateSQL(CONSTANT.B2B2CAppointmentTransitionsTable,
+		map[string]string{
+			"order_id": transitions[0]["order_id"],
+		},
+		map[string]string{
+			"appointment_id": appointmentID,
+			"booking_at":     UTIL.GetCurrentTime().String(),
+			"status":         CONSTANT.AppointmentTransitionBooked,
+		},
+	)
+
 	// Client SMS
 
 	// Client Booking Confirmation
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			CONSTANT.ClientWebApplicationAppointmentConfirmationTextMessage,
 			map[string]string{
-				"###userName###":  client[0]["first_name"],
-				"###user_Name###": counsellor[0]["first_name"],
-				"###date###":      UTIL.BuildOnlyDate(order[0]["date"]),
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###first_name###": client[0]["first_name"],
+				"###date###":       UTIL.BuildOnlyDate(order[0]["date"]),
+				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -552,14 +572,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	// Client Email
 
-	accessCode := ""
-
-	if domainName[1] == "db.com" {
-		accessCode = "2332"
-	} else {
-		accessCode = "1234"
-	}
-
 	// Payment receipt
 	emaildata := Model.EmailBodyWithAccessCodeMessageModel{
 		Name: client[0]["first_name"],
@@ -571,7 +583,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
-		AccessCode: accessCode,
 	}
 
 	emailBody := UTIL.GetHTMLTemplateForClientConfirmationWithAccessCodeText(emaildata, filepath_text)

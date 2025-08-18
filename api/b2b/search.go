@@ -29,7 +29,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	}
 
 	// get client details
-	transitions, status, ok := DB.SelectSQL(CONSTANT.B2B2CAppointmentTransitionsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	transitions, status, ok := DB.SelectProcess("select * from "+CONSTANT.B2B2CAppointmentTransitionsTable+" where client_id = ? and status != "+CONSTANT.AppointmentTransitionCompleted+" order by created_at asc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -185,12 +185,14 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 			expert = append(expert, value)
 		}
 
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, value["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+
 		counsellor["id"] = value["id"]
 		counsellor["name"] = value["first_name"] + " " + value["last_name"]
 		counsellor["pronoun"] = value["pronoun"]
 		counsellor["total_rate"] = value["total_rating"]
 		counsellor["average_rate"] = value["average_rating"]
-		counsellor["photo"] = value["photo"]
+		counsellor["photo"] = url
 		counsellor["education"] = value["education"]
 		counsellor["experience"] = value["experience"]
 		counsellor["therapeutic_approach"] = value["therapeutic_approach"]
@@ -206,7 +208,6 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	response["counsellors"] = counsellorlist
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-	response["media_url"] = CONFIG.MediaURL
 
 	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {

@@ -26,7 +26,6 @@ func ProfileGet(w http.ResponseWriter, r *http.Request, body map[string]string) 
 
 	var encryptedResponse = make(map[string]interface{})
 
-
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
@@ -78,10 +77,9 @@ func ProfileGet(w http.ResponseWriter, r *http.Request, body map[string]string) 
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
-		response["media_url"] = CONFIG.MediaURL
 	}
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -224,7 +222,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -306,4 +304,114 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request, body map[string]strin
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func AddProsculptStudentProfile(w http.ResponseWriter, r *http.Request, body map[string]string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
+
+	var userExist = false
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ProsculptStudentProfileRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	
+	if DB.CheckIfExists(CONSTANT.B2B2CAppointmentTransitionsTable, map[string]string{"payment_id": body["payment_id"]}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ProsculptPaymentIDAlreadyMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if user already signed up with specified phone
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["mobile_no"]}) {
+		userExist = true
+	}
+
+	// check if user already signed up with specified email
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email_id"]}) {
+		userExist = true
+	}
+
+	if userExist {
+
+		clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": body["email_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		transition := map[string]string{}
+
+		transition["client_id"] = clientD[0]["client_id"]
+		transition["payment_id"] = body["payment_id"]
+		transition["status"] = CONSTANT.ClientActive
+		transition["created_at"] = UTIL.GetCurrentTime().String()
+
+		_, status, ok = DB.InsertWithUniqueID(CONSTANT.B2B2CAppointmentTransitionsTable, CONSTANT.OrderTransitionsDigits, transition, "order_id")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	} else {
+
+		// add client details
+		client := map[string]string{}
+		client["company_name"] = "prosculpt"
+		client["first_name"] = body["first_name"]
+		client["last_name"] = body["last_name"]
+		client["phone"] = body["mobile_no"]
+		client["email"] = body["email_id"]
+		client["date_of_birth"] = body["dob"]
+		client["gender"] = body["gender"]
+		client["location"] = body["location"]
+		client["timezone"] = "330"
+		client["platform"] = "web"
+		client["status"] = CONSTANT.ClientActive
+		client["last_login_time"] = UTIL.GetCurrentTime().String()
+		client["created_at"] = UTIL.GetCurrentTime().String()
+		clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		transition := map[string]string{}
+
+		transition["client_id"] = clientID
+		transition["payment_id"] = body["payment_id"]
+		transition["status"] = CONSTANT.ClientActive
+		transition["created_at"] = UTIL.GetCurrentTime().String()
+
+		_, status, ok = DB.InsertWithUniqueID(CONSTANT.B2B2CAppointmentTransitionsTable, CONSTANT.OrderTransitionsDigits, transition, "order_id")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// send email to client
+	// filepath_text := "htmlfile/emailmessagebody.html"
+
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name:    body["first_name"],
+	// 	Message: CONSTANT.ClientSignupClientEmailBody,
+	// }
+
+	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// // email for client
+	// UTIL.SendEmail(
+	// 	CONSTANT.ClientSignupProfileTitle,
+	// 	emailBody,
+	// 	body["email"],
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }

@@ -8,6 +8,7 @@ import (
 	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strings"
+	"time"
 )
 
 func CheckAccessCode(w http.ResponseWriter, r *http.Request, body map[string]string) {
@@ -46,7 +47,7 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request, body map[string]str
 
 	response["title"] = title[0]
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -57,11 +58,10 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request, body map[string]str
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
-
 
 	// get client details
 	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]})
@@ -71,7 +71,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status", "company_name","client_id"}, map[string]string{"email": body["email"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status", "company_name", "client_id"}, map[string]string{"email": body["email"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -93,7 +93,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 	}
 
 	// get client details
-	transitions, status, ok := DB.SelectSQL(CONSTANT.B2B2CAppointmentTransitionsTable, []string{"*"}, map[string]string{"client_id": client[0]["client_id"]})
+	transitions, status, ok := DB.SelectProcess("select * from "+CONSTANT.B2B2CAppointmentTransitionsTable+" where client_id = ? and status != "+CONSTANT.AppointmentTransitionCompleted+" order by created_at asc", client[0]["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -110,6 +110,18 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 		return
 	}
 
+	if transitions[0]["status"] == CONSTANT.AppointmentTransitionActive {
+
+		expireCheck, _ := time.Parse("2006-01-02 15:04:05", transitions[0]["created_at"])
+
+		expiry := expireCheck.Add(30 * 24 * time.Hour)
+
+		if UTIL.GetCurrentTime().After(expiry) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentPayment, CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
 	// send otp
 	otp, ok := UTIL.GenerateOTPWithCorporateEmail(body["email"])
 	if !ok {
@@ -123,7 +135,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: "",
 		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientCorLoginOTPBody,
+			CONSTANT.ClientWebApplicationOTPBody,
 			map[string]string{
 				"###otp###": otp,
 			},
@@ -133,12 +145,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
 	// email for client
 	UTIL.SendEmail(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientCorLoginOTPTitle,
-			map[string]string{
-				"###otp###": otp,
-			},
-		),
+		CONSTANT.ClientWebApplicationOTPTitle,
 		emailBody1,
 		body["email"],
 		CONSTANT.InstantSendEmailMessage,
@@ -147,7 +154,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[s
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -202,19 +209,19 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request,body map
 		return
 	}
 
-	topics, status, ok := DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// topics, status, ok := DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
-	response["topic"] = topics
+	// response["topic"] = topics
 	response["client"] = client[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

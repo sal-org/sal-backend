@@ -28,6 +28,7 @@ var (
 	CounsellorOrderPaymentCompleteRequiredFields    = []string{"order_id", "payment_method", "payment_id", "signature", "razor_order_id"}
 	ListenerOrderPaymentCompleteRequiredFields      = []string{"order_id"}
 	ClientProfileAddRequiredFields                  = []string{"phone", "email"}
+	ProsculptStudentProfileRequiredFields           = []string{"mobile_no", "email_id", "first_name", "last_name", "dob", "gender", "payment_id", "location"}
 	ClientBookDemoInWebsiteAddRequiredFields        = []string{"name", "email", "phone", "company_name", "location", "size", "message"}
 	CorporateClientProfileAddRequiredFields         = []string{"phone", "email", "otp"}
 	CorporateClientRelativeProfileAddRequiredFields = []string{"phone", "email", "client_id"}

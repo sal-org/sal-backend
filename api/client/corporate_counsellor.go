@@ -163,36 +163,12 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		counsellorType = CONSTANT.CounsellorType
 	}
 
-	// Timezone conversion
+	// time zone convert client to system
 
-	// counsellorTimeZone := "330" // IST
+	// systemDate, systemTime := UTIL.ConvertTimeZoneClientToSystem(body["date"], body["time"], counsellor[0]["timezone"], client[0]["timezone"])
 
-	// clientTimeZone := "-300" // IST
-
-	// counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
-
-	// clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
-
-	// counsellorTimeInInt = counsellorTimeInInt / 30
-	// clientTimeInInt = clientTimeInInt / 30
-
-	// index, _ := strconv.Atoi(body["time"])
-	// index = index - clientTimeInInt
-	// index = index + counsellorTimeInInt
-
-	// if index > 47 {
-	// 	index = index - 47
-	// 	date, _ := time.Parse("2006-01-02", body["date"])
-
-	// 	lastestDate := date.AddDate(0, 0, 1)
-
-	// 	// Format the resulting date back to a string
-	// 	lastestDateStr := lastestDate.Format("2006-01-02")
-	// 	body["date"] = lastestDateStr
-	// 	body["time"] = strconv.Itoa(index)
-	// } else {
-	// 	body["time"] = strconv.Itoa(index)
-	// }
+	// body["time"] = systemTime
+	// body["date"] = systemDate
 
 	// check 2nd appointment with the same listener
 	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
@@ -360,13 +336,13 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	counsellor_fullname := counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
 
-	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	client_fullname := client_name[0]["first_name"] + " " + client_name[0]["last_name"]
+	client_fullname := client[0]["first_name"] + " " + client[0]["last_name"]
 
 	qualitycheck_details := map[string]string{}
 	qualitycheck_details["appointment_id"] = appointmentID
@@ -576,11 +552,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	accessCode := ""
 
-	if domainName[1] == "db.com" {
+	switch domainName[1] {
+	case "db.com":
 		accessCode = "2332"
-	} else if domainName[1] == "ageasfederal.com" {
+	case "ageasfederal.com":
 		accessCode = "2523"
-	} else {
+	default:
 		accessCode = "1234"
 	}
 

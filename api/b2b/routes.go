@@ -214,6 +214,8 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	decrypted, _ := DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 
 	switch decrypted["path"] {
+	case "/prosculpt/profile/add":
+		AddProsculptStudentProfile(w, r, decrypted)
 	case "/access_code":
 		CheckAccessCode(w, r, decrypted)
 	case "/send_otp":
