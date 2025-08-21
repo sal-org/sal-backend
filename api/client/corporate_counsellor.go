@@ -275,7 +275,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	}
 	// check if order payment is already captured
 	if !strings.EqualFold(order[0]["status"], CONSTANT.OrderWaiting) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.PaymentCapturedMessage, CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeOk, CONSTANT.AppointmentCapturedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -287,6 +287,35 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	}
 
 	domainName := strings.Split(client[0]["email"], "@")
+
+	// check if slots available
+	if !UTIL.CheckIfAppointmentSlotAvailable(order[0]["counsellor_id"], order[0]["date"], order[0]["time"]) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	DB.UpdateSQL(CONSTANT.SlotsTable,
+		map[string]string{
+			"counsellor_id": order[0]["counsellor_id"],
+			"date":          order[0]["date"],
+		},
+		map[string]string{
+			order[0]["time"]: CONSTANT.SlotBooked,
+		},
+	)
+
+	// change order status
+	orderUpdate := map[string]string{}
+	orderUpdate["status"] = CONSTANT.OrderInProgress
+	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
+
+
+	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
+		map[string]string{
+			"order_id": body["order_id"],
+		},
+		orderUpdate,
+	)
 
 	// create appointment between listener and client
 	appointment := map[string]string{}
@@ -322,6 +351,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	// 	}
 	// }
 
+	// client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
 	var counsellor []map[string]string
 
 	// sent notitifications
@@ -335,12 +370,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	}
 
 	counsellor_fullname := counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-
-	// client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
-	// if !ok {
-	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
 
 	client_fullname := client[0]["first_name"] + " " + client[0]["last_name"]
 
@@ -356,13 +385,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
 	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
 
-	// change order status
-	orderUpdate := map[string]string{}
-	orderUpdate["status"] = CONSTANT.OrderInProgress
-	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
-
-	// client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
-
 	// send email to client
 	filepath_text := "htmlfile/appointmentConfirmation.html"
 
@@ -371,23 +393,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-
-	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
-		map[string]string{
-			"order_id": body["order_id"],
-		},
-		orderUpdate,
-	)
-
-	DB.UpdateSQL(CONSTANT.SlotsTable,
-		map[string]string{
-			"counsellor_id": order[0]["counsellor_id"],
-			"date":          order[0]["date"],
-		},
-		map[string]string{
-			order[0]["time"]: CONSTANT.SlotBooked,
-		},
-	)
 
 	// client notification
 
@@ -798,6 +803,37 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		return
 	}
 
+	// check if slots available
+	if !UTIL.CheckIfAppointmentzInPersonSlotAvailable(order[0]["counsellor_id"], order[0]["date"], order[0]["time"]) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
+		map[string]string{
+			"counsellor_id":    order[0]["counsellor_id"],
+			"date":             order[0]["date"],
+			"company_name":     address[0]["partner_name"],
+			"company_location": address[0]["partner_location"],
+		},
+		map[string]string{
+			order[0]["time"]: CONSTANT.SlotBooked,
+		},
+	)
+
+	// change order status
+	orderUpdate := map[string]string{}
+	orderUpdate["status"] = CONSTANT.OrderInProgress
+	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
+
+
+	DB.UpdateSQL(CONSTANT.InPersonOrderClientAppointmentTable,
+		map[string]string{
+			"order_id": body["order_id"],
+		},
+		orderUpdate,
+	)
+
 	// create appointment between listener and client
 	appointment := map[string]string{}
 	appointment["order_id"] = body["order_id"]
@@ -830,34 +866,11 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 
 	}
 
-	// change order status
-	orderUpdate := map[string]string{}
-	orderUpdate["status"] = CONSTANT.OrderInProgress
-	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
-
-	DB.UpdateSQL(CONSTANT.InPersonOrderClientAppointmentTable,
-		map[string]string{
-			"order_id": body["order_id"],
-		},
-		orderUpdate,
-	)
-
-	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
-		map[string]string{
-			"counsellor_id":    order[0]["counsellor_id"],
-			"date":             order[0]["date"],
-			"company_name":     address[0]["partner_name"],
-			"company_location": address[0]["partner_location"],
-		},
-		map[string]string{
-			order[0]["time"]: CONSTANT.SlotBooked,
-		},
-	)
 
 	// client notification
 

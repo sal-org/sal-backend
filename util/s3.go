@@ -286,6 +286,7 @@ func PreSignedS3URLToUploadPut(s3Bucket, path, s3AccessKey, s3SecretKey, s3Regio
 
 	q := req.HTTPRequest.URL.Query()
 	q.Add("x-amz-acl", "public-read")
+	q.Add("Content-Type",getFileMIMEType(strings.ToLower(extension)))
 	req.HTTPRequest.URL.RawQuery = q.Encode()
 	// req.HTTPRequest.Header.Set("Content-MD5", checksum)
 	str, _ := req.Presign(5 * time.Minute)

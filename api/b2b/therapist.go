@@ -404,6 +404,35 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// check if slots available
+	if !UTIL.CheckIfAppointmentSlotAvailable(body["therapist_id"], body["date"], body["time"]) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	DB.UpdateSQL(CONSTANT.SlotsTable,
+		map[string]string{
+			"counsellor_id": order[0]["counsellor_id"],
+			"date":          order[0]["date"],
+		},
+		map[string]string{
+			order[0]["time"]: CONSTANT.SlotBooked,
+		},
+	)
+
+	// change order status
+	orderUpdate := map[string]string{}
+	orderUpdate["status"] = CONSTANT.OrderInProgress
+	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
+	
+
+	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
+		map[string]string{
+			"order_id": body["order_id"],
+		},
+		orderUpdate,
+	)
+
 	// create appointment between listener and client
 	appointment := map[string]string{}
 	appointment["order_id"] = body["order_id"]
@@ -432,32 +461,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	}
 
-	// change order status
-	orderUpdate := map[string]string{}
-	orderUpdate["status"] = CONSTANT.OrderInProgress
-	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
-
-	// client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
-
 	// send email to client
 	filepath_text := "htmlfile/appointmentConfirmation.html"
-
-	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
-		map[string]string{
-			"order_id": body["order_id"],
-		},
-		orderUpdate,
-	)
-
-	DB.UpdateSQL(CONSTANT.SlotsTable,
-		map[string]string{
-			"counsellor_id": order[0]["counsellor_id"],
-			"date":          order[0]["date"],
-		},
-		map[string]string{
-			order[0]["time"]: CONSTANT.SlotBooked,
-		},
-	)
 
 	// get client details
 	transitions, status, ok := DB.SelectProcess("select * from "+CONSTANT.B2B2CAppointmentTransitionsTable+" where client_id = ? and status = "+CONSTANT.AppointmentTransitionActive+" order by created_at asc", client[0]["client_id"])

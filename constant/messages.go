@@ -66,6 +66,7 @@ const (
 	OrderNotFoundMessage                          = "Order not found"
 	OrderAlreadyExistMessage                      = "Toast Message: Clove Café has been booked already. Tap Menu -> In-Person Café to know more"
 	PaymentCapturedMessage                        = "Payment captured. Order created succefully."
+	AppointmentCapturedMessage                    = "Appointment created succefully."
 	PaymentFailedMessage                          = "Payment Failed Status "
 	Reschedule4HoursMinimumMessage                = "Reschedule is not allowed within 4 hours of your upcoming appointment"
 	RescheduleSlotNotAvailableMessage             = "Slot not available in this hour. Reschedule to a different slot"

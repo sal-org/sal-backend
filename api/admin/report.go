@@ -1169,7 +1169,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "22": // inperson request appointment
-		heading = []string{"Client Name", "Counsellor Name", "Company Name", "Location", "Date", "Status"}
+		heading = []string{"Client Name", "Email ID", "Mobile No.", "Counsellor Name", "Company Name", "Location", "Date", "Status"}
 		inPersonAppointmentsRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonAppointmentRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1183,7 +1183,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorIDs := UTIL.ExtractValuesFromArrayMap(inPersonAppointmentsRequests, "counsellor_id")
 
 		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -1212,6 +1212,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 			data = append(data, []string{
 				clientsMap[inpersonappointmentRequest["client_id"]]["first_name"] + " " + clientsMap[inpersonappointmentRequest["client_id"]]["last_name"],
+				clientsMap[inpersonappointmentRequest["client_id"]]["email"],
+				clientsMap[inpersonappointmentRequest["client_id"]]["phone"],
 				counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["first_name"] + " " + counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["last_name"],
 				inpersonappointmentRequest["company_name"],
 				inpersonappointmentRequest["company_location"],
@@ -1221,7 +1223,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "23": // appointment request
-		heading = []string{"Client Name", "Company Name", "IsFamilyMember", "Counsellor Name", "Date", "Status"}
+		heading = []string{"Client Name", "Email", "Mobile No.", "Company Name", "IsFamilyMember", "Counsellor Name", "Date", "Status"}
 		appointmentsRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1235,7 +1237,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointmentsRequests, "counsellor_id")
 
 		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -1302,6 +1304,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 			data = append(data, []string{
 				clientsMap[inpersonappointmentRequest["client_id"]]["first_name"] + " " + clientsMap[inpersonappointmentRequest["client_id"]]["last_name"],
+				clientsMap[inpersonappointmentRequest["client_id"]]["email"],
+				clientsMap[inpersonappointmentRequest["client_id"]]["phone"],
 				partnerName,
 				isFamilyMember,
 				counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["first_name"] + " " + counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["last_name"],
@@ -1401,7 +1405,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "25": // inperson cafe request
-		heading = []string{"Client Name", "Cafe Name", "Total Seat", "Company Name", "Company Location", "Counsellor Name", "Status"}
+		heading = []string{"Client Name", "Email ID", "Mobile No.", "Cafe Name", "Total Seat", "Company Name", "Company Location", "Counsellor Name", "Status"}
 		inPersonCafeRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.EventInPersonRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1413,8 +1417,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		orderIDs := UTIL.ExtractValuesFromArrayMap(inPersonCafeRequests, "order_id")
 
 		// get client details
-		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -1452,6 +1455,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 			data = append(data, []string{
 				clientsMap[inPersonCafeRequest["client_id"]]["first_name"] + " " + clientsMap[inPersonCafeRequest["client_id"]]["last_name"],
+				clientsMap[inPersonCafeRequest["client_id"]]["email"],
+				clientsMap[inPersonCafeRequest["client_id"]]["phone"],
 				ordersMap[inPersonCafeRequest["order_id"]]["title"],
 				ordersMap[inPersonCafeRequest["order_id"]]["total_seat"],
 				ordersMap[inPersonCafeRequest["order_id"]]["company_name"],
