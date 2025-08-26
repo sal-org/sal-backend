@@ -84,8 +84,6 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]st
 
 	urlVideo := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["video"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 
-
-
 	counsellor["name"] = therapist[0]["first_name"] + " " + therapist[0]["last_name"]
 	counsellor["pronoun"] = therapist[0]["pronoun"]
 	counsellor["total_rate"] = therapist[0]["total_rating"]
@@ -405,7 +403,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	}
 
 	// check if slots available
-	if !UTIL.CheckIfAppointmentSlotAvailable(body["therapist_id"], body["date"], body["time"]) {
+	if !UTIL.CheckIfAppointmentSlotAvailable(order[0]["counsellor_id"], order[0]["date"], order[0]["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -424,7 +422,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	orderUpdate := map[string]string{}
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
-	
 
 	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{

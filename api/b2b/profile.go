@@ -313,7 +313,8 @@ func AddProsculptStudentProfile(w http.ResponseWriter, r *http.Request, body map
 
 	var encryptedResponse = make(map[string]interface{})
 
-	var userExist = false
+	var isMobileExist = false
+	var isEmailIDExist = false
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ProsculptStudentProfileRequiredFields)
@@ -322,7 +323,6 @@ func AddProsculptStudentProfile(w http.ResponseWriter, r *http.Request, body map
 		return
 	}
 
-	
 	if DB.CheckIfExists(CONSTANT.B2B2CAppointmentTransitionsTable, map[string]string{"payment_id": body["payment_id"]}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ProsculptPaymentIDAlreadyMessage, CONSTANT.ShowDialog, response)
 		return
@@ -330,15 +330,61 @@ func AddProsculptStudentProfile(w http.ResponseWriter, r *http.Request, body map
 
 	// check if user already signed up with specified phone
 	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["mobile_no"]}) {
-		userExist = true
+		isMobileExist = true
 	}
 
 	// check if user already signed up with specified email
 	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email_id"]}) {
-		userExist = true
+		isEmailIDExist = true
 	}
 
-	if userExist {
+	if isEmailIDExist {
+
+		if !isMobileExist {
+			DB.UpdateSQL(CONSTANT.ClientsTable,
+				map[string]string{
+					"email": body["email_id"],
+				},
+				map[string]string{
+					"phone":         body["mobile_no"],
+					"first_name":    body["first_name"],
+					"last_name":     body["last_name"],
+					"date_of_birth": body["dob"],
+					"gender":        body["gender"],
+					"location":      body["location"],
+					"modified_at":   UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			isMobileExist = true
+		}
+
+	}
+
+	if isMobileExist {
+
+		if !isEmailIDExist {
+			DB.UpdateSQL(CONSTANT.ClientsTable,
+				map[string]string{
+					"phone": body["mobile_no"],
+				},
+				map[string]string{
+					"email":         body["email_id"],
+					"first_name":    body["first_name"],
+					"last_name":     body["last_name"],
+					"date_of_birth": body["dob"],
+					"gender":        body["gender"],
+					"location":      body["location"],
+					"modified_at":   UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			isEmailIDExist = true
+		}
+
+	}
+
+	if isEmailIDExist && isMobileExist {
 
 		clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": body["email_id"]})
 		if !ok {
