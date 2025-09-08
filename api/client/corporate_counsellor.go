@@ -204,8 +204,12 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// convert client time to system time
+
+	dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneClientToSystem(body["date"], body["time"], client[0]["timezone"])
+
 	// check if slots available
-	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], body["date"], body["time"]) {
+	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], dateInTimeZone, timeInTimeZone) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -214,8 +218,8 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	order := map[string]string{}
 	order["client_id"] = body["client_id"]
 	order["counsellor_id"] = body["listener_id"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
+	order["date"] = dateInTimeZone
+	order["time"] = timeInTimeZone
 	order["type"] = counsellorType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
@@ -394,6 +398,10 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	counsellorDateInTimeZone, counsellorTimeInTimeZone := UTIL.ConvertTimeZoneSystemToCounsellor(order[0]["date"], order[0]["time"], counsellor[0]["timezone"])
+
+	clientDateInTimeZone, clientTimeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(order[0]["date"], order[0]["time"], client[0]["timezone"])
+
 	// client notification
 
 	// Booking confirmation
@@ -408,12 +416,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
 		"",
@@ -427,8 +435,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###Date###": UTIL.BuildOnlyDate(order[0]["date"]),
-				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###Date###": UTIL.BuildOnlyDate(counsellorDateInTimeZone),
+				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		order[0]["counsellor_id"],
@@ -446,12 +454,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
 				"###user_name###": counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		order[0]["counsellor_id"],
 		order[0]["type"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
 		"",
@@ -466,8 +474,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
 				"###user_Name###": counsellor[0]["first_name"],
-				"###date###":      UTIL.BuildOnlyDate(order[0]["date"]),
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":      UTIL.BuildOnlyDate(clientDateInTimeZone),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -485,12 +493,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
 				"###userName###":  counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-5*time.Hour).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).Add(-5*time.Hour).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -503,12 +511,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
 				"###userName###":  counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -522,8 +530,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###userName###":  counsellor[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
-				"###date###":      UTIL.BuildOnlyDate(order[0]["date"]),
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":      UTIL.BuildOnlyDate(counsellorDateInTimeZone),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -541,12 +549,12 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			map[string]string{
 				"###user_name###": counsellor[0]["first_name"],
 				"###userName###":  client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -573,8 +581,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": counsellor[0]["first_name"],
-				"###date###":          UTIL.BuildOnlyDate(order[0]["date"]),
-				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":          UTIL.BuildOnlyDate(clientDateInTimeZone),
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		AccessCode: accessCode,
@@ -598,8 +606,8 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 			CONSTANT.ClientAppointmentBookCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date###":        UTIL.BuildOnlyDate(order[0]["date"]),
-				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":        UTIL.BuildOnlyDate(counsellorDateInTimeZone),
+				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 	}

@@ -179,7 +179,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
 
 	// get counsellors|listeners|therapists slots
-	slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+	slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1  and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "' order by date asc")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -187,19 +187,15 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	// group counsellors|listeners|therapists slots
 	counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
 	filteredCounsellorSlots := map[string][]map[string]string{}
-	filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
-	var counsellorFirstList []map[string]string
-	var counsellorSecondList []map[string]string
+
 	// var nextSlot []map[string]string
 	for counsellorID, counsellorSlot := range counsellorSlots {
-		filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
-		if len(filteredCounsellorSlots[counsellorID]) == 0 {
-			nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1  and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
-			filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
+		if len(r.FormValue("client_id")) == 0 {
+			filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
+		} else {
+			clientTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.ClientsTable+" where client_id = ?", r.FormValue("client_id"))
+			filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlotsAccordingToTimeZone(counsellorSlot, clientTimeZone)
+
 		}
 	}
 
@@ -210,35 +206,13 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for key, value := range counsellors {
-
-		slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date = '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and available = 1 order by date asc", value["id"])
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		filteredCounsellorSlot := map[string][]map[string]string{}
-
-		filteredCounsellorSlot[value["id"]] = UTIL.FilterAvailableSlots(slots)
-		if len(filteredCounsellorSlot[value["id"]]) != 0 {
-			counsellorFirstList = append(counsellorFirstList, counsellors[key])
-		} else {
-			counsellorSecondList = append(counsellorSecondList, counsellors[key])
-		}
-
-	}
-
-	counsellorFirstList = append(counsellorFirstList, counsellorSecondList...)
-
 	// fmt.Println(counsellors)
 
-	response["counsellors"] = counsellorFirstList
+	response["counsellors"] = counsellors
 	response["slots"] = filteredCounsellorSlots
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
-	response["next_available"] = filteredCounsellorSlotsNextAvaliable
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -477,7 +451,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellors, "id")
 
 		// get counsellors|therapists slots
-		slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and date = '" + UTIL.GetCurrentTime().Format("2006-01-02") + "'")
+		slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "' order by date asc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -485,18 +459,17 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		// group counsellors|therapists slots
 		counsellorSlots := UTIL.ConvertArrayMapToKeyMapArray(slots, "counsellor_id")
 		filteredCounsellorSlots := map[string][]map[string]string{}
-		filteredCounsellorSlotsNextAvaliable := map[string][]map[string]string{}
 		// var nextSlot []map[string]string
 		for counsellorID, counsellorSlot := range counsellorSlots {
-			filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
-			if len(filteredCounsellorSlots[counsellorID]) == 0 {
-				nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1 and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
-				if !ok {
-					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-					return
-				}
-				filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
+
+			if len(r.FormValue("client_id")) == 0 {
+				filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
+			} else {
+				clientTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.ClientsTable+" where client_id = ?", r.FormValue("client_id"))
+				filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlotsAccordingToTimeZone(counsellorSlot, clientTimeZone)
+
 			}
+
 		}
 
 		// get counsellors|therapists count
@@ -513,7 +486,6 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		response["counsellors_count"] = counsellorsCount[0]["ctn"]
 		response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 		response["media_url"] = CONFIG.MediaURL
-		response["next_available"] = filteredCounsellorSlotsNextAvaliable
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

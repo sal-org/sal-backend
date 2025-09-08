@@ -50,6 +50,16 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Time Zone Conversion
+	counsellorTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointments[0]["counsellor_id"])
+
+	for i := range appointments {
+
+		dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToCounsellor(appointments[i]["date"], appointments[i]["time"], counsellorTimeZone)
+		appointments[i]["date"] = dateInTimeZone
+		appointments[i]["time"] = timeInTimeZone
+	}
+
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -135,6 +145,16 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	// Time Zone Conversion
+	counsellorTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointments[0]["counsellor_id"])
+
+	for i := range appointments {
+
+		dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToCounsellor(appointments[i]["date"], appointments[i]["time"], counsellorTimeZone)
+		appointments[i]["date"] = dateInTimeZone
+		appointments[i]["time"] = timeInTimeZone
 	}
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")

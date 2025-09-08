@@ -99,14 +99,27 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get listener slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0,0,15).Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// remove times and dates with no availability
-	response["slots"] = UTIL.FilterAvailableSlots(slots)
+	if len(r.FormValue("client_id")) == 0 {
+		// remove times and dates with no availability
+		response["slots"] = UTIL.FilterAvailableSlots(slots)
+	} else {
+		// get client details
+		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": r.FormValue("client_id")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// time zone conversion for slots
+		response["slots"] = UTIL.FilterAvailableSlotsAccordingToTimeZone(slots, client[0]["timezone"])
+	}
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -195,12 +208,15 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// convert client time to system time
+	dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneClientToSystem(body["date"], body["time"], client[0]["timezone"])
+
 	// order object to be inserted
 	order := map[string]string{}
 	order["client_id"] = body["client_id"]
 	order["counsellor_id"] = body["listener_id"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
+	order["date"] = timeInTimeZone
+	order["time"] = dateInTimeZone
 	order["type"] = CONSTANT.ListenerType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
@@ -287,20 +303,13 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellor_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ListenersTable+" where listener_id = ?", order[0]["counsellor_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
+	
 
-	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
-	client_fullname := client_name[0]["first_name"] + " " + client_name[0]["last_name"]
+	counsellor_fullname := listener[0]["first_name"] + " " + listener[0]["last_name"]
+	client_fullname := client[0]["first_name"] + " " + client[0]["last_name"]
 
 	qualitycheck_details := map[string]string{}
 	qualitycheck_details["appointment_id"] = appointmentID
@@ -319,12 +328,6 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 
-	// sent notitifications
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
-
-	// send email to client
-	filepath_text := "htmlfile/appointmentConfirmation.html"
 
 	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
 	if !ok {
@@ -349,11 +352,21 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	// sent notitifications
+
+	counsellorDateInTimeZone, counsellorTimeInTimeZone := UTIL.ConvertTimeZoneSystemToCounsellor(order[0]["date"], order[0]["time"], listener[0]["timezone"])
+
+	clientDateInTimeZone, clientTimeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(order[0]["date"], order[0]["time"], client[0]["timezone"])
+
+
 	// client notification
+
+	// send email to client
+	filepath_text := "htmlfile/appointmentConfirmation.html"
 
 	// Booking confirmation
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,"",
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// 15 min push notification before appointment start
@@ -363,12 +376,12 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		order[0]["client_id"],
 		CONSTANT.ClientType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
 		"",
@@ -382,8 +395,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentScheduleCounsellorContent,
 			map[string]string{
-				"###Date###": order[0]["date"],
-				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###Date###": counsellorDateInTimeZone,
+				"###Time###": UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		order[0]["counsellor_id"],
@@ -401,12 +414,12 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
 				"###user_name###": listener[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		order[0]["counsellor_id"],
 		CONSTANT.ListenerType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
 		"",
@@ -421,13 +434,13 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
 				"###user_Name###": listener[0]["first_name"],
-				"###date###":      order[0]["date"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":      clientDateInTimeZone,
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).UTC().String(),
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
 	)
@@ -440,12 +453,12 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
 				"###userName###":  listener[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-30*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).Add(-30*time.Minute).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -458,12 +471,12 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###user_name###": client[0]["first_name"],
 				"###userName###":  listener[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(clientDateInTimeZone, clientTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -477,13 +490,13 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  listener[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
-				"###date###":      order[0]["date"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":     counsellorDateInTimeZone,
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		listener[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).UTC().String(),
 		appointmentID,
 		CONSTANT.InstantSendTextMessage,
 	)
@@ -496,12 +509,12 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###user_name###": listener[0]["first_name"],
 				"###userName###":  client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		listener[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		appointmentID,
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -515,8 +528,8 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
 				"###therpist_name###": listener[0]["first_name"],
-				"###date###":          order[0]["date"],
-				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###date###":         clientDateInTimeZone,
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(clientTimeInTimeZone),
 			},
 		),
 	}

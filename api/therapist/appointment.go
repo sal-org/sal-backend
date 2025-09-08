@@ -50,6 +50,16 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Time Zone Conversion
+	therapistTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointments[0]["counsellor_id"])
+
+	for i := range appointments {
+
+		dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToCounsellor(appointments[i]["date"], appointments[i]["time"], therapistTimeZone)
+		appointments[i]["date"] = dateInTimeZone
+		appointments[i]["time"] = timeInTimeZone
+	}
+
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL

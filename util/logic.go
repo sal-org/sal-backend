@@ -1,6 +1,7 @@
 package util
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -360,20 +361,115 @@ func CalculateExperience(startDate, nowDate, gapYears, gapMonth string) string {
 
 }
 
-func ConvertTimeZoneClientToSystem(dateInClient, timeInClient, counsellorTimeZone, clientTimeZone string) (timeZoneDate string, timeZoneTime string) {
+// FilterAvailableSlots - show only available slots and dates
+func FilterAvailableSlotsAccordingToTimeZone(slots []map[string]string, clientTimeZone string) []map[string]string {
 
-	// Timezone conversion
+	filteredSlots := []map[string]string{}
 
-	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+	// Time Zone Conversion
 
 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
 
-	counsellorTimeInInt = counsellorTimeInInt / 30
+    systemTimeZone := "330" // IST
+
+	systemTimeZoneInInt, _ := strconv.Atoi(systemTimeZone) // IST
+	systemTimeZoneInInt /= 30
+	clientTimeInInt /= 30
+
+	//remove dates with no availability
+
+	for _, slot := range slots {
+		filteredSlot := map[string]string{}
+		privousSlot := map[string]string{}
+		startSlot := 0
+		if strings.EqualFold(GetCurrentTime().Format("2006-01-02"), slot["date"]) {
+			// use from next hour and multiply by 2 to get 30 min slots
+			startSlot = (GetCurrentTime().Add(330*time.Minute).Hour()+1)*2 + 2 // use next slot for removing expired time for today
+		}
+
+		for i := startSlot; i < 48; i++ { // 48 - 30 min slots
+			// show only times with availability
+			if strings.EqualFold(slot[strconv.Itoa(i)], "1") {
+				index := i
+				index = index - systemTimeZoneInInt
+				index = index + clientTimeInInt
+				if index < 0 {
+					index = index + 47
+					privousSlot[strconv.Itoa(index)] = "1"
+				} else {
+					filteredSlot[strconv.Itoa(index)] = "1"
+				}
+			}
+		}
+
+		if len(filteredSlot) > 0 { // atleast 1 slot is available
+			//filteredSlot["date"] = slot["date"]
+			filteredSlot["date"] = slot["date"]
+			filteredSlots = append(filteredSlots, filteredSlot)
+		}
+
+		if len(privousSlot) > 0 { // atleast 1 slot is available
+			//filteredSlot["date"] = slot["date"]
+			date, _ := time.Parse("2006-01-02", slot["date"])
+
+			previousDate := date.AddDate(0, 0, -1)
+
+			// Format the resulting date back to a string
+			previousDateStr := previousDate.Format("2006-01-02")
+			privousSlot["date"] = previousDateStr
+			filteredSlots = append(filteredSlots, privousSlot)
+		}
+	}
+
+	// Step 1: Merge by date
+	mergedMap := make(map[string]map[string]string)
+
+	for _, entry := range filteredSlots {
+		date := entry["date"]
+
+		if _, exists := mergedMap[date]; !exists {
+			mergedMap[date] = make(map[string]string)
+			mergedMap[date]["date"] = date
+		}
+
+		for k, v := range entry {
+			if k != "date" {
+				mergedMap[date][k] = v
+			}
+		}
+	}
+
+	// Step 2: Collect and sort dates
+	var sortedDates []string
+	for date := range mergedMap {
+		sortedDates = append(sortedDates, date)
+	}
+	sort.Strings(sortedDates) // sorts in ascending order
+
+	// Step 3: Build result using sorted dates
+	var result []map[string]string
+	for _, date := range sortedDates {
+		result = append(result, mergedMap[date])
+	}
+
+	return result
+}
+
+func ConvertTimeZoneClientToSystem(dateInClient, timeInClient, clientTimeZone string) (timeZoneDate string, timeZoneTime string) {
+
+	// Timezone conversion
+
+	systemTimeZone := "330" // IST
+	systemTimeInInt, _ := strconv.Atoi(systemTimeZone)
+
+	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	systemTimeInInt = systemTimeInInt / 30
 	clientTimeInInt = clientTimeInInt / 30
 
 	index, _ := strconv.Atoi(timeInClient)
 	index = index - clientTimeInInt
-	index = index + counsellorTimeInInt
+	index = index + systemTimeInInt
 
 	if index > 47 {
 		index = index - 47
@@ -393,19 +489,20 @@ func ConvertTimeZoneClientToSystem(dateInClient, timeInClient, counsellorTimeZon
 	return timeZoneDate, timeZoneTime
 }
 
-func ConvertTimeZoneSystemToClient(dateInClient, timeInClient, counsellorTimeZone, clientTimeZone string) (timeZoneDate string, timeZoneTime string) {
+func ConvertTimeZoneSystemToClient(dateInClient, timeInClient, clientTimeZone string) (timeZoneDate string, timeZoneTime string) {
 
 	// Timezone conversion
 
-	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+	systemTimeZone := "330" // IST
+	systemTimeZoneInInt, _ := strconv.Atoi(systemTimeZone)
+	systemTimeZoneInInt /= 30
 
 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
 
-	counsellorTimeInInt = counsellorTimeInInt / 30
-	clientTimeInInt = clientTimeInInt / 30
+	clientTimeInInt /= 30
 
 	index, _ := strconv.Atoi(timeInClient)
-	index = index - counsellorTimeInInt
+	index = index - systemTimeZoneInInt
 	index = index + clientTimeInInt
 
 	if index < 0 {
@@ -420,6 +517,41 @@ func ConvertTimeZoneSystemToClient(dateInClient, timeInClient, counsellorTimeZon
 		timeZoneTime = strconv.Itoa(index)
 	} else {
 		timeZoneDate = dateInClient
+		timeZoneTime = strconv.Itoa(index)
+	}
+
+	return timeZoneDate, timeZoneTime
+}
+
+
+func ConvertTimeZoneSystemToCounsellor(dateInCounsellor, timeInCounsellor, counsellorTimeZone string) (timeZoneDate string, timeZoneTime string) {
+
+	// Timezone conversion
+
+	systemTimeZone := "330" // IST
+	systemTimeZoneInInt, _ := strconv.Atoi(systemTimeZone)
+	systemTimeZoneInInt /= 30
+
+	counsellorTimeZoneInInt, _ := strconv.Atoi(counsellorTimeZone) // IST
+
+	counsellorTimeZoneInInt /= 30
+
+	index, _ := strconv.Atoi(timeInCounsellor)
+	index = index - systemTimeZoneInInt
+	index = index + counsellorTimeZoneInInt
+
+	if index < 0 {
+		index = index + 47
+		date, _ := time.Parse("2006-01-02", dateInCounsellor)
+
+		privousDate := date.AddDate(0, 0, -1)
+
+		// Format the resulting date back to a string
+		privousDateStr := privousDate.Format("2006-01-02")
+		timeZoneDate = privousDateStr
+		timeZoneTime = strconv.Itoa(index)
+	} else {
+		timeZoneDate = dateInCounsellor
 		timeZoneTime = strconv.Itoa(index)
 	}
 

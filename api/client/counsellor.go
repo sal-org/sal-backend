@@ -107,11 +107,23 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// remove times and dates with no availability
-	response["slots"] = UTIL.FilterAvailableSlots(slots)
+	if len(r.FormValue("client_id")) == 0 {
+		// remove times and dates with no availability
+		response["slots"] = UTIL.FilterAvailableSlots(slots)
+	} else {
+		// get client details
+		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"timezone"}, map[string]string{"client_id": r.FormValue("client_id")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// time zone conversion for slots
+		response["slots"] = UTIL.FilterAvailableSlotsAccordingToTimeZone(slots, client[0]["timezone"])
+	}
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
-
 
 func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -125,7 +137,7 @@ func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get counsellor slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"),r.FormValue("companyName"),r.FormValue("companyLocation"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"), r.FormValue("companyName"), r.FormValue("companyLocation"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -209,12 +221,16 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// convert client time to system time
+
+	dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneClientToSystem(body["date"], body["time"], client[0]["timezone"])
+
 	// order object to be inserted
 	order := map[string]string{}
 	order["client_id"] = body["client_id"]
 	order["counsellor_id"] = body["counsellor_id"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
+	order["date"] = dateInTimeZone
+	order["time"] = timeInTimeZone
 	order["type"] = CONSTANT.CounsellorType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
@@ -517,7 +533,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,"",
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// send appointment reminder notification to client before 15 min

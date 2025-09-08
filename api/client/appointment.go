@@ -49,7 +49,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	
+
 	// get counsellor ids to get details
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
@@ -62,39 +62,13 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 
 	// Time Zone Conversion
 
-	// for i := 0; i < len(appointments); i++ {
+	clientTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.ClientsTable+" where client_id = ?", appointments[0]["client_id"])
 
-	// 	// dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(appointments[i]["date"],appointments[i]["time"])
-
-	// 	counsellorTimeZone := "330" // IST
-
-	// 	clientTimeZone := "-300" // IST
-
-	// 	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
-
-	// 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
-
-	// 	counsellorTimeInInt = counsellorTimeInInt / 30
-	// 	clientTimeInInt = clientTimeInInt / 30
-
-	// 	index, _ := strconv.Atoi(appointments[i]["time"])
-	// 	index = index - counsellorTimeInInt
-	// 	index = index + clientTimeInInt
-	// 	if index < 0 {
-	// 		index = index + 47
-	// 		date, _ := time.Parse("2006-01-02", appointments[i]["date"])
-
-	// 		previousDate := date.AddDate(0, 0, -1)
-
-	// 		// Format the resulting date back to a string
-	// 		previousDateStr := previousDate.Format("2006-01-02")
-	// 		appointments[i]["date"] = previousDateStr
-	// 		appointments[i]["time"] = strconv.Itoa(index)
-	// 	} else {
-	// 		appointments[i]["time"] = strconv.Itoa(index)
-	// 	}
-
-	// }
+	for i := range appointments {
+		dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(appointments[i]["date"], appointments[i]["time"], clientTimeZone)
+		appointments[i]["date"] = dateInTimeZone
+		appointments[i]["time"] = timeInTimeZone
+	}
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
@@ -228,36 +202,14 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	// Time Zone Conversion
 
-	// for i := 0; i < len(appointments); i++ {
-	// 	counsellorTimeZone := "330" // IST
+	clientTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.ClientsTable+" where client_id = ?", appointments[0]["client_id"])
 
-	// 	clientTimeZone := "-300" // IST
+	for i := range appointments {
 
-	// 	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
-
-	// 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
-
-	// 	counsellorTimeInInt = counsellorTimeInInt / 30
-	// 	clientTimeInInt = clientTimeInInt / 30
-
-	// 	index, _ := strconv.Atoi(appointments[i]["time"])
-	// 	index = index - counsellorTimeInInt
-	// 	index = index + clientTimeInInt
-	// 	if index < 0 {
-	// 		index = index + 47
-	// 		date, _ := time.Parse("2006-01-02", appointments[i]["date"])
-
-	// 		previousDate := date.AddDate(0, 0, -1)
-
-	// 		// Format the resulting date back to a string
-	// 		previousDateStr := previousDate.Format("2006-01-02")
-	// 		appointments[i]["date"] = previousDateStr
-	// 		appointments[i]["time"] = strconv.Itoa(index)
-	// 	} else {
-	// 		appointments[i]["time"] = strconv.Itoa(index)
-	// 	}
-
-	// }
+		dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(appointments[i]["date"], appointments[i]["time"], clientTimeZone)
+		appointments[i]["date"] = dateInTimeZone
+		appointments[i]["time"] = timeInTimeZone
+	}
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
@@ -376,6 +328,12 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 		response["appointment_slots"] = appointmentSlots[0]
 	}
+
+	// Time Zone Conversion
+
+	dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(appointment[0]["date"], appointment[0]["time"], client[0]["timezone"])
+	appointment[0]["date"] = dateInTimeZone
+	appointment[0]["time"] = timeInTimeZone
 
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
@@ -808,30 +766,19 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	// // get client details
-	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
-	// if !ok {
-	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	// Time Zone Conversion
 
-	// domainName := strings.Split(client[0]["email"], "@")
+	clientTimeZone := DB.QueryRowSQL("select timezone from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"])
+
+	dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneClientToSystem(body["date"], body["time"], clientTimeZone)
+
 
 	// check if slots available
-	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
+	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], dateInTimeZone, timeInTimeZone) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// update counsellor slots
-	// remove previous slot
-	// date, _ := time.Parse("2006-01-02", appointment[0]["date"])
-	// // get schedules for a weekday
-	// schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
-	// if !ok {
-	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
 	// sometimes there will be no schedules. situation will be automatically taken care of below
 
 	// update counsellor availability
@@ -850,10 +797,10 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	DB.UpdateSQL(CONSTANT.SlotsTable,
 		map[string]string{
 			"counsellor_id": appointment[0]["counsellor_id"],
-			"date":          body["date"],
+			"date":          dateInTimeZone,
 		},
 		map[string]string{
-			body["time"]: CONSTANT.SlotBooked,
+			timeInTimeZone: CONSTANT.SlotBooked,
 		},
 	)
 
@@ -863,8 +810,8 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			"appointment_id": r.FormValue("appointment_id"),
 		},
 		map[string]string{
-			"date":        body["date"],
-			"time":        body["time"],
+			"date":        dateInTimeZone,
+			"time":        timeInTimeZone,
 			"modified_at": UTIL.GetCurrentTime().String(),
 		},
 	)
@@ -891,16 +838,20 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
 		// break
 	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
 		// break
 	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
 		// break
 	}
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone", "email", "timezone"}, map[string]string{"client_id": appointment[0]["client_id"]})
+
+	// Time Zone Conversion
+
+	counsellorDateInTimeZone, counsellorTimeInTimeZone := UTIL.ConvertTimeZoneSystemToCounsellor(dateInTimeZone, timeInTimeZone, counsellor[0]["timezone"])
 
 	// remove all previous notifications
 	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
@@ -1013,12 +964,12 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentRemiderClientContent,
 			map[string]string{
 				"###user_name###": counsellor[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		appointment[0]["counsellor_id"],
 		counsellorType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
 		"",
@@ -1033,12 +984,12 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###user_name###": counsellor[0]["first_name"],
 				"###userName###":  client[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		r.FormValue("appointment_id"),
 		CONSTANT.LaterSendTextMessage,
 	)
@@ -1055,8 +1006,8 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentRescheduleCounsellorEmailBody,
 			map[string]string{
 				"###first_name###": client[0]["first_name"],
-				"###date###":       body["date"],
-				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###date###":       counsellorDateInTimeZone,
+				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(counsellorTimeInTimeZone),
 			},
 		),
 	}
@@ -1095,13 +1046,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###counsellorName###": counsellor[0]["first_name"],
 				"###clientName###":     client[0]["first_name"],
-				"###date###":           body["date"],
-				"###time###":           body["time"],
+				"###date###":           counsellorDateInTimeZone,
+				"###time###":           counsellorTimeInTimeZone,
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
-		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).UTC().String(),
 		r.FormValue("appointment_id"),
 		CONSTANT.InstantSendTextMessage,
 	)
