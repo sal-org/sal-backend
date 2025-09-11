@@ -1,6 +1,7 @@
 package therapist
 
 import (
+	"fmt"
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
@@ -10,6 +11,12 @@ import (
 
 	UTIL "salbackend/util"
 )
+
+type SlotUpdate struct {
+	Date  string
+	Key   string
+	Value string
+}
 
 // AvailabilityGet godoc
 // @Tags Therapist Availability
@@ -143,7 +150,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 				DB.DeleteSQL(CONSTANT.SchedulesDatesTable, map[string]string{"id": day["id"]})
 
-				availabileDates, status, ok := DB.SelectProcess("select date,id from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), day["dates"])
+				availabileDates, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), day["dates"])
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
@@ -401,21 +408,31 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 				}
 
-				for key, val := range slots {
-
-					DB.ExecuteSQL("update "+CONSTANT.SlotsTable+" set `"+key+"` = "+val+" where id = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", availabileDates[0]["id"]) // dont update already booked slots
-
+				for key, value := range availabileDates[0] {
+					if value == "2" {
+						num, _ := strconv.Atoi(key)
+						slots[strconv.Itoa(num)] = "2"
+						slots[strconv.Itoa(num-1)] = "0"
+						slots[strconv.Itoa(num+1)] = "0"
+					}
 				}
 
-				// status, ok = DB.UpdateSQL(CONSTANT.SlotsTable, map[string]string{"id": availabileDates[0]["id"]}, slots)
-				// if !ok {
-				// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				// 	return
+				// for key, val := range slots {
+
+				// 	DB.ExecuteSQL("update "+CONSTANT.SlotsTable+" set `"+key+"` = "+val+" where id = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", availabileDates[0]["id"]) // dont update already booked slots
+
 				// }
+
+				status, ok = DB.UpdateSQL(CONSTANT.SlotsTable, map[string]string{"id": availabileDates[0]["id"]}, slots)
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
 			} else {
 
 				if DB.CheckIfExists(CONSTANT.SlotsTable, map[string]string{"date": day["dates"]}) {
-					availabileDates, status, ok := DB.SelectProcess("select date,id from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), day["dates"])
+					availabileDates, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), day["dates"])
 					if !ok {
 						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 						return
@@ -1212,17 +1229,26 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 						}
 					}
 
-					for key, val := range slots {
-
-						DB.ExecuteSQL("update "+CONSTANT.SlotsTable+" set `"+key+"` = "+val+" where id = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", availabileDates[0]["id"]) // dont update already booked slots
-
+					for key, value := range availabileDates[0] {
+						if value == "2" {
+							num, _ := strconv.Atoi(key)
+							slots[strconv.Itoa(num)] = "2"
+							slots[strconv.Itoa(num-1)] = "0"
+							slots[strconv.Itoa(num+1)] = "0"
+						}
 					}
 
-					// status, ok = DB.UpdateSQL(CONSTANT.SlotsTable, map[string]string{"id": availabileDates[0]["id"]}, slots)
-					// if !ok {
-					// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-					// 	return
+					// for key, val := range slots {
+
+					// 	DB.ExecuteSQL("update "+CONSTANT.SlotsTable+" set `"+key+"` = "+val+" where id = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", availabileDates[0]["id"]) // dont update already booked slots
+
 					// }
+
+					status, ok = DB.UpdateSQL(CONSTANT.SlotsTable, map[string]string{"id": availabileDates[0]["id"]}, slots)
+					if !ok {
+						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+						return
+					}
 
 				}
 
@@ -2189,58 +2215,126 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 			days[weekday]["available"] = availability
 		}
 
-		// isDayWithin15Days = true
-		// isSlotsAreActive = true
-
 		// update weekday availability to respective dates
 		// will run for 30 days * 24 * 2 hours = 1440 times - TODO needs to be optimised
-		for _, day := range days { // 7 times
+		// for _, day := range days { // 7 times
+		// 	weekday, _ := strconv.Atoi(day["weekday"])
+		// 	for _, date := range datesByWeekdays[weekday] { // respective weekday dates i.e., 4-5 times
+		// 		availabileDates, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), date)
+		// 		if !ok {
+		// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 			return
+		// 		}
+
+		// 		for key, value := range availabileDates[0] {
+		// 			if value == "2" {
+		// 				num, _ := strconv.Atoi(key)
+		// 				day[strconv.Itoa(num-1)] = "0"
+		// 				day[strconv.Itoa(num+1)] = "0"
+		// 			}
+		// 		}
+
+		// 		for key, value := range day { // 48 times
+		// 			if strings.EqualFold(day["status"], "0") || strings.EqualFold(day["availability_status"], "0") {
+		// 				value = CONSTANT.SlotUnavailable // not available
+		// 			}
+		// 			DB.ExecuteSQL("update "+CONSTANT.SlotsTable+" set `"+key+"` = "+value+" where counsellor_id = ? and date = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", r.FormValue("therapist_id"), date) // dont update already booked slots
+		// 		}
+		// 	}
+		// }
+
+		var updates []SlotUpdate
+		currentDate := UTIL.GetCurrentTime().Format("2006-01-02")
+		// skipDate := false
+		for _, day := range days {
+			var bookedDates []map[string]string
 			weekday, _ := strconv.Atoi(day["weekday"])
-			for _, date := range datesByWeekdays[weekday] { // respective weekday dates i.e., 4-5 times
-				for key, value := range day { // 48 times
-					if strings.EqualFold(day["status"], "0") || strings.EqualFold(day["availability_status"], "0") {
-						value = CONSTANT.SlotUnavailable // not available
+
+			for _, date := range datesByWeekdays[weekday] {
+
+				if currentDate != date {
+					availabilityDates, status, ok := DB.SelectProcess("select dates from "+CONSTANT.SchedulesDatesTable+" where counsellor_id = ? and dates = ? order by dates", r.FormValue("therapist_id"), date)
+					if !ok {
+						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+						return
 					}
-					DB.ExecuteSQL("update "+CONSTANT.SlotsTable+" set `"+key+"` = "+value+" where counsellor_id = ? and date = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", r.FormValue("therapist_id"), date) // dont update already booked slots
+
+					if len(availabilityDates) != 0 {
+						continue
+					}
+				}
+
+				if currentDate != date {
+
+					bookedDates, status, ok = DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), date)
+					if !ok {
+						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+						return
+					}
+
+					currentDate = date
+				}
+
+				for key, value := range day {
+					// Skip non-slot fields
+					if key == "weekday" || key == "status" || key == "availability_status" {
+						continue
+					}
+
+					if strings.EqualFold(day["status"], "0") || strings.EqualFold(day["availability_status"], "0") {
+						value = CONSTANT.SlotUnavailable
+					}
+
+					for key, value := range bookedDates[0] {
+						if value == "2" {
+							num, _ := strconv.Atoi(key)
+							day[strconv.Itoa(num)] = "2"
+							day[strconv.Itoa(num-1)] = "0"
+							day[strconv.Itoa(num+1)] = "0"
+						}
+					}
+
+					updates = append(updates, SlotUpdate{
+						Date:  date,
+						Key:   key,
+						Value: value,
+					})
 				}
 			}
 		}
+
+		updatesByDate := make(map[string]map[string]string)
+
+		for _, upd := range updates {
+			if _, ok := updatesByDate[upd.Date]; !ok {
+				updatesByDate[upd.Date] = make(map[string]string)
+			}
+			updatesByDate[upd.Date][upd.Key] = upd.Value
+		}
+
+		counsellorID := r.FormValue("therapist_id")
+
+		for date, slotMap := range updatesByDate {
+			var sets []string
+			var args []interface{}
+
+			for key, value := range slotMap {
+				sets = append(sets, fmt.Sprintf("`%s` = ?", key))
+				args = append(args, value)
+			}
+
+			args = append(args, counsellorID, date)
+
+			sql := fmt.Sprintf(
+				"UPDATE %s SET %s WHERE counsellor_id = ? AND date = ?",
+				CONSTANT.SlotsTable,
+				strings.Join(sets, ", "),
+			)
+
+			DB.ExecuteSQL(sql, args...)
+		}
+
 	}
-
-	// getAppointmentRequest, _, _ := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "status": "1"})
-
-	// if len(getAppointmentRequest) != 0 && isDayWithin15Days && isSlotsAreActive {
-	// 	for _, request := range getAppointmentRequest {
-	// 		client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name, last_name, phone"}, map[string]string{"client_id": request["client_id"], "status": "1"})
-	// 		UTIL.RemoveMessageForRequestAppointment(request["request_id"], client[0]["phone"])
-	// 		// send into client
-	// 		UTIL.SendMessage(
-	// 			UTIL.ReplaceNotificationContentInString(
-	// 				// need to change
-	// 				CONSTANT.CounsellorAppointmentRequestCreatedAvailabilityClientTextMessage,
-	// 				map[string]string{
-	// 					"###clientName###":     client[0]["first_name"],
-	// 					"###counsellorName###": counsellor[0]["first_name"],
-	// 				},
-	// 			),
-	// 			CONSTANT.TransactionalRouteTextMessage,
-	// 			client[0]["phone"],
-	// 			UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
-	// 			request["request_id"],
-	// 			CONSTANT.InstantSendTextMessage,
-	// 		)
-
-	// 		DB.UpdateSQL(CONSTANT.AppointmentRequestTable,
-	// 			map[string]string{
-	// 				"request_id": request["request_id"],
-	// 			},
-	// 			map[string]string{
-	// 				"status":      CONSTANT.AppointmentRequestCompleted,
-	// 				"modified_at": UTIL.GetCurrentTime().String(),
-	// 			},
-	// 		)
-	// 	}
-	// }
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

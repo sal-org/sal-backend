@@ -137,27 +137,39 @@ func CheckCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	// get last cleints
-	lastClient, status, ok := DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "client_id": r.FormValue("client_id"), "session_date": r.FormValue("date")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
+	if len(r.FormValue("appointment_id")) != 0 {
+		// get last cleints
+		lastClient, status, ok := DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(lastClient) == 0 {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	} else {
+		// get last cleints
+		lastClient, status, ok := DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id"), "client_id": r.FormValue("client_id"), "session_date": r.FormValue("date")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(lastClient) == 0 {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		} else {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
-	if len(lastClient) == 0 {
-
-		// check if appointment is not created
-		// for _, value := range lastClient {
-		// 	if value["appointment_id"] == r.FormValue("appointment_id") {
-		// 		UTIL.SetReponse(w, "400", "Appointment not created", CONSTANT.ShowDialog, response)
-		// 		return
-		// 	}
-		// }
-		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
 func CounsellorClientRecord(w http.ResponseWriter, r *http.Request) {

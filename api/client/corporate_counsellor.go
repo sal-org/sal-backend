@@ -309,7 +309,6 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 
-
 	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{
 			"order_id": body["order_id"],
@@ -398,7 +397,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	// Booking confirmation
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, CONSTANT.VirtualAppointmentImage,
 	)
 
 	// 15 min push notification before appointment start
@@ -416,7 +415,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// Counsellor Notification
@@ -436,7 +435,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -454,7 +453,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// Client SMS
@@ -826,7 +825,6 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 
-
 	DB.UpdateSQL(CONSTANT.InPersonOrderClientAppointmentTable,
 		map[string]string{
 			"order_id": body["order_id"],
@@ -866,7 +864,6 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 
 	}
 
-
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
 
 	// send email to client
@@ -884,7 +881,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 				"###location###":  address[0]["counselling_room"] + ", " + address[0]["counselling_address"],
 			},
-		), order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
+		), order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, CONSTANT.InPersonAppointmentImage,
 	)
 
 	// 15 min push notification before appointment start
@@ -902,7 +899,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// Counsellor Notification
@@ -924,7 +921,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -942,7 +939,7 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// Client SMS

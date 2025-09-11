@@ -1,5 +1,11 @@
 package constant
 
+// Image for virtual/ in-person
+const (
+	VirtualAppointmentImage  = "miscellaneous/1756794503N4x212019cs32.jpg"
+	InPersonAppointmentImage = "miscellaneous/1756794503N4x21s09cs32.jpg"
+)
+
 // format event-Target
 // notification headings
 const (

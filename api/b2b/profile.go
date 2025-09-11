@@ -346,6 +346,7 @@ func AddProsculptStudentProfile(w http.ResponseWriter, r *http.Request, body map
 					"email": body["email_id"],
 				},
 				map[string]string{
+					"company_name":  "prosculpt",
 					"phone":         body["mobile_no"],
 					"first_name":    body["first_name"],
 					"last_name":     body["last_name"],
@@ -369,6 +370,7 @@ func AddProsculptStudentProfile(w http.ResponseWriter, r *http.Request, body map
 					"phone": body["mobile_no"],
 				},
 				map[string]string{
+					"company_name":  "prosculpt",
 					"email":         body["email_id"],
 					"first_name":    body["first_name"],
 					"last_name":     body["last_name"],
