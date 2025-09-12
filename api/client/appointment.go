@@ -877,7 +877,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -895,7 +895,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -954,7 +954,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -972,7 +972,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(counsellorDateInTimeZone, counsellorTimeInTimeZone).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// Send to appointment Reminder SMS to counsellor
@@ -1210,7 +1210,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -1228,7 +1228,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -1292,7 +1292,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -1310,7 +1310,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
-		"",
+		CONSTANT.InPersonAppointmentImage,
 	)
 
 	// Send to appointment Reminder SMS to counsellor

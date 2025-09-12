@@ -1294,9 +1294,10 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				partnerName = partnerN
 			}
 
-			if inpersonappointmentRequest["status"] == "1" {
+			switch inpersonappointmentRequest["status"] {
+			case "1":
 				status1 = "InProgress"
-			} else if inpersonappointmentRequest["status"] == "2" {
+			case "2":
 				status1 = "Completed"
 			}
 
