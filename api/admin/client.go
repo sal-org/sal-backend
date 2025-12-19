@@ -37,6 +37,11 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 				wheres = append(wheres, " phone = ? ")
 				queryArgs = append(queryArgs, val[0])
 			}
+		case "emp_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " emp_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		case "email":
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " email = ? ")
@@ -48,8 +53,10 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 				queryArgs = append(queryArgs, val[0])
 			}
 		case "client_id":
-			wheres = append(wheres, " client_id = ? ")
-			queryArgs = append(queryArgs, val[0])
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " client_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		}
 	}
 

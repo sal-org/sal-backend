@@ -22,9 +22,10 @@ func GenerateAgoraRTCToken(channelName string, roleStr string, uidStr string, ex
 	// var appID, appCertificate string
 	var role rtctokenbuilder.Role
 
-	if roleStr == "publisher" {
+	switch roleStr {
+	case "publisher":
 		role = rtctokenbuilder.RolePublisher
-	} else if roleStr == "subscriber" {
+	case "subscriber":
 		role = rtctokenbuilder.RoleSubscriber
 	}
 
@@ -107,10 +108,10 @@ func AgoraRecordingCallStart(uid, channelName, token, resourceid string) (string
 		ClientRequest: Model.ClientRequestForStartCall{
 			Token: token,
 			RecordingConfig: Model.RecordingConfigModel{
-				MaxIdleTime:     100,
-				StreamTypes:     2,
-				ChannelType:     0,
-				VideoStreamType: 0,
+				MaxIdleTime:     70, // Idle timeout in seconds (e.g. 70 seconds)
+				StreamTypes:     2,  // Audio + Video
+				ChannelType:     1,  // Communication channel (0 = live broadcasting)
+				VideoStreamType: 0,  // High quality video
 				TranscodingConfigs: Model.TranscodingConfig{
 					Height:           640,
 					Width:            360,
@@ -253,7 +254,7 @@ func AgoraRecordingCallStop(uid, channelName, resourceid, sid string) {
 		CName: channelName,
 		Uid:   uid,
 		ClientRequest: Model.ClientRequestForStopCall{
-			Async_stop: false,
+			Async_stop: true,
 		},
 	}
 

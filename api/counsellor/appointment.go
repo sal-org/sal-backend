@@ -956,196 +956,71 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update appointment as completed
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":   CONSTANT.AppointmentCompleted,
-			"ended_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	if len(r.FormValue("waiting")) > 0 {
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	if appointment[0]["ended_at"] != "" {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-
-	// add to counsellor payments
-	// get invoice details
-
-	// if appointment[0]["client_started_at"] == "" && appointment[0]["client_ended_at"] == "" {
-
-	// 	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	// 	if !ok {
-	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 		return
-	// 	}
-	// 	if len(invoice) > 0 {
-
-	// 		// normal clients payment
-
-	// 		// get order details
-	// 		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	// 		if !ok {
-	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 			return
-	// 		}
-	// 		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-	// 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-	// 		paidAfterDiscount := paidAmount + discount
-	// 		if paidAfterDiscount > 0 { // add only if amount paid
-	// 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-
-	// 			// These come in Database
-	// 			// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
-
-	// 			amountToBePaid := (paidAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
-
-	// 			amountToBePaid = amountToBePaid * 0.2
-
-	// 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
-	// 				"counsellor_id": appointment[0]["counsellor_id"],
-	// 				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-	// 				"description":   "Client No Show",
-	// 				"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
-	// 				"status":        CONSTANT.PaymentActive,
-	// 				"created_at":    UTIL.GetCurrentTime().String(),
-	// 			}, "payment_id")
-	// 		}
-	// 	} else {
-	// 		// corporate appointment payments
-
-	// 		// get counsellor details
-	// 		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-	// 		if !ok {
-	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 			return
-	// 		}
-
-	// 		paidAmount, _ := strconv.ParseFloat(counsellor[0]["corporate_price"], 64)
-
-	// 		amountToBePaid := paidAmount * 0.2
-
-	// 		DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
-	// 			"counsellor_id": appointment[0]["counsellor_id"],
-	// 			"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-	// 			"description":   "Corporate Client",
-	// 			"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
-	// 			"status":        CONSTANT.PaymentActive,
-	// 			"created_at":    UTIL.GetCurrentTime().String(),
-	// 		}, "payment_id")
-
-	// 	}
-
-	// } else {
-	// 	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	// 	if !ok {
-	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 		return
-	// 	}
-	// 	if len(invoice) > 0 {
-
-	// 		// normal clients payment
-
-	// 		// get order details
-	// 		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
-	// 		if !ok {
-	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 			return
-	// 		}
-	// 		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-	// 		discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-	// 		paidAfterDiscount := paidAmount + discount
-	// 		if paidAfterDiscount > 0 { // add only if amount paid
-	// 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-
-	// 			// These come in Database
-	// 			// payoutPercentage, _ := strconv.ParseFloat(DB.QueryRowSQL("select payout_percentage from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]), 64)
-
-	// 			amountToBePaid := (paidAfterDiscount / slotsBought) * CONSTANT.CounsellorPayoutPercentage / 100 // for 1 counselling session
-
-	// 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
-	// 				"counsellor_id": appointment[0]["counsellor_id"],
-	// 				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-	// 				"description":   "Consultation",
-	// 				"amount":        strconv.FormatFloat(amountToBePaid, 'f', 2, 64),
-	// 				"status":        CONSTANT.PaymentActive,
-	// 				"created_at":    UTIL.GetCurrentTime().String(),
-	// 			}, "payment_id")
-	// 		}
-	// 	} else {
-	// 		// corporate appointment payments
-
-	// 		// get counsellor details
-	// 		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-	// 		if !ok {
-	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 			return
-	// 		}
-
-	// 		DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
-	// 			"counsellor_id": appointment[0]["counsellor_id"],
-	// 			"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
-	// 			"description":   "Corporate Client",
-	// 			"amount":        counsellor[0]["corporate_price"],
-	// 			"status":        CONSTANT.PaymentActive,
-	// 			"created_at":    UTIL.GetCurrentTime().String(),
-	// 		}, "payment_id")
-
-	// 	}
-	// }
-
-	// cloud recording
-	if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
-
-		DB.UpdateSQL(CONSTANT.AgoraTable,
+		// update appointment as completed
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
 				"appointment_id": r.FormValue("appointment_id"),
 			},
 			map[string]string{
-				"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
-				"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
-				"status":         CONSTANT.AgoraCallStop1,
-				"modified_at":    UTIL.GetCurrentTime().String(),
+				"ended_at": UTIL.GetCurrentTime().String(),
 			},
 		)
 
-		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+	} else {
+
+		// update appointment as completed
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
 				"appointment_id": r.FormValue("appointment_id"),
 			},
 			map[string]string{
-				"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
-				"status":         CONSTANT.QualityCheckLinkInsert,
-				"modified_at":    UTIL.GetCurrentTime().String(),
+				"status":   CONSTANT.AppointmentCompleted,
+				"ended_at": UTIL.GetCurrentTime().String(),
 			},
 		)
 
-	}
+		agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	// send appointment ended notification and rating to client
-	// UTIL.SendNotification(
-	// 	CONSTANT.ClientAppointmentFeedbackHeading,
-	// 	UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentFeedbackContent,
-	// 		map[string]string{
-	// 			"###counsellor_name###": DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"]),
-	// 		},
-	// 	),
-	// 	appointment[0]["client_id"],
-	// 	CONSTANT.ClientType,
-	// 	UTIL.GetCurrentTime().String(),
-	// 	CONSTANT.NotificationSent,
-	// 	r.FormValue("appointment_id"),
-	// )
+		// if appointment[0]["ended_at"] != "" {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		// cloud recording
+		if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
+
+			DB.UpdateSQL(CONSTANT.AgoraTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+					"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+					"status":         CONSTANT.AgoraCallStop1,
+					"modified_at":    UTIL.GetCurrentTime().String(),
+				},
+			)
+
+			DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+				map[string]string{
+					"appointment_id": r.FormValue("appointment_id"),
+				},
+				map[string]string{
+					"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+					"status":         CONSTANT.QualityCheckLinkInsert,
+					"modified_at":    UTIL.GetCurrentTime().String(),
+				},
+			)
+
+		}
+
+	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

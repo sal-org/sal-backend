@@ -161,7 +161,7 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where mood_id = ? and training = 0 and status = 1 order by created_at desc limit 20", mood_id[0]["mood_id"])
+	contents, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where mood_id like '%" + mood_id[0]["mood_id"] + "%' and training = 0 and status = 1 order by created_at desc limit 20")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

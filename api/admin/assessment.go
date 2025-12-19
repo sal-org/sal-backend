@@ -105,6 +105,92 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func AssessmentUpdate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// read request body
+	body := MODEL.AssessmentUpdateRequestInAdminPanel{}
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	defer r.Body.Close()
+	err = json.Unmarshal(b, &body)
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// add assessment
+	status, ok := DB.UpdateSQL(CONSTANT.AssessmentsTable, map[string]string{"assessment_id": body.AssessmentID}, map[string]string{
+		"title":       body.Title,
+		"subtitle":    body.SubTitles,
+		"photo":       body.Photo,
+		"duration":    body.Duration,
+		"type":        body.Type,
+		"instruction": body.Instruction,
+		"source":      body.Source,
+		"reference":   body.Reference,
+		"order":       body.Order,
+		"status":      body.Status,
+		"modified_at": UTIL.GetCurrentTime().UTC().String(),
+	})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	for _, score := range body.Scores {
+		// add assessment score
+		status, ok := DB.UpdateSQL(CONSTANT.AssessmentScoresTable, map[string]string{"assessment_id": body.AssessmentID, "id": score.ScoreID}, map[string]string{
+			"min":    score.MinScore,
+			"max":    score.MaxScore,
+			"result": score.Result,
+		})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	}
+
+	for _, question := range body.Questions {
+		// add assessment question
+		status, ok := DB.UpdateSQL(CONSTANT.AssessmentQuestionsTable, map[string]string{"assessment_id": body.AssessmentID, "assessment_question_id": question.AssessmentQuestionID}, map[string]string{
+			"question":    question.Question,
+			"order":       question.Order,
+			"status":      question.Status,
+			"modified_at": UTIL.GetCurrentTime().UTC().String(),
+		})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		for _, options := range question.Options {
+
+			// add assessment result
+			status, ok := DB.UpdateSQL(CONSTANT.AssessmentQuestionOptionsTable, map[string]string{"assessment_question_option_id": options.AssessmentQuestionOptionID}, map[string]string{
+				"option":      options.Option,
+				"score":       options.Score,
+				"order":       options.Order,
+				"status":      options.Status,
+				"modified_at": UTIL.GetCurrentTime().UTC().String(),
+			})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
 func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -131,6 +217,11 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 				wheres = append(wheres, " status = ? ")
 				queryArgs = append(queryArgs, val[0])
 			}
+		case "id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " assessment_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		}
 	}
 
@@ -144,6 +235,58 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// var
+
+	assessmentswithDetails := []map[string]interface{}{}
+
+	for _, m := range assessments {
+		conv := make(map[string]interface{})
+		for k, v := range m {
+			conv[k] = v
+		}
+		assessmentswithDetails = append(assessmentswithDetails, conv)
+	}
+
+	for _, assessment := range assessmentswithDetails {
+		// get assessment scores
+		scores, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? order by min asc", assessment["assessment_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		assessment["scores"] = scores
+	}
+
+	for _, assessment := range assessmentswithDetails {
+		// get assessment scores
+		questions, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ?", assessment["assessment_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		assessmentswithQuestion := []map[string]interface{}{}
+
+		for _, m := range questions {
+			conv := make(map[string]interface{})
+			for k, v := range m {
+				conv[k] = v
+			}
+			assessmentswithQuestion = append(assessmentswithQuestion, conv)
+		}
+
+		for _, question := range assessmentswithQuestion {
+			// get assessment question options
+			options, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentQuestionOptionsTable+" where assessment_question_id = ? and assessment_id = ? order by 'order' asc", question["assessment_question_id"], question["assessment_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			question["options"] = options
+		}
+		assessment["questions"] = assessmentswithQuestion
+	}
+
 	// get total number of clients
 	assessmentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.AssessmentsTable+where, queryArgs...)
 	if !ok {
@@ -151,7 +294,7 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response["assessments"] = assessments
+	response["assessments"] = assessmentswithDetails
 	response["assessments_count"] = assessmentsCount[0]["ctn"]
 	response["media_url"] = CONFIG.MediaURL
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(assessmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))

@@ -334,8 +334,43 @@ type AssessmentAddRequestInAdminPanel struct {
 		}
 	} `json:"questions"`
 	Scores []struct {
-		MinScore string `json:"min_score"`
-		MaxScore string `json:"max_score"`
+		MinScore string `json:"min"`
+		MaxScore string `json:"max"`
+		Result   string `json:"result"`
+	} `json:"scores"`
+}
+
+// AssessmentUpdateRequest .
+type AssessmentUpdateRequestInAdminPanel struct {
+	AssessmentID string `json:"assessment_id"`
+	Title        string `json:"title"`
+	SubTitles    string `json:"subtitles"`
+	Photo        string `json:"photo"`
+	Duration     string `json:"duration"`
+	Type         string `json:"type"`
+	Instruction  string `json:"instruction"`
+	Source       string `json:"source"`
+	Reference    string `json:"reference"`
+	Feedback     string `json:"feedback"`
+	Order        string `json:"order"`
+	Status       string `json:"status"`
+	Questions    []struct {
+		AssessmentQuestionID string `json:"assessment_question_id"`
+		Question             string `json:"question"`
+		Order                string `json:"order"`
+		Status               string `json:"status"`
+		Options              []struct {
+			AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
+			Option                     string `json:"option"`
+			Score                      string `json:"score"`
+			Order                      string `json:"order"`
+			Status                     string `json:"status"`
+		}
+	} `json:"questions"`
+	Scores []struct {
+		ScoreID  string `json:"id"`
+		MinScore string `json:"min"`
+		MaxScore string `json:"max"`
 		Result   string `json:"result"`
 	} `json:"scores"`
 }

@@ -106,19 +106,50 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.FormValue("type") == "1" {
-			contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
+			// contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
+			// if !ok {
+			// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			// 	return
+			// }
+
+			likedContentIDs := UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+			for i := range contentType {
+				if UTIL.IsStringInSlice(contentType[i]["content_id"], likedContentIDs) {
+					contentType[i]["liked"] = "1"
+				} else {
+					contentType[i]["liked"] = "0"
+				}
 			}
-			response["videos"] = contentVideo
+
+			response["videos"] = contentType
 			response["videos_count"] = videosCount[0]["ctn"]
 			response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
 		} else if r.FormValue("type") == "2" {
+			likedContentIDs := UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+			for i := range contentType {
+				if UTIL.IsStringInSlice(contentType[i]["content_id"], likedContentIDs) {
+					contentType[i]["liked"] = "1"
+				} else {
+					contentType[i]["liked"] = "0"
+				}
+			}
 			response["audios"] = contentType
 			response["audios_count"] = videosCount[0]["ctn"]
 			response["no_pages_audios"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
 		} else {
+
+			likedContentIDs := UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+			for i := range contentType {
+				if UTIL.IsStringInSlice(contentType[i]["content_id"], likedContentIDs) {
+					contentType[i]["liked"] = "1"
+				} else {
+					contentType[i]["liked"] = "0"
+				}
+			}
+
 			response["articles"] = contentType
 			response["articles_count"] = videosCount[0]["ctn"]
 			response["no_pages_articles"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
@@ -153,6 +184,32 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
+		}
+
+		likedContentIDs := UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
+
+		for i := range videos {
+			if UTIL.IsStringInSlice(videos[i]["content_id"], likedContentIDs) {
+				videos[i]["liked"] = "1"
+			} else {
+				videos[i]["liked"] = "0"
+			}
+		}
+
+		for i := range audios {
+			if UTIL.IsStringInSlice(audios[i]["content_id"], likedContentIDs) {
+				audios[i]["liked"] = "1"
+			} else {
+				audios[i]["liked"] = "0"
+			}
+		}
+
+		for i := range articles {
+			if UTIL.IsStringInSlice(articles[i]["content_id"], likedContentIDs) {
+				articles[i]["liked"] = "1"
+			} else {
+				articles[i]["liked"] = "0"
+			}
 		}
 
 		// get total number of contents

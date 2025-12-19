@@ -17,7 +17,6 @@ import (
 
 func ReportGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", "attachment; filename=reports.csv")
 
 	var response = make(map[string]interface{})
 
@@ -25,12 +24,14 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 	endBy, _ := time.Parse("2006-01-02", r.FormValue("end_by"))
 
 	heading := []string{}
+	fileName := "report.csv"
 	data := [][]string{}
 
 	switch r.FormValue("id") {
 	case "1": // appointment report
 
-		heading = []string{"Client Name", "Gender", "Age", "Email", "Mobile No.", "Company Name", "IsFamilyMember", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date & Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Client Start", "Client End", "Duration", "Mod. At", "Status", "Days Ago"}
+		fileName = "appointment_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Gender", "Age", "Email", "Mobile No.", "Company Name", "IsFamilyMember", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date", "Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Client Start", "Client End", "Duration", "Mod. At", "Created At", "Status", "Days Ago", "Is Record Filled", "Mental Health Scale"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -59,7 +60,22 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		for _, appointment := range appointments {
 
-			var days, duration, startTime, endTime, modAt, clientStartTime, clientEndTime, partnerName, isFamilyMember, status, location string
+			var days, duration, startTime, endTime, modAt, createdAt, clientStartTime, clientEndTime, partnerName, isFamilyMember, status, location, isRecordFilled, mentalHealth string
+
+			// get client details
+			counsellorRecord, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where appointment_id = ? ", appointment["appointment_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(counsellorRecord) > 0 {
+				isRecordFilled = "Yes"
+				mentalHealth = counsellorRecord[0]["mental_health"]
+			} else {
+				isRecordFilled = "No"
+				mentalHealth = ""
+			}
 
 			if appointment["started_at"] == "" {
 				startTime = ""
@@ -91,7 +107,14 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				modAt = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
 			}
 
-			if appointment["status"] == "3" {
+			if appointment["created_at"] == "" {
+				createdAt = ""
+			} else {
+				createdAt = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			switch appointment["status"] {
+			case "3":
 				if appointment["started_at"] == "" && appointment["ended_at"] == "" {
 					status = getAppointmentStatusInText("8")
 					if appointment["client_started_at"] != "" && appointment["client_ended_at"] != "" {
@@ -139,19 +162,19 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 					}
 
 				}
-			} else if appointment["status"] == "4" {
+			case "4":
 				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
 					status = getAppointmentStatusInText("12")
 				} else {
 					status = getAppointmentStatusInText("4")
 				}
-			} else if appointment["status"] == "5" {
+			case "5":
 				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
 					status = getAppointmentStatusInText("13")
 				} else {
 					status = getAppointmentStatusInText("5")
 				}
-			} else {
+			default:
 				status = getAppointmentStatusInText(appointment["status"])
 				if appointment["status"] == "2" {
 					// duration
@@ -221,7 +244,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				clientsMap[appointment["client_id"]]["department"],
 				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
-				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormatWithYearAndTime),
+				UTIL.BuildOnlyDateInDDMMYYYY(appointment["date"]),
+				UTIL.GetTimeFromTimeSlot(appointment["time"]),
 				appointment["times_rescheduled"],
 				startTime,
 				endTime,
@@ -229,11 +253,15 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				clientEndTime,
 				duration,
 				modAt,
+				createdAt,
 				status,
 				days,
+				isRecordFilled,
+				mentalHealth,
 			})
 		}
 	case "2": // sales report
+		fileName = "sales_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"User ID", "User Name", "User Type", "Total Individual Sessions amount", "Total SAL Cafe sessions amount", "Net Amount Received", "Refund Amount", "Cancellation Amount", "No Show Amount"}
 		invoices, status, ok := DB.SelectProcess("select user_id, sum(CASE WHEN order_type = " + CONSTANT.OrderAppointmentType + " THEN paid_amount ELSE 0 END) as total_session_amount, sum(CASE WHEN order_type = " + CONSTANT.OrderEventBookType + " THEN paid_amount ELSE 0 END) as total_event_amount from " + CONSTANT.InvoicesTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' group by user_id")
 		if !ok {
@@ -275,6 +303,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "3": // booking report
+
+		fileName = "booking_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Booking ID", "Client ID", "Client Name", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Date & Time of Session Booking", "Total Sessions Bought", "Session Remaining", "Bulk Cancel (4 - cancel)"}
 		bookings, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentSlotsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
 		if !ok {
@@ -317,6 +347,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "4": // sal cafe report
+
+		fileName = "sal_cafe_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Booking ID", "Client ID", "Client Name", "Client Email", "Client Mobile", "Counsellor ID", "Counsellor Name", "Counsellor Type", "Topic", "Date & Time of Booking", "Paid Amount"}
 		bookings, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderEventTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' and status = " + CONSTANT.OrderInProgress + " order by created_at desc")
 		if !ok {
@@ -370,6 +402,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "5": // finance report
+
+		fileName = "finance_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Invoice ID", "User ID", "User Type", "User Name", "User Email", "User Mobile", "Date & Time of Booking", "Paid Amount", "CGST Amount", "SGST Amount", "Total Tax Amount"}
 		invoices, status, ok := DB.SelectProcess("select * from " + CONSTANT.InvoicesTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' order by created_at desc")
 		if !ok {
@@ -404,6 +438,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "6": // payout report
+
+		fileName = "payout_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Counsellor ID", "Counsellor Name", "Counsellor Type", "Heading", "Description", "Date & Time of Session", "Amount to be paid", "Beneficiary Name", "Bank Name", "Account Type", "IFSC Code", "Bank A/c Number"}
 		payments, status, ok := DB.SelectProcess("select * from " + CONSTANT.PaymentsTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "'")
 		if !ok {
@@ -440,6 +476,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "7": // promo code report
+
+		fileName = "promo_code_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Promo Code", "Description", "No. of times used", "Promo code used in amt.", "Amount Received"}
 		invoices, status, ok := DB.SelectProcess("select coupon_code, count(*) as ctn, sum(discount) as used_amount, sum(paid_amount) as paid_amount from " + CONSTANT.InvoicesTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' and coupon_code != '' group by coupon_code")
 		if !ok {
@@ -467,6 +505,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "8": // push notification report
+
+		fileName = "push_notification_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Notification Type", "Date", "Times"}
 		notifications, status, ok := DB.SelectProcess("select date(created_at) as date, CASE WHEN notification_type = 1 THEN 'Promo' WHEN notification_type = 2 THEN 'Content' WHEN notification_type = 3 THEN 'Event' WHEN notification_type = 4 THEN 'Other' ELSE 'Nothing' END as notification_type, count(*) as ctn from " + CONSTANT.NotificationsBulkTable + " where created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "' group by date(created_at), notification_type")
 		if !ok {
@@ -483,6 +523,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 	case "10": // onboarding report
 
+		fileName = "onboarding_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"First Name", "Last Name", "Gender", "Email", "Phone", "Type", "Created At"}
 		counsellors, status, ok := DB.SelectProcess("(select first_name, last_name, gender, email, phone, 'Counsellor' as `type`, created_at from " + CONSTANT.CounsellorsTable + " where status = " + CONSTANT.CounsellorActive + " and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "') union (select first_name, last_name, gender, email, phone, 'Listener' as `type`, created_at from " + CONSTANT.ListenersTable + " where status = " + CONSTANT.ListenerActive + " and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "') union (select first_name, last_name, gender, email, phone, 'Therapist' as `type`, created_at from " + CONSTANT.TherapistsTable + " where status = " + CONSTANT.TherapistActive + " and created_at > '" + startBy.UTC().String() + "' and created_at < '" + endBy.UTC().String() + "')")
 		if !ok {
@@ -497,6 +538,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		var partnerName, location string
 
+		fileName = "client_onboarding_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Client Name", "Company Name", "Mobile No.", "Email", "Age", "Gender", "Location", "Last Active Time", "Last Login Time", "CreatedAt"}
 
 		clients, status, ok := DB.SelectProcess("select asscoiate_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, last_active_time, last_login_time, created_at from " + CONSTANT.ClientsTable + " where asscoiate_id IS NULL and `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
@@ -530,9 +572,10 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		var partnerName, isFamilyMember, location string
 
-		heading = []string{"Client Name", "Mood", "Age", "Gender", "Company Name", "IsFamilyMember", "Location", "Department"}
+		fileName = "client_mood_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Mood", "Session Taken", "Age", "Email ID", "Mobile No.", "Gender", "Company Name", "IsFamilyMember", "Location", "Department", "Notes"}
 
-		moods, status, ok := DB.SelectProcess("select * from " + CONSTANT.MoodResultsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
+		moods, status, ok := DB.SelectProcess("select * from " + CONSTANT.MoodResultsTable + " where `date` >= '" + startBy.Format("2006-01-02") + "' and `date` <= '" + endBy.Format("2006-01-02") + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -541,7 +584,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		clientIDs := UTIL.ExtractValuesFromArrayMap(moods, "client_id")
 
 		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, asscoiate_id, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, asscoiate_id, first_name, last_name, email, gender, phone, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -589,15 +632,22 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				location = clientsMap[mood["client_id"]]["location"]
 			}
 
-			moodTitle := DB.QueryRowSQL("select title from "+CONSTANT.MoodsTable+" where id = ?", mood["mood_id"])
+			appointments, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.AppointmentsTable + " where client_id = '" + mood["client_id"] + "' and status = " + CONSTANT.AppointmentCompleted + " and `date` >= '" + startBy.Format("2006-01-02") + "' and `date` <= '" + endBy.Format("2006-01-02") + "' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 
-			data = append(data, []string{mood["name"], moodTitle, mood["age"], mood["gender"], partnerName, isFamilyMember, location, clientsMap[mood["client_id"]]["department"]})
+			moodTitle := DB.QueryRowSQL("select title from "+CONSTANT.MoodsTable+" where id = ? ", mood["mood_id"])
+
+			data = append(data, []string{clientsMap[mood["client_id"]]["first_name"] + " " + clientsMap[mood["client_id"]]["last_name"], moodTitle, appointments[0]["ctn"], mood["age"], clientsMap[mood["client_id"]]["email"], clientsMap[mood["client_id"]]["phone"], mood["gender"], partnerName, isFamilyMember, location, clientsMap[mood["client_id"]]["department"], mood["notes"]})
 		}
-	case "13": // client asessment report
+	case "13": // client assessment report
 
 		var partnerName, isFamilyMember, location, department string
 
-		heading = []string{"Client Name", "Assessment", "Age", "Gender", "Company Name", "IsFamilyMember", "Location", "Department", "CreatedAt"}
+		fileName = "client_assessment_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Assessment", "Age", "Email ID", "Mobile No.", "Session Taken", "Gender", "Company Name", "IsFamilyMember", "Location", "Department", "CreatedAt"}
 
 		assessments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentResultsTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -608,7 +658,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		clientIDs := UTIL.ExtractValuesFromArrayMap(assessments, "user_id")
 
 		// get client details
-		clients, status, ok := DB.SelectProcess("select client_id, email, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		clients, status, ok := DB.SelectProcess("select client_id, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -617,6 +667,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
 
 		for _, assessment := range assessments {
+
+			var totalAppointment string
 
 			if len(clientsMap[assessment["user_id"]]) != 0 {
 				domainName := strings.Split(clientsMap[assessment["user_id"]]["email"], "@")
@@ -659,21 +711,33 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 				department = clientsMap[assessment["user_id"]]["department"]
 
+				startDate := UTIL.BuildOnlyDateInYYYYMMDD(assessment["created_at"])
+
+				appointments, status, ok := DB.SelectProcess("select count(*) as ctn from " + CONSTANT.AppointmentsTable + " where client_id = '" + assessment["user_id"] + "' and status = " + CONSTANT.AppointmentCompleted + " and `date` >= '" + startDate + "' and `date` <= '" + endBy.Format("2006-01-02") + "' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null)")
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
+				totalAppointment = appointments[0]["ctn"]
+
 			} else {
 				partnerName = "None"
 				location = ""
 				department = ""
+				totalAppointment = "0"
 
 			}
 
 			assessmentTitle := DB.QueryRowSQL("select title from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", assessment["assessment_id"])
 
-			data = append(data, []string{assessment["name"], assessmentTitle, assessment["age"], assessment["gender"], partnerName, isFamilyMember, location, department, UTIL.ConvertTimezone(UTIL.ConvertToTime(assessment["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
+			data = append(data, []string{assessment["name"], assessmentTitle, assessment["age"], clientsMap[assessment["user_id"]]["email"], clientsMap[assessment["user_id"]]["phone"], totalAppointment, assessment["gender"], partnerName, isFamilyMember, location, department, UTIL.ConvertTimezone(UTIL.ConvertToTime(assessment["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)})
 		}
 	case "14": // counsellor record report
 		var noShow string
 
-		heading = []string{"Session For", "Session Type", "Company Name", "Counsellor Name", "Client Name", "Age", "Gender", "Location", "Department", "No Show", "Session Mode", "Session No", "Session Date", "In-Time", "Out-Time", "Presenting Concerns", "Mental Health Scale", "Psychiatric Intervention", "Psychiatric Intervention Reason", "Therapy Notes", "Category", "Sub Category", "Emotional State", "Next Follow Date", "Client Notes", "Client Self-Work", "Client Assessment", "Therapeutic Plan"}
+		fileName = "counsellor_record_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Session For", "Session Type", "Company Name", "Counsellor Name", "Client Name", "Mental Health Scale", "Age", "Gender", "Location", "Department", "No Show", "Session Mode", "Session No", "Session Date", "In-Time", "Out-Time", "Presenting Concerns", "Psychiatric Intervention", "Psychiatric Intervention Reason", "Therapy Notes", "Category", "Sub Category", "Emotional State", "Next Follow Date", "Client Notes", "Client Self-Work", "Client Assessment", "Therapeutic Plan"}
 
 		counsellorRecords, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordsTable + " where `session_date` >= '" + startBy.String() + "' and `session_date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -703,7 +767,7 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 			// get client details
 			if counsellorRecord["client_id"] != "" {
-				clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name,email from " + CONSTANT.ClientsTable + " where client_id = '" + counsellorRecord["client_id"] + "'")
+				clients, status, ok := DB.SelectProcess("select client_id, asscoiate_id, first_name, last_name,email from " + CONSTANT.ClientsTable + " where client_id = '" + counsellorRecord["client_id"] + "'")
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
@@ -713,14 +777,33 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 					title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
 					if len(title) > 0 {
 						partnerName = title[0]["partner_name"]
+					} else {
+						if clients[0]["asscoiate_id"] != "" {
+							// get client details
+							clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email from " + CONSTANT.ClientsTable + " where client_id = '" + clients[0]["asscoiate_id"] + "'")
+							if !ok {
+								UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+								return
+							}
+
+							domainName := strings.Split(clients[0]["email"], "@")
+
+							title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+							if len(title) > 0 {
+								partnerName = title[0]["partner_name"]
+							}
+						}
 					}
 				}
 			}
-			data = append(data, []string{counsellorRecord["session_for"], counsellorRecord["session_type"], partnerName, counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["presenting_concerns"], counsellorRecord["mental_health"], counsellorRecord["psychiatric_intervention"], counsellorRecord["psychiatric_intervention_reason"], counsellorRecord["therapy_notes"], counsellorRecord["therapeutic_goal"], counsellorRecord["sub_category"], counsellorRecord["emotional_state"], counsellorRecord["next_follow_date"], counsellorRecord["client_notes"], counsellorRecord["client_documents"], counsellorRecord["assessment_tool"], counsellorRecord["therapy_plan"]})
+			data = append(data, []string{counsellorRecord["session_for"], counsellorRecord["session_type"], partnerName, counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], counsellorRecord["client_first_name"] + " " + counsellorRecord["client_last_name"], counsellorRecord["mental_health"], counsellorRecord["client_age"], counsellorRecord["client_gender"], counsellorRecord["client_location"], counsellorRecord["client_department"], noShow, counsellorRecord["session_mode"], counsellorRecord["session_no"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], counsellorRecord["presenting_concerns"], counsellorRecord["psychiatric_intervention"], counsellorRecord["psychiatric_intervention_reason"], counsellorRecord["therapy_notes"], counsellorRecord["therapeutic_goal"], counsellorRecord["sub_category"], counsellorRecord["emotional_state"], counsellorRecord["next_follow_date"], counsellorRecord["client_notes"], counsellorRecord["client_documents"], counsellorRecord["assessment_tool"], counsellorRecord["therapy_plan"]})
 		}
 
 	case "15": // client virtual appointment rating
-		heading = []string{"Counsellor Name", "Client Name", "Company Name", "Gender", "Date", "Rate", "Rate Type", "Comment"}
+
+		fileName = "client_virtual_appointment_rating_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Counsellor Name", "Client Name", "Company Name", "IsFamilyMember", "Gender", "Date", "Rate", "Rate Type", "Comment"}
 
 		appointments, status, ok := DB.SelectProcess("select counsellor_id, client_id, `date`, rating, rating_types, rating_comment  from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -752,8 +835,9 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		for _, appointment := range appointments {
 
 			partnerName := "None"
+			isFamilyMember := "No"
 
-			clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name,email from " + CONSTANT.ClientsTable + " where client_id = '" + appointment["client_id"] + "'")
+			clients, status, ok := DB.SelectProcess("select client_id, asscoiate_id, first_name, last_name,email from " + CONSTANT.ClientsTable + " where client_id = '" + appointment["client_id"] + "'")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -763,13 +847,33 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
 				if len(title) > 0 {
 					partnerName = title[0]["partner_name"]
+					isFamilyMember = "No"
+				} else {
+					if clients[0]["asscoiate_id"] != "" {
+						// get client details
+						clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email from " + CONSTANT.ClientsTable + " where client_id = '" + clients[0]["asscoiate_id"] + "'")
+						if !ok {
+							UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+							return
+						}
+
+						domainName := strings.Split(clients[0]["email"], "@")
+
+						title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+						if len(title) > 0 {
+							partnerName = title[0]["partner_name"]
+							isFamilyMember = "Yes"
+						}
+					}
 				}
 			}
 
 			data = append(data, []string{
 				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
-				clientsMap[appointment["client_id"]]["first_name"],
+				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
 				partnerName,
+				isFamilyMember,
 				clientsMap[appointment["client_id"]]["gender"],
 				appointment["date"],
 				appointment["rating"],
@@ -778,6 +882,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	case "16": // content
+
+		fileName = "content_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Title", "Type", "Views", "Category", "Mood", "Is Training Content", "Created By", "Uploaded At", "Status"}
 
 		contents, status, ok := DB.SelectProcess("select *  from " + CONSTANT.ContentsTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
@@ -871,7 +977,9 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "17": // counsellor time sheet
-		heading = []string{"Counsellor Name", "Company Name", "Location", "In-Time", "Out-Time"}
+
+		fileName = "counsellor_time_sheet_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Counsellor Name", "Company Name", "Location", "In-Date", "In-Time", "Out-Date", "Out-Time", "Duration"}
 
 		myTimeSheets, status, ok := DB.SelectProcess("select *  from " + CONSTANT.CounsellorMyTimeSheetTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -892,15 +1000,37 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 		for _, timeSheet := range myTimeSheets {
 
+			var inTime, inDate, outTime, outDate, duration string
+
+			inTimeDateAndTime := strings.Split(timeSheet["inTime"], " ")
+			outTimeDateAndTime := strings.Split(timeSheet["outTime"], " ")
+
+			if len(inTimeDateAndTime) > 1 {
+				inTime = inTimeDateAndTime[1]
+				inDate = inTimeDateAndTime[0]
+			}
+
+			if len(outTimeDateAndTime) > 1 {
+				outTime = outTimeDateAndTime[1]
+				outDate = outTimeDateAndTime[0]
+			}
+
+			duration = strconv.Itoa(int(UTIL.BuildToDteTime(timeSheet["outTime"]).Sub(UTIL.BuildToDteTime(timeSheet["inTime"])).Hours())) + " hours " + strconv.Itoa(int(UTIL.BuildToDteTime(timeSheet["outTime"]).Sub(UTIL.BuildToDteTime(timeSheet["inTime"])).Minutes())%60) + " minutes"
+
 			data = append(data, []string{
 				counsellorsMap[timeSheet["counsellor_id"]]["first_name"] + " " + counsellorsMap[timeSheet["counsellor_id"]]["last_name"],
 				timeSheet["partner_name"],
 				timeSheet["location"],
-				timeSheet["inTime"],
-				timeSheet["outTime"],
+				inDate,
+				inTime,
+				outDate,
+				outTime,
+				duration,
 			})
 		}
 	case "18": // total number of session
+
+		fileName = "total_number_of_session_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Client Name", "Company Name", "IsFamilyMember", "Total Number Of Session"}
 
 		var partnerName, isFamilyMember string
@@ -964,6 +1094,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "19": // total counsellor session
+
+		fileName = "total_counsellor_session_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Counsellor Name", "Total Number Of Session"}
 
 		appointments, status, ok := DB.SelectProcess("select counsellor_id, count(counsellor_id) as total from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' and type = '4' and status = '3' and (client_started_at is not null or client_ended_at is not null) and (started_at is not null or ended_at is not null) group by counsellor_id ")
@@ -992,6 +1124,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "20": // total number session month and years wise
+
+		fileName = "total_number_of_session_month_year_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Client Name", "Company Name", "IsFamilyMember", "Total Number Of Session", "Month", "Year"}
 
 		var partnerName, isFamilyMember string
@@ -1058,7 +1192,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 	case "21": // in-person appointment report
 
-		heading = []string{"Client Name", "Gender", "Age", "Mobile No.", "Email", "Company Name", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date & Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Mod. At", "Status"}
+		fileName = "in_person_appointment_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Gender", "Age", "Mobile No.", "Email", "Company Name", "Location", "Department", "Counsellor Name", "Counsellor Type", "Date", "Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Mod. At", "Status"}
 		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonAppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1159,7 +1294,8 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				clientsMap[appointment["client_id"]]["department"],
 				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
 				counsellorsMap[appointment["counsellor_id"]]["type"],
-				UTIL.ConvertTimezone(UTIL.BuildDateTime(appointment["date"], appointment["time"]), "0").Format(CONSTANT.ReadbleDateTimeFormat),
+				UTIL.BuildOnlyDateInDDMMYYYY(appointment["date"]),
+				UTIL.GetTimeFromTimeSlot(appointment["time"]),
 				appointment["times_rescheduled"],
 				startTime,
 				endTime,
@@ -1169,7 +1305,9 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "22": // inperson request appointment
-		heading = []string{"Client Name", "Email ID", "Mobile No.", "Counsellor Name", "Company Name", "Location", "Date", "Status"}
+
+		fileName = "in_person_appointment_request_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Email ID", "Mobile No.", "Counsellor Name", "Company Name", "Location", "Request At.", "Updated At.", "Status"}
 		inPersonAppointmentsRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonAppointmentRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1208,7 +1346,15 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				status1 = "Completed"
 			}
 
-			date := UTIL.BuildDate(inpersonappointmentRequest["created_at"])
+			requestDate := UTIL.BuildDate(inpersonappointmentRequest["created_at"])
+
+			var updatedDate string
+
+			if len(inpersonappointmentRequest["modified_at"]) > 0 {
+				updatedDate = UTIL.BuildDate(inpersonappointmentRequest["modified_at"])
+			} else {
+				updatedDate = ""
+			}
 
 			data = append(data, []string{
 				clientsMap[inpersonappointmentRequest["client_id"]]["first_name"] + " " + clientsMap[inpersonappointmentRequest["client_id"]]["last_name"],
@@ -1217,13 +1363,16 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["first_name"] + " " + counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["last_name"],
 				inpersonappointmentRequest["company_name"],
 				inpersonappointmentRequest["company_location"],
-				date,
+				requestDate,
+				updatedDate,
 				status1,
 			})
 		}
 
 	case "23": // appointment request
-		heading = []string{"Client Name", "Email", "Mobile No.", "Company Name", "IsFamilyMember", "Counsellor Name", "Date", "Status"}
+
+		fileName = "appointment_request_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Email", "Mobile No.", "Company Name", "IsFamilyMember", "Counsellor Name", "Request At.", "Updated At.", "Status"}
 		appointmentsRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1294,13 +1443,21 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				partnerName = partnerN
 			}
 
-			if inpersonappointmentRequest["status"] == "1" {
+			switch inpersonappointmentRequest["status"] {
+			case "1":
 				status1 = "InProgress"
-			} else if inpersonappointmentRequest["status"] == "2" {
+			case "2":
 				status1 = "Completed"
 			}
 
-			date := UTIL.BuildDate(inpersonappointmentRequest["created_at"])
+			requestDate := UTIL.BuildDate(inpersonappointmentRequest["created_at"])
+			var updatedDate string
+
+			if len(inpersonappointmentRequest["modified_at"]) > 0 {
+				updatedDate = UTIL.BuildDate(inpersonappointmentRequest["modified_at"])
+			} else {
+				updatedDate = ""
+			}
 
 			data = append(data, []string{
 				clientsMap[inpersonappointmentRequest["client_id"]]["first_name"] + " " + clientsMap[inpersonappointmentRequest["client_id"]]["last_name"],
@@ -1309,12 +1466,15 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				partnerName,
 				isFamilyMember,
 				counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["first_name"] + " " + counsellorsMap[inpersonappointmentRequest["counsellor_id"]]["last_name"],
-				date,
+				requestDate,
+				updatedDate,
 				status1,
 			})
 		}
 
 	case "24": // inperson cafe appointment
+
+		fileName = "in_person_cafe_appointment_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Cafe Name", "Counsellor Name", "Client Name", "Client Age", "Client Gender", "Client Mobile No.", "Client Email", "Attended", "Company Name", "Company Location", "Question1", "Question2", "Question3", "Question4", "Question5", "Cancellation Reason", "User Status", "Event Status", "Created At"}
 
 		inPersonCafeAppointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderEventInPersonTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
@@ -1405,7 +1565,9 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "25": // inperson cafe request
-		heading = []string{"Client Name", "Email ID", "Mobile No.", "Cafe Name", "Total Seat", "Company Name", "Company Location", "Counsellor Name", "Status"}
+
+		fileName = "in_person_cafe_request_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Client Name", "Email ID", "Mobile No.", "Cafe Name", "Total Seat", "Company Name", "Company Location", "Counsellor Name", "Status", "Requested At", "Updated At"}
 		inPersonCafeRequests, status, ok := DB.SelectProcess("select * from " + CONSTANT.EventInPersonRequestTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1453,6 +1615,14 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				status1 = "Completed"
 			}
 
+			requestDate := UTIL.BuildDate(inPersonCafeRequest["created_at"])
+			var updatedDate string
+			if len(inPersonCafeRequest["modified_at"]) > 0 {
+				updatedDate = UTIL.BuildDate(inPersonCafeRequest["modified_at"])
+			} else {
+				updatedDate = ""
+			}
+
 			data = append(data, []string{
 				clientsMap[inPersonCafeRequest["client_id"]]["first_name"] + " " + clientsMap[inPersonCafeRequest["client_id"]]["last_name"],
 				clientsMap[inPersonCafeRequest["client_id"]]["email"],
@@ -1463,9 +1633,13 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				ordersMap[inPersonCafeRequest["order_id"]]["company_location"],
 				counsellorsMap[ordersMap[inPersonCafeRequest["order_id"]]["counsellor_id"]]["first_name"] + " " + counsellorsMap[ordersMap[inPersonCafeRequest["order_id"]]["counsellor_id"]]["last_name"],
 				status1,
+				requestDate,
+				updatedDate,
 			})
 		}
 	case "26": // family onboarding report
+
+		fileName = "family_onboarding_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 		heading = []string{"Company Name", "Client Name", "Family Member Relationship", "Family Member Name", "Family Member Email", "Family Member Phone", "Family Member Age", "Family Member Active Time", "Family Member Login At", "Family Member Status", "Family Member Created At"}
 		familyOnboarding, status, ok := DB.SelectProcess("select client_id, asscoiate_id, relation, first_name, last_name, email, phone, year(curdate())-year(date_of_birth) as age, last_active_time, last_login_time, status, created_at from " + CONSTANT.ClientsTable + " where asscoiate_id != '' and `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
 		if !ok {
@@ -1510,11 +1684,399 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 				UTIL.ConvertTimezone(UTIL.BuildToDteTime(family["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat),
 			})
 		}
+
+	case "27": // virtual or in-person report
+
+		fileName = "virtual_in_person_appointment_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Mode", "Client Name", "Gender", "Age", "Email", "Mobile No.", "Company Name", "IsFamilyMember", "Location", "Counsellor Name", "Date", "Time", "No. of Reschedule", "Therapist Start", "Therapist End", "Client Start", "Client End", "Duration", "Created At", "Status", "Is Record Filled", "Mental Health Scale"}
+
+		appointments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		// get counsellor, client ids to get details
+		clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+		for _, appointment := range appointments {
+
+			var duration, startTime, endTime, createdAt, clientStartTime, clientEndTime, partnerName, isFamilyMember, status, location, isRecordFilled, mentalHealth string
+
+			// get client details
+			counsellorRecord, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where appointment_id = ? ", appointment["appointment_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(counsellorRecord) > 0 {
+				isRecordFilled = "Yes"
+				mentalHealth = counsellorRecord[0]["mental_health"]
+			} else {
+				isRecordFilled = "No"
+				mentalHealth = ""
+			}
+
+			if appointment["started_at"] == "" {
+				startTime = ""
+			} else {
+				startTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["client_started_at"] == "" {
+				clientStartTime = ""
+			} else {
+				clientStartTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["client_started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["client_ended_at"] == "" {
+				clientEndTime = ""
+			} else {
+				clientEndTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["client_ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["ended_at"] == "" {
+				endTime = ""
+			} else {
+				endTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["created_at"] == "" {
+				createdAt = ""
+			} else {
+				createdAt = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			switch appointment["status"] {
+			case "3":
+				if appointment["started_at"] == "" && appointment["ended_at"] == "" {
+					status = getAppointmentStatusInText("8")
+					if appointment["client_started_at"] != "" && appointment["client_ended_at"] != "" {
+						duration = strconv.Itoa(int(UTIL.BuildToDteTime(appointment["client_ended_at"]).Sub(UTIL.BuildToDteTime(appointment["client_started_at"])).Minutes())) + " minutes"
+					}
+				} else if appointment["client_started_at"] == "" && appointment["client_ended_at"] == "" {
+					status = getAppointmentStatusInText("7")
+					duration = "0 minutes"
+				} else {
+					// calculate the duration
+
+					if len(appointment["client_started_at"]) != 0 && len(appointment["client_ended_at"]) == 0 {
+						duration = "5 minutes"
+					} else if len(appointment["client_started_at"]) == 0 && len(appointment["client_ended_at"]) != 0 {
+						duration = "5 minutes"
+					} else {
+						duration = strconv.Itoa(int(UTIL.BuildToDteTime(appointment["client_ended_at"]).Sub(UTIL.BuildToDteTime(appointment["client_started_at"])).Minutes())) + " minutes"
+					}
+
+					if UTIL.BuildToDteTime(appointment["ended_at"]).Sub(UTIL.BuildToDteTime(appointment["started_at"])).Minutes() > 11 {
+						status = getAppointmentStatusInText("3")
+					} else {
+						status = getAppointmentStatusInText("14")
+					}
+
+				}
+			case "4":
+				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
+					status = getAppointmentStatusInText("12")
+				} else {
+					status = getAppointmentStatusInText("4")
+				}
+			case "5":
+				if UTIL.BuildDateTime(appointment["date"], appointment["time"]).Sub(UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["modified_at"]), "330")).Hours() <= 4 {
+					status = getAppointmentStatusInText("13")
+				} else {
+					status = getAppointmentStatusInText("5")
+				}
+			default:
+				status = getAppointmentStatusInText(appointment["status"])
+				if appointment["status"] == "2" {
+					// duration
+					if appointment["client_started_at"] != "" || appointment["client_started_at"] == "" {
+						duration = "5 minutes"
+					} else if appointment["client_started_at"] == "" && appointment["client_ended_at"] == "" {
+						duration = "5 minutes"
+					}
+
+				}
+			}
+
+			domainName := strings.Split(clientsMap[appointment["client_id"]]["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+				isFamilyMember = "No"
+			} else {
+				// get client details
+				clients, status, ok := DB.SelectProcess("select client_id, asscoiate_id from " + CONSTANT.ClientsTable + " where client_id = '" + appointment["client_id"] + "'")
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
+				partnerN := ""
+
+				if clients[0]["asscoiate_id"] != "" {
+					// get client details
+					clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email from " + CONSTANT.ClientsTable + " where client_id = '" + clients[0]["asscoiate_id"] + "'")
+					if !ok {
+						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+						return
+					}
+
+					domainName := strings.Split(clients[0]["email"], "@")
+
+					title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+					partnerN = title[0]["partner_name"]
+					isFamilyMember = "Yes"
+				} else {
+					partnerN = "None"
+					isFamilyMember = "No"
+				}
+
+				partnerName = partnerN
+			}
+
+			if clientsMap[appointment["client_id"]]["location"] == "40.04" {
+				location = ""
+			} else {
+				location = clientsMap[appointment["client_id"]]["location"]
+			}
+
+			data = append(data, []string{
+				"Virtual",
+				clientsMap[appointment["client_id"]]["first_name"] + " " + clientsMap[appointment["client_id"]]["last_name"],
+				clientsMap[appointment["client_id"]]["gender"],
+				clientsMap[appointment["client_id"]]["age"],
+				clientsMap[appointment["client_id"]]["email"],
+				clientsMap[appointment["client_id"]]["phone"],
+				partnerName,
+				isFamilyMember,
+				location,
+				counsellorsMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsMap[appointment["counsellor_id"]]["last_name"],
+				UTIL.BuildOnlyDateInDDMMYYYY(appointment["date"]),
+				UTIL.GetTimeFromTimeSlot(appointment["time"]),
+				appointment["times_rescheduled"],
+				startTime,
+				endTime,
+				clientStartTime,
+				clientEndTime,
+				duration,
+				createdAt,
+				status,
+				isRecordFilled,
+				mentalHealth,
+			})
+		}
+
+		appointmentsInPerson, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonAppointmentsTable + " where `date` >= '" + startBy.String() + "' and `date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor, client ids to get details
+		clientInPersonIDs := UTIL.ExtractValuesFromArrayMap(appointmentsInPerson, "client_id")
+		counsellorInPersonIDs := UTIL.ExtractValuesFromArrayMap(appointmentsInPerson, "counsellor_id")
+
+		// get client details
+		clientsInPerson, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientInPersonIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get counsellor details
+		counsellorsInPerson, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorInPersonIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorInPersonIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorInPersonIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsInPersonMap := UTIL.ConvertMapToKeyMap(clientsInPerson, "client_id")
+		counsellorsInPersonMap := UTIL.ConvertMapToKeyMap(counsellorsInPerson, "id")
+
+		for _, appointment := range appointmentsInPerson {
+
+			var startTime, endTime, createdAt, partnerName, statusValue, location, duration, isRecordFilled, mentalHealth string
+
+			if appointment["started_at"] == "" {
+				startTime = ""
+			} else {
+				startTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["started_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["ended_at"] == "" {
+				endTime = ""
+			} else {
+				endTime = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["ended_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			if appointment["started_at"] != "" && appointment["ended_at"] != "" {
+				duration = strconv.Itoa(int(UTIL.BuildToDteTime(appointment["ended_at"]).Sub(UTIL.BuildToDteTime(appointment["started_at"])).Minutes())) + " minutes"
+			} else if appointment["started_at"] != "" && appointment["ended_at"] == "" {
+				duration = "5 minutes"
+			} else if appointment["started_at"] == "" && appointment["ended_at"] != "" {
+				duration = "5 minutes"
+			} else {
+				duration = "0 minutes"
+			}
+
+			if appointment["created_at"] == "" {
+				createdAt = ""
+			} else {
+				createdAt = UTIL.ConvertTimezone(UTIL.BuildToDteTime(appointment["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat)
+			}
+
+			statusValue = getAppointmentStatusInText("3")
+
+			domainName := strings.Split(clientsInPersonMap[appointment["client_id"]]["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+			} else {
+				partnerName = "None"
+			}
+
+			if clientsInPersonMap[appointment["client_id"]]["location"] == "40.04" {
+				location = ""
+			} else {
+				location = clientsInPersonMap[appointment["client_id"]]["location"]
+			}
+
+			// get client details
+			counsellorRecord, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where appointment_id = ? ", appointment["appointment_id"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(counsellorRecord) > 0 {
+				if counsellorRecord[0]["noshow"] == "1" {
+					statusValue = getAppointmentStatusInText("7")
+				}
+				isRecordFilled = "Yes"
+				mentalHealth = counsellorRecord[0]["mental_health"]
+			} else {
+				isRecordFilled = "No"
+				mentalHealth = ""
+			}
+
+			data = append(data, []string{
+				"In-Person",
+				clientsInPersonMap[appointment["client_id"]]["first_name"] + " " + clientsInPersonMap[appointment["client_id"]]["last_name"],
+				clientsInPersonMap[appointment["client_id"]]["gender"],
+				clientsInPersonMap[appointment["client_id"]]["age"],
+				clientsInPersonMap[appointment["client_id"]]["phone"],
+				clientsInPersonMap[appointment["client_id"]]["email"],
+				partnerName,
+				"No",
+				location,
+				counsellorsInPersonMap[appointment["counsellor_id"]]["first_name"] + " " + counsellorsInPersonMap[appointment["counsellor_id"]]["last_name"],
+				UTIL.BuildOnlyDateInDDMMYYYY(appointment["date"]),
+				UTIL.GetTimeFromTimeSlot(appointment["time"]),
+				appointment["times_rescheduled"],
+				startTime,
+				endTime,
+				"",
+				"",
+				duration,
+				createdAt,
+				statusValue,
+				isRecordFilled,
+				mentalHealth,
+			})
+		}
+
+	case "28": // webinar request report
+
+		fileName = "webinar_request_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+
+		heading = []string{"Webinar Name", "Company Name", "Client Name", "Email", "Phone", "Age", "Gender", "Location", "Department", "Request At"}
+		webinars, status, ok := DB.SelectProcess("select * from " + CONSTANT.WebinarsBookTable + " where `created_at` >= '" + startBy.String() + "' and `created_at` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get client ids to get details
+		clientIDs := UTIL.ExtractValuesFromArrayMap(webinars, "client_id")
+		// get webinar ids to get details
+		webinarIDs := UTIL.ExtractValuesFromArrayMap(webinars, "webinar_id")
+		// get client details
+		clients, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department  from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get client details
+		webinarNames, status, ok := DB.SelectProcess("select * from " + CONSTANT.WebinarsTable + " where webinar_id in ('" + strings.Join(webinarIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		webinarNamesMap := UTIL.ConvertMapToKeyMap(webinarNames, "webinar_id")
+
+		for _, webinar := range webinars {
+			var partnerName string
+
+			domainName := strings.Split(clientsMap[webinar["client_id"]]["email"], "@")
+
+			title, _, _ := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"domain": domainName[1]})
+
+			if len(title) > 0 {
+				partnerName = title[0]["partner_name"]
+			} else {
+				partnerName = "None"
+			}
+			data = append(data, []string{
+				webinarNamesMap[webinar["webinar_id"]]["title"],
+				partnerName,
+				clientsMap[webinar["client_id"]]["first_name"] + " " + clientsMap[webinar["client_id"]]["last_name"],
+				clientsMap[webinar["client_id"]]["email"],
+				clientsMap[webinar["client_id"]]["phone"],
+				clientsMap[webinar["client_id"]]["age"],
+				clientsMap[webinar["client_id"]]["gender"],
+				clientsMap[webinar["client_id"]]["location"],
+				clientsMap[webinar["client_id"]]["department"],
+				UTIL.ConvertTimezone(UTIL.BuildToDteTime(webinar["created_at"]), "330").Format(CONSTANT.ReadbleDateTimeFormat),
+			})
+		}
+
+	
+
 	default:
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid report type", CONSTANT.ShowDialog, response)
 		return
 
 	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+fileName)
 
 	if strings.EqualFold(r.FormValue("type"), "json") {
 		response["headings"] = heading
@@ -1564,8 +2126,9 @@ func getAppointmentStatusInText(status string) string {
 		return "Counsellor no-show"
 	case CONSTANT.AppointmentNoShowBoth:
 		return "Both no-show"
+	default:
+		return ""
 	}
-	return ""
 }
 
 func getInt(input string) float64 {
@@ -1694,7 +2257,7 @@ func GetAppReport(w http.ResponseWriter, r *http.Request) {
 
 			asscoiateIDs := UTIL.ExtractValuesFromArrayMap(familyMember, "asscoiate_id")
 
-			familyMembers, status, ok := DB.SelectProcess("select count(*) as total from "+CONSTANT.ClientsTable+whereClient+" and status = 1 and client_id in ('"+strings.Join(asscoiateIDs, "','")+"') and email like '%"+companyName+"'", queryArgs...)
+			familyMembers, status, ok := DB.SelectProcess("select count(*) as total from " + CONSTANT.ClientsTable + " where status = 1 and client_id in ('" + strings.Join(asscoiateIDs, "','") + "') and email like '%" + companyName + "'")
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return

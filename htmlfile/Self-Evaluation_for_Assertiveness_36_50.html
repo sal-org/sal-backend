@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Self-Evaluation for Assertiveness</title>
+    <style>
+      body {
+        min-width: 300px; /* Suppose you want minimum width of 1000px */
+        width: auto !important; /* Firefox will set width as auto */
+        width: 300px; /* As IE6 ignores !important it will set width as 1000px; */
+        font-family: "Open Sans";
+        page-break-inside: avoid !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="padding: 2%">
+      <div>
+        <p style="text-align: center; font-size: x-large">
+          <b>Self-Evaluation for Assertiveness</b>
+        </p>
+        <p style="text-align: center">
+          The following self-evaluation questions provide you with a clearer
+          understanding of whether you have assertiveness issues, based on how
+          you communicate and interact with others. (Adapted from Murphy, J.
+          (2011). Assertiveness)
+        </p>
+        <p style="font-size: large; text-align: end">
+          Source:
+          <a
+            href="https://positive.b-cdn.net/wp-content/uploads/2020/11/Self-evaluation-Questions-for-Assertiveness.pdf"
+          >
+            https://positive.b-cdn.net/wp-content/uploads/2020/11/Self-evaluation-Questions-for-Assertiveness.pdf</a
+          >
+        </p>
+        <p style="font-size: large; text-align: end">Date: {{.Date}}</p>
+        <p
+          style="
+            height: 30px;
+            width: 100%;
+            border: 2px solid black;
+            background: coral;
+          "
+        >
+          <b>Personal Details:</b>
+        </p>
+      </div>
+      <br />
+      <div>
+        <p><b>Name: {{.Name}}</b></p>
+      </div>
+      <div>
+        <div style="float: left">
+          <p><b>Age: {{.Age}}</b></p>
+        </div>
+        <div style="float: right">
+          <p><b>Gender: {{.Gender}}</b></p>
+        </div>
+      </div>
+      <br /><br /><br />
+      <div>
+        <p><b>About the Report:</b></p>
+        <p><b>What is Assertiveness?</b></p>
+        <p>
+          Assertiveness is the ability to express your thoughts, feelings,
+          needs, and rights openly and honestly while respecting the rights of
+          others. It is a balanced style of communication that avoids two
+          extremes:
+        </p>
+        <ul>
+          <li>
+            Passive behaviour – staying quiet, avoiding conflict, or allowing
+            others to impose on you, often leading to frustration or resentment.
+          </li>
+          <li>
+            Aggressive behaviour – expressing yourself in a forceful, hostile,
+            or disrespectful way, which may harm relationships and create
+            tension.
+          </li>
+        </ul>
+        <br />
+        <p><b>What is your Assertiveness Scale?</b></p>
+        <p>
+          The Assertiveness Scale is a self-evaluation tool designed to measure
+          how confidently and respectfully you express yourself in everyday
+          situations. It reflects your ability to communicate openly, set
+          boundaries, handle conflict, and stand up for your rights without
+          being passive or aggressive.
+        </p>
+        <p>This scale is not a diagnostic test but a reflection tool to:</p>
+        <ul>
+          <li>Increase awareness of your current communication style.</li>
+          <li>Identify strengths and areas for growth.</li>
+          <li>
+            Serve as a starting point for practicing and developing
+            assertiveness skills.
+          </li>
+        </ul>
+
+        <br />
+      </div>
+      <br /><br />
+      <div>
+        <p><b>SCALE</b></p>
+        <table
+          style="
+            border: 1px solid black;
+            width: 100%;
+            border-collapse: collapse;
+          "
+        >
+          <tr
+            style="
+              border: 1px solid black;
+              background-color: coral;
+              padding: 5px;
+            "
+          >
+            <th style="border: 1px solid black">Never</th>
+            <th style="border: 1px solid black">Rarely</th>
+            <th style="border: 1px solid black">Sometimes</th>
+            <th style="border: 1px solid black">Often</th>
+            <th style="border: 1px solid black">Always</th>
+          </tr>
+          <tr style="text-align: center">
+            <td style="border: 1px solid black">1</td>
+            <td style="border: 1px solid black">2</td>
+            <td style="border: 1px solid black">3</td>
+            <td style="border: 1px solid black">4</td>
+            <td style="border: 1px solid black">5</td>
+          </tr>
+        </table>
+      </div>
+      <p><b>SCALE</b></p>
+      <p><b>Recorded Responses:</b></p>
+      <div style="padding: 2%">
+        <table style="width: 100%; text-align: left">
+          <tr>
+            <td style="padding: 10px">
+              1. When talking to people, do you look them in the eye?
+            </td>
+            <td style="text-align: center">{{.Answer1}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              2. Do you project your voice as you speak? Are you clear and loud
+              enough to be heard?
+            </td>
+            <td style="text-align: center">{{.Answer2}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              3. Are you confident? Or are your sentences filled with gaps,
+              “ums,” and “errs”?
+            </td>
+            <td style="text-align: center">{{.Answer3}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              4. How are you standing or seated when dealing with others? Are
+              you upright or looking downward?
+            </td>
+            <td style="text-align: center">{{.Answer4}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              5. Are you able to ask the questions you have, or do you shy away
+              from them?
+            </td>
+            <td style="text-align: center">{{.Answer5}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">6. Are you comfortable around others?</td>
+            <td style="text-align: center">{{.Answer6}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              7. Do you feel able to say “no” when asked things?
+            </td>
+            <td style="text-align: center">{{.Answer7}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              8. Can you show when you are annoyed, if appropriate?
+            </td>
+            <td style="text-align: center">{{.Answer8}}</td>
+          </tr>
+          <br />
+          <tr>
+            <td style="padding: 10px">
+              9. Can you disagree with what is being said when you have an
+              alternative opinion or different beliefs?
+            </td>
+            <td style="text-align: center">{{.Answer9}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              10. Are you able to defend yourself when you are being blamed for
+              something that wasn’t your fault?
+            </td>
+            <td style="text-align: center">{{.Answer10}}</td>
+          </tr>
+
+          <tr>
+            <th style="padding: 10px; font-weight: 545">Total Score:</th>
+            <th style="text-align: center; font-weight: 545">{{.Score}}</th>
+          </tr>
+        </table>
+        <p>
+          The scale consists of 10 questions about communication, body language,
+          confidence, and boundary-setting. Responses are rated on a 5-point
+          Likert scale (1 = Never, 5 = Always). Total scores range from 10 to
+          50, with higher scores indicating stronger assertiveness skills.
+        </p>
+      </div>
+      <br />
+      <br />
+      <p><b>Score Interpretation:</b></p>
+      <table
+        style="border: 1px solid black; width: 60%; border-collapse: collapse"
+      >
+        <tr
+          style="border: 1px solid black; background-color: coral; padding: 5px"
+        >
+          <th style="border: 1px solid black">SCORE</th>
+          <th style="border: 1px solid black">
+            Self-Evaluation for Assertiveness
+          </th>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">10-20</td>
+          <td style="border: 1px solid black">Low Assertiveness</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">21-35</td>
+          <td style="border: 1px solid black">Moderate Assertiveness</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">36-50</td>
+          <td style="border: 1px solid black">High Assertiveness</td>
+        </tr>
+      </table>
+      <p><b>Inference:</b></p>
+      <p>
+        Your overall score range is 36-50 based on the assessment. Your score
+        suggests you are generally confident and effective in expressing
+        yourself while respecting others. You can handle conflict, express
+        disagreement, set boundaries, and defend yourself appropriately. Minor
+        improvements might involve refining communication style, tone, and
+        subtle social cues to maintain balance in more complex situations.
+      </p>
+      <br /><br />
+      <p>
+        <b>Suggestions:</b>
+      </p>
+      <ul>
+        <li>Reinforce assertive habits</li>
+        <li>Mentor others on assertive communication.</li>
+        <li>Refine subtle skills like tone, timing, and active listening.</li>
+      </ul>
+      <br />
+      <br />
+    </div>
+  </body>
+</html>

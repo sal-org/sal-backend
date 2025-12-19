@@ -946,7 +946,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("html body not create ")
 			}
 
-		} else if title == "GRIT SCALE" {
+		} else if title == "Grit Scale" || assessment_result[0]["assessment_id"] == "yu6h98081msq" {
 			var filePath string
 
 			if finalScore >= 1.0 && finalScore <= 2.0 {
@@ -1028,6 +1028,94 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			}
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+		} else if title == "Doomscrolling Scale" || assessment_result[0]["assessment_id"] == "0m18gbm7vv13" {
+			var filePath string
+
+			if finalScore >= 0.0 && finalScore <= 16.0 {
+
+				filePath = "htmlfile/doomscrolling_questionnaire_0_16.html"
+
+			} else if finalScore >= 17.0 && finalScore <= 36.0 {
+
+				filePath = "htmlfile/doomscrolling_questionnaire_17_36.html"
+
+			} else if finalScore >= 37.0 && finalScore <= 60.0 {
+
+				filePath = "htmlfile/doomscrolling_questionnaire_37_60.html"
+
+			} else if finalScore >= 61.0 && finalScore <= 80.0 {
+
+				filePath = "htmlfile/doomscrolling_questionnaire_61_80.html"
+
+			} else {
+
+				filePath = "htmlfile/doomscrolling_questionnaire_81_96.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadBurnOutModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+				Answer11: assessment_result_details[10]["score"],
+				Answer12: assessment_result_details[11]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBurnOut(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
+		} else if title == "Assertiveness Scale" {
+			var filePath string
+
+			if finalScore >= 10.0 && finalScore <= 20.0 {
+
+				filePath = "htmlfile/Self-Evaluation_for_Assertiveness_10_20.html"
+
+			} else if finalScore >= 21.0 && finalScore <= 35.0 {
+
+				filePath = "htmlfile/Self-Evaluation_for_Assertiveness_21_35.html"
+
+			} else {
+
+				filePath = "htmlfile/Self-Evaluation_for_Assertiveness_36_50.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadSelfEsteemModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
 				fmt.Println("html body not create ")
 			}

@@ -58,7 +58,7 @@ const (
 const (
 	CounsellorNotApproved = "0"
 	CounsellorActive      = "1"
-	CounsellorInactive    = "2"
+	CounsellorDeleted     = "2"
 	CounsellorBlocked     = "3"
 )
 
@@ -66,7 +66,7 @@ const (
 const (
 	ListenerNotApproved = "0"
 	ListenerActive      = "1"
-	ListenerInactive    = "2"
+	ListenerDeleted     = "2"
 	ListenerBlocked     = "3"
 )
 
@@ -74,7 +74,7 @@ const (
 const (
 	TherapistNotApproved = "0"
 	TherapistActive      = "1"
-	TherapistInactive    = "2"
+	TherapistDeleted     = "2"
 	TherapistBlocked     = "3"
 )
 
@@ -130,6 +130,22 @@ const (
 	OrderInProgress = "1"
 	OrderCompleted  = "2"
 	OrderCancel     = "4"
+)
+
+// webinar status
+const (
+	WebinarWaiting          = "0"
+	WebinarBooked           = "1"
+	WebinarCompleted        = "2"
+	WebinarCancel           = "4"
+	WebinarCancelledByAdmin = "5"
+)
+
+// order inperson event status
+const (
+	InPersonEventOrderCompleted        = "1"
+	InPersonEventOrderCancel           = "4"
+	InPersonEventOrderCancelledByAdmin = "5"
 )
 
 // appointment status

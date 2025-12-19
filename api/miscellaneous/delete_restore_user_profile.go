@@ -41,7 +41,7 @@ func DeleteUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.CounsellorBlocked, "deletion_reason": r.FormValue("reason"), "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.CounsellorDeleted, "deletion_reason": r.FormValue("reason"), "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -61,7 +61,7 @@ func DeleteUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.ListenerBlocked, "deletion_reason": r.FormValue("reason"), "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.ListenerDeleted, "deletion_reason": r.FormValue("reason"), "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -81,7 +81,7 @@ func DeleteUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.ListenerBlocked, "deletion_reason": r.FormValue("reason"), "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.ClientDeleted, "deletion_reason": r.FormValue("reason"), "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -101,7 +101,7 @@ func DeleteUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.TherapistBlocked, "last_login_time": UTIL.GetCurrentTime().String(), "deletion_reason": r.FormValue("reason"), "modified_at": UTIL.GetCurrentTime().String()})
+		status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("user_id")}, map[string]string{"status": CONSTANT.TherapistDeleted, "last_login_time": UTIL.GetCurrentTime().String(), "deletion_reason": r.FormValue("reason"), "modified_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -167,6 +167,11 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if counsellor[0]["status"] != CONSTANT.CounsellorDeleted {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
 		status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": user[0]["counsellor_id"]}, map[string]string{"status": CONSTANT.CounsellorActive, "deletion_reason": "", "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -189,6 +194,11 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if counsellor[0]["status"] != CONSTANT.ListenerDeleted {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountBlockedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
 		status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": user[0]["listener_id"]}, map[string]string{"status": CONSTANT.ListenerActive, "deletion_reason": "", "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -208,6 +218,11 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 
 		if len(counsellor) == 0 {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if counsellor[0]["status"] != CONSTANT.TherapistDeleted {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 

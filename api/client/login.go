@@ -34,7 +34,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientBlocked {
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientDeleted {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -88,7 +88,7 @@ func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientBlocked {
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientDeleted {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -399,7 +399,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientBlocked {
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientDeleted {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
 		return
 	}

@@ -63,6 +63,7 @@ func LoadAdminRoutes(router *mux.Router) {
 
 	// add assessment
 	adminRoutes.HandleFunc("/assessment", AssessmentAdd).Methods("POST")
+	adminRoutes.HandleFunc("/assessment", AssessmentUpdate).Methods("PUT")
 	adminRoutes.HandleFunc("/assessment", AssessmentGet).Methods("GET")
 	adminRoutes.HandleFunc("/assessment/upload", PreSignedS3URLToAssessmentUpload).Queries(
 		"fileName", "{fileName}",

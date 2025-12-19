@@ -769,7 +769,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, "htmlfile/b2cAppointmentConfirmation.html")
 	// email for client
 	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentBookCounsellorTitle,
+		CONSTANT.ClientAppointmentBookClientTitle,
 		emailBody1,
 		client[0]["email"],
 		CONSTANT.InstantSendEmailMessage,

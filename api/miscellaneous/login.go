@@ -43,12 +43,12 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorDeleted) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -66,8 +66,13 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerActive) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerDeleted) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerBlocked) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 	}
@@ -83,8 +88,13 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
-		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistActive) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistDeleted) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistBlocked) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 	}
@@ -180,12 +190,12 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
-		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorInactive) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorDeleted) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 		counsellorType = CONSTANT.CounsellorType
@@ -205,12 +215,12 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
-			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerInactive) {
-				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountBlockedMessage, CONSTANT.ShowDialog, response)
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerDeleted) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
 			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerBlocked) {
-				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountBlockedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
 			counsellorType = CONSTANT.ListenerType
@@ -231,12 +241,12 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
-			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistInactive) {
-				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountBlockedMessage, CONSTANT.ShowDialog, response)
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistDeleted) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
 			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistBlocked) {
-				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountBlockedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
 			counsellorType = CONSTANT.TherapistType
@@ -420,7 +430,7 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if user already signed up with specified email
-	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["user_id"],}) {
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["user_id"]}) {
 		if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": body["user_id"]}) {
 			if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": body["user_id"]}) {
 				if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": body["user_id"]}) {

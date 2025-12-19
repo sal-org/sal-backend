@@ -1,6 +1,7 @@
 package util
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -8,6 +9,11 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 )
+
+
+func IsStringInSlice(target string, list []string) bool {
+	return slices.Contains(list, target)
+}
 
 // GetBillingDetails - calculate tax, paid amount
 func GetBillingDetails(price, discount string) map[string]string {
@@ -166,7 +172,7 @@ func FilterAvailableSlots(slots []map[string]string) []map[string]string {
 	for _, slot := range slots {
 		filteredSlot := map[string]string{}
 		startSlot := 0
-		if strings.EqualFold(GetCurrentTime().Format("2006-01-02"), slot["date"]) {
+		if strings.EqualFold(GetCurrentTime().Add(330*time.Minute).Format("2006-01-02"), slot["date"]) {
 			// use from next hour and multiply by 2 to get 30 min slots
 			startSlot = (GetCurrentTime().Add(330*time.Minute).Hour()+1)*2 + 2 // use next slot for removing expired time for today
 		}

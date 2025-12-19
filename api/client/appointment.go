@@ -44,12 +44,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	// local := strconv.Itoa(localTime)
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	
+
 	// get counsellor ids to get details
 	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
 
@@ -355,9 +355,16 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if it is emp or family
 	domainName := strings.Split(client[0]["email"], "@")
 
 	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+
+	if !ok {
+		if client[0]["asscoiate_id"] != "" {
+			ok = true
+		}
+	}
 
 	if !(appointment[0]["type"] == "2" || ok) {
 
@@ -3258,16 +3265,58 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	// update appointment as completed
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":          CONSTANT.AppointmentCompleted,
-			"client_ended_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	if len(r.FormValue("waiting")) > 0 {
+		// update appointment as waiting
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"client_ended_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+	} else {
+		// update appointment as completed
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"status":          CONSTANT.AppointmentCompleted,
+				"client_ended_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+
+		var counsellor []map[string]string
+		switch appointment[0]["type"] {
+		case CONSTANT.CounsellorType:
+			counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+			// break
+		case CONSTANT.ListenerType:
+			counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+			// break
+		case CONSTANT.TherapistType:
+			counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+			// break
+		}
+
+		// send appointment ended notification and rating to client
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentFeedbackHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentFeedbackContent,
+				map[string]string{
+					"###counsellor_name###": counsellor[0]["first_name"],
+				},
+			),
+			appointment[0]["client_id"],
+			CONSTANT.ClientType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationSent,
+			r.FormValue("appointment_id"),
+			"",
+		)
+	}
 
 	// if domainName[1] == "clovemind.com" {
 
@@ -3408,36 +3457,6 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	// 		},
 	// 	)
 	// }
-
-	var counsellor []map[string]string
-	switch appointment[0]["type"] {
-	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		// break
-	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		// break
-	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		// break
-	}
-
-	// send appointment ended notification and rating to client
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentFeedbackHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFeedbackContent,
-			map[string]string{
-				"###counsellor_name###": counsellor[0]["first_name"],
-			},
-		),
-		appointment[0]["client_id"],
-		CONSTANT.ClientType,
-		UTIL.GetCurrentTime().String(),
-		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
-		"",
-	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

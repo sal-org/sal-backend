@@ -43,6 +43,10 @@ func TherapistGet(w http.ResponseWriter, r *http.Request) {
 				wheres = append(wheres, " email = ? ")
 				queryArgs = append(queryArgs, val[0])
 			}
+		case "location":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " location like '%%"+val[0]+"%%' ")
+			}
 		case "status":
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " status = ? ")

@@ -1044,18 +1044,43 @@ func WebinarList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.FormValue("webinar_id") == "" {
-		// get upcoming events
-		events, status, ok = DB.SelectProcess("select * from " + CONSTANT.WebinarsTable + " where status = " + CONSTANT.EventToBeStarted + " and partner_name = ? and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' order by date desc, time desc", partnerName[0]["partner_name"])
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
+
+		if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" || client[0]["email"] == "shivam.tiwari@clovemind.com" {
+			// get upcoming events
+			events, status, ok = DB.SelectProcess("select * from " + CONSTANT.WebinarsTable + " where status = " + CONSTANT.EventToBeStarted + " and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' order by date desc, time desc")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		} else {
+			// get upcoming events
+			events, status, ok = DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where status = "+CONSTANT.EventToBeStarted+" and partner_name = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date desc, time desc", partnerName[0]["partner_name"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 		}
+
 	} else {
-		// get event by id
-		events, status, ok = DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and partner_name = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("webinar_id"), partnerName[0]["partner_name"])
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
+
+		if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" || client[0]["email"] == "shivam.tiwari@clovemind.com" {
+
+			// get event by id
+			events, status, ok = DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("webinar_id"))
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+		} else {
+
+			// get event by id
+			events, status, ok = DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and partner_name = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("webinar_id"), partnerName[0]["partner_name"])
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
 		}
 	}
 

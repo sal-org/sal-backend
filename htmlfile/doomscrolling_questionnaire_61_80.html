@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DQ Scale</title>
+    <style>
+      body {
+        min-width: 300px; /* Suppose you want minimum width of 1000px */
+        width: auto !important; /* Firefox will set width as auto */
+        width: 300px; /* As IE6 ignores !important it will set width as 1000px; */
+        font-family: "Open Sans";
+        page-break-inside: avoid !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="padding: 2%">
+      <div>
+        <p style="text-align: center; font-size: x-large">
+          <b>DOOMSCROLLING QUESTIONNAIRE</b>
+        </p>
+        <p style="text-align: center">
+          It is a standardized framework for evaluating the frequency and
+          intensity of doomscrolling behaviours (Melnyk, Y. B., & Stadnik, A. V.
+          (2024). Doomscrolling Questionnaire.)
+        </p>
+        <p style="font-size: large; text-align: end">
+          Source:
+          <a
+            href="https://culturehealth.org/hogokz_knigi/Kn_produkc/Metod/Melnyk_Stadnik.2024.DQ.pdf"
+          >
+            https://culturehealth.org/hogokz_knigi/Kn_produkc/Metod/Melnyk_Stadnik.2024.DQ.pdf</a
+          >
+        </p>
+        <p style="font-size: large; text-align: end">Date: {{.Date}}</p>
+        <p
+          style="
+            height: 30px;
+            width: 100%;
+            border: 2px solid black;
+            background: coral;
+          "
+        >
+          <b>Personal Details:</b>
+        </p>
+      </div>
+      <br />
+      <div>
+        <p><b>Name: {{.Name}}</b></p>
+      </div>
+      <div>
+        <div style="float: left">
+          <p><b>Age: {{.Age}}</b></p>
+        </div>
+        <div style="float: right">
+          <p><b>Gender: {{.Gender}}</b></p>
+        </div>
+      </div>
+      <br /><br /><br />
+      <div>
+        <p><b>About the Report:</b></p>
+        <p>
+          The locus of control and related beliefs affect our cognition and
+          behaviour and, as such, have a vital role to play across multiple
+          areas of our lives. It is the extent to which we feel we have control
+          over events that impact our life. It is a belief about whether the
+          outcomes of our actions are contingent on what we do or on events
+          outside our personal control.
+        </p>
+        <br />
+        <p><b>What is Doomscrolling?</b></p>
+        <ul>
+          <li>
+            It is the act of spending an excessive amount of time reading large
+            quantities of user- generated content or news, particularly negative
+            digital news.
+          </li>
+          <li>
+            Most people in modern times do not realize that they are even
+            seeking negative information. Social media algorithms heed the
+            content users engage in and display posts similar in nature, which
+            can aid in the act of doomscrolling.
+          </li>
+        </ul>
+        <p>
+          Health professionals have advised that doomscrolling can negatively
+          impact existing mental health issues. While the overall impact that
+          doomscrolling has on people may vary, it can often make one feel
+          anxious, stressed, fearful, depressed, and isolated.
+        </p>
+        <p><b>What is your Doomscrolling Scale?</b></p>
+        <p>
+          This scale is designed to serve as a valuable tool for individuals to
+          self-assess their doomscrolling tendencies and take proactive steps
+          towards fostering healthier digital habits.
+        </p>
+        <p>
+          The questionnaire contains questions about the extent to which the
+          following thoughts, feelings or actions are characteristic of you.
+          This interpretation is used to understand an individual's level of
+          engagement in this behaviour, its relationship to other psychological
+          factors, and its severity, with insights into its potential impact on
+          stress, anxiety, and other mental health conditions.
+        </p>
+        <br />
+      </div>
+      <br /><br />
+      <div>
+        <p><b>SCALE</b></p>
+        <table
+          style="
+            border: 1px solid black;
+            width: 100%;
+            border-collapse: collapse;
+          "
+        >
+          <tr
+            style="
+              border: 1px solid black;
+              background-color: coral;
+              padding: 5px;
+            "
+          >
+            <th style="border: 1px solid black">Group</th>
+            <th style="border: 1px solid black">Question Numbers</th>
+            <th style="border: 1px solid black">Never</th>
+            <th style="border: 1px solid black">Sometimes</th>
+            <th style="border: 1px solid black">Often</th>
+            <th style="border: 1px solid black">Routinely</th>
+            <th style="border: 1px solid black">Always</th>
+          </tr>
+          <tr style="text-align: center">
+            <td style="border: 1px solid black">A</td>
+            <td style="border: 1px solid black">1,2,3,4</td>
+            <td style="border: 1px solid black">0</td>
+            <td style="border: 1px solid black">1</td>
+            <td style="border: 1px solid black">2</td>
+            <td style="border: 1px solid black">3</td>
+            <td style="border: 1px solid black">4</td>
+          </tr>
+          <tr style="text-align: center">
+            <td style="border: 1px solid black">B</td>
+            <td style="border: 1px solid black">5,6,7,8</td>
+            <td style="border: 1px solid black">0</td>
+            <td style="border: 1px solid black">2</td>
+            <td style="border: 1px solid black">4</td>
+            <td style="border: 1px solid black">6</td>
+            <td style="border: 1px solid black">8</td>
+          </tr>
+          <tr style="text-align: center">
+            <td style="border: 1px solid black">C</td>
+            <td style="border: 1px solid black">9,10,11,12</td>
+            <td style="border: 1px solid black">0</td>
+            <td style="border: 1px solid black">3</td>
+            <td style="border: 1px solid black">6</td>
+            <td style="border: 1px solid black">9</td>
+            <td style="border: 1px solid black">12</td>
+          </tr>
+        </table>
+      </div>
+      <p><b>SCALE</b></p>
+      <p><b>Recorded Responses:</b></p>
+      <div style="padding: 2%">
+        <table style="width: 100%; text-align: left">
+          <tr>
+            <td style="padding: 10px">
+              1. I have subscriptions to online news sites and news update
+              alerts that I check several times a day
+            </td>
+            <td style="text-align: center">{{.Answer1}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              2. When I watch the news on the Internet, I do not realise how
+              quickly time Passes
+            </td>
+            <td style="text-align: center">{{.Answer2}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              3. I watch the news trying to find answers to questions that
+              interest me (how to solve a problem, how to make a difficult
+              decision, how to help my loved ones)
+            </td>
+            <td style="text-align: center">{{.Answer3}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              4. It has become a habit for me to start every morning by watching
+              negative news and end the day late at night by watching such news
+              on the Internet
+            </td>
+            <td style="text-align: center">{{.Answer4}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              5. I feel that I spend too much time checking news updates, even
+              when it interferes with my daily routine
+            </td>
+            <td style="text-align: center">{{.Answer5}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              6. I am horrified by what I see on social media, but I cannot
+              switch to anything else
+            </td>
+            <td style="text-align: center">{{.Answer6}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              7. I feel like I’m in a state of uncertainty and misunderstanding,
+              following negative news or tension, as if something bad is about
+              to happen
+            </td>
+            <td style="text-align: center">{{.Answer7}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              8. I try to follow negative events on social media to find out if
+              they really happened
+            </td>
+            <td style="text-align: center">{{.Answer8}}</td>
+          </tr>
+          <br />
+          <tr>
+            <td style="padding: 10px">
+              9. When I wake up at night, I check the news on the internet to
+              see if anything bad has happened recently
+            </td>
+            <td style="text-align: center">{{.Answer9}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              10. I find it hard to stop watching negative news, reading
+              comments and refraining from discussing them on social media
+            </td>
+            <td style="text-align: center">{{.Answer10}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              11. Recent negative news causes me to have eating disorders,
+              anxiety, fear or Irritability
+            </td>
+            <td style="text-align: center">{{.Answer11}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              12. I pay close attention to news analysis and negative
+              predictions on social media, and I believe that real information
+              is hidden or suppressed from me
+            </td>
+            <td style="text-align: center">{{.Answer12}}</td>
+          </tr>
+          <tr>
+            <th style="padding: 10px; font-weight: 545">Total Score:</th>
+            <th style="text-align: center; font-weight: 545">{{.Score}}</th>
+          </tr>
+        </table>
+        <p>
+          The points obtained for the questions in the first group (1-4) remain
+          unchanged; The points obtained for the questions in the second group
+          (5-8) are multiplied by 2; the points obtained for the questions in
+          the third group (9-12) are multiplied by 3.The maximum score for all
+          questions in Group 1 is 16 points, for Group 2 – 32 points, and for
+          Group 3 – 48 points.
+        </p>
+      </div>
+      <br />
+      <br />
+      <p><b>Score Interpretation:</b></p>
+      <p>
+        The questionnaire consists of 4 criteria (scales) – Addiction, Rigidity,
+        Mental Health, and Reflection. For each criterion there are 3 questions
+        that reflect the severity of the manifestation of doomscrolling
+        indicators. The severity of doomscrolling is determined by the number of
+        points scored. There are the following levels of doomscrolling: minimal,
+        mild, moderate, moderately severe, and severe.
+      </p>
+      <table
+        style="border: 1px solid black; width: 60%; border-collapse: collapse"
+      >
+        <tr
+          style="border: 1px solid black; background-color: coral; padding: 5px"
+        >
+          <th style="border: 1px solid black">SCORE</th>
+          <th style="border: 1px solid black">
+            Severity of Doomscrolling Symtoms
+          </th>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">0-16</td>
+          <td style="border: 1px solid black">Minimal</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">17-36</td>
+          <td style="border: 1px solid black">Mild</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">37-60</td>
+          <td style="border: 1px solid black">Moderate</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">61-80</td>
+          <td style="border: 1px solid black">Moderately Severe</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">81-96</td>
+          <td style="border: 1px solid black">Severe</td>
+        </tr>
+      </table>
+      <p><b>Inference:</b></p>
+      <p>
+        Your overall score range is 61-80 based on the assessment. Your score
+        suggests moderately severe levels of doomscrolling habit strongly
+        impacting your mood, focus, or daily energy. You may find it harder to
+        disconnect from negative news. There are signs of social isolation,
+        excessive daytime sleepiness and/or a complete change in sleep patterns
+        and insomnia, or possible eating disorders.
+      </p>
+      <br /><br />
+      <p>
+        <b>Suggestions:</b>
+      </p>
+      <p>
+        You’re not alone in this; many people experience it. Think of this as an
+        opportunity to regain control of your attention and protect your
+        emotional well-being.
+      </p>
+      <ul>
+        <li>
+          Curate your feed: unfollow or mute accounts that fuel stress and
+          negativity.
+        </li>
+        <li>
+          Use app timers or digital wellbeing tools to limit news/social media
+          use.
+        </li>
+        <li>
+          Replace doomscrolling with grounding rituals (tea, stretching, prayer,
+          or mindfulness).
+        </li>
+        <li>
+          Share your goals with a trusted friend or colleague for support and
+          accountability.
+        </li>
+      </ul>
+      <p>
+        In such scenarios, working with a counsellor can help by addressing
+        anxiety and fear driving the behaviour, teaching strategies to regain
+        control over compulsive scrolling, and introducing healthier routines to
+        replace excessive news use. They can also support by providing
+        accountability and personalized coping tools to prevent the behaviour
+        from worsening.
+      </p>
+      <br />
+      <br />
+    </div>
+  </body>
+</html>

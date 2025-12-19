@@ -360,6 +360,47 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// cancellation process if user booked event and admin change status to cancelled
+	if body["status"] == "5" {
+		// get event booked count
+		eventBooked, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderEventInPersonTable + " where event_order_id  = '" + r.FormValue("order_id") + "' and status = " + CONSTANT.InPersonEventOrderCompleted + "")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		for _, booking := range eventBooked {
+			// update each booking status to cancelled
+			status, ok := DB.UpdateSQL(CONSTANT.OrderEventInPersonTable, map[string]string{"order_id": booking["order_id"]}, map[string]string{
+				"status":           CONSTANT.InPersonEventOrderCancelledByAdmin,
+				"cancelled_reason": "Event cancelled by administrator",
+				"modified_at":      UTIL.GetCurrentTime().String(),
+			})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			// send event reminder notification to counsellor before 15 min
+			UTIL.SendNotification(
+				CONSTANT.AdminCancelledInPersonCafeHeading,
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.AdminCancelledInPersonCafeContent,
+					map[string]string{
+						"###InPersonCafeName###":     body["title"],
+						"###date###": UTIL.BuildOnlyDate(booking["date"]),
+					},
+				),
+				booking["user_id"],
+				CONSTANT.ClientType,
+				UTIL.BuildDateTime(body["date"], body["time"]).String(),
+				CONSTANT.NotificationSent,
+				booking["order_id"],
+				"",
+			)
+		}
+	}
+
 	counsellorType := CONSTANT.CounsellorType
 	if len(DB.QueryRowSQL("select device_id from "+CONSTANT.TherapistsTable+" where therapist_id = ?", body["counsellor_id"])) > 0 {
 		counsellorType = CONSTANT.TherapistType

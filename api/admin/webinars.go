@@ -37,6 +37,11 @@ func WebinarsGet(w http.ResponseWriter, r *http.Request) {
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " counsellor_name like '%%"+val[0]+"%%' ")
 			}
+		case "webinar_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " webinar_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		}
 	}
 
@@ -155,6 +160,33 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	if body["status"] == CONSTANT.WebinarCancelledByAdmin {
+		// send notification to clients who have booked the webinar
+		webinarBookings, status, ok := DB.SelectProcess("select * from " + CONSTANT.WebinarsBookTable + " where webinar_id = '" + r.FormValue("webinar_id") + "' and status = " + CONSTANT.WebinarBooked + "")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		for _, booking := range webinarBookings {
+			// send notification to client
+			UTIL.SendNotification(
+				CONSTANT.AdminCancelledWebinarHeading,
+				UTIL.ReplaceNotificationContentInString(
+					CONSTANT.AdminCancelledWebinarContent,
+					map[string]string{
+						"###webinarName###": body["title"],
+					},
+				),
+				booking["user_id"],
+				CONSTANT.ClientType,
+				UTIL.BuildDateTime(body["date"], body["time"]).String(),
+				CONSTANT.NotificationSent,
+				booking["order_id"],
+				"",
+			)
+		}
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

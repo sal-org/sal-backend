@@ -104,6 +104,20 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// for _, day := range body {
+	// 	if day["status"] != "1" || day["availability_status"] != "1" {
+	// 		if day["dates"] != "" {
+	// 			availabileDates, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), day["dates"])
+	// 			if !ok {
+	// 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 				return
+	// 			}
+	// 		} else {
+
+	// 		}
+	// 	}
+	// }
+
 	for _, day := range body {
 		if day["dates"] == "" {
 			if strings.EqualFold(day["status"], "0") {
@@ -1276,7 +1290,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 		// get all dates for counsellor and group by weekday
 		datesByWeekdays := map[int][]string{}
-		availabileDates, status, ok := DB.SelectProcess("select date from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` >= ?", r.FormValue("therapist_id"), UTIL.GetCurrentTime().AddDate(0, 0, -1).String())
+		availabileDates, status, ok := DB.SelectProcess("select date from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` >= ?", r.FormValue("therapist_id"), UTIL.GetCurrentTime().Add(330*time.Minute).AddDate(0, 0, -1).String())
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -2244,7 +2258,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		// }
 
 		var updates []SlotUpdate
-		currentDate := UTIL.GetCurrentTime().Format("2006-01-02")
+		currentDate := UTIL.GetCurrentTime().Add(330*time.Minute).AddDate(0, 0, -1).Format("2006-01-02")
 		// skipDate := false
 		for _, day := range days {
 			var bookedDates []map[string]string
@@ -2264,6 +2278,12 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 
+				// Clone the day map to avoid reusing for multiple dates
+				clonedDay := make(map[string]string)
+				for k, v := range day {
+					clonedDay[k] = v
+				}
+
 				if currentDate != date {
 
 					bookedDates, status, ok = DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("therapist_id"), date)
@@ -2272,27 +2292,41 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
+					// Modify clonedDay based on bookings
+					if len(bookedDates) > 0 {
+						for key, val := range bookedDates[0] {
+							num, err := strconv.Atoi(key)
+							if err != nil {
+								continue // Skip non-slot keys
+							}
+							if val == "2" {
+								clonedDay[key] = "2"
+
+								// Set adjacent slots to 0 (unavailable)
+								prev := strconv.Itoa(num - 1)
+								next := strconv.Itoa(num + 1)
+								if _, ok := clonedDay[prev]; ok {
+									clonedDay[prev] = "0"
+								}
+								if _, ok := clonedDay[next]; ok {
+									clonedDay[next] = "0"
+								}
+							}
+						}
+					}
+
 					currentDate = date
 				}
 
-				for key, value := range day {
+				for key, value := range clonedDay {
 					// Skip non-slot fields
-					if key == "weekday" || key == "status" || key == "availability_status" {
+					if key == "weekday" || key == "status" || key == "availability_status" || key == "break" || key == "id" {
 						continue
 					}
 
-					if strings.EqualFold(day["status"], "0") || strings.EqualFold(day["availability_status"], "0") {
-						value = CONSTANT.SlotUnavailable
-					}
-
-					for key, value := range bookedDates[0] {
-						if value == "2" {
-							num, _ := strconv.Atoi(key)
-							day[strconv.Itoa(num)] = "2"
-							day[strconv.Itoa(num-1)] = "0"
-							day[strconv.Itoa(num+1)] = "0"
-						}
-					}
+					// if strings.EqualFold(day["status"], "0") || strings.EqualFold(day["availability_status"], "0") {
+					// 	value = CONSTANT.SlotUnavailable
+					// }
 
 					updates = append(updates, SlotUpdate{
 						Date:  date,
