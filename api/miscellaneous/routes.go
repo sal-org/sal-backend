@@ -8,8 +8,8 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// content
 	router.HandleFunc("/content", Content).Methods("GET")
 	router.HandleFunc("/content/name", GetContentUsedTitle).Queries(
-		"content_name","{content_name}",
-		"type","{type}",
+		"content_name", "{content_name}",
+		"type", "{type}",
 	).Methods("GET")
 	router.HandleFunc("/content/like", ContentLikeGet).Queries(
 		"user_id", "{user_id}",
@@ -47,7 +47,6 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
-
 	// counsellor content
 	router.HandleFunc("/app-feedback", AppFeedback).Methods("POST")
 
@@ -65,6 +64,15 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 	// meta
 	router.HandleFunc("/meta", ListMeta).Methods("GET")
 
+	// get counsellor record history
+	router.HandleFunc("/get-last-history-for-new-counsellor-record", GetLastHistoryRecord).Methods("GET")
+
+	// get counsellor record history
+	router.HandleFunc("/get-last-history-new-version", GetCounsellorClientRecordForNewestVersion).Methods("GET")
+
+	// new version counsellor record form
+	router.HandleFunc("/counsellor-client-record-for-new-version", CounsellorClientRecordForNewestVersion).Methods("POST")
+
 	// adsConent
 	router.HandleFunc("/adscontents", AdsContent).Methods("GET")
 
@@ -77,6 +85,10 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"counsellor_id", "{counsellor_id}",
 		"client_id", "{client_id}",
 		"date", "{date}",
+	).Methods("GET")
+
+	router.HandleFunc("/counsellor-record-new-version/check", CheckGetCounsellorClientRecordForNewest).Queries(
+		"appointment_id", "{appointment_id}",
 	).Methods("GET")
 
 	router.HandleFunc("/counsellor-record", CounsellorClientRecord).Methods("POST")

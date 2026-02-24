@@ -32,6 +32,14 @@ func ConvertMapToKeyMap(data []map[string]string, key string) map[string]map[str
 	return result
 }
 
+func ConvertMapIntoTwoKeyMap(data []map[string]string, key1 string, key2 string) map[string]map[string]string {
+	result := map[string]map[string]string{}
+	for _, object := range data {
+		result[object[key1]+"|"+object[key2]] = object
+	}
+	return result
+}
+
 // ConvertArrayMapToKeyMapArray -
 func ConvertArrayMapToKeyMapArray(data []map[string]string, key string) map[string][]map[string]string {
 	result := map[string][]map[string]string{}

@@ -10,6 +10,15 @@ func GetCurrentTime() time.Time {
 	return time.Now().UTC()
 }
 
+func GetIndiaCurrentTime() string {
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	now := time.Now().In(loc)
+
+	// Format as HH:MM (24-hour clock)
+	timeStr := now.Format("15:04")
+	return timeStr
+}
+
 // BuildDateTime - build UTC time from given inputs
 func BuildDateTime(date string, timeSlot string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", date+" "+GetTimeFromTimeSlot(timeSlot))

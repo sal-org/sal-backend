@@ -179,29 +179,55 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	if len(appointment2nd) >= 1 {
 
-		if appointment2nd[0]["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
-			// check if appointment time is already booked
-			localTime := 0
-			timeNow := UTIL.GetCurrentTime()
-			timeNow = timeNow.Add(330 * time.Minute)
-			if timeNow.Minute() >= 30 {
-				localTime = timeNow.Hour()*2 + 1
-			} else {
-				localTime = timeNow.Hour() * 2
-			}
-			appointmentTime, _ := strconv.Atoi(appointment2nd[0]["time"])
+		loc, _ := time.LoadLocation("Asia/Kolkata")
+		now := time.Now().In(loc)
 
-			if appointmentTime >= localTime+1 {
-				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-				return
-			} else if len(appointment2nd) >= 2 {
-				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-				return
-			}
-		} else {
+		if appointment2nd[0]["date"] != now.Format("2006-01-02") {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
 			return
 		}
+
+		// Calculate current 30-min slot
+		currentSlot := now.Hour() * 2
+		if now.Minute() >= 30 {
+			currentSlot++
+		}
+
+		appointmentSlot, err := strconv.Atoi(appointment2nd[0]["time"])
+		if err != nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid appointment time", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// Slot already passed OR duplicate booking
+		if appointmentSlot >= currentSlot {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// if appointment2nd[0]["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
+		// 	// check if appointment time is already booked
+		// 	localTime := 0
+		// 	timeNow := UTIL.GetCurrentTime()
+		// 	timeNow = timeNow.Add(330 * time.Minute)
+		// 	if timeNow.Minute() >= 30 {
+		// 		localTime = timeNow.Hour()*2 + 1
+		// 	} else {
+		// 		localTime = timeNow.Hour() * 2
+		// 	}
+		// 	appointmentTime, _ := strconv.Atoi(appointment2nd[0]["time"])
+
+		// 	if appointmentTime >= localTime+1 {
+		// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 		return
+		// 	} else if len(appointment2nd) >= 2 {
+		// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 		return
+		// 	}
+		// } else {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 	return
+		// }
 	}
 
 	// check if slots available

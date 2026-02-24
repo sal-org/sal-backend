@@ -40,6 +40,8 @@ const (
 	CouponsTable                                = "coupons"
 	CounsellorsTable                            = "counsellors"
 	CounsellorRecordsTable                      = "counsellor_record"
+	CounsellorRecordsFormLastestVersionTable    = "counsellor_record_newest_version"
+	TherapistCheckMHScalePointsTable            = "therapist_check_mh_scale_points"
 	CounsellorRecordFormCategoryTable           = "counsellor_record_form_category"
 	CounsellorRecordFormSubCategoryTable        = "counsellor_record_form_sub_category"
 	CounsellorRecordFormEmotionalState          = "counsellor_record_form_emotional_state"
@@ -91,7 +93,7 @@ const RandomIDDigits = "abcdefghijklmnopqrstuvwxyz0123456789"
 // length of unqiue digits to be generated for each table
 const (
 	AdminDigits                    = 4
-	AppointmentDigits              = 12
+	AppointmentDigits              = 16
 	LimitAppointmentDigits         = 12
 	AppointmentRequestDigits       = 17
 	AppointmentSlotDigits          = 11

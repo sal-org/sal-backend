@@ -42,7 +42,7 @@ func SendEmail(title, body, email string, now bool) {
 
 }
 
-func SendEmailWithCCBB(title, body, email string, ccemail string, now bool) {
+func SendEmailWithCCBB(title, body, email string, ccemail []string, now bool) {
 	if strings.Contains(title, "###") || strings.Contains(body, "###") { // check if mail variables are replaced
 		return
 	}
@@ -55,7 +55,7 @@ func SendEmailWithCCBB(title, body, email string, ccemail string, now bool) {
 	if now {
 		// set mail sent status as sent if now is true
 		mail["status"] = CONSTANT.EmailSent
-		sendSESMailWithCCBB(title, body, email,ccemail)
+		sendSESMailWithCCBB(title, body, email, ccemail)
 	} else {
 		mail["status"] = CONSTANT.EmailInProgress
 	}
@@ -64,7 +64,7 @@ func SendEmailWithCCBB(title, body, email string, ccemail string, now bool) {
 
 }
 
-func sendSESMailWithCCBB(title, body, email, ccemail string) {
+func sendSESMailWithCCBB(title, body, email string, ccemail []string) {
 	// start a new aws session
 	sess, err := session.NewSession()
 	if err != nil {
@@ -75,17 +75,20 @@ func sendSESMailWithCCBB(title, body, email, ccemail string) {
 	// start a new ses session
 	svc := ses.New(sess, &aws.Config{
 		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"),
+		Region:      aws.String("ap-south-1"), // ap-south-1
 	})
+
+	ccAddressess := []*string{}
+	for _, e := range ccemail {
+		ccAddressess = append(ccAddressess, aws.String(e))
+	}
 
 	params := &ses.SendEmailInput{
 		Destination: &ses.Destination{ // Required
 			ToAddresses: []*string{
 				aws.String(email), // Required
 			},
-			CcAddresses: []*string{
-				aws.String(ccemail),
-			},
+			CcAddresses: ccAddressess,
 		},
 		Message: &ses.Message{ // Required
 			Body: &ses.Body{ // Required
@@ -118,7 +121,7 @@ func sendSESMail(title, body, email string) {
 	// start a new ses session
 	svc := ses.New(sess, &aws.Config{
 		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"),
+		Region:      aws.String("ap-south-1"), // ap-south-1
 	})
 
 	params := &ses.SendEmailInput{
@@ -182,7 +185,7 @@ func sendSESMailForQualityCheck(title string, body string, emailfrom string, ema
 	// start a new ses session
 	svc := ses.New(sess, &aws.Config{
 		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"),
+		Region:      aws.String("ap-south-1"), // ap-south-1
 	})
 
 	params := &ses.SendEmailInput{
@@ -252,7 +255,7 @@ func SendEmailWithDocument(toemail string, body string, title string, documentB 
 	// start a new ses session
 	svc := ses.New(sess, &aws.Config{
 		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"),
+		Region:      aws.String("ap-south-1"), // ap-south-1
 	})
 
 	// Send the email with SES

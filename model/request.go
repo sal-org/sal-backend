@@ -511,6 +511,39 @@ type EmailDataForCounsellorRecord struct {
 	SendingStatus                 string
 }
 
+type EmailDataForCounsellorRecordForLastestVersion struct {
+	TherapistName                         string
+	Client_First_Name                     string
+	Client_Last_Name                      string
+	Client_Gender                         string
+	Client_Age                            string
+	SessionFor                            string
+	SessionType                           string
+	SessionMode                           string
+	SessionDate                           string
+	InTime                                string
+	OutTime                               string
+	NoShow                                string
+	PresentingConcerns                    string
+	MentalHealthScale                     string
+	MentalHealthCheck                     string
+	DowngradingHighRiskCase               string
+	IsClinicalPsychologistRequiredReason  string
+	PsychiatricInterventionRequiredReason string
+	Category                              string
+	SubCategory                           string
+	EmotionalState                        string
+	TotalSessionNeeded                    string
+	TakenSessions                          string
+	TherapyNotes                          string
+	NextSessionPlan                       string
+	GoalsAchieved                         string
+	NextFollowDate                        string
+	ClientNotes                           string
+	Assessment                            string
+	SelfWorkMaterial                      string
+}
+
 type EmailDataForFeedback struct {
 	ClientFirstName string
 	ClientLastName  string
@@ -666,6 +699,33 @@ type AssessmentDownloadSelfEsteemModel struct {
 	Answer8  string `json:"answer8"`
 	Answer9  string `json:"answer9"`
 	Answer10 string `json:"answer10"`
+}
+
+type AssessmentDownloadPSYCHOLOGICALWELLBEINGModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+	Answer11 string `json:"answer11"`
+	Answer12 string `json:"answer12"`
+	Answer13 string `json:"answer13"`
+	Answer14 string `json:"answer14"`
+	Answer15 string `json:"answer15"`
+	Answer16 string `json:"answer16"`
+	Answer17 string `json:"answer17"`
+	Answer18 string `json:"answer18"`
+
 }
 
 type AssessmentDownloadBDIModel struct {

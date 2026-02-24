@@ -158,6 +158,32 @@ func GetHTMLTemplateForCounsellorRecord(data Model.EmailDataForCounsellorRecord,
 	return templateBuffer.String()
 }
 
+
+// CounsellorRecordNewestVersion
+func GetHTMLTemplateForCounsellorRecordNewestVersion(data Model.EmailDataForCounsellorRecordForLastestVersion, filepath string) string {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	return templateBuffer.String()
+}
+
 func GetHTMLTemplateForCounsellorVisit(data Model.EmailDataForCounsellorVisit, filepath string) string {
 	var templateBuffer bytes.Buffer
 
@@ -375,6 +401,31 @@ func GetHTMLTemplateForAssessmentSRS(data Model.AssessmentDownloadSRSModel, file
 }
 
 func GetHTMLTemplateForAssessmentSelfEsteem(data Model.AssessmentDownloadSelfEsteemModel, filepath string) (string, bool) {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := ioutil.ReadFile(filepath)
+
+	if err != nil {
+		fmt.Println("file is not read")
+		return "", false
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		fmt.Println("Data not pass in html")
+		return "", false
+	}
+
+	return templateBuffer.String(), true
+}
+
+
+func GetHTMLTemplateForAssessmentPSYCHOLOGICALWELLBEING(data Model.AssessmentDownloadPSYCHOLOGICALWELLBEINGModel, filepath string) (string, bool) {
 	var templateBuffer bytes.Buffer
 
 	// You can bind custom data here as per requirements.

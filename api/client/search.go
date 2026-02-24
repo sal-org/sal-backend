@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -282,6 +281,8 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		domainName := strings.Split(client[0]["email"], "@")
+
+		
 
 		if domainName[1] == "ageasfederal.com" {
 
@@ -724,8 +725,6 @@ func ListSearchForCorporateInPersonDuplication(w http.ResponseWriter, r *http.Re
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-
-	fmt.Println(client)
 
 	if client[0]["email"] == "shivam.tiwari@clovemind.com" {
 

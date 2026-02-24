@@ -1,15 +1,17 @@
 package util
 
 import (
+	"math"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 )
-
 
 func IsStringInSlice(target string, list []string) bool {
 	return slices.Contains(list, target)
@@ -25,11 +27,12 @@ func GetBillingDetails(price, discount string) map[string]string {
 	if paidAmount < 0 { // if amount becomes negative after discount
 		paidAmount = 0
 	}
+	paidAmount = math.Round(paidAmount)
 	tax := (float64(paidAmount) / float64((100 + CONSTANT.GSTPercent))) * float64(CONSTANT.GSTPercent)
 	actualAmount := float64(paidAmount) - tax
 	cgst, sgst := tax/2, tax/2
 
-	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 2, 64)
+	billing["paid_amount"] = strconv.FormatFloat(paidAmount, 'f', 0, 64)
 	billing["discount"] = discount
 	billing["tax"] = strconv.FormatFloat(tax, 'f', 2, 64)
 	billing["actual_amount"] = strconv.FormatFloat(actualAmount, 'f', 2, 64)
@@ -99,6 +102,15 @@ func EncodeEmailID(email string) string {
 
 	// Reconstruct the email with modified local part
 	return localPart + domainPart
+}
+
+func CapitalizeFirst(s string) string {
+	if s == "" {
+		return s
+	}
+
+	r, size := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[size:]
 }
 
 // GetBillingDetails - calculate tax, paid amount

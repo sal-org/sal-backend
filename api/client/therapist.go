@@ -68,6 +68,15 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for index, review := range reviews {
+		firstName := UTIL.CapitalizeFirst(review["first_name"])
+		lastName := UTIL.CapitalizeFirst(review["last_name"])
+		reviews[index]["first_name"] = string(firstName[0])
+		reviews[index]["last_name"] = string(lastName[0])
+	}
+
+	fmt.Println("reviews", reviews)
+
 	// get counsellor latest content
 	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("therapist_id"))
 	if !ok {
@@ -540,7 +549,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,"",
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// send appointment reminder notification to client before 15 min

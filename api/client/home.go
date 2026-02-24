@@ -33,7 +33,6 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if len(r.FormValue("client_id")) > 0 {
 
 		active := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"status": "1", "client_id": r.FormValue("client_id")})
-
 		if !active {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
@@ -54,11 +53,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 		domainName := strings.Split(client[0]["email"], "@")
 
-		if domainName[1] == "db.com" {
+		switch domainName[1] {
+		case "db.com":
 			accessCode = "2332"
-		} else if domainName[1] == "ageasfederal.com" {
+		case "ageasfederal.com":
 			accessCode = "2523"
-		} else {
+		default:
 			accessCode = "1234"
 		}
 
@@ -92,12 +92,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 			if appointments[0]["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
 				localTime := 0
-				timeNow := UTIL.GetCurrentTime()
-				timeNow = timeNow.Add(330 * time.Minute)
-				if timeNow.Minute() >= 30 {
-					localTime = timeNow.Hour()*2 + 1
+				loc, _ := time.LoadLocation("Asia/Kolkata")
+				now := time.Now().In(loc)
+				if now.Minute() >= 30 {
+					localTime = now.Hour()*2 + 1
 				} else {
-					localTime = timeNow.Hour() * 2
+					localTime = now.Hour() * 2
 				}
 				appointmentTime, _ := strconv.Atoi(appointments[0]["time"])
 

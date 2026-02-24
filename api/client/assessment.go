@@ -1066,6 +1066,53 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				fmt.Println("html body not create ")
 			}
+		} else if title == "Psychological well-being scale" {
+			var filePath string
+
+			if finalScore >= 18.0 && finalScore <= 69.0 {
+
+				filePath = "htmlfile/psychological_well-being_scale_18_69.html"
+
+			} else if finalScore >= 70.0 && finalScore <= 94.0 {
+
+				filePath = "htmlfile/psychological_well-being_scale_70_94.html"
+
+			} else {
+
+				filePath = "htmlfile/psychological_well-being_scale_95_126.html"
+
+			}
+
+			assessment_data := MODEL.AssessmentDownloadPSYCHOLOGICALWELLBEINGModel{
+				Name:     assessment_result[0]["name"],
+				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:      assessment_result[0]["age"],
+				Gender:   assessment_result[0]["gender"],
+				Score:    assessment_result[0]["final_score"],
+				Answer1:  assessment_result_details[0]["score"],
+				Answer2:  assessment_result_details[1]["score"],
+				Answer3:  assessment_result_details[2]["score"],
+				Answer4:  assessment_result_details[3]["score"],
+				Answer5:  assessment_result_details[4]["score"],
+				Answer6:  assessment_result_details[5]["score"],
+				Answer7:  assessment_result_details[6]["score"],
+				Answer8:  assessment_result_details[7]["score"],
+				Answer9:  assessment_result_details[8]["score"],
+				Answer10: assessment_result_details[9]["score"],
+				Answer11: assessment_result_details[10]["score"],
+				Answer12: assessment_result_details[11]["score"],
+				Answer13: assessment_result_details[12]["score"],
+				Answer14: assessment_result_details[13]["score"],
+				Answer15: assessment_result_details[14]["score"],
+				Answer16: assessment_result_details[15]["score"],
+				Answer17: assessment_result_details[16]["score"],
+				Answer18: assessment_result_details[17]["score"],
+			}
+
+			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentPSYCHOLOGICALWELLBEING(assessment_data, filePath)
+			if !ok {
+				fmt.Println("html body not create ")
+			}
 		} else {
 
 			var filePath string

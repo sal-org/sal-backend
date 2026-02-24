@@ -29,16 +29,12 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("type") {
 	case CONSTANT.CounsellorType:
 		s3Path = CONSTANT.CounsellorS3Path
-		break
 	case CONSTANT.ListenerType:
 		s3Path = CONSTANT.ListenerS3Path
-		break
 	case CONSTANT.ClientType:
 		s3Path = CONSTANT.ClientS3Path
-		break
 	case CONSTANT.TherapistType:
 		s3Path = CONSTANT.TherapistS3Path
-		break
 	}
 
 	var fileName string
