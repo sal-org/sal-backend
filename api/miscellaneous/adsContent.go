@@ -754,12 +754,15 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 			takenSessions, _ := strconv.Atoi(value["taken_sessions"])
 
 			if oneTrueState {
-				totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
-				totalSessionByClient = totalSessionByClient + totalSessions
+				if totalSessions == takenSessions {
+					totalSessionByClient = totalSessionByClient + totalSessions
+					totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+				} else {
+					totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+					totalSessionByClient = totalSessionByClient + totalSessions
+				}
 				oneTrueState = false
-			}
-
-			if totalSessions == takenSessions {
+			} else if totalSessions == takenSessions {
 				totalSessionByClient = totalSessionByClient + totalSessions
 				totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
 			}
