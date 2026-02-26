@@ -253,10 +253,10 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	therapistArgs := []interface{}{}
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// // build counsellor query
 	// counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
@@ -274,7 +274,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 
 	if len(r.FormValue("client_id")) > 0 {
 
-		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
+		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email, location"}, map[string]string{"client_id": r.FormValue("client_id")})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -282,7 +282,19 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 
 		domainName := strings.Split(client[0]["email"], "@")
 
-		
+		checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, mental_health_scale from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? order by created_at desc limit 5", r.FormValue("client_id"))
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// isAddressExist := DB.CheckIfExists(CONSTANT.CorporatePartnersAddressTable, map[string]string{"address": client[0]["location"], "status": "1"})
+
+		clientAddress, status, ok := DB.SelectProcess("select * from "+CONSTANT.CorporatePartnersAddressTable+" where address = ? and status = 1 order by created_at desc", client[0]["location"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
 		if domainName[1] == "ageasfederal.com" {
 
@@ -362,6 +374,33 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 			response["next_available"] = filteredCounsellorSlotsNextAvaliable
 
 		} else {
+
+			counsellorID := []string{}
+
+			if len(clientAddress) > 0 {
+
+				counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+				for _, value := range counsellorConnectWithCompanyLocation {
+
+					if len(checkClientRecordForm) > 0 {
+
+						mentalHealthScore, _ := strconv.Atoi(checkClientRecordForm[0]["mental_health_scale"])
+
+						if mentalHealthScore < 8 {
+							counsellorID = append(counsellorID, value["counsellor_id"])
+						}
+
+					} else {
+						counsellorID = append(counsellorID, value["counsellor_id"])
+					}
+				}
+
+			}
+
 			// build therapist query
 			therapistSQLQuery = "select therapist_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions, education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.TherapistType + " as type, slot_type from " + CONSTANT.TherapistsTable
 			wheres := []string{}
@@ -371,6 +410,10 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 				min, _ := strconv.ParseFloat(experiences[0], 64)
 				max, _ := strconv.ParseFloat(experiences[1], 64)
 				therapistArgs = append(therapistArgs, min, max)
+			}
+			if len(counsellorID) > 0 {
+				wheres = append(wheres, " therapist_id not in ('"+strings.Join(counsellorID, "', '")+"') ")
+				// therapistArgs = append(therapistArgs, counsellorID)
 			}
 			wheres = append(wheres, " status = "+CONSTANT.TherapistActive+" and corporate_therpist != 0 ") // only active therapists
 			therapistSQLQuery += " where " + strings.Join(wheres, " and ")

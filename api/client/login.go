@@ -910,7 +910,7 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 
 	topics := []map[string]string{}
 
-	if len(client[0]["topic_ids"]) > 0 && !strings.Contains(client[0]["topic_ids"], ",,") { 
+	if len(client[0]["topic_ids"]) > 0 && !strings.Contains(client[0]["topic_ids"], ",,") {
 		// if topic_ids is not empty or not just two commas
 		// then get topics
 		topics, status, ok = DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
@@ -934,6 +934,18 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	inpersonLocationMatch := ""
+
+	isAddressExist := DB.CheckIfExists(CONSTANT.CorporatePartnersAddressTable, map[string]string{"address": client[0]["location"], "status": "1"})
+
+	if isAddressExist {
+		inpersonLocationMatch = "Yes"
+	} else {
+		inpersonLocationMatch = "No"
+	}
+
+	client[0]["inperson_location_match"] = inpersonLocationMatch
+
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 	response["topic"] = topics
@@ -956,9 +968,6 @@ func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
 	}
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
-
-
-
 
 func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 
@@ -984,7 +993,6 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
 			return
 		}
-
 
 		if userType == CONSTANT.ClientType {
 
