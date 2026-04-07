@@ -64,12 +64,45 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		for _, content := range contentType {
+			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			content["photo"] = endPointURL
+
+			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+			content["background_photo"] = endPointURLBackgroundPhoto
+
+			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+				content["share_content"] = endPointURLShareContent
+			}
+		}
+
 		if r.FormValue("type") == "1" {
 			contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
+
+			for _, content := range contentVideo {
+				urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+				content["photo"] = endPointURL
+
+				urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+				content["background_photo"] = endPointURLBackgroundPhoto
+
+				if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+					urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+					_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+					content["share_content"] = endPointURLShareContent
+				}
+			}
+
 			response["videos"] = contentVideo
 			response["videos_count"] = videosCount[0]["ctn"]
 			response["no_pages_videos"] = strconv.Itoa(UTIL.GetNumberOfPages(videosCount[0]["ctn"], CONSTANT.ContentPerPageUser))
@@ -103,6 +136,22 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
+		}
+
+		for _, content := range contentType {
+			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			content["photo"] = endPointURL
+
+			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+			content["background_photo"] = endPointURLBackgroundPhoto
+
+			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+				content["share_content"] = endPointURLShareContent
+			}
 		}
 
 		if r.FormValue("type") == "1" {
@@ -231,6 +280,38 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		for _, content := range videos {
+			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			content["photo"] = endPointURL
+
+			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+			content["background_photo"] = endPointURLBackgroundPhoto
+
+			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+				content["share_content"] = endPointURLShareContent
+			}
+		}
+
+		for _, content := range audios {
+			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			content["photo"] = endPointURL
+
+			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+			content["background_photo"] = endPointURLBackgroundPhoto
+
+			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+				content["share_content"] = endPointURLShareContent
+			}
+		}
+
 		response["videos"] = videos
 		response["audios"] = audios
 		response["articles"] = articles
@@ -262,6 +343,22 @@ func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, content := range contentType {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
 	}
 
 	response["contents_name"] = contentType
@@ -324,6 +421,38 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, content := range videos {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
+	}
+
+	for _, content := range audios {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
 	}
 
 	response["videos"] = videos

@@ -230,7 +230,11 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 
 	counsellorFirstList = append(counsellorFirstList, counsellorSecondList...)
 
-	// fmt.Println(counsellors)
+	for _, counsellor := range counsellorFirstList {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
+	}
 
 	response["counsellors"] = counsellorFirstList
 	response["slots"] = filteredCounsellorSlots
@@ -281,8 +285,6 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		domainName := strings.Split(client[0]["email"], "@")
-
-		
 
 		if domainName[1] == "ageasfederal.com" {
 
@@ -352,7 +354,11 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// fmt.Println(counsellors)
+			for _, counsellor := range counsellors {
+				url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+				counsellor["photo"] = endPointURL
+			}
 
 			response["counsellors"] = counsellors
 			response["slots"] = filteredCounsellorSlots
@@ -411,14 +417,21 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 			// var nextSlot []map[string]string
 			for counsellorID, counsellorSlot := range counsellorSlots {
 				filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
-				if len(filteredCounsellorSlots[counsellorID]) == 0 {
-					nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1 and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
-					if !ok {
-						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-						return
-					}
-					filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
-				}
+
+			}
+
+			nextSlots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "' order by date asc")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			// group counsellors|therapists slots
+			counsellorNextSlots := UTIL.ConvertArrayMapToKeyMapArray(nextSlots, "counsellor_id")
+
+			// var nextSlot []map[string]string
+			for counsellorID, counsellorNextSlot := range counsellorNextSlots {
+				filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(counsellorNextSlot)
 			}
 
 			// get counsellors|therapists count
@@ -428,7 +441,11 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// fmt.Println(counsellors)
+			for _, counsellor := range counsellors {
+				url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+				counsellor["photo"] = endPointURL
+			}
 
 			response["counsellors"] = counsellors
 			response["slots"] = filteredCounsellorSlots
@@ -490,14 +507,20 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		// var nextSlot []map[string]string
 		for counsellorID, counsellorSlot := range counsellorSlots {
 			filteredCounsellorSlots[counsellorID] = UTIL.FilterAvailableSlots(counsellorSlot)
-			if len(filteredCounsellorSlots[counsellorID]) == 0 {
-				nextSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = 1 and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", counsellorID)
-				if !ok {
-					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-					return
-				}
-				filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(nextSlots)
-			}
+		}
+
+		nextSlots, status, ok := DB.SelectProcess("select * from " + CONSTANT.SlotsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "') and available = 1 and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "' order by date asc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// group counsellors|therapists slots
+		counsellorNextSlots := UTIL.ConvertArrayMapToKeyMapArray(nextSlots, "counsellor_id")
+
+		// var nextSlot []map[string]string
+		for counsellorID, counsellorNextSlot := range counsellorNextSlots {
+			filteredCounsellorSlotsNextAvaliable[counsellorID] = UTIL.FilterAvailableSlots(counsellorNextSlot)
 		}
 
 		// get counsellors|therapists count
@@ -507,7 +530,11 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// fmt.Println(counsellors)
+		for _, counsellor := range counsellors {
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+			counsellor["photo"] = endPointURL
+		}
 
 		response["counsellors"] = counsellors
 		response["slots"] = filteredCounsellorSlots
@@ -696,6 +723,12 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
+	}
+
 	response["counsellors"] = counsellors
 	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
@@ -880,6 +913,12 @@ func ListSearchForCorporateInPersonDuplication(w http.ResponseWriter, r *http.Re
 			}
 		}
 
+	}
+
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
 	}
 
 	response["counsellors"] = counsellors

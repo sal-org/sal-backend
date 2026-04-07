@@ -109,6 +109,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 							return
 						}
 
+						url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellors[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+						_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+						counsellors[0]["photo"] = endPointURL
+
 						appointments[1]["counsellor_name"] = counsellors[0]["first_name"] + " " + counsellors[0]["last_name"]
 						appointments[1]["counsellor_photo"] = counsellors[0]["photo"]
 						appointments[1]["counsellor_education"] = counsellors[0]["education"]
@@ -125,6 +129,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
+					url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellors[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+					_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+					counsellors[0]["photo"] = endPointURL
+
 					appointments[0]["counsellor_name"] = counsellors[0]["first_name"] + " " + counsellors[0]["last_name"]
 					appointments[0]["counsellor_photo"] = counsellors[0]["photo"]
 					appointments[0]["counsellor_education"] = counsellors[0]["education"]
@@ -137,6 +145,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
 				}
+
+				url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellors[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+				counsellors[0]["photo"] = endPointURL
 
 				appointments[0]["counsellor_name"] = counsellors[0]["first_name"] + " " + counsellors[0]["last_name"]
 				appointments[0]["counsellor_photo"] = counsellors[0]["photo"]
@@ -177,6 +189,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 							return
 						}
 
+						url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellors[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+						_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+						counsellors[0]["photo"] = endPointURL
+
 						inpersonAppointments[1]["counsellor_name"] = counsellors[0]["first_name"] + " " + counsellors[0]["last_name"]
 						inpersonAppointments[1]["counsellor_photo"] = counsellors[0]["photo"]
 						inpersonAppointments[1]["counsellor_education"] = counsellors[0]["education"]
@@ -193,6 +209,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
+					url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellors[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+					_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+					counsellors[0]["photo"] = endPointURL
+
 					inpersonAppointments[0]["counsellor_name"] = counsellors[0]["first_name"] + " " + counsellors[0]["last_name"]
 					inpersonAppointments[0]["counsellor_photo"] = counsellors[0]["photo"]
 					inpersonAppointments[0]["counsellor_education"] = counsellors[0]["education"]
@@ -206,6 +226,10 @@ func Home(w http.ResponseWriter, r *http.Request) {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
 				}
+
+				url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellors[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+				counsellors[0]["photo"] = endPointURL
 
 				inpersonAppointments[0]["counsellor_name"] = counsellors[0]["first_name"] + " " + counsellors[0]["last_name"]
 				inpersonAppointments[0]["counsellor_photo"] = counsellors[0]["photo"]
@@ -228,6 +252,13 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		if len(events) > 0 {
 			// get counsellor details
 			// get upcoming booked events
+			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, events[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			events[0]["photo"] = endPointURLPhoto
+
+			urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, events[0]["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+			events[0]["background_photo"] = endPointURLBackGroundPhoto
 			response["upcoming_events"] = events[0]
 		} else {
 			response["upcoming_events"] = make(map[string]string)
@@ -281,6 +312,22 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, content := range recommended {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
 	}
 
 	response["recommended"] = recommended

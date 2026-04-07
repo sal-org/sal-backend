@@ -50,6 +50,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
+
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -88,6 +94,12 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 	// 	return
 	// }
+
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
@@ -135,6 +147,12 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
 	}
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
@@ -187,6 +205,12 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 	// 	return
 	// }
+
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments

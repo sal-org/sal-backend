@@ -98,6 +98,10 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			therapist[0]["in_person_connect"] = "0"
 		}
 
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		therapist[0]["photo"] = endPointURL
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["languages"] = languages
@@ -244,7 +248,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send account signup notification, message to therapist
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, therapistID,"")
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, therapistID, "")
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -345,6 +349,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.AnandEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)*/
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	therapist_details[0]["photo"] = endPointURL
 
 	response["therapist"] = therapist_details[0]
 	response["access_token"] = accessToken

@@ -72,6 +72,10 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket,  counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	counsellor[0]["photo"] = endPointURL
+
 	response["counsellor"] = counsellor[0]
 	response["languages"] = counsellorLang
 	response["topics"] = topics

@@ -2,6 +2,7 @@ package util
 
 import (
 	"math"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -104,6 +105,18 @@ func EncodeEmailID(email string) string {
 	return localPart + domainPart
 }
 
+func GetBaseURLAndEndpointFromURL(fullURL string) (string, string) {
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		panic(err)
+	}
+
+	baseURL := u.Scheme + "://" + u.Host
+	endpoint := strings.TrimPrefix(u.RequestURI(), "/")
+	return baseURL, endpoint
+}
+
+// CapitalizeFirst - capitalize first letter of the string
 func CapitalizeFirst(s string) string {
 	if s == "" {
 		return s

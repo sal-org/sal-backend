@@ -1,128 +1,145 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  </head>
+  <body>
     <p>Therapist Name: {{.TherapistName}}</p>
-    <h4 style="color: rgb(113, 113, 233);">Client Profile Details</h4>
-    <table style="width: 80%;text-align: left;">
+    <h4 style="color: rgb(113, 113, 233)">Client Profile Details</h4>
+    <table style="width: 80%; text-align: left">
       <tr>
-        <th style="color:#808080; padding: 10px;">Client Name:</th>
-        <td>{{.Client_First_Name}}</td><td style="text-align: left;">{{.Client_Last_Name}}</td>
+        <th style="color: #808080; padding: 10px">Client Name:</th>
+        <td>{{.Client_First_Name}}</td>
+        <td style="text-align: left">{{.Client_Last_Name}}</td>
       </tr>
-        <tr>
-            <th style="color:#808080; padding: 10px;">Client Gender:</th>
-            <td>{{.Client_Gender}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Client Age:</th>
-            <td>{{.Client_Age}}</td>
-          </tr>
-          <tr>
-            <th style="color: rgb(113, 113, 233);">Session Details</th>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Session For:</th>
-            <td>{{.SessionFor}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Session Type:</th>
-            <td>{{.SessionType}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Session Mode:</th>
-            <td>{{.SessionMode}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Session Date:</th>
-            <td>{{.SessionDate}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">In-Time:</th>
-            <td>{{.InTime}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Out-Time:</th>
-            <td>{{.OutTime}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">No Show:</th>
-            <td>{{.NoShow}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Presenting Concerns:</th>
-            <td>{{.PresentingConcerns}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Mental Health Score:</th>
-            <td>{{.MentalHealthScale}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Mental Health Check:</th>
-            <td>{{.MentalHealthCheck}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Downgrading High Risk Case:</th>
-            <td>{{.DowngradingHighRiskCase}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Is Clinical Psychologist Required Reason:</th>
-            <td>{{.IsClinicalPsychologistRequiredReason}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Psychiatric Intervention Reason:</th>
-            <td>{{.PsychiatricInterventionRequiredReason}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Category:</th>
-            <td>{{.Category}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Sub Category:</th>
-            <td>{{.SubCategory}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Emotional State:</th>
-            <td>{{.EmotionalState}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Total Session Needed:</th>
-            <td>{{.TotalSessionNeeded}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Taken Sessions:</th>
-            <td>{{.TakenSessions}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Therapy Notes:</th>
-            <td>{{.TherapyNotes}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Therapy Plan:</th>
-            <td>{{.NextSessionPlan}}</td>
-          </tr>
-          <tr>
-            <th style="color: rgb(113, 113, 233);">Notes for client (Send To Client)</th>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Next Follow Date:</th>
-            <td>{{.NextFollowDate}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Client Notes:</th>
-            <td>{{.ClientNotes}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Client Attachments:</th>
-            <td>{{.Assessment}}</td>
-          </tr>
-          <tr>
-            <th style="color:#808080; padding: 10px;">Self Work Material:</th>
-            <td>{{.SelfWorkMaterial}}</td>
-          </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Client Gender:</th>
+        <td>{{.Client_Gender}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Client Age:</th>
+        <td>{{.Client_Age}}</td>
+      </tr>
+      <tr>
+        <th style="color: rgb(113, 113, 233)">Session Details</th>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Session For:</th>
+        <td>{{.SessionFor}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Session Type:</th>
+        <td>{{.SessionType}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Session Mode:</th>
+        <td>{{.SessionMode}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Session Date:</th>
+        <td>{{.SessionDate}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">In-Time:</th>
+        <td>{{.InTime}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Out-Time:</th>
+        <td>{{.OutTime}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">No Show:</th>
+        <td>{{.NoShow}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Presenting Concerns:</th>
+        <td>{{.PresentingConcerns}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Mental Health Score:</th>
+        <td>{{.MentalHealthScale}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Mental Health Check:</th>
+        <td>{{.MentalHealthCheck}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">
+          Downgrading High Risk Case:
+        </th>
+        <td>{{.DowngradingHighRiskCase}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">
+          Is Clinical Psychologist Required Reason:
+        </th>
+        <td>{{.IsClinicalPsychologistRequiredReason}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">
+          Psychiatric Intervention Reason:
+        </th>
+        <td>{{.PsychiatricInterventionRequiredReason}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Category:</th>
+        <td>{{.Category}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Sub Category:</th>
+        <td>{{.SubCategory}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Emotional State:</th>
+        <td>{{.EmotionalState}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Total Session Needed:</th>
+        <td>{{.TotalSessionNeeded}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Taken Sessions:</th>
+        <td>{{.TakenSessions}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Goals Achieved:</th>
+        <td>{{.GoalsAchieved}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Goals Achieved Reason:</th>
+        <td>{{.GoalsAchievedReason}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Therapy Notes:</th>
+        <td>{{.TherapyNotes}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Therapy Plan:</th>
+        <td>{{.NextSessionPlan}}</td>
+      </tr>
+      <tr>
+        <th style="color: rgb(113, 113, 233)">
+          Notes for client (Send To Client)
+        </th>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Next Follow Date:</th>
+        <td>{{.NextFollowDate}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Client Notes:</th>
+        <td>{{.ClientNotes}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Client Attachments:</th>
+        <td>{{.Assessment}}</td>
+      </tr>
+      <tr>
+        <th style="color: #808080; padding: 10px">Self Work Material:</th>
+        <td>{{.SelfWorkMaterial}}</td>
+      </tr>
     </table>
-</body>
+  </body>
 </html>

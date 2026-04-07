@@ -35,6 +35,23 @@ func Training(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	for _, content := range training {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
+	}
+
 	response["training"] = training
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	UTIL "salbackend/util"
+	CONFIG "salbackend/config"
 )
 
 // MoodAdd godoc
@@ -172,6 +173,22 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, content := range contents {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
 	}
 
 	response["mood_content"] = contents

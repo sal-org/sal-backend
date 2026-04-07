@@ -106,7 +106,7 @@ func UploadToS3(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, a
 		Key:         aws.String(fileName),
 		Body:        openedFile,
 		ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
-		ACL:         aws.String(acl),
+		// ACL:         aws.String(acl),
 	})
 
 	os.Remove(savedFileName)
@@ -285,8 +285,8 @@ func PreSignedS3URLToUploadPut(s3Bucket, path, s3AccessKey, s3SecretKey, s3Regio
 	})
 
 	q := req.HTTPRequest.URL.Query()
-	q.Add("x-amz-acl", "public-read")
-	q.Add("Content-Type",getFileMIMEType(strings.ToLower(extension)))
+	// q.Add("x-amz-acl", "public-read")
+	q.Add("Content-Type", getFileMIMEType(strings.ToLower(extension)))
 	req.HTTPRequest.URL.RawQuery = q.Encode()
 	// req.HTTPRequest.Header.Set("Content-MD5", checksum)
 	str, _ := req.Presign(5 * time.Minute)
@@ -299,25 +299,29 @@ func PreSignedS3URLToGetTheData(s3Bucket, path, s3AccessKey, s3SecretKey, s3Regi
 
 	// // credentials from the shared credentials file ~/.aws/credentials.
 	// Create AWS session
-	sess, _ := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
-		Region:      aws.String(s3Region)},
-	)
+	if path == "" {
+		return ""
+	}
 
-	// Create S3 client
+	sess, err := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+		Region:      aws.String(s3Region),
+	})
+	if err != nil {
+		fmt.Println("Session error:", err)
+		return ""
+	}
+
 	svc := s3.New(sess)
 
-	// Create a GetObject request
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(s3Bucket),
 		Key:    aws.String(path),
 	})
 
-	// Generate pre-signed URL valid for 15 minutes
 	urlStr, err := req.Presign(15 * time.Minute)
-
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Presign error:", err)
 		return ""
 	}
 

@@ -45,6 +45,12 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, assessment := range assessments {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		assessment["photo"] = endPointURL
+	}
+
 	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
 	response["assessments"] = assessments
 	response["media_url"] = CONFIG.MediaURL
@@ -247,6 +253,12 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		result := DB.QueryRowSQL("select result from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? and min <= ? and max >=  ? ", assessmentResults[i]["assessment_id"], assessmentResults[i]["final_score"], assessmentResults[i]["final_score"])
 
 		results = append(results, result)
+	}
+
+	for _, assessment := range assessmentDetails {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		assessment["photo"] = endPointURL
 	}
 
 	response["assessment_results"] = assessmentResults
@@ -1196,6 +1208,10 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//receipt := map[string]string{}
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	fileName = endPointURL
 
 	response["media_url"] = CONFIG.MediaURL
 	response["pdf_name"] = fileName

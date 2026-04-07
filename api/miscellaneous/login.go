@@ -364,6 +364,11 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
+
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+			counsellor[0]["photo"] = endPointURL
+
 			response["languages"] = languages
 			response["topics"] = topics
 			response["therapist"] = counsellor[0]

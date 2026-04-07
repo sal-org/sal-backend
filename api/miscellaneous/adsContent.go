@@ -31,6 +31,12 @@ func AdsContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, adsCont := range adsContent {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, adsCont["image"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		adsCont["image"] = endPointURL
+	}
+
 	response["ads"] = adsContent
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -46,6 +52,12 @@ func GetDocumentList(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, document := range getDocuments {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, document["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		document["document"] = endPointURL
 	}
 
 	response["documents"] = getDocuments
@@ -513,6 +525,8 @@ func CheckGetCounsellorClientRecordForNewest(w http.ResponseWriter, r *http.Requ
 
 	var response = make(map[string]interface{})
 
+	var clients []map[string]string
+
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
@@ -531,11 +545,91 @@ func CheckGetCounsellorClientRecordForNewest(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// fmt.Print(status, ok)
+	if len(newVersionClientRecordForm) > 0 {
+		// get client details
+		clients, status, ok = DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id = '" + newVersionClientRecordForm[0]["client_id"] + "'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
 
-	// if len(newVersionClientRecordForm) == 0 || !ok {
-	// 	UTIL.SetReponse(w, "400", "No records found for the given appointment ID", CONSTANT.ShowDialog, response)
-	// }
+		countOldClient, status, ok := DB.SelectProcess("select count(record_id) as ctn from "+CONSTANT.CounsellorRecordsTable+" where client_id = ?  order by session_date desc", newVersionClientRecordForm[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		countNewClient, status, ok := DB.SelectProcess("select count(record_id) as ctn from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and status = '2' order by modified_at desc", newVersionClientRecordForm[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		totalCount := 0
+
+		if len(countOldClient) > 0 {
+			total, _ := strconv.Atoi(countOldClient[0]["ctn"])
+			totalCount += total
+		}
+
+		if len(countNewClient) > 0 {
+			total, _ := strconv.Atoi(countNewClient[0]["ctn"])
+			totalCount += total
+		}
+
+		clients[0]["total_sessions"] = strconv.Itoa(totalCount)
+
+	} else {
+		newVersionClientRecordForm, status, ok = DB.SelectSQL(CONSTANT.CounsellorRecordsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(newVersionClientRecordForm) > 0 {
+
+			if len(newVersionClientRecordForm[0]["client_id"]) != 0 {
+				clients, status, ok = DB.SelectProcess("select client_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id = '" + newVersionClientRecordForm[0]["client_id"] + "'")
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
+				countOldClient, status, ok := DB.SelectProcess("select count(record_id) as ctn from "+CONSTANT.CounsellorRecordsTable+" where client_id = ?  order by session_date desc", newVersionClientRecordForm[0]["client_id"])
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
+				countNewClient, status, ok := DB.SelectProcess("select count(record_id) as ctn from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and status = '2' order by modified_at desc", newVersionClientRecordForm[0]["client_id"])
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+
+				totalCount := 0
+
+				if len(countOldClient) > 0 {
+					total, _ := strconv.Atoi(countOldClient[0]["ctn"])
+					totalCount += total
+				}
+
+				if len(countNewClient) > 0 {
+					total, _ := strconv.Atoi(countNewClient[0]["ctn"])
+					totalCount += total
+				}
+
+				clients[0]["total_sessions"] = strconv.Itoa(totalCount)
+			}
+		}
+
+	}
+
+	if len(clients) > 0 {
+		response["client_details"] = clients[0]
+	} else {
+		response["client_details"] = map[string]string{}
+	}
 
 	response["client_record"] = newVersionClientRecordForm
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -547,10 +641,10 @@ func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Re
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	var totalLastClientRecord []map[string]string
 
@@ -584,7 +678,7 @@ func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	countNewClient, status, ok := DB.SelectProcess("select count(record_id) as ctn from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ?  order by session_date desc", r.FormValue("client_id"))
+	countNewClient, status, ok := DB.SelectProcess("select count(record_id) as ctn from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and status = '2' order by modified_at desc", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -606,10 +700,10 @@ func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Re
 
 	SQLQueryLastest := "select * from " + CONSTANT.CounsellorRecordsFormLastestVersionTable + " where client_id = ? and status = 2"
 
-	sortByLastest := " created_at " // default ordering by created_at
+	sortByLastest := " modified_at " // default ordering by modified_at
 	orderByLastest := " desc "
 	if strings.EqualFold(r.FormValue("sort_by"), "1") {
-		sortByLastest = " created_at "
+		sortByLastest = " modified_at "
 	}
 	if strings.EqualFold(r.FormValue("sort_by"), "2") {
 		sortByLastest = " mental_health_scale "
@@ -661,6 +755,9 @@ func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Re
 
 		totalLastClientRecord = append(totalLastClientRecord, oldLastClient...)
 
+	} else {
+
+		totalLastClientRecord = append(totalLastClientRecord, lastClient...)
 	}
 
 	appointmentIDs := UTIL.ExtractValuesFromArrayMap(totalLastClientRecord, "appointment_id")
@@ -671,6 +768,14 @@ func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Re
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	inpersonAppointmentDetails, status, ok := DB.SelectProcess("select time, appointment_id from " + CONSTANT.InPersonAppointmentsTable + " where appointment_id in ('" + strings.Join(appointmentIDs, "','") + "') ")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	appointmentDetails = append(appointmentDetails, inpersonAppointmentDetails...)
 
 	appointmentDetailsMap := UTIL.ConvertMapToKeyMap(appointmentDetails, "appointment_id")
 
@@ -703,7 +808,7 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 
 	totalSessionTakenByTheClientWithSameTherapist := 0
 
-	newVersionClientRecordForm, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and status = '2'  order by created_at desc limit 1", r.FormValue("client_id"), r.FormValue("counsellor_id"))
+	newVersionClientRecordForm, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and no_show = 0 and incomplete_session = 0 and status = '2'  order by modified_at desc limit 3", r.FormValue("client_id"), r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -715,7 +820,7 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newClientRecordFormTotal, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and no_show = 0 and status = '2' order by session_date desc", r.FormValue("client_id"), r.FormValue("counsellor_id"))
+	newClientRecordFormTotal, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and no_show = 0 and incomplete_session = 0 and status = '2' order by modified_at desc", r.FormValue("client_id"), r.FormValue("counsellor_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -733,8 +838,12 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
+
+		sessionDetails["previousTotalSession"] = strconv.Itoa(totalSessionTakenByTheClientWithSameTherapist)
+		sessionDetails["totalSession"] = "0"
+		sessionDetails["takenSession"] = "0"
 	} else {
-		newVersionClientRecordFormTotalSession, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and status = '2' order by created_at desc", r.FormValue("client_id"), r.FormValue("counsellor_id"))
+		newVersionClientRecordFormTotalSession, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and no_show = 0 and incomplete_session = 0 and status = '2' order by modified_at desc", r.FormValue("client_id"), r.FormValue("counsellor_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -742,32 +851,45 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 
 		totalSessionByClient := 0
 		totaltakenSessionByClient := 0
-		oneTrueState := true
+		// oneTrueState := true
 
-		for _, value := range newVersionClientRecordFormTotalSession {
+		if len(newVersionClientRecordFormTotalSession) > 0 {
+			if newVersionClientRecordFormTotalSession[0]["goals_achieved"] != "Yes" {
+				totalSessions, _ := strconv.Atoi(newVersionClientRecordFormTotalSession[0]["total_session_needed"])
+				takenSessions, _ := strconv.Atoi(newVersionClientRecordFormTotalSession[0]["taken_sessions"])
 
-			if value["goals_achieved"] == "Yes" {
-				break
-			}
-
-			totalSessions, _ := strconv.Atoi(value["total_session_needed"])
-			takenSessions, _ := strconv.Atoi(value["taken_sessions"])
-
-			if oneTrueState {
-				if totalSessions == takenSessions {
-					totalSessionByClient = totalSessionByClient + totalSessions
-					totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
-				} else {
-					totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
-					totalSessionByClient = totalSessionByClient + totalSessions
-				}
-				oneTrueState = false
-			} else if totalSessions == takenSessions {
 				totalSessionByClient = totalSessionByClient + totalSessions
-				totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+				totaltakenSessionByClient = totaltakenSessionByClient + takenSessions + 1
 			}
-
 		}
+
+		// for _, value := range newVersionClientRecordFormTotalSession {
+
+		// 	if value["goals_achieved"] == "Yes" {
+		// 		break
+		// 	}
+
+		// 	totalSessions, _ := strconv.Atoi(value["total_session_needed"])
+		// 	takenSessions, _ := strconv.Atoi(value["taken_sessions"])
+
+		// 	totalSessionByClient = totalSessionByClient + totalSessions
+		// 	totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+
+		// 	// if oneTrueState {
+		// 	// 	if totalSessions == takenSessions {
+		// 	// 		totalSessionByClient = totalSessionByClient + totalSessions
+		// 	// 		totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+		// 	// 	} else {
+		// 	// 		totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+		// 	// 		totalSessionByClient = totalSessionByClient + totalSessions
+		// 	// 	}
+		// 	// 	oneTrueState = false
+		// 	// } else if totalSessions == takenSessions {
+		// 	// 	totalSessionByClient = totalSessionByClient + totalSessions
+		// 	// 	totaltakenSessionByClient = totaltakenSessionByClient + takenSessions
+		// 	// }
+
+		// }
 
 		sessionDetails["previousTotalSession"] = strconv.Itoa(totalSessionTakenByTheClientWithSameTherapist)
 		sessionDetails["totalSession"] = strconv.Itoa(totalSessionByClient)
@@ -775,12 +897,21 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(newVersionClientRecordForm) > 0 {
-		appointmentDetails, status, ok := DB.SelectProcess("select time, appointment_id from " + CONSTANT.AppointmentsTable + " where appointment_id = '" + newVersionClientRecordForm[0]["appointment_id"] + "' ")
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
+		if newVersionClientRecordForm[0]["session_mode"] == "In-Person" {
+			appointmentDetails, status, ok := DB.SelectProcess("select time, appointment_id from " + CONSTANT.InPersonAppointmentsTable + " where appointment_id = '" + newVersionClientRecordForm[0]["appointment_id"] + "' ")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			newVersionClientRecordForm[0]["appointment_time"] = appointmentDetails[0]["time"]
+		} else {
+			appointmentDetails, status, ok := DB.SelectProcess("select time, appointment_id from " + CONSTANT.AppointmentsTable + " where appointment_id = '" + newVersionClientRecordForm[0]["appointment_id"] + "' ")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			newVersionClientRecordForm[0]["appointment_time"] = appointmentDetails[0]["time"]
 		}
-		newVersionClientRecordForm[0]["appointment_time"] = appointmentDetails[0]["time"]
 	}
 
 	checkPointsList, status, ok := DB.SelectProcess("select * from " + CONSTANT.TherapistCheckMHScalePointsTable + " ")
@@ -814,7 +945,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 	// 	return
 	// }
 
-	var noshow, mentalHealth string
+	var noshow, incompleteSession, mentalHealth string
 	var newVersionClientRecordForm []map[string]string
 
 	if len(body["mental_health"]) > 0 {
@@ -832,9 +963,9 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 	}
 
 	if len(body["incomplete_session"]) > 0 {
-		noshow = body["incomplete_session"]
+		incompleteSession = body["incomplete_session"]
 	} else {
-		noshow = "0"
+		incompleteSession = "0"
 	}
 
 	// if len(body["session_for"]) > 0 {
@@ -856,10 +987,12 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 		counsellorRecord := map[string]string{}
 		counsellorRecord["session_type"] = body["session_type"]
+		counsellorRecord["family_relation"] = body["family_relation"]
+		counsellorRecord["out_time"] = body["out_time"]
 		counsellorRecord["no_show"] = noshow
-		counsellorRecord["incomplete_session"] = body["incomplete_session"]
+		counsellorRecord["incomplete_session"] = incompleteSession
 		counsellorRecord["presenting_concers"] = body["presenting_concers"]
-		counsellorRecord["mental_health_scale"] = mentalHealth
+		counsellorRecord["mental_health"] = mentalHealth
 		counsellorRecord["mental_health_check"] = body["mental_health_check"]
 		counsellorRecord["downgrading_high_risk_case"] = body["downgrading_high_risk_case"]
 		counsellorRecord["is_clinical_psychologist_required_reason"] = body["is_clinical_psychologist_required_reason"]
@@ -869,7 +1002,9 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		counsellorRecord["emotional_state"] = body["emotional_state"]
 		counsellorRecord["therapy_notes"] = body["therapy_notes"]
 		counsellorRecord["goals_achieved"] = body["goals_achieved"]
+		counsellorRecord["goals_achieved_reason"] = body["goals_achieved_reason"]
 		counsellorRecord["total_session_needed"] = body["total_session_needed"]
+		counsellorRecord["taken_sessions"] = body["taken_sessions"]
 		counsellorRecord["next_session_plan"] = body["next_session_plan"]
 		counsellorRecord["next_follow_up_date"] = body["next_follow_up_date"]
 		counsellorRecord["client_notes"] = body["client_notes"]
@@ -911,6 +1046,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		counsellorRecord["client_id"] = body["client_id"]
 		counsellorRecord["appointment_id"] = body["appointment_id"]
 		counsellorRecord["session_for"] = body["session_for"]
+		counsellorRecord["family_relation"] = body["family_relation"]
 		counsellorRecord["session_type"] = body["session_type"]
 		counsellorRecord["session_mode"] = body["session_mode"]
 		counsellorRecord["session_date"] = body["session_date"]
@@ -919,7 +1055,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		counsellorRecord["no_show"] = noshow
 		counsellorRecord["incomplete_session"] = body["incomplete_session"]
 		counsellorRecord["presenting_concers"] = body["presenting_concers"]
-		counsellorRecord["mental_health_scale"] = mentalHealth
+		counsellorRecord["mental_health"] = mentalHealth
 		counsellorRecord["mental_health_check"] = body["mental_health_check"]
 		counsellorRecord["downgrading_high_risk_case"] = body["downgrading_high_risk_case"]
 		counsellorRecord["is_clinical_psychologist_required_reason"] = body["is_clinical_psychologist_required_reason"]
@@ -929,13 +1065,16 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		counsellorRecord["emotional_state"] = body["emotional_state"]
 		counsellorRecord["therapy_notes"] = body["therapy_notes"]
 		counsellorRecord["goals_achieved"] = body["goals_achieved"]
+		counsellorRecord["goals_achieved_reason"] = body["goals_achieved_reason"]
 		counsellorRecord["total_session_needed"] = body["total_session_needed"]
+		counsellorRecord["taken_sessions"] = body["taken_sessions"]
 		counsellorRecord["next_session_plan"] = body["next_session_plan"]
 		counsellorRecord["next_follow_up_date"] = body["next_follow_up_date"]
 		counsellorRecord["client_notes"] = body["client_notes"]
 		counsellorRecord["self_work_material"] = body["self_work_material"]
 		counsellorRecord["assessment"] = body["assessment"]
-		counsellorRecord["status"] = CONSTANT.CounsellorRecordFormActive
+		counsellorRecord["status"] = CONSTANT.CounsellorRecordFormCompleted
+		counsellorRecord["created_at"] = UTIL.GetCurrentTime().String()
 		counsellorRecord["modified_at"] = UTIL.GetCurrentTime().String()
 
 		recordID, status, ok := DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.CounsellorRecordDigits, counsellorRecord, "record_id")
@@ -974,12 +1113,12 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	sessionDate := UTIL.BuildOnlyDate(body["session_date"])
+	sessionDate := UTIL.BuildOnlyDate(newVersionClientRecordForm[0]["session_date"])
 
 	nextFollowDate := ""
 
-	if len(body["next_follow_up_date"]) != 0 {
-		nextFollowDate = UTIL.BuildOnlyDate(body["next_follow_up_date"])
+	if len(newVersionClientRecordForm[0]["next_follow_up_date"]) != 0 {
+		nextFollowDate = UTIL.BuildOnlyDate(newVersionClientRecordForm[0]["next_follow_up_date"])
 	}
 
 	if noshow == "1" {
@@ -996,12 +1135,13 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		Client_Age:                            clients[0]["age"],
 		SessionFor:                            newVersionClientRecordForm[0]["session_for"],
 		SessionType:                           newVersionClientRecordForm[0]["session_type"],
+		FamilyRelation:                        newVersionClientRecordForm[0]["family_relation"],
 		SessionMode:                           newVersionClientRecordForm[0]["session_mode"],
-		SessionDate:                           newVersionClientRecordForm[0]["session_date"],
+		SessionDate:                           sessionDate,
 		InTime:                                newVersionClientRecordForm[0]["in_time"],
 		OutTime:                               newVersionClientRecordForm[0]["out_time"],
 		NoShow:                                noshow,
-		PresentingConcerns:                    body["presenting_concerns"],
+		PresentingConcerns:                    body["presenting_concers"],
 		MentalHealthScale:                     mentalHealth,
 		MentalHealthCheck:                     body["mental_health_check"],
 		DowngradingHighRiskCase:               body["downgrading_high_risk_case"],
@@ -1011,6 +1151,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		SubCategory:                           body["sub_category"],
 		EmotionalState:                        body["emotional_state"],
 		GoalsAchieved:                         body["goals_achieved"],
+		GoalsAchievedReason:                   body["goals_achieved_reason"],
 		TotalSessionNeeded:                    body["total_session_needed"],
 		TakenSessions:                         newVersionClientRecordForm[0]["taken_sessions"],
 		TherapyNotes:                          body["therapy_notes"],
@@ -1040,7 +1181,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 	message, message1, message2, subjectLine := "", "", "", ""
 
-	if len(body["next_follow_date"]) != 0 {
+	if len(body["next_follow_up_date"]) != 0 {
 		// 15 min push notification before appointment start
 
 		if newVersionClientRecordForm[0]["session_mode"] == "In-Person" {
@@ -1055,7 +1196,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 				),
 				newVersionClientRecordForm[0]["client_id"],
 				CONSTANT.ClientType,
-				UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
+				UTIL.BuildDateTime(body["next_follow_up_date"], "26").Add(-24*time.Hour).UTC().String(),
 				CONSTANT.NotificationInProgress,
 				newVersionClientRecordForm[0]["client_id"],
 				"",
@@ -1074,7 +1215,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 				),
 				newVersionClientRecordForm[0]["client_id"],
 				CONSTANT.ClientType,
-				UTIL.BuildDateTime(body["next_follow_date"], "26").Add(-24*time.Hour).UTC().String(),
+				UTIL.BuildDateTime(body["next_follow_up_date"], "26").Add(-24*time.Hour).UTC().String(),
 				CONSTANT.NotificationInProgress,
 				newVersionClientRecordForm[0]["client_id"],
 				"",

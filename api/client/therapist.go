@@ -75,14 +75,16 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 		reviews[index]["last_name"] = string(lastName[0])
 	}
 
-	fmt.Println("reviews", reviews)
-
 	// get counsellor latest content
 	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	therapist[0]["photo"] = endPointURL
 
 	response["therapist"] = therapist[0]
 	response["languages"] = therapistLang

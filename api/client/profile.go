@@ -82,6 +82,10 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client[0]["photo"] = endPointURL
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
@@ -197,7 +201,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send notification to client
-	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID,"")
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID, "")
 
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -229,6 +233,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		clientID,
 		CONSTANT.InstantSendTextMessage,
 	)
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, clientD[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	clientD[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
@@ -361,7 +369,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send notification to client
-	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID,"")
+	UTIL.SendNotification(CONSTANT.ClientCompletedProfileHeading, CONSTANT.ClientCompletedProfileContent, clientID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, clientID, "")
 
 	// send email to client
 	filepath_text := "htmlfile/emailmessagebody.html"
@@ -393,6 +401,10 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 		clientID,
 		CONSTANT.InstantSendTextMessage,
 	)
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, clientD[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	clientD[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken

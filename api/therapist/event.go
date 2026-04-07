@@ -594,6 +594,22 @@ func UpcomingEventsInPerson(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	for _, event := range events {
+
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		event["photo"] = endPointURL
+
+		backgroundURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, backgroundPointURL := UTIL.GetBaseURLAndEndpointFromURL(backgroundURL)
+		event["background_photo"] = backgroundPointURL
+
+		documentsURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, documentsPointURL := UTIL.GetBaseURLAndEndpointFromURL(documentsURL)
+		event["document"] = documentsPointURL
+	}
+
 	response["upcoming_events"] = events
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -671,8 +687,8 @@ func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
 		DB.UpdateSQL(CONSTANT.OrderEventInPersonTable,
 			map[string]string{
 				"event_order_id": body.OrderID,
-				"user_id":  clientID.UserID,
-				"status" : "1",
+				"user_id":        clientID.UserID,
+				"status":         "1",
 			},
 			map[string]string{
 				"attended": "1",
@@ -712,7 +728,6 @@ func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
-
 
 func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -771,6 +786,22 @@ func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	event[0]["photo"] = endPointURL
+
+	backgroundURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, backgroundPointURL := UTIL.GetBaseURLAndEndpointFromURL(backgroundURL)
+	event[0]["background_photo"] = backgroundPointURL
+
+	documentsURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, documentsPointURL := UTIL.GetBaseURLAndEndpointFromURL(documentsURL)
+	event[0]["document"] = documentsPointURL
+
+	counsellorURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, counsellorEndPointURL := UTIL.GetBaseURLAndEndpointFromURL(counsellorURL)
+	event[0]["photo"] = counsellorEndPointURL
+
 	response["event"] = event[0]
 	response["counsellor"] = counsellor[0]
 	response["languages"] = languages
@@ -796,6 +827,22 @@ func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	for _, event := range events {
+
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		event["photo"] = endPointURL
+
+		backgroundURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, backgroundPointURL := UTIL.GetBaseURLAndEndpointFromURL(backgroundURL)
+		event["background_photo"] = backgroundPointURL
+
+		documentsURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, documentsPointURL := UTIL.GetBaseURLAndEndpointFromURL(documentsURL)
+		event["document"] = documentsPointURL
+	}
+
 	response["past_events"] = events
 
 	// // get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))

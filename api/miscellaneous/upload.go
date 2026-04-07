@@ -58,12 +58,14 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		fileName = name
 	}
 
+	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	fileName = endPointURL
+
 	response["file"] = fileName
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
-
-
 
 func PreSignedS3URLToUpload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

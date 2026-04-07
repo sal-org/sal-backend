@@ -28,6 +28,14 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(r.FormValue("therapist_id")) > 0 {
+		active := DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"status": "1", "therapist_id": r.FormValue("therapist_id")})
+		if !active {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
 	// get latest content for recommended
 	recommended, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where training = 1 and status = 1 order by created_at desc limit 20")
 	if !ok {
@@ -60,6 +68,22 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, content := range recommended {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		content["photo"] = endPointURL
+
+		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		content["background_photo"] = endPointURLBackgroundPhoto
+
+		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			content["share_content"] = endPointURLShareContent
+		}
 	}
 
 	response["recommended"] = recommended

@@ -231,6 +231,16 @@ func EventInPersonGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, event := range events {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		event["photo"] = endPointURLPhoto
+
+		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+		event["background_photo"] = endPointURLBackGroundPhoto
+	}
+
 	response["events"] = events
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["events_booked_count"] = UTIL.ConvertMapToKeyMap(eventBookedCount, "event_order_id")
@@ -453,6 +463,10 @@ func UploadEventFile(w http.ResponseWriter, r *http.Request) {
 		fileName = name
 	}
 
+	urlFile := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlFile)
+	fileName = endPointURL
+
 	response["file"] = fileName
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -594,6 +608,11 @@ func PreSignedS3URLToUploadEvent(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, CONSTANT.EventS3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
+
+
+	// urlFile := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlFile)
+	// fileName = endPointURL
 
 	response["file_name"] = fileName
 	response["url"] = url

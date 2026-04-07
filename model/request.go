@@ -519,6 +519,7 @@ type EmailDataForCounsellorRecordForLastestVersion struct {
 	Client_Age                            string
 	SessionFor                            string
 	SessionType                           string
+	FamilyRelation                        string
 	SessionMode                           string
 	SessionDate                           string
 	InTime                                string
@@ -534,10 +535,11 @@ type EmailDataForCounsellorRecordForLastestVersion struct {
 	SubCategory                           string
 	EmotionalState                        string
 	TotalSessionNeeded                    string
-	TakenSessions                          string
+	TakenSessions                         string
 	TherapyNotes                          string
 	NextSessionPlan                       string
 	GoalsAchieved                         string
+	GoalsAchievedReason                   string
 	NextFollowDate                        string
 	ClientNotes                           string
 	Assessment                            string
@@ -725,7 +727,6 @@ type AssessmentDownloadPSYCHOLOGICALWELLBEINGModel struct {
 	Answer16 string `json:"answer16"`
 	Answer17 string `json:"answer17"`
 	Answer18 string `json:"answer18"`
-
 }
 
 type AssessmentDownloadBDIModel struct {

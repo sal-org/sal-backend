@@ -103,6 +103,18 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
+	}
+
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
+
 	response["appointments"] = appointments
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")

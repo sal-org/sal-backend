@@ -70,6 +70,12 @@ func CounsellorGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
+	}
+
 	response["counsellors"] = counsellors
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["media_url"] = CONFIG.MediaURL

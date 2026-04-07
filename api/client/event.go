@@ -98,6 +98,16 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+	for _, event := range events {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		event["photo"] = endPointURLPhoto
+
+		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+		event["background_photo"] = endPointURLBackGroundPhoto
+	}
+
 	response["booked_event_id"] = orderIDs
 	response["events"] = events
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -152,6 +162,10 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	counsellor[0]["photo"] = endPointURL
 
 	response["event"] = event[0]
 	response["counsellor"] = counsellor[0]
@@ -218,6 +232,18 @@ func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	counsellor[0]["photo"] = endPointURL
+
+	urlEvent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURLEvent := UTIL.GetBaseURLAndEndpointFromURL(urlEvent)
+	event[0]["photo"] = endPointURLEvent
+
+	urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+	event[0]["background_photo"] = endPointURLBackGroundPhoto
 
 	response["event"] = event[0]
 	response["counsellor"] = counsellor[0]
@@ -623,6 +649,17 @@ func EventsBookedInPerson(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	for _, event := range events {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		event["photo"] = endPointURLPhoto
+
+		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+		event["background_photo"] = endPointURLBackGroundPhoto
+	}
+
 	response["upcoming_events"] = events
 
 	// // get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))
@@ -656,6 +693,16 @@ func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, event := range events {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		event["photo"] = endPointURLPhoto
+
+		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+		event["background_photo"] = endPointURLBackGroundPhoto
 	}
 
 	response["past_events"] = events
@@ -1082,6 +1129,20 @@ func WebinarList(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
+	}
+
+	for _, event := range events {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		event["photo"] = endPointURLPhoto
+
+		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+		event["background_photo"] = endPointURLBackGroundPhoto
+
+		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+		event["counsellor_photo"] = endPointURLCounsellorPhoto
 	}
 
 	response["events"] = events

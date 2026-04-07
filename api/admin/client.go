@@ -77,6 +77,12 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
+
 	response["clients"] = clients
 	response["clients_count"] = clientsCount[0]["ctn"]
 	response["media_url"] = CONFIG.MediaURL

@@ -75,6 +75,12 @@ func TherapistGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, therapist := range therapists {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		therapist["photo"] = endPointURL
+	}
+
 	response["therapists"] = therapists
 	response["therapists_count"] = therapistsCount[0]["ctn"]
 	response["media_url"] = CONFIG.MediaURL

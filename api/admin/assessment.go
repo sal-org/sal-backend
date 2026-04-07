@@ -294,6 +294,14 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, assessment := range assessmentswithDetails {
+		photo := ""
+		photo = assessment["photo"].(string)
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, photo, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		assessment["photo"] = endPointURL
+	}
+
 	response["assessments"] = assessmentswithDetails
 	response["assessments_count"] = assessmentsCount[0]["ctn"]
 	response["media_url"] = CONFIG.MediaURL

@@ -96,6 +96,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 
 	// }
 
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
+	}
+
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -133,6 +139,12 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
 	}
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
@@ -182,6 +194,12 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
 	}
 
 	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
@@ -259,6 +277,12 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	// }
 
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
+	}
+
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -297,6 +321,12 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	for _, counsellor := range counsellors {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		counsellor["photo"] = endPointURL
 	}
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
@@ -422,15 +452,15 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	if len(client) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// if len(client) == 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
@@ -2662,6 +2692,11 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	fileName = endPointURL
+
 	response["file"] = fileName
 	response["media_url"] = CONFIG.MediaURL
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

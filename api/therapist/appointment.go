@@ -50,6 +50,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
+
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -89,6 +95,12 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
+
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
 	// response["slots"] = slots
@@ -108,6 +120,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var appointments []map[string]string
 	var statusMessage string
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -116,17 +129,44 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get past completed appointments
-	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.AppointmentCompleted})
+	appointmentsCompleted, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.AppointmentCompleted})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	/*appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status = ? order by date desc", r.FormValue("therapist_id"), CONSTANT.AppointmentCompleted)
+	appointmentsReviewed, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where counsellor_id = ? and status in ('"+CONSTANT.AppointmentStarted+"', '"+CONSTANT.AppointmentToBeStarted+"') and date <= ?", r.FormValue("therapist_id"), UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
-	}*/
+	}
+
+	var appointmentsReviewedList []map[string]string
+
+	for _, appointment := range appointmentsReviewed {
+		if appointment["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
+			localTime := 0
+			loc, _ := time.LoadLocation("Asia/Kolkata")
+			now := time.Now().In(loc)
+			if now.Minute() >= 30 {
+				localTime = now.Hour()*2 + 1
+			} else {
+				localTime = now.Hour() * 2
+			}
+			appointmentTime, _ := strconv.Atoi(appointment["time"])
+
+			if appointmentTime < localTime {
+				appointmentsReviewedList = append(appointmentsReviewedList, appointment)
+			}
+
+		} else {
+			appointmentsReviewedList = append(appointmentsReviewedList, appointment)
+		}
+	}
+
+	appointments = append(appointments, appointmentsCompleted...)
+	appointments = append(appointments, appointmentsReviewedList...)
+
 	// get client ids to get details
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
 	appointmentIDs := UTIL.ExtractValuesFromArrayMap(appointments, "appointment_id")
@@ -171,7 +211,11 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 			if counsellorRecordMap[idStr]["status"] == "2" {
 				appointments[index]["is_counsellor_record_filled"] = "yes"
 			} else {
-				appointments[index]["is_counsellor_record_filled"] = "no"
+				if counsellorRecordMap[idStr]["status"] == "" {
+					appointments[index]["is_counsellor_record_filled"] = "yes"
+				} else {
+					appointments[index]["is_counsellor_record_filled"] = "no"
+				}
 			}
 			// appointments[index]["is_counsellor_record_filled"] = "yes"
 			// fmt.Println("Matched row:", row)
@@ -224,6 +268,12 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		appointments[index]["status_text"] = statusMessage
 	}
 
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
+	}
+
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
@@ -234,6 +284,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var appointments []map[string]string
 	var statusMessage string
 
 	// check if access token is valid, not expired
@@ -249,7 +300,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+") order by date desc", r.FormValue("therapist_id"))
+	appointmentsCompleted, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+") order by date desc", r.FormValue("therapist_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -260,6 +311,44 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}*/
+
+	// appointmentsCompleted, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("therapist_id"), "status": CONSTANT.AppointmentCompleted})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	appointmentsReviewed, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and status in ('"+CONSTANT.AppointmentStarted+"', '"+CONSTANT.AppointmentToBeStarted+"') and date <= ?", r.FormValue("therapist_id"), UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	var appointmentsReviewedList []map[string]string
+
+	for _, appointment := range appointmentsReviewed {
+		if appointment["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
+			localTime := 0
+			loc, _ := time.LoadLocation("Asia/Kolkata")
+			now := time.Now().In(loc)
+			if now.Minute() >= 30 {
+				localTime = now.Hour()*2 + 1
+			} else {
+				localTime = now.Hour() * 2
+			}
+			appointmentTime, _ := strconv.Atoi(appointment["time"])
+
+			if appointmentTime < localTime {
+				appointmentsReviewedList = append(appointmentsReviewedList, appointment)
+			}
+
+		} else {
+			appointmentsReviewedList = append(appointmentsReviewedList, appointment)
+		}
+	}
+
+	appointments = append(appointments, appointmentsCompleted...)
+	appointments = append(appointments, appointmentsReviewedList...)
 
 	// get client ids to get details
 	clientIDs := UTIL.ExtractValuesFromArrayMap(appointments, "client_id")
@@ -287,7 +376,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	counsellorRecordsIDs := UTIL.ExtractValuesFromArrayMap(counsellorRecords, "appointment_id")
 	counsellorRecordsNewVersionIDs := UTIL.ExtractValuesFromArrayMap(counsellorRecordsNewVersion, "appointment_id")
-
+	counsellorRecordMap := UTIL.ConvertMapToKeyMap(counsellorRecordsNewVersion, "appointment_id")
 	counsellorRecordsIDs = append(counsellorRecordsIDs, counsellorRecordsNewVersionIDs...)
 
 	idSet := make(map[string]struct{})
@@ -302,7 +391,16 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if _, exists := idSet[idStr]; exists {
-			appointments[index]["is_counsellor_record_filled"] = "yes"
+			if counsellorRecordMap[idStr]["status"] == "2" {
+				appointments[index]["is_counsellor_record_filled"] = "yes"
+			} else {
+				if counsellorRecordMap[idStr]["status"] == "" {
+					appointments[index]["is_counsellor_record_filled"] = "yes"
+				} else {
+					appointments[index]["is_counsellor_record_filled"] = "no"
+				}
+			}
+			// appointments[index]["is_counsellor_record_filled"] = "yes"
 			// fmt.Println("Matched row:", row)
 		} else {
 			appointments[index]["is_counsellor_record_filled"] = "no"
@@ -312,23 +410,13 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		case "3":
 			if appointment["started_at"] == "" && appointment["ended_at"] == "" {
 				statusMessage = getAppointmentStatusInText("8")
-			} else if appointment["client_started_at"] == "" && appointment["client_ended_at"] == "" {
-				statusMessage = getAppointmentStatusInText("7")
-			} else if len(appointment["client_started_at"]) != 0 && len(appointment["client_ended_at"]) == 0 {
-				statusMessage = getAppointmentStatusInText("14")
-			} else if len(appointment["client_started_at"]) == 0 && len(appointment["client_ended_at"]) != 0 {
-				statusMessage = getAppointmentStatusInText("14")
 			} else if len(appointment["started_at"]) != 0 && len(appointment["ended_at"]) == 0 {
 				statusMessage = getAppointmentStatusInText("14")
 			} else if len(appointment["started_at"]) == 0 && len(appointment["ended_at"]) != 0 {
 				statusMessage = getAppointmentStatusInText("14")
 			} else {
 				if UTIL.BuildToDteTime(appointment["ended_at"]).Sub(UTIL.BuildToDteTime(appointment["started_at"])).Minutes() > 10 {
-					if UTIL.BuildToDteTime(appointment["client_ended_at"]).Sub(UTIL.BuildToDteTime(appointment["client_started_at"])).Minutes() < 10 {
-						statusMessage = getAppointmentStatusInText("19")
-					} else {
-						statusMessage = getAppointmentStatusInText("3")
-					}
+					statusMessage = getAppointmentStatusInText("3")
 				} else {
 					statusMessage = getAppointmentStatusInText("14")
 				}
@@ -346,11 +434,19 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 			} else {
 				statusMessage = getAppointmentStatusInText("5")
 			}
+		case "7":
+			statusMessage = getAppointmentStatusInText("7")
 		default:
 			statusMessage = getAppointmentStatusInText(appointment["status"])
 		}
 
 		appointments[index]["status_text"] = statusMessage
+	}
+
+	for _, client := range clients {
+		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		client["photo"] = endPointURL
 	}
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
@@ -976,16 +1072,16 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	if len(agora) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if len(agora) == 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"asscoiate_id"}, map[string]string{"client_id": appointment[0]["client_id"]})
@@ -994,62 +1090,40 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ? and status = '2' order by created_at desc limit 5", appointment[0]["client_id"], appointment[0]["counsellor_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	if appointment[0]["counsellor_id"] == "0lpdw" {
 
-	var sessionFor, takenSessions, totalSessions string
+		var sessionFor string
 
-	if len(client[0]["asscoiate_id"]) == 0 {
-		sessionFor = "Self"
-	} else {
-		sessionFor = "Family"
-	}
-
-	if len(newVersionClientRecordForm) == 0 {
-		takenSessions = "1"
-		totalSessions = ""
-	} else {
-		if newVersionClientRecordForm[0]["total_session_needed"] == newVersionClientRecordForm[0]["taken_sessions"] {
-			takenSessions = "1"
-			totalSessions = ""
-		} else if newVersionClientRecordForm[0]["goal_achieved"] == "Yes" {
-			takenSessions = "1"
-			totalSessions = ""
+		if len(client[0]["asscoiate_id"]) == 0 {
+			sessionFor = "Self"
 		} else {
-			totalSessions = newVersionClientRecordForm[0]["total_session_needed"]
-			takenSessionsInt, _ := strconv.Atoi(newVersionClientRecordForm[0]["taken_sessions"])
-			takenSessions = strconv.Itoa(takenSessionsInt + 1)
+			sessionFor = "Family"
 		}
-	}
 
-	checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by created_at desc limit 5", appointment[0]["appointment_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	if len(checkClientRecordForm) == 0 {
-
-		counsellorRecordForm := map[string]string{}
-		counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
-		counsellorRecordForm["client_id"] = appointment[0]["client_id"]
-		counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
-		counsellorRecordForm["session_for"] = sessionFor
-		counsellorRecordForm["session_mode"] = "Virtual"
-		counsellorRecordForm["taken_sessions"] = takenSessions
-		counsellorRecordForm["total_session_needed"] = totalSessions
-		counsellorRecordForm["session_date"] = appointment[0]["date"]
-		counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
-		counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
-		counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
-
-		_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+		checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by modified_at desc limit 5", appointment[0]["appointment_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
+		}
+
+		if len(checkClientRecordForm) == 0 {
+
+			counsellorRecordForm := map[string]string{}
+			counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
+			counsellorRecordForm["client_id"] = appointment[0]["client_id"]
+			counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
+			counsellorRecordForm["session_for"] = sessionFor
+			counsellorRecordForm["session_mode"] = "Virtual"
+			counsellorRecordForm["session_date"] = appointment[0]["date"]
+			counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
+			counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
+			counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
+
+			_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 		}
 	}
 
@@ -1085,25 +1159,25 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	// allUsers = append(allUsers, agora[0]["uid1"])
 	// allUsers = append(allUsers, agora[0]["uid"])
 
-	if len(agora[0]["sid"]) == 0 {
+	// if len(agora[0]["sid"]) == 0 {
 
-		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
-		if err != nil {
-			fmt.Println("cloud recording not started")
-		}
+	// 	sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+	// 	if err != nil {
+	// 		fmt.Println("cloud recording not started")
+	// 	}
 
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"agora_id": agora[0]["agora_id"],
-			},
-			map[string]string{
-				"sid":         sid,
-				"status":      CONSTANT.AgoraCallStart1,
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"agora_id": agora[0]["agora_id"],
+	// 		},
+	// 		map[string]string{
+	// 			"sid":         sid,
+	// 			"status":      CONSTANT.AgoraCallStart1,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
 
-	}
+	// }
 
 	// send appointment join the call notification to Client
 	UTIL.SendNotification(
@@ -1196,62 +1270,40 @@ func AppointmentInPersonStart(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ?  order by created_at desc limit 5", appointment[0]["client_id"], appointment[0]["counsellor_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	if appointment[0]["counsellor_id"] == "0lpdw" {
 
-	var sessionFor, takenSessions, totalSessions string
+		var sessionFor string
 
-	if len(client[0]["asscoiate_id"]) == 0 {
-		sessionFor = "Self"
-	} else {
-		sessionFor = "Family"
-	}
-
-	if len(newVersionClientRecordForm) == 0 {
-		takenSessions = "1"
-		totalSessions = ""
-	} else {
-		if newVersionClientRecordForm[0]["total_session_needed"] == newVersionClientRecordForm[0]["taken_sessions"] {
-			takenSessions = "1"
-			totalSessions = ""
-		} else if newVersionClientRecordForm[0]["goal_achieved"] == "Yes" {
-			takenSessions = "1"
-			totalSessions = ""
+		if len(client[0]["asscoiate_id"]) == 0 {
+			sessionFor = "Self"
 		} else {
-			totalSessions = newVersionClientRecordForm[0]["total_session_needed"]
-			takenSessionsInt, _ := strconv.Atoi(newVersionClientRecordForm[0]["taken_sessions"])
-			takenSessions = strconv.Itoa(takenSessionsInt + 1)
+			sessionFor = "Family"
 		}
-	}
 
-	checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by created_at desc limit 5", appointment[0]["appointment_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	if len(checkClientRecordForm) == 0 {
-
-		counsellorRecordForm := map[string]string{}
-		counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
-		counsellorRecordForm["client_id"] = appointment[0]["client_id"]
-		counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
-		counsellorRecordForm["session_for"] = sessionFor
-		counsellorRecordForm["session_mode"] = "In-Person"
-		counsellorRecordForm["taken_sessions"] = takenSessions
-		counsellorRecordForm["total_session_needed"] = totalSessions
-		counsellorRecordForm["session_date"] = appointment[0]["date"]
-		counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
-		counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
-		counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
-
-		_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+		checkClientRecordForm, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by modified_at desc limit 5", appointment[0]["appointment_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
+		}
+
+		if len(checkClientRecordForm) == 0 {
+
+			counsellorRecordForm := map[string]string{}
+			counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
+			counsellorRecordForm["client_id"] = appointment[0]["client_id"]
+			counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
+			counsellorRecordForm["session_for"] = sessionFor
+			counsellorRecordForm["session_mode"] = "In-Person"
+			counsellorRecordForm["session_date"] = appointment[0]["date"]
+			counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
+			counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
+			counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
+
+			_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 		}
 	}
 
@@ -1312,67 +1364,52 @@ func AppointmentInPersonNoShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, record_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by created_at desc limit 5", appointment[0]["appointment_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	if appointment[0]["counsellor_id"] == "0lpdw" {
 
-	if len(newVersionClientRecordForm) == 0 {
-		newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ?  order by created_at desc limit 5", appointment[0]["client_id"], appointment[0]["counsellor_id"])
+		newVersionClientRecordForm, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by modified_at desc limit 5", appointment[0]["appointment_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		var sessionFor, takenSessions, totalSessions string
+		if len(newVersionClientRecordForm) == 0 {
 
-		if len(client[0]["asscoiate_id"]) == 0 {
-			sessionFor = "Self"
+			var sessionFor string
+
+			if len(client[0]["asscoiate_id"]) == 0 {
+				sessionFor = "Self"
+			} else {
+				sessionFor = "Family"
+			}
+
+			counsellorRecordForm := map[string]string{}
+			counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
+			counsellorRecordForm["client_id"] = appointment[0]["client_id"]
+			counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
+			counsellorRecordForm["session_for"] = sessionFor
+			counsellorRecordForm["session_mode"] = "In-Person"
+			counsellorRecordForm["session_date"] = appointment[0]["date"]
+			counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
+			counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
+			counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
+
+			_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 		} else {
-			sessionFor = "Family"
+			DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
+				map[string]string{
+					"record_id": newVersionClientRecordForm[0]["record_id"],
+				},
+				map[string]string{
+					"out_time":    UTIL.GetIndiaCurrentTime(),
+					"modified_at": UTIL.GetCurrentTime().String(),
+				},
+			)
 		}
 
-		if newVersionClientRecordForm[0]["total_session_needed"] == newVersionClientRecordForm[0]["taken_sessions"] {
-			takenSessions = "1"
-			totalSessions = ""
-		} else if newVersionClientRecordForm[0]["goal_achieved"] == "Yes" {
-			takenSessions = "1"
-			totalSessions = ""
-		} else {
-			totalSessions = newVersionClientRecordForm[0]["total_session_needed"]
-			takenSessionsInt, _ := strconv.Atoi(newVersionClientRecordForm[0]["taken_sessions"])
-			takenSessions = strconv.Itoa(takenSessionsInt + 1)
-		}
-
-		counsellorRecordForm := map[string]string{}
-		counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
-		counsellorRecordForm["client_id"] = appointment[0]["client_id"]
-		counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
-		counsellorRecordForm["session_for"] = sessionFor
-		counsellorRecordForm["session_mode"] = "Virtual"
-		counsellorRecordForm["taken_sessions"] = takenSessions
-		counsellorRecordForm["total_session_needed"] = totalSessions
-		counsellorRecordForm["session_date"] = appointment[0]["date"]
-		counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
-		counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
-		counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
-
-		_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-	} else {
-		DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
-			map[string]string{
-				"record_id": newVersionClientRecordForm[0]["record_id"],
-			},
-			map[string]string{
-				"out_time":    UTIL.GetIndiaCurrentTime(),
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
 	}
 
 	// update appointment as started
@@ -1445,11 +1482,11 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"asscoiate_id"}, map[string]string{"client_id": appointment[0]["client_id"]})
@@ -1458,67 +1495,51 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, record_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by created_at desc limit 5", appointment[0]["appointment_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	if appointment[0]["counsellor_id"] == "0lpdw" {
 
-	if len(newVersionClientRecordForm) == 0 {
-		newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ?  order by created_at desc limit 5", appointment[0]["client_id"], appointment[0]["counsellor_id"])
+		newVersionClientRecordForm, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by modified_at desc limit 5", appointment[0]["appointment_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		var sessionFor, takenSessions, totalSessions string
+		if len(newVersionClientRecordForm) == 0 {
 
-		if len(client[0]["asscoiate_id"]) == 0 {
-			sessionFor = "Self"
+			var sessionFor string
+
+			if len(client[0]["asscoiate_id"]) == 0 {
+				sessionFor = "Self"
+			} else {
+				sessionFor = "Family"
+			}
+
+			counsellorRecordForm := map[string]string{}
+			counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
+			counsellorRecordForm["client_id"] = appointment[0]["client_id"]
+			counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
+			counsellorRecordForm["session_for"] = sessionFor
+			counsellorRecordForm["session_mode"] = "Virtual"
+			counsellorRecordForm["session_date"] = appointment[0]["date"]
+			counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
+			counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
+			counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
+
+			_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 		} else {
-			sessionFor = "Family"
+			DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
+				map[string]string{
+					"record_id": newVersionClientRecordForm[0]["record_id"],
+				},
+				map[string]string{
+					"out_time":    UTIL.GetIndiaCurrentTime(),
+					"modified_at": UTIL.GetCurrentTime().String(),
+				},
+			)
 		}
-
-		if newVersionClientRecordForm[0]["total_session_needed"] == newVersionClientRecordForm[0]["taken_sessions"] {
-			takenSessions = "1"
-			totalSessions = ""
-		} else if newVersionClientRecordForm[0]["goal_achieved"] == "Yes" {
-			takenSessions = "1"
-			totalSessions = ""
-		} else {
-			totalSessions = newVersionClientRecordForm[0]["total_session_needed"]
-			takenSessionsInt, _ := strconv.Atoi(newVersionClientRecordForm[0]["taken_sessions"])
-			takenSessions = strconv.Itoa(takenSessionsInt + 1)
-		}
-
-		counsellorRecordForm := map[string]string{}
-		counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
-		counsellorRecordForm["client_id"] = appointment[0]["client_id"]
-		counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
-		counsellorRecordForm["session_for"] = sessionFor
-		counsellorRecordForm["session_mode"] = "Virtual"
-		counsellorRecordForm["taken_sessions"] = takenSessions
-		counsellorRecordForm["total_session_needed"] = totalSessions
-		counsellorRecordForm["session_date"] = appointment[0]["date"]
-		counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
-		counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
-		counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
-
-		_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-	} else {
-		DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
-			map[string]string{
-				"record_id": newVersionClientRecordForm[0]["record_id"],
-			},
-			map[string]string{
-				"out_time":    UTIL.GetIndiaCurrentTime(),
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
 	}
 
 	if len(r.FormValue("waiting")) > 0 {
@@ -1551,33 +1572,33 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		// 	return
 		// }
 
-		if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
-			UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+		// if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
+		// 	UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
 
-			DB.UpdateSQL(CONSTANT.AgoraTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
-					"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
-					"status":         CONSTANT.AgoraCallStop1,
-					"modified_at":    UTIL.GetCurrentTime().String(),
-				},
-			)
+		// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+		// 		map[string]string{
+		// 			"appointment_id": r.FormValue("appointment_id"),
+		// 		},
+		// 		map[string]string{
+		// 			"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+		// 			"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+		// 			"status":         CONSTANT.AgoraCallStop1,
+		// 			"modified_at":    UTIL.GetCurrentTime().String(),
+		// 		},
+		// 	)
 
-			DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
-					"status":         CONSTANT.QualityCheckLinkInsert,
-					"modified_at":    UTIL.GetCurrentTime().String(),
-				},
-			)
+		// 	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+		// 		map[string]string{
+		// 			"appointment_id": r.FormValue("appointment_id"),
+		// 		},
+		// 		map[string]string{
+		// 			"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+		// 			"status":         CONSTANT.QualityCheckLinkInsert,
+		// 			"modified_at":    UTIL.GetCurrentTime().String(),
+		// 		},
+		// 	)
 
-		}
+		// }
 
 	}
 
@@ -1632,67 +1653,51 @@ func AppointmentInPersonEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, record_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by session_date desc limit 5", appointment[0]["appointment_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	if appointment[0]["counsellor_id"] == "0lpdw" {
 
-	if len(newVersionClientRecordForm) == 0 {
-		newVersionClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and counsellor_id = ?  order by created_at desc limit 5", appointment[0]["client_id"], appointment[0]["counsellor_id"])
+		newVersionClientRecordForm, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? order by modified_at desc limit 5", appointment[0]["appointment_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		var sessionFor, takenSessions, totalSessions string
+		if len(newVersionClientRecordForm) == 0 {
 
-		if len(client[0]["asscoiate_id"]) == 0 {
-			sessionFor = "Self"
+			var sessionFor string
+
+			if len(client[0]["asscoiate_id"]) == 0 {
+				sessionFor = "Self"
+			} else {
+				sessionFor = "Family"
+			}
+
+			counsellorRecordForm := map[string]string{}
+			counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
+			counsellorRecordForm["client_id"] = appointment[0]["client_id"]
+			counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
+			counsellorRecordForm["session_for"] = sessionFor
+			counsellorRecordForm["session_mode"] = "In-Person"
+			counsellorRecordForm["session_date"] = appointment[0]["date"]
+			counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
+			counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
+			counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
+
+			_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
 		} else {
-			sessionFor = "Family"
+			DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
+				map[string]string{
+					"record_id": newVersionClientRecordForm[0]["record_id"],
+				},
+				map[string]string{
+					"out_time":    UTIL.GetIndiaCurrentTime(),
+					"modified_at": UTIL.GetCurrentTime().String(),
+				},
+			)
 		}
-
-		if newVersionClientRecordForm[0]["total_session_needed"] == newVersionClientRecordForm[0]["taken_sessions"] {
-			takenSessions = "1"
-			totalSessions = ""
-		} else if newVersionClientRecordForm[0]["goal_achieved"] == "Yes" {
-			takenSessions = "1"
-			totalSessions = ""
-		} else {
-			totalSessions = newVersionClientRecordForm[0]["total_session_needed"]
-			takenSessionsInt, _ := strconv.Atoi(newVersionClientRecordForm[0]["taken_sessions"])
-			takenSessions = strconv.Itoa(takenSessionsInt + 1)
-		}
-
-		counsellorRecordForm := map[string]string{}
-		counsellorRecordForm["appointment_id"] = appointment[0]["appointment_id"]
-		counsellorRecordForm["client_id"] = appointment[0]["client_id"]
-		counsellorRecordForm["counsellor_id"] = appointment[0]["counsellor_id"]
-		counsellorRecordForm["session_for"] = sessionFor
-		counsellorRecordForm["session_mode"] = "In-Person"
-		counsellorRecordForm["taken_sessions"] = takenSessions
-		counsellorRecordForm["total_session_needed"] = totalSessions
-		counsellorRecordForm["session_date"] = appointment[0]["date"]
-		counsellorRecordForm["in_time"] = UTIL.GetIndiaCurrentTime()
-		counsellorRecordForm["status"] = CONSTANT.AppointmentToBeStarted
-		counsellorRecordForm["created_at"] = UTIL.GetCurrentTime().String()
-
-		_, status, ok = DB.InsertWithUniqueID(CONSTANT.CounsellorRecordsFormLastestVersionTable, CONSTANT.AppointmentDigits, counsellorRecordForm, "record_id")
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-	} else {
-		DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
-			map[string]string{
-				"record_id": newVersionClientRecordForm[0]["record_id"],
-			},
-			map[string]string{
-				"out_time":    UTIL.GetIndiaCurrentTime(),
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
 	}
 
 	// send client for rating
@@ -1721,7 +1726,7 @@ func getAppointmentStatusInText(status string) string {
 	case CONSTANT.AppointmentToBeStarted:
 		return "Both no-show"
 	case CONSTANT.AppointmentStarted:
-		return "Started"
+		return "To be Reviewed"
 	case CONSTANT.AppointmentCompleted:
 		return "Completed"
 	case CONSTANT.AppointmentUserCancelled:
