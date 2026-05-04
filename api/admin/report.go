@@ -2565,6 +2565,106 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 
+	case "29": // new counsellor record form report
+		var noShow, incompleteSession, statusMessage string
+
+		fileName = "new_counsellor_record_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
+		heading = []string{"Company Name", "Counsellor Name", "Client Name", "Age", "Gender", "Location", "Department", "Session For", "Family Relationship", "Session Type", "Session Mode", "Session Date", "In-Time", "Out-Time", "No Show", "Incomplete Session", "Presenting Concerns", "Mental Health Scale", "Mental_Health_Check", "Downgrading_High_Risk_Case", "Is_Clinical_Psychologist_Required_Reason", "Psychiatric_Intervention_Required_Reason", "Category", "Sub Category", "Emotional State", "Total Session Needed", "Taken Sessions", "Therapy Notes", "Goal Achievement", "Goal Achievement Reason", "Next Session Plan", "Next Follow-up Date", "Client Notes", "Assessment", "Self Work Material", "Status", "Created At", "Modified At"}
+
+		counsellorRecords, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordsFormLastestVersionTable + " where `session_date` >= '" + startBy.String() + "' and `session_date` <= '" + endBy.String() + "' order by created_at desc")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorIDs := UTIL.ExtractValuesFromArrayMap(counsellorRecords, "counsellor_id")
+		clientIDs := UTIL.ExtractValuesFromArrayMap(counsellorRecords, "client_id")
+
+		// get counsellor details
+		counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, 'Counsellor' as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, 'Listener' as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, 'Therapist' as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		clients, status, ok := DB.SelectProcess("select client_id, asscoiate_id, first_name, last_name, email, phone, gender, year(curdate())-year(date_of_birth) as age, location, department from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(clientIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get company name details
+		companyNames, status, ok := DB.SelectProcess("select partner_name, domain from " + CONSTANT.CorporatePartnersTable + "")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// get client details
+		clientFamilyMembers, status, ok := DB.SelectProcess("select client_id, asscoiate_id from " + CONSTANT.ClientsTable + " where asscoiate_id  != ''")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		extractClientIDsFromFamilyMembers := UTIL.ExtractValuesFromArrayMap(clientFamilyMembers, "asscoiate_id")
+
+		// get client details
+		extractClientFromFamilyMembers, status, ok := DB.SelectProcess("select client_id, first_name, last_name, email from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(extractClientIDsFromFamilyMembers, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		counsellorsMap := UTIL.ConvertMapToKeyMap(counsellors, "id")
+		clientsMap := UTIL.ConvertMapToKeyMap(clients, "client_id")
+		companyNamesMap := UTIL.ConvertMapToKeyMap(companyNames, "domain")
+		extractClientFromFamilyMembersMap := UTIL.ConvertMapToKeyMap(extractClientFromFamilyMembers, "client_id")
+
+		for _, counsellorRecord := range counsellorRecords {
+			if counsellorRecord["no_show"] == "0" {
+				noShow = "No"
+			} else {
+				noShow = "Yes"
+			}
+
+			if counsellorRecord["incomplete_session"] == "0" {
+				incompleteSession = "No"
+			} else {
+				incompleteSession = "Yes"
+			}
+
+			if counsellorRecord["status"] == "2" {
+				statusMessage = "Completed"
+			} else {
+				statusMessage = "Inprogress"
+			}
+
+			partnerName := "None"
+
+			// get client details
+			if counsellorRecord["client_id"] != "" {
+
+				domainName := strings.Split(clientsMap[counsellorRecord["client_id"]]["email"], "@")
+
+				if len(companyNamesMap[domainName[1]]) > 0 {
+					partnerName = companyNamesMap[domainName[1]]["partner_name"]
+				} else {
+					if clientsMap[counsellorRecord["client_id"]]["asscoiate_id"] != "" {
+
+						domainName := strings.Split(extractClientFromFamilyMembersMap[clientsMap[counsellorRecord["client_id"]]["asscoiate_id"]]["email"], "@")
+
+						if len(companyNamesMap[domainName[1]]) > 0 {
+							partnerName = companyNamesMap[domainName[1]]["partner_name"]
+						}
+					}
+				}
+
+			}
+
+			data = append(data, []string{partnerName, counsellorsMap[counsellorRecord["counsellor_id"]]["first_name"] + " " + counsellorsMap[counsellorRecord["counsellor_id"]]["last_name"], clientsMap[counsellorRecord["client_id"]]["first_name"] + " " + clientsMap[counsellorRecord["client_id"]]["last_name"], clientsMap[counsellorRecord["client_id"]]["age"], clientsMap[counsellorRecord["client_id"]]["gender"], clientsMap[counsellorRecord["client_id"]]["location"], clientsMap[counsellorRecord["client_id"]]["department"], counsellorRecord["session_for"], counsellorRecord["family_relation"], counsellorRecord["session_type"], counsellorRecord["session_mode"], counsellorRecord["session_date"], counsellorRecord["in_time"], counsellorRecord["out_time"], noShow, incompleteSession, counsellorRecord["presenting_concers"], counsellorRecord["mental_health"], counsellorRecord["downgrading_high_risk_case"], counsellorRecord["mental_health_check"], counsellorRecord["is_clinical_psychologist_required_reason"], counsellorRecord["psychiatric_intervention_required_reason"], counsellorRecord["category"], counsellorRecord["sub_category"], counsellorRecord["emotional_state"], counsellorRecord["total_session_needed"], counsellorRecord["taken_sessions"], counsellorRecord["therapy_notes"], counsellorRecord["goals_achieved"], counsellorRecord["goals_achieved_reason"], counsellorRecord["next_session_plan"], counsellorRecord["next_follow_up_date"], counsellorRecord["client_notes"], counsellorRecord["assessment"], counsellorRecord["self_work_material"], statusMessage, counsellorRecord["created_at"], counsellorRecord["modified_at"]})
+		}
+
 	default:
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid report type", CONSTANT.ShowDialog, response)
 		return

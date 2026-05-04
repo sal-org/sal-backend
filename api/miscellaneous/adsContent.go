@@ -1166,6 +1166,13 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 	emailbody := UTIL.GetHTMLTemplateForCounsellorRecordNewestVersion(data, filepath)
 
+	UTIL.SendEmail(
+		CONSTANT.CounsellorRecordForClientTitle,
+		emailbody,
+		counsellor[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
 	if mentalStatus > 7 || len(body["psychiatric_intervention_required_reason"]) != 0 || len(body["is_clinical_psychologist_required_reason"]) != 0 {
 
 		ccAddressess := []string{CONFIG.QCEmailID1, CONFIG.QCEmailID3}

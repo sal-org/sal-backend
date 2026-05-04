@@ -10,6 +10,7 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -281,6 +282,64 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
 		counsellor["photo"] = endPointURL
+	}
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email", "location"}, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, mental_health, counsellor_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and no_show = 0 and incomplete_session = 0 and status = '2' order by modified_at desc limit 5", r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientAddress, status, ok := DB.SelectProcess("select * from "+CONSTANT.CorporatePartnersAddressTable+" where address = ? and status = 1 order by created_at desc", client[0]["location"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellorID := []string{}
+
+	if len(clientAddress) > 0 {
+
+		counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		for _, value := range counsellorConnectWithCompanyLocation {
+
+			if len(checkClientRecordForm) > 0 {
+
+				if value["counsellor_id"] == checkClientRecordForm[0]["counsellor_id"] {
+					mentalHealthScore, _ := strconv.Atoi(checkClientRecordForm[0]["mental_health"])
+
+					if mentalHealthScore < 8 {
+						counsellorID = append(counsellorID, value["counsellor_id"])
+					}
+				} else {
+					counsellorID = append(counsellorID, value["counsellor_id"])
+				}
+
+			} else {
+				counsellorID = append(counsellorID, value["counsellor_id"])
+			}
+		}
+
+	}
+
+	for _, appointment := range appointments {
+
+		if !slices.Contains(counsellorID, appointment["counsellor_id"]) {
+			appointment["book_again"] = "Yes"
+		} else {
+			appointment["book_again"] = "No"
+		}
+
 	}
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")

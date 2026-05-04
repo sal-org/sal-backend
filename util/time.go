@@ -19,6 +19,29 @@ func GetIndiaCurrentTime() string {
 	return timeStr
 }
 
+func IsCurrentOrFutureDate(dateStr string) (bool, error) {
+	// Define your expected format
+	layout := "2006-01-02" // YYYY-MM-DD
+
+	// Parse the input string
+	inputDate, err := time.Parse(layout, dateStr)
+	if err != nil {
+		return false, err
+	}
+
+	// Get current date (truncate time part)
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	now := time.Now().In(loc)
+	currentDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Compare
+	if inputDate.Before(currentDate) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // BuildDateTime - build UTC time from given inputs
 func BuildDateTime(date string, timeSlot string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", date+" "+GetTimeFromTimeSlot(timeSlot))

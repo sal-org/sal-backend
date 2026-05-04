@@ -397,8 +397,8 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 				UTIL.ReplaceNotificationContentInString(
 					CONSTANT.AdminCancelledInPersonCafeContent,
 					map[string]string{
-						"###InPersonCafeName###":     body["title"],
-						"###date###": UTIL.BuildOnlyDate(booking["date"]),
+						"###InPersonCafeName###": body["title"],
+						"###date###":             UTIL.BuildOnlyDate(booking["date"]),
 					},
 				),
 				booking["user_id"],
@@ -608,7 +608,6 @@ func PreSignedS3URLToUploadEvent(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, CONSTANT.EventS3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
-
 
 	// urlFile := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlFile)

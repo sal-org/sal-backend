@@ -281,6 +281,10 @@ func downloadDocument(url string) ([]byte, error) {
 	// Create an HTTP client
 	client := http.Client{}
 
+	preSignedUrl := PreSignedS3URLToGetTheData(CONFIG.S3Bucket, url, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := GetBaseURLAndEndpointFromURL(preSignedUrl)
+	url = endPointURL
+
 	urlWithBaseURL := CONFIG.MediaURL + url
 	// Send a GET request to the URL
 	response, err := client.Get(urlWithBaseURL)

@@ -221,6 +221,13 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	slots["47"] = body["47"]
 
 	if len(body["id"]) > 0 {
+
+		inpersonSlotList, status, ok := DB.SelectSQL(CONSTANT.InPersonSLotsScheduleTable, []string{"*"}, map[string]string{"id": body["id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
 		DB.UpdateSQL(CONSTANT.InPersonSLotsScheduleTable, map[string]string{"id": body["id"]}, slotsDate)
 
 		if body["status"] == "0" {
@@ -400,6 +407,19 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 				counsellor[0]["email"],
 				CONSTANT.InstantSendEmailMessage,
 			)
+		}
+
+		if body["roomNo"] != inpersonSlotList[0]["roomNo"] || body["address"] != inpersonSlotList[0]["address"] {
+			inpersonAppointments, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": body["counsellor_id"], "date": body["date"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			for _, appoint := range inpersonAppointments {
+				DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": appoint["appointment_id"]}, map[string]string{"counselling_room": body["roomNo"], "counselling_address": body["address"]})
+			}
+
 		}
 
 		for key, val := range slots {

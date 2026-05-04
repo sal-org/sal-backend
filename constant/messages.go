@@ -62,6 +62,7 @@ const (
 	InPersonAppointmentAlreadyBooked              = "You already have an upcoming appointment. Navigate to 'My Activities' from the menu to know more"
 	ListenerNotActiveMessage                      = "Listener is not active"
 	ListenerSlotNotAvailableMessage               = "Listener not available in this hour. Book a different slot"
+	DateNotAvailableMessage                       = "Date unavailable. Choose another date."
 	MoodAlreadyAddedMessage                       = "Mood already added"
 	OrderNotFoundMessage                          = "Order not found"
 	OrderAlreadyExistMessage                      = "Toast Message: Clove Café has been booked already. Tap Menu -> In-Person Café to know more"

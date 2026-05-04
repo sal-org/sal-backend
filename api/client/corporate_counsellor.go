@@ -230,6 +230,18 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		// }
 	}
 
+	isPresent, err := UTIL.IsCurrentOrFutureDate(body["date"])
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid date format", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if slots available
+	if !isPresent {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.DateNotAvailableMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
