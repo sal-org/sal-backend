@@ -286,25 +286,25 @@ func SendEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set toAddress section
-	var toRecipients []*string
+	var toRecipients []string
 	for _, r := range receipts.ToEmails {
 		toAddress := r
-		toRecipients = append(toRecipients, &toAddress)
+		toRecipients = append(toRecipients, toAddress)
 	}
 
-	var ccRecipients []*string
+	var ccRecipients []string
 	if len(receipts.CcEmails) > 0 {
 		for _, c := range receipts.CcEmails {
 			ccAddress := c
-			ccRecipients = append(ccRecipients, &ccAddress)
+			ccRecipients = append(ccRecipients, ccAddress)
 		}
 	}
 
-	var bccRecipients []*string
+	var bccRecipients []string
 	if len(receipts.BccEmails) > 0 {
 		for _, b := range receipts.BccEmails {
 			bccAddress := b
-			bccRecipients = append(bccRecipients, &bccAddress)
+			bccRecipients = append(bccRecipients, bccAddress)
 		}
 	}
 

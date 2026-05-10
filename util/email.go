@@ -11,11 +11,15 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"gopkg.in/gomail.v2"
 )
 
@@ -65,93 +69,182 @@ func SendEmailWithCCBB(title, body, email string, ccemail []string, now bool) {
 }
 
 func sendSESMailWithCCBB(title, body, email string, ccemail []string) {
-	// start a new aws session
-	sess, err := session.NewSession()
+
+	// old version of aws sdk
+
+	// // start a new aws session
+	// sess, err := session.NewSession()
+	// if err != nil {
+	// 	fmt.Println("failed to create session,", err)
+	// 	return
+	// }
+
+	// // start a new ses session
+	// svc := ses.New(sess, &aws.Config{
+	// 	Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+	// 	Region:      aws.String("ap-south-1"), // ap-south-1
+	// })
+
+	// params := &ses.SendEmailInput{
+	// 	Destination: &ses.Destination{ // Required
+	// 		ToAddresses: []*string{
+	// 			aws.String(email), // Required
+	// 		},
+	// 		CcAddresses: ccAddressess,
+	// 	},
+	// 	Message: &ses.Message{ // Required
+	// 		Body: &ses.Body{ // Required
+	// 			Html: &ses.Content{
+	// 				Data:    aws.String(body), // Required
+	// 				Charset: aws.String("UTF-8"),
+	// 			},
+	// 		},
+	// 		Subject: &ses.Content{ // Required
+	// 			Data:    aws.String(title), // Required
+	// 			Charset: aws.String("UTF-8"),
+	// 		},
+	// 	},
+	// 	Source: aws.String(CONFIG.FromEmailID),
+	// }
+
+	// //end email
+	// output, err := svc.SendEmail(params)
+
+	// new version of aws sdk
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(CONFIG.AWSRegion),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+		),
+	)
 	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
+		fmt.Println("config load failed: %w", err)
 	}
 
-	// start a new ses session
-	svc := ses.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"), // ap-south-1
-	})
+	client := ses.NewFromConfig(cfg)
 
 	ccAddressess := []*string{}
 	for _, e := range ccemail {
 		ccAddressess = append(ccAddressess, aws.String(e))
 	}
 
-	params := &ses.SendEmailInput{
-		Destination: &ses.Destination{ // Required
-			ToAddresses: []*string{
-				aws.String(email), // Required
-			},
-			CcAddresses: ccAddressess,
+	input := &ses.SendEmailInput{
+		Source: aws.String(CONFIG.FromEmailID),
+		Destination: &types.Destination{
+			ToAddresses: []string{email},
+			CcAddresses: ccemail,
 		},
-		Message: &ses.Message{ // Required
-			Body: &ses.Body{ // Required
-				Html: &ses.Content{
-					Data:    aws.String(body), // Required
+		Message: &types.Message{
+			Subject: &types.Content{
+				Data:    aws.String(title),
+				Charset: aws.String("UTF-8"),
+			},
+			Body: &types.Body{
+				Html: &types.Content{
+					Data:    aws.String(body),
 					Charset: aws.String("UTF-8"),
 				},
 			},
-			Subject: &ses.Content{ // Required
-				Data:    aws.String(title), // Required
-				Charset: aws.String("UTF-8"),
-			},
 		},
-		Source: aws.String(CONFIG.FromEmailID),
 	}
 
-	//end email
-	output, err := svc.SendEmail(params)
-	fmt.Println(err, output.String())
+	output, err := client.SendEmail(ctx, input)
+	if err != nil {
+		fmt.Println("failed to send email: %w", err)
+	}
+
+	fmt.Println("Email sent:", *output.MessageId)
+
 }
 
 func sendSESMail(title, body, email string) {
-	// start a new aws session
-	sess, err := session.NewSession()
+	// // start a new aws session
+	// sess, err := session.NewSession()
+	// if err != nil {
+	// 	fmt.Println("failed to create session,", err)
+	// 	return
+	// }
+
+	// // start a new ses session
+	// svc := ses.New(sess, &aws.Config{
+	// 	Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+	// 	Region:      aws.String("ap-south-1"), // ap-south-1
+	// })
+
+	// params := &ses.SendEmailInput{
+	// 	Destination: &ses.Destination{ // Required
+	// 		ToAddresses: []*string{
+	// 			aws.String(email), // Required
+	// 		},
+	// 	},
+	// 	Message: &ses.Message{ // Required
+	// 		Body: &ses.Body{ // Required
+	// 			Html: &ses.Content{
+	// 				Data:    aws.String(body), // Required
+	// 				Charset: aws.String("UTF-8"),
+	// 			},
+	// 		},
+	// 		Subject: &ses.Content{ // Required
+	// 			Data:    aws.String(title), // Required
+	// 			Charset: aws.String("UTF-8"),
+	// 		},
+	// 	},
+	// 	Source: aws.String(CONFIG.FromEmailID),
+	// }
+
+	// //end email
+	// output, err := svc.SendEmail(params)
+	// fmt.Println(err, output.String())
+
+	// new version of aws sdk
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(CONFIG.AWSRegion),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+		),
+	)
 	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
+		fmt.Println("config load failed: %w", err)
 	}
 
-	// start a new ses session
-	svc := ses.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"), // ap-south-1
-	})
+	client := ses.NewFromConfig(cfg)
 
-	params := &ses.SendEmailInput{
-		Destination: &ses.Destination{ // Required
-			ToAddresses: []*string{
-				aws.String(email), // Required
-			},
+	input := &ses.SendEmailInput{
+		Source: aws.String(CONFIG.FromEmailID),
+		Destination: &types.Destination{
+			ToAddresses: []string{email},
 		},
-		Message: &ses.Message{ // Required
-			Body: &ses.Body{ // Required
-				Html: &ses.Content{
-					Data:    aws.String(body), // Required
+		Message: &types.Message{
+			Subject: &types.Content{
+				Data:    aws.String(title),
+				Charset: aws.String("UTF-8"),
+			},
+			Body: &types.Body{
+				Html: &types.Content{
+					Data:    aws.String(body),
 					Charset: aws.String("UTF-8"),
 				},
 			},
-			Subject: &ses.Content{ // Required
-				Data:    aws.String(title), // Required
-				Charset: aws.String("UTF-8"),
-			},
 		},
-		Source: aws.String(CONFIG.FromEmailID),
 	}
 
-	//end email
-	output, err := svc.SendEmail(params)
-	fmt.Println(err, output.String())
+	output, err := client.SendEmail(ctx, input)
+	if err != nil {
+		fmt.Println("failed to send email: %w", err)
+	}
+
+	fmt.Println("Email sent:", *output.MessageId)
 }
 
 // SendEmail - send email using SES. now : true - send now without background workers
-func SendEmailWithCcRefrence(title string, body string, emailfrom string, emailto, emailcc, emailbcc []*string, todata string, now bool) {
+func SendEmailWithCcRefrence(title string, body string, emailfrom string, emailto, emailcc, emailbcc []string, todata string, now bool) {
 	if strings.Contains(title, "###") || strings.Contains(body, "###") { // check if mail variables are replaced
 		return
 	}
@@ -174,44 +267,88 @@ func SendEmailWithCcRefrence(title string, body string, emailfrom string, emailt
 
 }
 
-func sendSESMailForQualityCheck(title string, body string, emailfrom string, emailto, emailcc, emailbcc []*string) {
-	// start a new aws session
-	sess, err := session.NewSession()
+func sendSESMailForQualityCheck(title string, body string, emailfrom string, emailto, emailcc, emailbcc []string) {
+	// // start a new aws session
+	// sess, err := session.NewSession()
+	// if err != nil {
+	// 	fmt.Println("failed to create session,", err)
+	// 	return
+	// }
+
+	// // start a new ses session
+	// svc := ses.New(sess, &aws.Config{
+	// 	Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+	// 	Region:      aws.String("ap-south-1"), // ap-south-1
+	// })
+
+	// params := &ses.SendEmailInput{
+	// 	Destination: &ses.Destination{ // Required
+	// 		CcAddresses:  emailcc,
+	// 		ToAddresses:  emailto,
+	// 		BccAddresses: emailbcc,
+	// 	},
+	// 	Message: &ses.Message{ // Required
+	// 		Body: &ses.Body{ // Required
+	// 			Html: &ses.Content{
+	// 				Data:    aws.String(body), // Required
+	// 				Charset: aws.String("UTF-8"),
+	// 			},
+	// 		},
+	// 		Subject: &ses.Content{ // Required
+	// 			Data:    aws.String(title), // Required
+	// 			Charset: aws.String("UTF-8"),
+	// 		},
+	// 	},
+	// 	Source: aws.String(emailfrom),
+	// }
+
+	// //end email
+	// output, err := svc.SendEmail(params)
+	// fmt.Println(err, output.String())
+
+	// new version of aws sdk
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(CONFIG.AWSRegion),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+		),
+	)
 	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
+		fmt.Println("config load failed: %w", err)
 	}
 
-	// start a new ses session
-	svc := ses.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"), // ap-south-1
-	})
+	client := ses.NewFromConfig(cfg)
 
-	params := &ses.SendEmailInput{
-		Destination: &ses.Destination{ // Required
+	input := &ses.SendEmailInput{
+		Source: aws.String(CONFIG.FromEmailID),
+		Destination: &types.Destination{
 			CcAddresses:  emailcc,
 			ToAddresses:  emailto,
 			BccAddresses: emailbcc,
 		},
-		Message: &ses.Message{ // Required
-			Body: &ses.Body{ // Required
-				Html: &ses.Content{
-					Data:    aws.String(body), // Required
+		Message: &types.Message{
+			Subject: &types.Content{
+				Data:    aws.String(title),
+				Charset: aws.String("UTF-8"),
+			},
+			Body: &types.Body{
+				Html: &types.Content{
+					Data:    aws.String(body),
 					Charset: aws.String("UTF-8"),
 				},
 			},
-			Subject: &ses.Content{ // Required
-				Data:    aws.String(title), // Required
-				Charset: aws.String("UTF-8"),
-			},
 		},
-		Source: aws.String(emailfrom),
 	}
 
-	//end email
-	output, err := svc.SendEmail(params)
-	fmt.Println(err, output.String())
+	output, err := client.SendEmail(ctx, input)
+	if err != nil {
+		fmt.Println("failed to send email: %w", err)
+	}
+
+	fmt.Println("Email sent:", *output.MessageId)
 }
 
 func IsValidEmail(email_id string) string {
@@ -241,40 +378,80 @@ func SendEmailWithDocument(toemail string, body string, title string, documentB 
 		}))
 	}
 
-	// Create a buffer to hold the raw email
+	// // Create a buffer to hold the raw email
+	// var emailRaw bytes.Buffer
+	// msg.WriteTo(&emailRaw)
+
+	// // Create an AWS session and SES client
+	// sess, err := session.NewSession()
+	// if err != nil {
+	// 	fmt.Println("failed to create session,", err)
+	// 	return
+	// }
+
+	// // start a new ses session
+	// svc := ses.New(sess, &aws.Config{
+	// 	Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+	// 	Region:      aws.String("ap-south-1"), // ap-south-1
+	// })
+
+	// // Send the email with SES
+	// input := &ses.SendRawEmailInput{
+	// 	RawMessage: &ses.RawMessage{
+	// 		Data: emailRaw.Bytes(),
+	// 	},
+	// 	Source: aws.String(CONFIG.FromEmailID),
+	// 	Destinations: []*string{
+	// 		aws.String(recipients[0]),
+	// 	},
+	// }
+	// _, err = svc.SendRawEmail(input)
+	// if err != nil {
+	// 	fmt.Println("Error sending email:", err)
+	// 	return
+	// }
+
+	// fmt.Println("Email sent successfully!")
+
+	// new version of aws sdk
+
 	var emailRaw bytes.Buffer
 	msg.WriteTo(&emailRaw)
 
-	// Create an AWS session and SES client
-	sess, err := session.NewSession()
+	// Context with timeout (recommended)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Load AWS config
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(CONFIG.AWSRegion), // set your region
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
+		),
+	)
 	if err != nil {
-		fmt.Println("failed to create session,", err)
-		return
+		fmt.Println("failed to load config: %w", err)
 	}
 
-	// start a new ses session
-	svc := ses.New(sess, &aws.Config{
-		Credentials: credentials.NewStaticCredentials(CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, ""),
-		Region:      aws.String("ap-south-1"), // ap-south-1
-	})
+	// Create SES client
+	client := ses.NewFromConfig(cfg)
 
-	// Send the email with SES
+	// Prepare raw email input
 	input := &ses.SendRawEmailInput{
-		RawMessage: &ses.RawMessage{
+		RawMessage: &types.RawMessage{
 			Data: emailRaw.Bytes(),
 		},
-		Source: aws.String(CONFIG.FromEmailID),
-		Destinations: []*string{
-			aws.String(recipients[0]),
-		},
-	}
-	_, err = svc.SendRawEmail(input)
-	if err != nil {
-		fmt.Println("Error sending email:", err)
-		return
+		Source:       aws.String(CONFIG.FromEmailID),
+		Destinations: recipients, // ✅ v2 uses []string (not []*string)
 	}
 
-	fmt.Println("Email sent successfully!")
+	// Send email
+	output, err := client.SendRawEmail(ctx, input)
+	if err != nil {
+		fmt.Println("error sending email: %w", err)
+	}
+
+	fmt.Println("Email sent successfully:", *output.MessageId)
 }
 
 func downloadDocument(url string) ([]byte, error) {

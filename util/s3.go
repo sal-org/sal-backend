@@ -11,11 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 const randomIDdigits = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -80,41 +82,113 @@ func UploadToS3(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, a
 	}
 	fmt.Println(savedFileName)
 
-	conf := aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
-		Region:      aws.String(s3Region),
-	}
-	sess, _ := session.NewSession(&conf)
+	// conf := aws.Config{
+	// 	Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+	// 	Region:      aws.String(s3Region),
+	// }
+	// sess, _ := session.NewSession(&conf)
 
-	svc := s3manager.NewUploader(sess)
+	// svc := s3manager.NewUploader(sess)
+
+	// LOGGER.Log("Uploading file to S3...")
+
+	// openedFile, err := os.Open(savedFileName)
+	// if err != nil {
+	// 	fmt.Println("uploadToS3", err)
+	// 	return "", false
+	// }
+	// s, _ := openedFile.Stat()
+	// fmt.Println(s.Size())
+	// defer openedFile.Close()
+
+	// fileName := path + "/" + getFileMD5Hash(savedFileName) + extension
+
+	// _, err = svc.Upload(&s3manager.UploadInput{
+	// 	Bucket:      aws.String(s3Bucket),
+	// 	Key:         aws.String(fileName),
+	// 	Body:        openedFile,
+	// 	ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
+	// 	// ACL:         aws.String(acl),
+	// })
+
+	// os.Remove(savedFileName)
+	// if err != nil {
+	// 	fmt.Println("uploadToS3 "+path, err)
+	// 	return "", false
+	// }
+	// return fileName, true
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Load AWS config (replaces aws.Config + session.NewSession)
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
+		config.WithRegion(s3Region),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				s3AccessKey,
+				s3SecretKey,
+				"",
+			),
+		),
+		config.WithRetryMaxAttempts(3),
+	)
+	if err != nil {
+		fmt.Println("failed to load aws config:", err)
+		return "", false
+	}
+
+	// Create S3 client
+	client := s3.NewFromConfig(cfg)
 
 	LOGGER.Log("Uploading file to S3...")
 
+	// Open file
 	openedFile, err := os.Open(savedFileName)
 	if err != nil {
-		fmt.Println("uploadToS3", err)
+		fmt.Println("uploadToS3 open file error:", err)
 		return "", false
 	}
-	s, _ := openedFile.Stat()
-	fmt.Println(s.Size())
 	defer openedFile.Close()
 
+	// File info
+	fileStat, err := openedFile.Stat()
+	if err == nil {
+		fmt.Println("file size:", fileStat.Size())
+	}
+
+	// Generate file name
 	fileName := path + "/" + getFileMD5Hash(savedFileName) + extension
 
-	_, err = svc.Upload(&s3manager.UploadInput{
-		Bucket:      aws.String(s3Bucket),
-		Key:         aws.String(fileName),
-		Body:        openedFile,
-		ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
-		// ACL:         aws.String(acl),
+	// Upload to S3 using PutObject
+	_, err = client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(fileName),
+		Body:   openedFile,
+		ContentType: aws.String(
+			getFileMIMEType(strings.ToLower(extension)),
+		),
+
+		// Optional:
+		// ServerSideEncryption: types.ServerSideEncryptionAes256,
 	})
 
-	os.Remove(savedFileName)
 	if err != nil {
-		fmt.Println("uploadToS3 "+path, err)
+		fmt.Println("uploadToS3 upload error:", err)
 		return "", false
 	}
+
+	// Remove local file after successful upload
+	err = os.Remove(savedFileName)
+	if err != nil {
+		fmt.Println("warning: failed to remove local file:", err)
+	}
+
+	fmt.Println("file uploaded successfully:", fileName)
+
 	return fileName, true
+
 }
 
 func UploadToS3File(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extension, acl string, file []byte) (string, bool) {
@@ -125,41 +199,113 @@ func UploadToS3File(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extensio
 	}
 	fmt.Println(savedFileName)
 
-	conf := aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
-		Region:      aws.String(s3Region),
-	}
-	sess, _ := session.NewSession(&conf)
+	// conf := aws.Config{
+	// 	Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
+	// 	Region:      aws.String(s3Region),
+	// }
+	// sess, _ := session.NewSession(&conf)
 
-	svc := s3manager.NewUploader(sess)
+	// svc := s3manager.NewUploader(sess)
+
+	// LOGGER.Log("Uploading file to S3...")
+
+	// openedFile, err := os.Open(savedFileName)
+	// if err != nil {
+	// 	fmt.Println("uploadToS3", err)
+	// 	return "", false
+	// }
+	// s, _ := openedFile.Stat()
+	// fmt.Println(s.Size())
+	// defer openedFile.Close()
+
+	// fileName := path + "/" + getFileMD5Hash(savedFileName) + extension
+
+	// _, err = svc.Upload(&s3manager.UploadInput{
+	// 	Bucket:      aws.String(s3Bucket),
+	// 	Key:         aws.String(fileName),
+	// 	Body:        openedFile,
+	// 	ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
+	// 	ACL:         aws.String(acl),
+	// })
+
+	// os.Remove(savedFileName)
+	// if err != nil {
+	// 	fmt.Println("uploadToS3 "+path, err)
+	// 	return "", false
+	// }
+	// return fileName, true
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Load AWS config (replaces aws.Config + session.NewSession)
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
+		config.WithRegion(s3Region),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				s3AccessKey,
+				s3SecretKey,
+				"",
+			),
+		),
+		config.WithRetryMaxAttempts(3),
+	)
+	if err != nil {
+		fmt.Println("failed to load aws config:", err)
+		return "", false
+	}
+
+	// Create S3 client
+	client := s3.NewFromConfig(cfg)
 
 	LOGGER.Log("Uploading file to S3...")
 
+	// Open file
 	openedFile, err := os.Open(savedFileName)
 	if err != nil {
-		fmt.Println("uploadToS3", err)
+		fmt.Println("uploadToS3 open file error:", err)
 		return "", false
 	}
-	s, _ := openedFile.Stat()
-	fmt.Println(s.Size())
 	defer openedFile.Close()
 
+	// File info
+	fileStat, err := openedFile.Stat()
+	if err == nil {
+		fmt.Println("file size:", fileStat.Size())
+	}
+
+	// Generate file name
 	fileName := path + "/" + getFileMD5Hash(savedFileName) + extension
 
-	_, err = svc.Upload(&s3manager.UploadInput{
-		Bucket:      aws.String(s3Bucket),
-		Key:         aws.String(fileName),
-		Body:        openedFile,
-		ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
-		ACL:         aws.String(acl),
+	// Upload to S3 using PutObject
+	_, err = client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(fileName),
+		Body:   openedFile,
+		ContentType: aws.String(
+			getFileMIMEType(strings.ToLower(extension)),
+		),
+
+		// Optional:
+		// ServerSideEncryption: types.ServerSideEncryptionAes256,
 	})
 
-	os.Remove(savedFileName)
 	if err != nil {
-		fmt.Println("uploadToS3 "+path, err)
+		fmt.Println("uploadToS3 upload error:", err)
 		return "", false
 	}
+
+	// Remove local file after successful upload
+	err = os.Remove(savedFileName)
+	if err != nil {
+		fmt.Println("warning: failed to remove local file:", err)
+	}
+
+	fmt.Println("file uploaded successfully:", fileName)
+
 	return fileName, true
+
 }
 
 func getFileMIMEType(extension string) string {
@@ -269,29 +415,58 @@ func PreSignedS3URLToUploadPut(s3Bucket, path, s3AccessKey, s3SecretKey, s3Regio
 
 	// // Initialize a session in us-west-2 that the SDK will use to load
 	// // credentials from the shared credentials file ~/.aws/credentials.
-	sess, _ := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
-		Region:      aws.String(s3Region)},
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Load AWS config
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
+		config.WithRegion(s3Region),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				s3AccessKey,
+				s3SecretKey,
+				"",
+			),
+		),
 	)
+	if err != nil {
+		fmt.Println("failed to load aws config:", err)
+		return "", ""
+	}
 
-	// Create S3 service client
-	svc := s3.New(sess)
+	// Create S3 client
+	client := s3.NewFromConfig(cfg)
 
+	// Generate unique file key
 	fileNameKey := path + "/" + generateRandomIDForSignedURl(30) + extension
 
-	req, _ := svc.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: aws.String(s3Bucket),
-		Key:    aws.String(fileNameKey),
-	})
+	// Create presign client
+	presignClient := s3.NewPresignClient(client)
 
-	q := req.HTTPRequest.URL.Query()
-	// q.Add("x-amz-acl", "public-read")
-	q.Add("Content-Type", getFileMIMEType(strings.ToLower(extension)))
-	req.HTTPRequest.URL.RawQuery = q.Encode()
-	// req.HTTPRequest.Header.Set("Content-MD5", checksum)
-	str, _ := req.Presign(5 * time.Minute)
+	// Generate presigned PUT URL
+	request, err := presignClient.PresignPutObject(
+		ctx,
+		&s3.PutObjectInput{
+			Bucket: aws.String(s3Bucket),
+			Key:    aws.String(fileNameKey),
+			ContentType: aws.String(
+				getFileMIMEType(strings.ToLower(extension)),
+			),
 
-	return str, fileNameKey
+			// Optional:
+			// ACL: types.ObjectCannedACLPublicRead,
+		},
+		s3.WithPresignExpires(5*time.Minute),
+	)
+
+	if err != nil {
+		fmt.Println("failed to generate presigned url:", err)
+		return "", ""
+	}
+
+	// request.URL contains the signed upload URL
+	return request.URL, fileNameKey
 
 }
 
@@ -303,27 +478,47 @@ func PreSignedS3URLToGetTheData(s3Bucket, path, s3AccessKey, s3SecretKey, s3Regi
 		return ""
 	}
 
-	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3AccessKey, s3SecretKey, ""),
-		Region:      aws.String(s3Region),
-	})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Load AWS config
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
+		config.WithRegion(s3Region),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				s3AccessKey,
+				s3SecretKey,
+				"",
+			),
+		),
+	)
 	if err != nil {
-		fmt.Println("Session error:", err)
+		fmt.Println("config error:", err)
 		return ""
 	}
 
-	svc := s3.New(sess)
+	// Create S3 client
+	client := s3.NewFromConfig(cfg)
 
-	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(s3Bucket),
-		Key:    aws.String(path),
-	})
+	// Create presign client
+	presignClient := s3.NewPresignClient(client)
 
-	urlStr, err := req.Presign(15 * time.Minute)
+	// Generate presigned GET URL
+	request, err := presignClient.PresignGetObject(
+		ctx,
+		&s3.GetObjectInput{
+			Bucket: aws.String(s3Bucket),
+			Key:    aws.String(path),
+		},
+		s3.WithPresignExpires(15*time.Minute),
+	)
+
 	if err != nil {
-		fmt.Println("Presign error:", err)
+		fmt.Println("presign error:", err)
 		return ""
 	}
 
-	return urlStr
+	// Return signed URL
+	return request.URL
 }
