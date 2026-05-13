@@ -83,7 +83,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt ,_ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -154,7 +154,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]str
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt ,_ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -217,7 +217,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request,body map[string]st
 	response["order"] = order[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt ,_ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -906,7 +906,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 	response["token"] = agora_token
 	response["UID"] = uidStr
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt ,_ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return

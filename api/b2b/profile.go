@@ -79,7 +79,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request, body map[string]string) 
 		response["client"] = client[0]
 	}
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
@@ -222,7 +222,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return

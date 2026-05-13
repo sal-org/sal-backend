@@ -1,6 +1,14 @@
 package client
 
-import "github.com/gorilla/mux"
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+	CONSTANT "salbackend/constant"
+	UTIL "salbackend/util"
+
+	"github.com/gorilla/mux"
+)
 
 // LoadClientRoutes - load all client routes with client prefix
 func LoadClientRoutes(router *mux.Router) {
@@ -316,7 +324,6 @@ func LoadClientRoutes(router *mux.Router) {
 		"hashData", "{hashData}",
 	).Methods("GET")
 
-
 	clientRoutes.HandleFunc("/restore-user-account", RestoreUserProfile).Methods("PUT")
 
 	// corporate client
@@ -328,5 +335,180 @@ func LoadClientRoutes(router *mux.Router) {
 
 	clientRoutes.HandleFunc("/inperson_corporateCounsellor/order", InPersonCorporateCounsellorOrderCreate).Methods("POST")
 	clientRoutes.HandleFunc("/inperson_corporateCounsellor/paymentcomplete", InPersonCorporateCounsellorOrderPaymentComplete).Methods("POST")
+
+}
+
+// CreateUserHandler handles user creation with detailed error logging
+func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Recover from any panics
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic: %v", r)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
+	}()
+
+	// Validate request method
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse incoming payload
+	var encryptedPayload struct {
+		Payload string `json:"payload"`
+	}
+
+	// Decode JSON with error logging
+	err := json.NewDecoder(r.Body).Decode(&encryptedPayload)
+	if err != nil {
+		log.Printf("JSON decoding error: %v", err)
+		http.Error(w, "Invalid payload format", http.StatusBadRequest)
+		return
+	}
+
+	decrypted, _ := UTIL.DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+
+	switch decrypted["path"] {
+	case "/appointment/upcoming":
+		AppointmentsUpcoming(w, r, decrypted)
+	case "/inperson_appointment/upcoming":
+		InPersonAppointmentsUpcoming(w, r, decrypted)
+	case "/appointment/slots":
+		AppointmentSlotsUnused(w, r, decrypted)
+	case "/appointment/past":
+		AppointmentsPast(w, r, decrypted)
+	case "/inperson_appointment/past":
+		InPersonAppointmentsPast(w, r, decrypted)
+	case "/appointment/detail":
+		AppointmentDetail(w, r, decrypted)
+	case "/inperson_appointment/detail":
+		InPersonAppointmentDetail(w, r, decrypted)
+	case "/appointment/book":
+		AppointmentBook(w, r, decrypted)
+	case "/appointment/reschedule":
+		AppointmentReschedule(w, r, decrypted)
+	case "/inperson_appointment/reschedule":
+		InPersonAppointmentReschedule(w, r, decrypted)
+	case "/appointment/cancel":
+		AppointmentCancel(w, r, decrypted)
+	case "/inperson_appointment/cancel":
+		InPersonAppointmentCancel(w, r, decrypted)
+	case "/appointment/bulk":
+		AppointmentBulkCancel(w, r, decrypted)
+	case "/appointment/rate":
+		AppointmentRatingAdd(w, r, decrypted)
+	case "/inperson_appointment/rate":
+		InPersonAppointmentRatingAdd(w, r, decrypted)
+	case "/appointment/download":
+		DownloadReceipt(w, r, decrypted)
+	case "/appointment/cancellationreason":
+		CancellationReason(w, r, decrypted)
+	case "/inperson_appointment/cancellationreason":
+		InPersonCancellationReason(w, r, decrypted)
+	case "/inperson_appointment/no_show":
+		InPersonAppointmentNoShow(w, r, decrypted)
+	case "/appointment/agoratoken":
+		GenerateAgoraToken(w, r, decrypted)
+	case "/appointment/request":
+		AppointmentRequest(w, r, decrypted)
+	case "/inperson_appointment/request":
+		InPersonAppointmentRequest(w, r, decrypted)
+	case "/appointment/request/get":
+		GetAppointmentRequest(w, r, decrypted)
+	case "/inperson_appointment/request/get":
+		GetInPersonAppointmentRequest(w, r, decrypted)
+	case "/appointment/start":
+		AppointmentStart(w, r, decrypted)
+	case "/appointment/end":
+		AppointmentEnd(w, r, decrypted)
+	case "/appointment/coupon":
+		CouponGet(w, r, decrypted)
+	case "/assessment/get":
+		AssessmentsList(w, r, decrypted)
+	case "/assessment/detail":
+		AssessmentDetail(w, r, decrypted)
+	case "/assessment/add":
+		AssessmentAdd(w, r, decrypted)
+	case "/assessment/history":
+		AssessmentHistory(w, r, decrypted)
+	case "/assessment/download":
+		AssessmentDownload(w, r, decrypted)
+	case "/counsellor/get":
+		CounsellorProfile(w, r, decrypted)
+	case "/counsellor/slots":
+		CounsellorSlots(w, r, decrypted)
+	case "/in_person_counsellor/slots":
+		InPersonCounsellorSlots(w, r, decrypted)
+	case "/counsellor/order":
+		CounsellorOrderCreate(w, r, decrypted)
+	case "/counsellor/paymentcomplete":
+		CounsellorOrderPaymentComplete(w, r, decrypted)
+	case "/events/get":
+		EventsList(w, r, decrypted)
+	case "/events_inperson/get":
+		InPersonEventsList(w, r, decrypted)
+	case "/event/detail":
+		EventDetail(w, r, decrypted)
+	case "/event_inperson/detail":
+		EventInPersonDetail(w, r, decrypted)
+	case "/event/booked":
+		EventsBooked(w, r, decrypted)
+	case "/event_inperson/booked":
+		EventsBookedInPerson(w, r, decrypted)
+	case "/event_inperson/past":
+		PastEventsInPerson(w, r, decrypted)
+	case "/event_inperson/request":
+		EventsInPersonRequest(w, r, decrypted)
+	case "/event_inperson/request/get":
+		GetEventInPersonRequest(w, r, decrypted)
+	case "/event_inperson/cancel":
+		EventsInPersonCancel(w, r, decrypted)
+	case "/event_inperson/rate/get":
+		GetEventsInPersonRate(w, r, decrypted)
+	case "/event_inperson/rate":
+		EventsInPersonRate(w, r, decrypted)
+	case "/event/order":
+		EventOrderCreate(w, r, decrypted)
+	case "/event_inperson/order":
+		EventOrderInPersonCreate(w, r, decrypted)
+	case "/event/paymentcomplete":
+		EventOrderPaymentComplete(w, r, decrypted)
+	case "/home":
+		Home(w, r, decrypted)
+	case "/coremail/sendotp":
+		SendOTPWithCorporateEmail(w, r, decrypted)
+	case "/coremail/send":
+		SendOTPWithCorporateEmailForRegister(w, r, decrypted)
+	case "/check_code":
+		CheckAccessCode(w, r, decrypted)
+	case "/get_address":
+		GetAddressForCorporateClient(w, r, decrypted)
+	case "/check_access_token":
+		CheckIfAccessTokenExpired(w, r, decrypted)
+	case "/check_uniqueid":
+		CheckEmailANDPhone(w, r, decrypted)
+	case "/coremail/verifyotp":
+		VerifyOTPWithCorporateEmail(w, r, decrypted)
+	case "/depandent_client/sendotp":
+		GetDenpendantClientOTP(w, r, decrypted)
+	case "/depandent_client/verifyotp":
+		VerifyOTPWithDependantClientEmail(w, r, decrypted)
+	case "/family_member/sendotp":
+		SendOTPForForFamilyRegister(w, r, decrypted)
+	case "/family_member/verifyotp":
+		VerifyOTPForRegisterFamilyMember(w, r, decrypted)
+	case "/sendotp":
+		SendOTP(w, r, decrypted)
+	case "/verifyotp":
+		VerifyOTP(w, r, decrypted)
+	case "/refresh-token":
+		RefreshToken(w, r, decrypted)
+	default:
+		w.Header().Set("Status", "200")
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode("Page Not Found")
+	}
 
 }

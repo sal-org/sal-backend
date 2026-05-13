@@ -47,7 +47,7 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request, body map[string]str
 
 	response["title"] = title[0]
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -221,7 +221,7 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request, body ma
 	response["client"] = client[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

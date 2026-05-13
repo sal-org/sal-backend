@@ -1,15 +1,11 @@
 package b2c
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"log"
-	"math/rand"
 	"net/http"
 	CONSTANT "salbackend/constant"
+	UTIL "salbackend/util"
 
 	"github.com/gorilla/mux"
 )
@@ -54,133 +50,6 @@ func LoadWebB2CRoutes(router *mux.Router) {
 
 }
 
-// EncryptPayload encrypts data using AES-CBC with PKCS7 padding
-func EncryptPayload(plainText map[string]interface{}, key string, iv string) (string, error) {
-
-	// Marshal the map into a JSON string
-	jsonData, err := json.Marshal(plainText)
-	if err != nil {
-		log.Fatalf("Error marshaling map: %v", err)
-	}
-
-	plainTextBytes := []byte(string(jsonData))
-	keyBytes := []byte(key)
-	ivBytes := []byte(iv)
-
-	// Validate parameters
-	if len(keyBytes) != 16 && len(keyBytes) != 24 && len(keyBytes) != 32 {
-		return "", errors.New("key length must be 16, 24, or 32 bytes")
-	}
-
-	if len(ivBytes) != 16 {
-		return "", errors.New("IV must be exactly 16 bytes")
-	}
-
-	// Create AES cipher
-	block, err := aes.NewCipher(keyBytes)
-	if err != nil {
-		return "", err
-	}
-
-	// Add PKCS7 padding
-	plainTextBytes = addPKCS7Padding(plainTextBytes, aes.BlockSize)
-
-	// Create the CBC encrypter
-	mode := cipher.NewCBCEncrypter(block, ivBytes)
-
-	// Allocate space for ciphertext
-	ciphertext := make([]byte, len(plainTextBytes))
-
-	// Encrypt
-	mode.CryptBlocks(ciphertext, plainTextBytes)
-
-	// Base64 encode for transmission
-	encoded := base64.StdEncoding.EncodeToString(ciphertext)
-
-	return encoded, nil
-}
-
-// GenerateRandomIV creates a cryptographically secure random IV
-func GenerateRandomIV() ([]byte, error) {
-	iv := make([]byte, 16) // AES block size is always 16 bytes
-	if _, err := rand.Read(iv); err != nil {
-		return nil, err
-	}
-	return iv, nil
-}
-
-// addPKCS7Padding adds PKCS7 padding to plaintext
-func addPKCS7Padding(data []byte, blockSize int) []byte {
-	padLen := blockSize - (len(data) % blockSize)
-	padding := make([]byte, padLen)
-	for i := 0; i < padLen; i++ {
-		padding[i] = byte(padLen)
-	}
-	return append(data, padding...)
-}
-
-func DecryptPayload(encryptedData string, key string, iv string) (map[string]string, error) {
-	// Decode the base64 encrypted string from CryptoJS
-	decodedData, err := base64.StdEncoding.DecodeString(encryptedData)
-	if err != nil {
-		return map[string]string{}, errors.New("base64 decode error: " + err.Error())
-	}
-
-	// Convert key and IV to byte slices
-	keyBytes := []byte(key)
-	ivBytes := []byte(iv)
-
-	// Create AES cipher
-	block, err := aes.NewCipher(keyBytes)
-	if err != nil {
-		return map[string]string{}, errors.New("cipher creation error: " + err.Error())
-	}
-
-	// Create CBC decrypter
-	mode := cipher.NewCBCDecrypter(block, ivBytes)
-
-	// Decrypt the data
-	decrypted := make([]byte, len(decodedData))
-	mode.CryptBlocks(decrypted, decodedData)
-
-	// Remove PKCS7 padding
-	unpaddedData, err := removePKCS7Padding(decrypted)
-	if err != nil {
-		return map[string]string{}, errors.New("padding removal error: " + err.Error())
-	}
-
-	// Declare a map to store the unmarshalled data
-	result := make(map[string]string)
-
-	// Unmarshal the JSON string into the map
-	err = json.Unmarshal(unpaddedData, &result)
-	if err != nil {
-		log.Fatalf("Error unmarshaling JSON: %v", err)
-	}
-
-	return result, nil
-}
-
-func removePKCS7Padding(data []byte) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, errors.New("empty input")
-	}
-
-	padLength := int(data[len(data)-1])
-	if padLength > len(data) || padLength == 0 {
-		return nil, errors.New("invalid padding")
-	}
-
-	// Verify padding
-	for i := 1; i <= padLength; i++ {
-		if data[len(data)-i] != byte(padLength) {
-			return nil, errors.New("invalid padding")
-		}
-	}
-
-	return data[:len(data)-padLength], nil
-}
-
 // CreateUserHandler handles user creation with detailed error logging
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -211,11 +80,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decrypted, _ := DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB_PROD, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB_PROD)
+	decrypted, _ := UTIL.DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB_PROD, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB_PROD)
 
 	switch decrypted["path"] {
 	case "/book_demo":
-		ClientBookDemo(w,r, decrypted)
+		ClientBookDemo(w, r, decrypted)
 	case "/access_code":
 		CheckAccessCode(w, r, decrypted)
 	case "/send_otp":

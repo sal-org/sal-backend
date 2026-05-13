@@ -89,7 +89,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request, body map[strin
 	// response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -172,7 +172,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request, body map[string]st
 	// response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -235,7 +235,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request, body map[string]s
 	response["order"] = order[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -959,7 +959,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 	response["token"] = agora_token
 	response["UID"] = uidStr
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return
