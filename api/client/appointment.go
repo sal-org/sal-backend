@@ -306,7 +306,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	if len(clientAddress) > 0 {
 
-		counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
+		counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? and status = '1' order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return

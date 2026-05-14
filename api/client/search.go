@@ -266,10 +266,10 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	therapistArgs := []interface{}{}
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// // build counsellor query
 	// counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about,corporate_therpist, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
@@ -396,7 +396,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 
 			if len(clientAddress) > 0 {
 
-				counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
+				counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? and status = '1' order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
