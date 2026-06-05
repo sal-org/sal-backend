@@ -25,10 +25,11 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func TherapistProfile(w http.ResponseWriter, r *http.Request) {
+func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -37,7 +38,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "price", "video", "multiple_sessions", "education", "experience", "therapeutic_approach", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "price", "video", "multiple_sessions", "education", "experience", "therapeutic_approach", "about", "slot_type"}, map[string]string{"therapist_id": body["therapist_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -48,21 +49,21 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist languages
-	therapistLang, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
+	therapistLang, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", body["therapist_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get therapist topics
-	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", r.FormValue("therapist_id"))
+	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", body["therapist_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get last 20 therapist apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.rating_types, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 20 ", r.FormValue("therapist_id"))
+	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.rating_types, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 20 ", body["therapist_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -76,7 +77,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get counsellor latest content
-	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", r.FormValue("therapist_id"))
+	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where counsellor_id = ? and training = 0 and status = 1 order by created_at desc limit 20", body["therapist_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -92,7 +93,15 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	response["reviews"] = reviews
 	response["contents"] = contents
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // TherapistSlots godoc
@@ -103,10 +112,11 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func TherapistSlots(w http.ResponseWriter, r *http.Request) {
+func TherapistSlots(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -115,7 +125,7 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", body["therapist_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -123,14 +133,22 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 
 	// remove times and dates with no availability
 	response["slots"] = UTIL.FilterAvailableSlots(slots)
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
+func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
-
+	var encryptedResponse = make(map[string]interface{})
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
@@ -138,7 +156,7 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"), r.FormValue("companyName"), r.FormValue("companyLocation"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", body["therapist_id"], body["companyName"], body["companyLocation"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -146,7 +164,13 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 
 	// remove times and dates with no availability
 	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // TherapistOrderCreate godoc
@@ -157,10 +181,11 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
+func TherapistOrderCreate(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -169,11 +194,11 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderCreateRequiredFields)
@@ -315,21 +340,37 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	response["order_id"] = orderID
 	response["payu_key"] = CONFIG.PayUKey
 	response["prices"] = map[string]string{"price": therapist[0]["price"], "price_3": therapist[0]["price_3"], "price_5": therapist[0]["price_5"]}
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
+func GenerateHashForPayment(w http.ResponseWriter, r *http.Request, body map[string]string) {
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
-	data := r.FormValue("hashData") + CONFIG.PayUSalt
+	data := body["hashData"] + CONFIG.PayUSalt
 	hash := sha512.New()
 	hash.Write([]byte(data))
 	hashData := hex.EncodeToString(hash.Sum(nil))
 
 	response["hash_data"] = hashData
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // TherapistOrderPaymentComplete godoc
@@ -340,10 +381,11 @@ func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
+func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -352,11 +394,11 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderPaymentCompleteRequiredFields)
@@ -809,5 +851,13 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	)
 
 	response["invoice_id"] = invoiceID
-	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, encryptedResponse)
 }

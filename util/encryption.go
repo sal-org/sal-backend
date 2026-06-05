@@ -14,6 +14,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	MODEL "salbackend/model"
 )
 
 func GetStringMD5Hash(str string) string {
@@ -139,6 +140,49 @@ func DecryptPayload(encryptedData string, key string, iv string) (map[string]str
 	result := make(map[string]string)
 
 	// Unmarshal the JSON string into the map
+	err = json.Unmarshal(unpaddedData, &result)
+	if err != nil {
+		log.Fatalf("Error unmarshaling JSON: %v", err)
+	}
+
+	return result, nil
+}
+
+
+func DecryptPayloadForAssessment(encryptedData string, key string, iv string) (MODEL.AssessmentAddRequest, error) {
+	// Decode the base64 encrypted string from CryptoJS
+	decodedData, err := base64.StdEncoding.DecodeString(encryptedData)
+	if err != nil {
+		return MODEL.AssessmentAddRequest{}, errors.New("base64 decode error: " + err.Error())
+	}
+
+	// Convert key and IV to byte slices
+	keyBytes := []byte(key)
+	ivBytes := []byte(iv)
+
+	// Create AES cipher
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		return MODEL.AssessmentAddRequest{}, errors.New("cipher creation error: " + err.Error())
+	}
+
+	// Create CBC decrypter
+	mode := cipher.NewCBCDecrypter(block, ivBytes)
+
+	// Decrypt the data
+	decrypted := make([]byte, len(decodedData))
+	mode.CryptBlocks(decrypted, decodedData)
+
+	// Remove PKCS7 padding
+	unpaddedData, err := removePKCS7Padding(decrypted)
+	if err != nil {
+		return MODEL.AssessmentAddRequest{}, errors.New("padding removal error: " + err.Error())
+	}
+
+	// Declare a struct to store the unmarshalled data
+	result := MODEL.AssessmentAddRequest{}
+
+	// Unmarshal the JSON string into the struct
 	err = json.Unmarshal(unpaddedData, &result)
 	if err != nil {
 		log.Fatalf("Error unmarshaling JSON: %v", err)

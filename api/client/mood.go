@@ -18,10 +18,11 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func MoodAdd(w http.ResponseWriter, r *http.Request) {
+func MoodAdd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -30,11 +31,11 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.MoodAddRequiredFields)
@@ -97,7 +98,16 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["mood_result_id"] = moodResultID
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // MoodHistory godoc
@@ -109,10 +119,11 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func MoodHistory(w http.ResponseWriter, r *http.Request) {
+func MoodHistory(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -120,21 +131,28 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dates := strings.Split(r.FormValue("dates"), ",")
+	dates := strings.Split(body["dates"], ",")
 	if len(dates) < 2 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get mood past results
-	moodResults, status, ok := DB.SelectProcess("select mood_id, `date`, notes from "+CONSTANT.MoodResultsTable+" where client_id = ? and status = "+CONSTANT.MoodResultActive+" and `date` >= ? and `date` <= ? order by `date` asc", r.FormValue("client_id"), dates[0], dates[1])
+	moodResults, status, ok := DB.SelectProcess("select mood_id, `date`, notes from "+CONSTANT.MoodResultsTable+" where client_id = ? and status = "+CONSTANT.MoodResultActive+" and `date` >= ? and `date` <= ? order by `date` asc", body["client_id"], dates[0], dates[1])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	response["mood_results"] = moodResults
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // MoodContent godoc
@@ -145,10 +163,11 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func ListMoodContent(w http.ResponseWriter, r *http.Request) {
+func ListMoodContent(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -156,7 +175,7 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mood_id, status, ok := DB.SelectProcess("select * from "+CONSTANT.MoodResultsTable+" where client_id = ?  and status = 1 order by created_at desc limit 20", r.FormValue("user_id"))
+	mood_id, status, ok := DB.SelectProcess("select * from "+CONSTANT.MoodResultsTable+" where client_id = ?  and status = 1 order by created_at desc limit 20", body["user_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -169,7 +188,7 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get liked content ids
-	contentLiked, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
+	contentLiked, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", body["user_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -194,6 +213,12 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 	response["mood_content"] = contents
 	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(contentLiked, "content_id")
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 
 }

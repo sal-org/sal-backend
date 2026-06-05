@@ -20,25 +20,26 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func Home(w http.ResponseWriter, r *http.Request) {
+func Home(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 	var recommended []map[string]string
 	var ok bool
 	var status string
 
 	accessCode := ""
 
-	if len(r.FormValue("client_id")) > 0 {
+	if len(body["client_id"]) > 0 {
 
-		active := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"status": "1", "client_id": r.FormValue("client_id")})
+		active := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"status": "1", "client_id": body["client_id"]})
 		if !active {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		client, status, ok := DB.SelectProcess("select topic_ids, email from "+CONSTANT.ClientsTable+" where client_id = ? and status = 1", r.FormValue("client_id"))
+		client, status, ok := DB.SelectProcess("select topic_ids, email from "+CONSTANT.ClientsTable+" where client_id = ? and status = 1", body["client_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -65,25 +66,25 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		updateClient := map[string]string{}
 
 		// update last login time and platform
-		if len(r.FormValue("platform")) > 0 {
-			updateClient["platform"] = r.FormValue("platform")
+		if len(body["platform"]) > 0 {
+			updateClient["platform"] = body["platform"]
 		}
-		if len(r.FormValue("version")) > 0 {
-			updateClient["version"] = r.FormValue("version")
+		if len(body["version"]) > 0 {
+			updateClient["version"] = body["version"]
 		}
-		if len(r.FormValue("timezone")) > 0 {
-			updateClient["timezone"] = r.FormValue("timezone")
+		if len(body["timezone"]) > 0 {
+			updateClient["timezone"] = body["timezone"]
 		}
 		updateClient["last_active_time"] = UTIL.GetCurrentTime().String()
 
-		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, updateClient)
+		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]}, updateClient)
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
 		// get upcoming appointments both to be started and started
-		appointments, status, ok := DB.SelectProcess("select appointment_id, counsellor_id, client_id, date, time from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+		appointments, status, ok := DB.SelectProcess("select appointment_id, counsellor_id, client_id, date, time from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -162,7 +163,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get upcoming appointments both to be started and started
-		inpersonAppointments, status, ok := DB.SelectProcess("select appointment_id, counsellor_id, client_id, date, time, company_name, company_location, counselling_address from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+		inpersonAppointments, status, ok := DB.SelectProcess("select appointment_id, counsellor_id, client_id, date, time, company_name, company_location, counselling_address from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -243,7 +244,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get upcoming booked events
-		events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc, time asc", r.FormValue("client_id"))
+		events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc, time asc", body["client_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -264,7 +265,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			response["upcoming_events"] = make(map[string]string)
 		}
 
-		webinarOrder, status, ok := DB.SelectProcess("select * from "+CONSTANT.WebinarsBookTable+" where status = 1 and client_id = ? ", r.FormValue("client_id"))
+		webinarOrder, status, ok := DB.SelectProcess("select * from "+CONSTANT.WebinarsBookTable+" where status = 1 and client_id = ? ", body["client_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -337,5 +338,14 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	response["android_version"] = appInfo[0]["client_android_version"]
 	response["ios_version"] = appInfo[0]["client_ios_version"]
 	response["urls"] = CONSTANT.URLs
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }

@@ -1,9 +1,7 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"path/filepath"
@@ -26,10 +24,12 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AssessmentsList(w http.ResponseWriter, r *http.Request) {
+func AssessmentsList(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// get all available assessments
 	assessments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentsTable + " where status = " + CONSTANT.AssessmentActive + " order by `order` asc")
@@ -39,7 +39,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get assessment latest result
-	assessmentResults, status, ok := DB.SelectProcess("select final_score, assessment_id from "+CONSTANT.AssessmentResultsTable+" where id in (select max(id) from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and status = "+CONSTANT.AssessmentResultActive+" group by assessment_id)", r.FormValue("client_id"))
+	assessmentResults, status, ok := DB.SelectProcess("select final_score, assessment_id from "+CONSTANT.AssessmentResultsTable+" where id in (select max(id) from "+CONSTANT.AssessmentResultsTable+" where user_id = ? and status = "+CONSTANT.AssessmentResultActive+" group by assessment_id)", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -54,7 +54,16 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
 	response["assessments"] = assessments
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AssessmentDetail godoc
@@ -65,13 +74,15 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
+func AssessmentDetail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
+	var encryptedResponse = make(map[string]interface{})
+
 	// get assessment questions
-	questions, status, ok := DB.SelectProcess("select assessment_question_id, question from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", r.FormValue("assessment_id"))
+	questions, status, ok := DB.SelectProcess("select assessment_question_id, question from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", body["assessment_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -80,7 +91,7 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 	response["questions"] = questions
 
 	// get assessment question options
-	questionOptions, status, ok := DB.SelectProcess("select assessment_question_id, assessment_question_option_id, `option`, `score` from "+CONSTANT.AssessmentQuestionOptionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionOptionActive+" order by `order` asc", r.FormValue("assessment_id"))
+	questionOptions, status, ok := DB.SelectProcess("select assessment_question_id, assessment_question_option_id, `option`, `score` from "+CONSTANT.AssessmentQuestionOptionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionOptionActive+" order by `order` asc", body["assessment_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -89,7 +100,7 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 	response["questions"] = questions
 
 	// get assessment scores
-	scores, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? order by `min` asc", r.FormValue("assessment_id"))
+	scores, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentScoresTable+" where assessment_id = ? order by `min` asc", body["assessment_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -98,7 +109,16 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 	response["questions"] = questions
 	response["question_options"] = UTIL.ConvertArrayMapToKeyMapArray(questionOptions, "assessment_question_id")
 	response["scores"] = scores
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AssessmentAdd godoc
@@ -109,24 +129,24 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
+func AssessmentAdd(w http.ResponseWriter, r *http.Request, body MODEL.AssessmentAddRequest) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
 	// read request body
-	body := MODEL.AssessmentAddRequest{}
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	defer r.Body.Close()
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body := MODEL.AssessmentAddRequest{}
+	// b, err := ioutil.ReadAll(r.Body)
+	// if err != nil {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// defer r.Body.Close()
+	// err = json.Unmarshal(b, &body)
+	// if err != nil {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	assessmentName := DB.QueryRowSQL("select title from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", body.AssessmentID)
 
@@ -190,10 +210,11 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
+func AssessmentHistory(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -204,7 +225,7 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	var results []string
 
 	// get assessment past results
-	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ?  and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", r.FormValue("client_id"))
+	assessmentResults, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where user_id = ?  and status = "+CONSTANT.AssessmentResultActive+" order by created_at desc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -268,7 +289,15 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	//response["assessment"] = assessment
 	//response["assessment_questions"] = assessmentQuestions
 	//response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AssessmentDownload godoc
@@ -279,28 +308,29 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
+func AssessmentDownload(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	//const assessment_id = "ywlxbz8yrlp942"
 
 	var fileName, emailbody string
 
-	if DB.CheckIfExists(CONSTANT.AssessmentPdfTable, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")}) {
+	if DB.CheckIfExists(CONSTANT.AssessmentPdfTable, map[string]string{"assessment_result_id": body["assessment_result_id"]}) {
 
-		receipt, _, _ := DB.SelectSQL(CONSTANT.AssessmentPdfTable, []string{"*"}, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")})
+		receipt, _, _ := DB.SelectSQL(CONSTANT.AssessmentPdfTable, []string{"*"}, map[string]string{"assessment_result_id": body["assessment_result_id"]})
 		fileName = receipt[0]["pdf"]
 	} else {
 
-		assessment_result, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where assessment_result_id = ? ", r.FormValue("assessment_result_id"))
+		assessment_result, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultsTable+" where assessment_result_id = ? ", body["assessment_result_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		assessment_result_details, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultDetailsTable+" where assessment_result_id = ? ", r.FormValue("assessment_result_id"))
+		assessment_result_details, status, ok := DB.SelectProcess("select * from "+CONSTANT.AssessmentResultDetailsTable+" where assessment_result_id = ? ", body["assessment_result_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -1216,6 +1246,14 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	response["media_url"] = CONFIG.MediaURL
 	response["pdf_name"] = fileName
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 
 }

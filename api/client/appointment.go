@@ -24,10 +24,12 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
+func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -39,13 +41,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	// if timeNow.Minute() >= 30 {
 	// 	localTime = timeNow.Hour()*2 - 1
 	// } else {
-	// 	localTime = timeNow.Hour() * 2
 	// }
 	// fmt.Println(localTime)
 	// local := strconv.Itoa(localTime)
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02")+"' order by date asc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -106,13 +107,24 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -121,7 +133,7 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -152,7 +164,16 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	response["appointments"] = appointments
 	response["slots"] = slots
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AppointmentSlotsUnused godoc
@@ -163,10 +184,12 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
+func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -175,7 +198,7 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get unused appointment slots
-	appointmentSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentSlotsTable+" where client_id = ? and slots_remaining > 0 and status = "+CONSTANT.AppointmentSlotsActive, r.FormValue("client_id"))
+	appointmentSlots, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentSlotsTable+" where client_id = ? and slots_remaining > 0 and status = "+CONSTANT.AppointmentSlotsActive, body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -207,7 +230,15 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointment_slots"] = appointmentSlots
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AppointmentsPast godoc
@@ -218,10 +249,12 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
+func AppointmentsPast(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -230,7 +263,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get past completed appointments
-	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": CONSTANT.AppointmentCompleted})
+	appointments, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "status": CONSTANT.AppointmentCompleted})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -284,13 +317,13 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		counsellor["photo"] = endPointURL
 	}
 
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email", "location"}, map[string]string{"client_id": r.FormValue("client_id")})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email", "location"}, map[string]string{"client_id": body["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, mental_health, counsellor_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and no_show = 0 and incomplete_session = 0 and status = '2' order by modified_at desc limit 5", r.FormValue("client_id"))
+	checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, mental_health, counsellor_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and no_show = 0 and incomplete_session = 0 and status = '2' order by modified_at desc limit 5", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -345,13 +378,23 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -366,7 +409,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+") order by date desc", r.FormValue("client_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+") order by date desc", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -391,7 +434,15 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AppointmentDetail godoc
@@ -402,10 +453,12 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
+func AppointmentDetail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -416,7 +469,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	var invoice, order []map[string]string
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -476,13 +529,23 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -493,7 +556,7 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	var order []map[string]string
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -524,7 +587,16 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
 	response["media_url"] = CONFIG.MediaURL
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+	
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // AppointmentBook godoc
@@ -535,7 +607,7 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentBook(w http.ResponseWriter, r *http.Request) {
+func AppointmentBook(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -547,11 +619,11 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentBookRequiredFields)
@@ -851,7 +923,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
+func AppointmentReschedule(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -863,11 +935,11 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRescheduleRequiredFields)
@@ -877,7 +949,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -956,7 +1028,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update appointment date and time
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
 		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
+			"appointment_id": body["appointment_id"],
 		},
 		map[string]string{
 			"date":        body["date"],
@@ -965,7 +1037,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	// update rescheduled times
-	DB.ExecuteSQL("update "+CONSTANT.AppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
+	DB.ExecuteSQL("update "+CONSTANT.AppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", body["appointment_id"])
 
 	// if domainName[1] == "clovemind.com" {
 
@@ -984,7 +1056,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
@@ -999,13 +1071,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["client_id"])
 
 	// remove all previous message for client
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], client[0]["phone"])
 
 	// remove all previous message for therpist
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], counsellor[0]["phone"])
 
 	// send appointment reschedule notification to client
 	UTIL.SendNotification(
@@ -1021,7 +1093,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.VirtualAppointmentImage,
 	)
 
@@ -1039,7 +1111,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.VirtualAppointmentImage,
 	)
 
@@ -1058,7 +1130,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.LaterSendTextMessage,
 	)
 
@@ -1088,7 +1160,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["counsellor_id"])
 
 	// send appointment reschedule notification to counsellor
 	UTIL.SendNotification(
@@ -1098,7 +1170,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.VirtualAppointmentImage,
 	)
 
@@ -1116,7 +1188,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.VirtualAppointmentImage,
 	)
 
@@ -1135,7 +1207,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.LaterSendTextMessage,
 	)
 
@@ -1180,7 +1252,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
 		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 
@@ -1198,14 +1270,14 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
 		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -1217,11 +1289,11 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRescheduleRequiredFields)
@@ -1231,7 +1303,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1304,7 +1376,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update appointment date and time
 	DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
 		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
+			"appointment_id": body["appointment_id"],
 		},
 		map[string]string{
 			"date":        body["date"],
@@ -1313,12 +1385,12 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	// update rescheduled times
-	DB.ExecuteSQL("update "+CONSTANT.InPersonAppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
+	DB.ExecuteSQL("update "+CONSTANT.InPersonAppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", body["appointment_id"])
 
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
@@ -1333,13 +1405,13 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["client_id"])
 
 	// remove all previous message for client
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], client[0]["phone"])
 
 	// remove all previous message for therpist
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], counsellor[0]["phone"])
 
 	// send appointment reschedule notification to client
 	UTIL.SendNotification(
@@ -1354,7 +1426,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InPersonAppointmentImage,
 	)
 
@@ -1372,7 +1444,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InPersonAppointmentImage,
 	)
 
@@ -1421,7 +1493,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["counsellor_id"])
 
 	// send appointment reschedule notification to counsellor
 	UTIL.SendNotification(
@@ -1436,7 +1508,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InPersonAppointmentImage,
 	)
 
@@ -1454,7 +1526,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InPersonAppointmentImage,
 	)
 
@@ -1515,7 +1587,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
 		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 
@@ -1531,7 +1603,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
 		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 
@@ -1546,7 +1618,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
+func AppointmentCancel(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -1558,7 +1630,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1628,7 +1700,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// update appointment date and time
 	DB.UpdateSQL(CONSTANT.AppointmentsTable,
 		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
+			"appointment_id": body["appointment_id"],
 		},
 		map[string]string{
 			"status":      CONSTANT.AppointmentUserCancelled,
@@ -1638,7 +1710,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 
 	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
 		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
+			"appointment_id": body["appointment_id"],
 		},
 		map[string]string{
 			"status":      CONSTANT.AppointmentUserCancelled,
@@ -1776,7 +1848,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
@@ -1789,13 +1861,13 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["client_id"])
 
 	// remove all previous message for client
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], client[0]["phone"])
 
 	// remove all previous message for therpist
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], counsellor[0]["phone"])
 
 	// send appointment cancel notification, email to client
 	UTIL.SendNotification(
@@ -1811,7 +1883,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -1841,7 +1913,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["counsellor_id"])
 
 	// send appointment cancel notification to counsellor
 	UTIL.SendNotification(
@@ -1857,7 +1929,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -1897,7 +1969,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
 		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 
@@ -1914,14 +1986,14 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
 		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 	// fmt.Println("Status:" + CONSTANT.StatusCodeOk)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -1933,7 +2005,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1973,7 +2045,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// update appointment date and time
 	DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
 		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
+			"appointment_id": body["appointment_id"],
 		},
 		map[string]string{
 			"status":      CONSTANT.AppointmentUserCancelled,
@@ -1984,7 +2056,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
@@ -1997,13 +2069,13 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["client_id"])
 
 	// remove all previous message for client
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], client[0]["phone"])
 
 	// remove all previous message for therpist
-	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+	UTIL.RemoveMessage(body["appointment_id"], counsellor[0]["phone"])
 
 	// send appointment cancel notification, email to client
 	UTIL.SendNotification(
@@ -2019,7 +2091,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -2050,7 +2122,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+	UTIL.RemoveNotification(body["appointment_id"], appointment[0]["counsellor_id"])
 
 	// send appointment cancel notification to counsellor
 	UTIL.SendNotification(
@@ -2067,7 +2139,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -2106,7 +2178,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		client[0]["phone"],
 		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 
@@ -2121,7 +2193,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.TransactionalRouteTextMessage,
 		counsellor[0]["phone"],
 		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		CONSTANT.InstantSendTextMessage,
 	)
 	// fmt.Println("Status:" + CONSTANT.StatusCodeOk)
@@ -2136,7 +2208,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
+func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2148,7 +2220,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment slots details
-	appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"appointment_slot_id": r.FormValue("appointment_slot_id"), "status": CONSTANT.AppointmentSlotsActive})
+	appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"appointment_slot_id": body["appointment_slot_id"], "status": CONSTANT.AppointmentSlotsActive})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -2201,7 +2273,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 
 	// update slots remaining to 0
 	DB.UpdateSQL(CONSTANT.AppointmentSlotsTable, map[string]string{
-		"appointment_slot_id": r.FormValue("appointment_slot_id"),
+		"appointment_slot_id": body["appointment_slot_id"],
 	}, map[string]string{
 		"slots_remaining": "0",
 		"status":          CONSTANT.AppointmentUserCancelled,
@@ -2211,7 +2283,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
-	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", r.FormValue("appointment_slot_id"))
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentSlotsTable+" where appointment_slot_id = ?)", body["appointment_slot_id"])
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone"}, map[string]string{"counsellor_id": appointmentSlots[0]["counsellor_id"]})
@@ -2238,7 +2310,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_slot_id"),
+		body["appointment_slot_id"],
 		"",
 	)
 
@@ -2300,7 +2372,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
+func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2312,11 +2384,11 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRatingAddRequiredFields)
@@ -2372,7 +2444,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -2456,7 +2528,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2468,11 +2540,11 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRatingAddRequiredFields)
@@ -2522,7 +2594,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -2614,7 +2686,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
+func DownloadReceipt(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2627,7 +2699,7 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 
 	var fileName string
 
-	invoice, status, ok := DB.SelectProcess("select * from "+CONSTANT.InvoicesTable+" where invoice_id = ? ", r.FormValue("invoice_id"))
+	invoice, status, ok := DB.SelectProcess("select * from "+CONSTANT.InvoicesTable+" where invoice_id = ? ", body["invoice_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -2771,7 +2843,7 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func CancellationReason(w http.ResponseWriter, r *http.Request) {
+func CancellationReason(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2795,26 +2867,26 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.EqualFold(r.FormValue("sessions"), CONSTANT.EventStarted) {
-		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if strings.EqualFold(body["sessions"], CONSTANT.EventStarted) {
+		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		status, ok := DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
+		status, ok := DB.UpdateSQL(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body["appointment_id"]}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 	} else {
 
-		exists := DB.CheckIfExists(CONSTANT.AppointmentSlotsTable, map[string]string{"appointment_slot_id": r.FormValue("appointment_id")})
+		exists := DB.CheckIfExists(CONSTANT.AppointmentSlotsTable, map[string]string{"appointment_slot_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		status, ok := DB.UpdateSQL(CONSTANT.AppointmentSlotsTable, map[string]string{"appointment_slot_id": r.FormValue("appointment_id")}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
+		status, ok := DB.UpdateSQL(CONSTANT.AppointmentSlotsTable, map[string]string{"appointment_slot_id": body["appointment_id"]}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -2823,7 +2895,7 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
+func InPersonCancellationReason(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2835,11 +2907,11 @@ func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CancellationUpdateRequiredFields)
 	if len(fieldCheck) > 0 {
@@ -2847,14 +2919,14 @@ func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.EqualFold(r.FormValue("sessions"), CONSTANT.EventStarted) {
-		exists := DB.CheckIfExists(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if strings.EqualFold(body["sessions"], CONSTANT.EventStarted) {
+		exists := DB.CheckIfExists(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		status, ok := DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
+		status, ok := DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": body["appointment_id"]}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -2863,7 +2935,7 @@ func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -2875,7 +2947,7 @@ func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -2929,7 +3001,7 @@ func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
 	// update appointment date and time
 	DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
 		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
+			"appointment_id": body["appointment_id"],
 		},
 		map[string]string{
 			"status":      CONSTANT.InPersonAppointmentNoShowForCounsellor,
@@ -2968,9 +3040,10 @@ func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
+func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]string) {
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	var roleStr, agora_token, uidStr, channelName string
 
@@ -2982,17 +3055,17 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 
 	uidStr = generateRandomID()
 
-	if r.FormValue("session") == "1" {
-		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if body["session"] == "1" {
+		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		channelName = r.FormValue("appointment_id")
-		if r.FormValue("type") == "1" {
+		channelName = body["appointment_id"]
+		if body["type"] == "1" {
 			roleStr = CONSTANT.RolePublisher
-		} else if r.FormValue("type") == "2" {
+		} else if body["type"] == "2" {
 			roleStr = CONSTANT.RoleSubscriber
 		} else {
 			roleStr = "attended"
@@ -3012,17 +3085,17 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		agora_token = token
-	} else if r.FormValue("session") == "2" {
-		exists := DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("appointment_id")})
+	} else if body["session"] == "2" {
+		exists := DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		channelName = r.FormValue("appointment_id")
-		if r.FormValue("type") == "1" {
+		channelName = body["appointment_id"]
+		if body["type"] == "1" {
 			roleStr = CONSTANT.RolePublisher
-		} else if r.FormValue("type") == "2" {
+		} else if body["type"] == "2" {
 			roleStr = CONSTANT.RoleSubscriber
 		} else {
 			roleStr = "attended"
@@ -3148,7 +3221,15 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 	response["token"] = agora_token
 	response["UID"] = uidStr
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 
 }
 
@@ -3170,7 +3251,7 @@ func generateRandomID() string {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentStart(w http.ResponseWriter, r *http.Request) {
+func AppointmentStart(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -3182,7 +3263,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -3217,7 +3298,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		// update appointment as started
 		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
+				"appointment_id": body["appointment_id"],
 			},
 			map[string]string{
 				"status":            CONSTANT.AppointmentStarted,
@@ -3305,7 +3386,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		appointment[0]["type"],
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
+		body["appointment_id"],
 		"",
 	)
 
@@ -3321,7 +3402,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
+func AppointmentEnd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -3333,7 +3414,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get appointment details
-	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -3359,11 +3440,11 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	if len(r.FormValue("waiting")) > 0 {
+	if len(body["waiting"]) > 0 {
 		// update appointment as waiting
 		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
+				"appointment_id": body["appointment_id"],
 			},
 			map[string]string{
 				"client_ended_at": UTIL.GetCurrentTime().String(),
@@ -3373,7 +3454,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		// update appointment as completed
 		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
+				"appointment_id": body["appointment_id"],
 			},
 			map[string]string{
 				"status":          CONSTANT.AppointmentCompleted,
@@ -3407,7 +3488,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientType,
 			UTIL.GetCurrentTime().String(),
 			CONSTANT.NotificationSent,
-			r.FormValue("appointment_id"),
+			body["appointment_id"],
 			"",
 		)
 	}
@@ -3555,10 +3636,12 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-func CouponGet(w http.ResponseWriter, r *http.Request) {
+func CouponGet(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+
+	var encryptedResponse = make(map[string]interface{})
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3567,7 +3650,7 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get counsellor details
-	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by ", r.FormValue("client_id"))
+	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by ", body["client_id"])
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -3575,10 +3658,18 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 
 	response["coupons"] = couponsCode
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
+func AppointmentRequest(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -3591,11 +3682,11 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRequestRequiredFields)
@@ -3728,7 +3819,7 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
+func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -3880,10 +3971,11 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
+func GetAppointmentRequest(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3891,7 +3983,7 @@ func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -3899,14 +3991,23 @@ func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 
 	response["appointment_request"] = appointmentRequest
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 
 }
 
-func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
+func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3914,7 +4015,7 @@ func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -3922,6 +4023,14 @@ func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 
 	response["appointment_request"] = appointmentRequest
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 
 }

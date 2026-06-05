@@ -20,10 +20,11 @@ import (
 // @Param device_id query string true "Device ID of client - to get details, if signed up already"
 // @Produce json
 // @Success 200
-func ProfileGet(w http.ResponseWriter, r *http.Request) {
+func ProfileGet(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// if len(r.FormValue("device_id")) < 0 {
 	// 	UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
@@ -48,7 +49,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": body["email"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -93,7 +94,14 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 		response["media_url"] = CONFIG.MediaURL
 	}
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
 // ProfileAdd godoc
@@ -103,17 +111,18 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 // @Param body body model.ClientProfileAddRequest true "Request Body"
 // @Produce json
 // @Success 200
-func ProfileAdd(w http.ResponseWriter, r *http.Request) {
+func ProfileAdd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientProfileAddRequiredFields)
@@ -244,20 +253,28 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
-}
-
-func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var response = make(map[string]interface{})
-
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
+}
+
+func ProfileAddForCor(w http.ResponseWriter, r *http.Request, body map[string]string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
+
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateClientProfileAddRequiredFields)
@@ -283,7 +300,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	domainName := strings.Split(body["email"], "@")
 
 	// check domain exists or not
-	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
@@ -412,22 +429,30 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	response["client"] = clientD[0]
 	response["media_url"] = CONFIG.MediaURL
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
+func GetRelativeProfile(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
+	var encryptedResponse = make(map[string]interface{})
 
 	// check domain exists or not
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")})
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"client_id", "relation", "first_name", "last_name", "gender", "email", "date_of_birth", "location", "phone", "photo"}, map[string]string{"asscoiate_id": r.FormValue("client_id"), "status": "1"})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"client_id", "relation", "first_name", "last_name", "gender", "email", "date_of_birth", "location", "phone", "photo"}, map[string]string{"asscoiate_id": body["client_id"], "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -436,20 +461,27 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 	response["relation_list"] = client
 	response["media_url"] = CONFIG.MediaURL
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+	encrypt, _ := UTIL.EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY, CONSTANT.ENCRYPTION_SECRET_IV)
+	if encrypt == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
-func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
+func RelativeProfileAdd(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateClientRelativeProfileAddRequiredFields)
@@ -459,7 +491,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check domain exists or not
-	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]})
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
@@ -621,7 +653,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
+func ProfileUpdate(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -633,11 +665,11 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// update client details
 	client := map[string]string{}
@@ -676,7 +708,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["modified_at"] = UTIL.GetCurrentTime().String()
-	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, client)
+	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]}, client)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
