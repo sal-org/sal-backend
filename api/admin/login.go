@@ -13,7 +13,7 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get admin details
 	admin, status, ok := DB.SelectSQL(CONSTANT.AdminsTable, []string{"*"}, map[string]string{"username": r.FormValue("username"), "password": UTIL.GetStringMD5Hash(r.FormValue("password"))})
@@ -57,7 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	fmt.Println("RefreshToken", r.Header, r.URL.Query())
 	// check if refresh token is valid, not expired and token user id is same as user id given

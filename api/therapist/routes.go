@@ -129,6 +129,10 @@ func LoadTherapistRoutes(router *mux.Router) {
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 
+	therapistRoutes.HandleFunc("/payment/download", PaymentsDownload).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
 	// profile
 	therapistRoutes.HandleFunc("", ProfileGet).Queries(
 		"email", "{email}",

@@ -28,7 +28,7 @@ import (
 func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -106,7 +106,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -129,7 +129,7 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -160,7 +160,7 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -320,7 +320,7 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	data := r.FormValue("hashData") + CONFIG.PayUSalt
 	hash := sha512.New()
@@ -343,7 +343,7 @@ func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {

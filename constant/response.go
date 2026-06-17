@@ -7,6 +7,6 @@ const (
 	CorporateNamePerPageAdmin        = 20
 	CounsellorsListPerPageClient     = 10
 	CounsellorsRecordFormPerPage     = 10
-	CounsellorsPaymentsPerPageClient = 10
+	CounsellorsPaymentsPerPageClient = 40
 	NotificationsPerPage             = 10
 )

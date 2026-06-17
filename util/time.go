@@ -19,6 +19,27 @@ func GetIndiaCurrentTime() string {
 	return timeStr
 }
 
+func FirstDayOfMonth(t time.Time) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		1,
+		0, 0, 0, 0,
+		t.Location(),
+	)
+}
+
+
+func LastDayOfMonth(t time.Time) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month()+1,
+		0,
+		0, 0, 0, 0,
+		t.Location(),
+	)
+}
+
 func IsCurrentOrFutureDate(dateStr string) (bool, error) {
 	// Define your expected format
 	layout := "2006-01-02" // YYYY-MM-DD

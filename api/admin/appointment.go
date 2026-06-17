@@ -16,7 +16,7 @@ import (
 func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -26,7 +26,7 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 
 	// get appointments
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "state":
@@ -130,7 +130,7 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -140,7 +140,7 @@ func InPersonAppointmentGet(w http.ResponseWriter, r *http.Request) {
 
 	// get appointments
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "state":
@@ -213,7 +213,7 @@ func InPersonAppointmentGet(w http.ResponseWriter, r *http.Request) {
 func AppointmentRefund(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})

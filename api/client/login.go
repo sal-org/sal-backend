@@ -21,7 +21,7 @@ import (
 func SendOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	if len(r.FormValue("phone")) < 8 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
@@ -74,7 +74,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	if len(r.FormValue("family_phone_no")) < 8 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
@@ -154,7 +154,7 @@ func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
 func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if otp is correct
 	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
@@ -167,21 +167,26 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.EqualFold("915757575757", r.FormValue("phone")) {
-		if !strings.EqualFold("4444", r.FormValue("otp")) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-			return
-		}
-	} else if strings.EqualFold("914747474747", r.FormValue("phone")) {
-		if !strings.EqualFold("4848", r.FormValue("otp")) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-			return
-		}
-	} else {
-		if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-			return
-		}
+	// if strings.EqualFold("915757575757", r.FormValue("phone")) {
+	// 	if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// } else if strings.EqualFold("914747474747", r.FormValue("phone")) {
+	// 	if !strings.EqualFold("4848", r.FormValue("otp")) {
+	// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// } else {
+		// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+	// }
+
+	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
 	}
 
 	// if !strings.EqualFold("4444", r.FormValue("otp")) {
@@ -260,7 +265,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if otp is correct
 	if !UTIL.VerifyOTP(r.FormValue("family_phone_no"), r.FormValue("otp")) {
@@ -347,7 +352,7 @@ func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if refresh token is valid, not expired and token user id is same as user id given
 	id, ok, access := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
@@ -377,7 +382,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	is_valid_email := UTIL.IsValidEmail(r.FormValue("cor_email"))
 	if is_valid_email == "" {
@@ -457,7 +462,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 func SendOTPWithCorporateEmailForRegister(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	is_valid_email := UTIL.IsValidEmail(r.FormValue("cor_email"))
 	if is_valid_email == "" {
@@ -532,7 +537,7 @@ func SendOTPWithCorporateEmailForRegister(w http.ResponseWriter, r *http.Request
 func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get client details
 	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"access_code": r.FormValue("access_code"), "status": "1"})
@@ -563,7 +568,7 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
 func GetAddressForCorporateClient(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get client details
 	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
@@ -594,7 +599,7 @@ func GetAddressForCorporateClient(w http.ResponseWriter, r *http.Request) {
 func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get client details
 	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
@@ -681,7 +686,7 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get client details
 	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
@@ -790,7 +795,7 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get client details
 	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
@@ -810,7 +815,7 @@ func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
 func CheckEmailANDPhone(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	if len(r.FormValue("cor_email")) == 0 && len(r.FormValue("phone")) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientEmptyBodyPass, CONSTANT.ShowDialog, response)
@@ -865,7 +870,7 @@ func CheckEmailANDPhone(w http.ResponseWriter, r *http.Request) {
 func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if otp is correct
 	if !UTIL.VerifyOTPWithCorporateEmail(r.FormValue("cor_email"), r.FormValue("otp")) {
@@ -963,7 +968,7 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -977,7 +982,7 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {

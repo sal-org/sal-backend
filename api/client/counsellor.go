@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -25,7 +24,7 @@ import (
 func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -96,7 +95,7 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -120,7 +119,7 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -151,7 +150,7 @@ func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -319,7 +318,7 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -441,6 +440,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
+	
 	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
 
 	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
@@ -721,10 +721,10 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	filepath := "htmlfile/receiptClove.html"
 
-	emailbody, ok := UTIL.GetHTMLTemplateForReceipt(data, filepath)
-	if !ok {
-		fmt.Println("html body not create")
-	}
+	emailbody, _ := UTIL.GetHTMLTemplateForReceipt(data, filepath)
+	// if !ok {
+	// 	fmt.Println("html body not create")
+	// }
 
 	UTIL.SendEmail(
 		CONSTANT.ClientPaymentSucessClientHeading,

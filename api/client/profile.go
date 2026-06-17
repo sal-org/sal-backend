@@ -23,7 +23,7 @@ import (
 func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// if len(r.FormValue("device_id")) < 0 {
 	// 	UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
@@ -106,7 +106,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -250,7 +250,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -418,7 +418,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check domain exists or not
 	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")})
@@ -442,7 +442,7 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -624,7 +624,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {

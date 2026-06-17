@@ -2,8 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"path/filepath"
@@ -29,7 +28,7 @@ import (
 func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get all available assessments
 	assessments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentsTable + " where status = " + CONSTANT.AssessmentActive + " order by `order` asc")
@@ -68,7 +67,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get assessment questions
 	questions, status, ok := DB.SelectProcess("select assessment_question_id, question from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", r.FormValue("assessment_id"))
@@ -112,11 +111,11 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body := MODEL.AssessmentAddRequest{}
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
@@ -193,7 +192,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -282,7 +281,7 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//const assessment_id = "ywlxbz8yrlp942"
 
@@ -326,7 +325,6 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			} else if finalScore >= 40 && finalScore <= 69 {
 
-				fmt.Println(assessment_result[0]["score"])
 				filePath = "htmlfile/Assessment_AIS_Mid.html"
 
 			} else {
@@ -355,7 +353,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentAIS(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp943" {
@@ -445,7 +444,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBDI(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp944" {
 
@@ -485,7 +485,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentAIS(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp945" {
@@ -541,7 +542,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSRS(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp947" {
 			var filePath string
@@ -571,14 +573,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 				Answer6: assessment_result_details[5]["score"],
 			}
 
-			fmt.Println(assessment_data)
-
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGWB(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
-
-			fmt.Println(emailbody)
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp948" {
 			var filePath string
@@ -623,7 +622,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBurnOut(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp949" {
 			var filePath string
@@ -662,7 +662,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp950" {
 
@@ -702,7 +703,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp951" {
@@ -743,7 +745,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp952" {
@@ -784,7 +787,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp953" {
@@ -825,7 +829,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp954" {
@@ -862,7 +867,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		} else if assessment_result[0]["assessment_id"] == "ywlxbz8yrlp955" {
@@ -896,14 +902,13 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 				Answer6: assessment_result_details[5]["score"],
 			}
 
-			fmt.Println(assessment_data)
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGWB(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
-			fmt.Println(emailbody)
 
 		} else if title == "Grit Scale" || assessment_result[0]["assessment_id"] == "yu6h98081msq" {
 			var filePath string
@@ -948,7 +953,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBurnOut(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if title == "UCLA Loneliness Scale" {
 			var filePath string
@@ -988,7 +994,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if title == "Doomscrolling Scale" || assessment_result[0]["assessment_id"] == "0m18gbm7vv13" {
 			var filePath string
@@ -1037,7 +1044,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentBurnOut(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if title == "Assertiveness Scale" {
 			var filePath string
@@ -1076,7 +1084,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentSelfEsteem(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else if title == "Psychological well-being scale" {
 			var filePath string
@@ -1123,7 +1132,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentPSYCHOLOGICALWELLBEING(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 		} else {
 
@@ -1165,7 +1175,8 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
 			if !ok {
-				fmt.Println("html body not create ")
+				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
+				return
 			}
 
 		}
@@ -1177,8 +1188,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 		created := UTIL.HtmlToPDFAssessment(emailbody)
 
 		if created == nil {
-			fmt.Println("Pdf is not created")
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 
@@ -1187,8 +1197,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 		name, uploaded := UTIL.UploadToS3File(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(filename), CONSTANT.S3PublicRead, created)
 		if !uploaded {
-			fmt.Println("UploadFile")
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 		fileName = name

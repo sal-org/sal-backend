@@ -18,7 +18,7 @@ import (
 func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	// get counsellor details
 	var counsellorType string
 
@@ -272,7 +272,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -656,7 +656,7 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	// get counsellor details
 	var counsellorType string
 
@@ -789,7 +789,7 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {

@@ -82,5 +82,6 @@ const (
 	TherapistSlotNotAvailableMessage              = "Therapist not available in this hour. Book a different slot"
 	ValidPhoneRequiredMessage                     = "Valid phone number required"
 	VerifyPhoneRequiredMessage                    = "Verify phone number wth OTP"
+	HTMLTemplateNotCreateMessage                  = "Unable to generate PDF. Please try again later."
 	AgoraCredentialsIssueMessage                  = "FATAL ERROR: ENV not properly configured, check APP_ID and APP_CERTIFICATE"
 )

@@ -1,10 +1,8 @@
 package main
 
 import (
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	API "salbackend/api"
 	CONFIG "salbackend/config"
@@ -25,7 +23,7 @@ import (
 
 func main() {
 
-	rand.Seed(time.Now().UnixNano()) // seed for random generator
+	// rand.Seed(time.Now().UnixNano()) // seed for random generator
 
 	CONFIG.LoadConfig()
 	DATABASE.ConnectDatabase()

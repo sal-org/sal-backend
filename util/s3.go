@@ -151,7 +151,7 @@ func UploadToS3File(s3Bucket, path, s3AccessKey, s3SecretKey, s3Region, extensio
 		Key:         aws.String(fileName),
 		Body:        openedFile,
 		ContentType: aws.String(getFileMIMEType(strings.ToLower(extension))),
-		ACL:         aws.String(acl),
+		// ACL:         aws.String(acl),
 	})
 
 	os.Remove(savedFileName)

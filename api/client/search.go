@@ -31,13 +31,13 @@ import (
 func ListSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var SQLQuery, therapistSQLQuery string // counsellorSQLQuery, listenerSQLQuery,
-	args := []interface{}{}
+	args := []any{}
 	// counsellorArgs := []interface{}{}
 	// listenerArgs := []interface{}{}
-	therapistArgs := []interface{}{}
+	therapistArgs := []any{}
 
 	// build counsellor query
 	// counsellorSQLQuery = "select counsellor_id as id, first_name, last_name, pronoun, total_rating, average_rating, photo, price, multiple_sessions , education, experience, therapeutic_approach, about, " + CONSTANT.CounsellorType + " as type, slot_type from " + CONSTANT.CounsellorsTable
@@ -257,13 +257,13 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var SQLQuery, therapistSQLQuery string
-	args := []interface{}{}
+	args := []any{}
 
-	counsellorArgs := []interface{}{}
-	therapistArgs := []interface{}{}
+	counsellorArgs := []any{}
+	therapistArgs := []any{}
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -611,7 +611,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	var counsellorsCount []map[string]string
 	var counsellors []map[string]string
 	// filteredCounsellorSlots := map[string][]map[string]string{}
@@ -817,7 +817,7 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 func ListSearchForCorporateInPersonDuplication(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	var counsellorsCount []map[string]string
 	var counsellors []map[string]string
 	// filteredCounsellorSlots := map[string][]map[string]string{}

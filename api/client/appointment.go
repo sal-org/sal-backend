@@ -27,22 +27,13 @@ import (
 func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// var localTime int
-	// timeNow := UTIL.GetCurrentTime().Local()
-	// if timeNow.Minute() >= 30 {
-	// 	localTime = timeNow.Hour()*2 - 1
-	// } else {
-	// 	localTime = timeNow.Hour() * 2
-	// }
-	// fmt.Println(localTime)
-	// local := strconv.Itoa(localTime)
 
 	// get upcoming appointments both to be started and started
 	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
@@ -112,7 +103,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -166,7 +157,7 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -221,7 +212,7 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -351,7 +342,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -405,7 +396,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -482,7 +473,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -538,7 +529,7 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -854,7 +845,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1208,7 +1199,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1549,7 +1540,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1924,7 +1915,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2139,7 +2130,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2303,7 +2294,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2459,7 +2450,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2617,7 +2608,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2774,7 +2765,7 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 func CancellationReason(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2826,7 +2817,7 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2866,7 +2857,7 @@ func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -2970,7 +2961,7 @@ func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
 // @Success 200
 func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var roleStr, agora_token, uidStr, channelName string
 
@@ -3173,7 +3164,7 @@ func generateRandomID() string {
 func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3324,7 +3315,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3558,7 +3549,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 func CouponGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3581,7 +3572,7 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	var counsellor []map[string]string
 
 	// check if access token is valid, not expired
@@ -3731,7 +3722,7 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	var counsellor []map[string]string
 
 	// check if access token is valid, not expired
@@ -3883,7 +3874,7 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -3906,7 +3897,7 @@ func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {

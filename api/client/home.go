@@ -23,7 +23,7 @@ import (
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	var recommended []map[string]string
 	var ok bool
 	var status string
