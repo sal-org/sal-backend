@@ -89,23 +89,58 @@ func extractJWTToken(authorization string) string {
 	return ""
 }
 
+// func verifyJWTToken(authorization string) (*jwt.Token, bool) {
+// 	token, err := jwt.Parse(extractJWTToken(authorization), func(token *jwt.Token) (interface{}, error) {
+// 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+// 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+// 		}
+// 		return CONFIG.JWTSecret, nil
+// 	})
+// 	if err != nil {
+// 		return nil, false
+// 	}
+// 	// check if token valid
+// 	if _, ok := token.Claims.(jwt.MapClaims); !ok {
+// 		return nil, false
+// 	}
+// 	if !token.Valid {
+// 		return nil, false
+// 	}
+// 	return token, true
+// }
+
+
 func verifyJWTToken(authorization string) (*jwt.Token, bool) {
-	token, err := jwt.Parse(extractJWTToken(authorization), func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	tokenStr := extractJWTToken(authorization)
+
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+
+		// Allow only expected algorithm
+		if token.Method != jwt.SigningMethodHS256 {
+			return nil, fmt.Errorf("unexpected signing method")
 		}
+
 		return CONFIG.JWTSecret, nil
 	})
+
 	if err != nil {
 		return nil, false
 	}
-	// check if token valid
-	if _, ok := token.Claims.(jwt.Claims); !ok {
+
+	if token == nil || !token.Valid {
 		return nil, false
 	}
-	if !token.Valid {
+
+	_, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
 		return nil, false
 	}
+
+	// Optional explicit validation
+	// if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
+	// 	return nil, false
+	// }
+
 	return token, true
 }
 

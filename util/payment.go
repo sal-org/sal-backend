@@ -29,7 +29,11 @@ func GetPayUPayment(transactionID string) bool {
 
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
 
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return false
+	}
 
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)

@@ -1413,6 +1413,20 @@ func AppointmentInPersonNoShow(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	// update counsellor availability
+	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
+		map[string]string{
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             appointment[0]["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
+		},
+		map[string]string{
+			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
+			appointment[0]["time"]: CONSTANT.SlotAvailable, // update availability to the latest one
+		},
+	)
+
 	// send appointment join the call notification to Client
 	// UTIL.SendNotification(
 	// 	CONSTANT.ClientAppointmentHasBeenStartedHeading,

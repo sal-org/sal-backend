@@ -48,6 +48,15 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
 		assessment["photo"] = endPointURL
+
+		// get assessment questions
+		questions, status, ok := DB.SelectProcess("select count(assessment_question_id) as question_count from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", assessment["assessment_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		assessment["question_count"] = questions[0]["question_count"]
 	}
 
 	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
