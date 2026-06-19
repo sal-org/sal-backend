@@ -2,7 +2,7 @@ package util
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -35,7 +35,7 @@ func RequiredFiledsCheck(body map[string]string, required []string) string {
 // ReadRequestBody - read raw body from request
 func ReadRequestBody(r *http.Request) (map[string]string, bool) {
 	body := map[string]string{}
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		return body, false
 	}
@@ -47,7 +47,7 @@ func ReadRequestBody(r *http.Request) (map[string]string, bool) {
 // ReadRequestBodyInListMap - read raw body from request to list of maps
 func ReadRequestBodyInListMap(r *http.Request) ([]map[string]string, bool) {
 	body := []map[string]string{}
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		return body, false
 	}
