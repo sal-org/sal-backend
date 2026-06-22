@@ -84,4 +84,5 @@ const (
 	VerifyPhoneRequiredMessage                    = "Verify phone number wth OTP"
 	HTMLTemplateNotCreateMessage                  = "Unable to generate PDF. Please try again later."
 	AgoraCredentialsIssueMessage                  = "FATAL ERROR: ENV not properly configured, check APP_ID and APP_CERTIFICATE"
+	StatusCodeNoDataFoundMessage                  = "No data found"
 )
