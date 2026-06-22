@@ -10,6 +10,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 
@@ -29,6 +30,12 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
+
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get all available assessments
 	assessments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentsTable + " where status = " + CONSTANT.AssessmentActive + " order by `order` asc")
@@ -77,6 +84,12 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
+
+	assessmentID, ok := VALIDATOR.Required(r.FormValue("assessment_id"), "Assessment ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, assessmentID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get assessment questions
 	questions, status, ok := DB.SelectProcess("select assessment_question_id, question from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", r.FormValue("assessment_id"))
