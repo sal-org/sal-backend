@@ -211,7 +211,7 @@ func PaymentsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func PaymentsDownload(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Type", "application/json")
 
 	startBy, _ := time.Parse("2006-01-02", r.FormValue("start_by"))
 	endBy, _ := time.Parse("2006-01-02", r.FormValue("end_by"))
@@ -350,6 +350,8 @@ func PaymentsDownload(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+
+	w.Header().Set("Content-Type", "text/csv")
 
 	data = append(data, []string{"Total Amount", "", "", "", "", totalPayments[0]["total"]})
 
