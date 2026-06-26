@@ -8,6 +8,7 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
+	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 	"time"
@@ -27,10 +28,16 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellorID, ok := VALIDATOR.Required(r.FormValue("counsellor_id"), "Counsellor ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get counsellor details
 	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "price", "video", "multiple_sessions", "education", "experience", "therapeutic_approach", "about", "slot_type"}, map[string]string{"counsellor_id": r.FormValue("counsellor_id")})
@@ -103,6 +110,12 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	counsellorID, ok := VALIDATOR.Required(r.FormValue("counsellor_id"), "Counsellor ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get counsellor slots
 	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"))
 	if !ok {
@@ -124,6 +137,24 @@ func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellorID, ok := VALIDATOR.Required(r.FormValue("counsellor_id"), "Counsellor ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	companyName, ok := VALIDATOR.Required(r.FormValue("companyName"), "Company Name")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyName, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	companyLocation, ok := VALIDATOR.Required(r.FormValue("companyLocation"), "Company Location")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyLocation, CONSTANT.ShowDialog, response)
 		return
 	}
 

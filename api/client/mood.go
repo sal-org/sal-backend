@@ -8,6 +8,7 @@ import (
 
 	UTIL "salbackend/util"
 	CONFIG "salbackend/config"
+	VALIDATOR "salbackend/validator"
 )
 
 // MoodAdd godoc
@@ -120,6 +121,18 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	dateValidator, ok := VALIDATOR.Required(r.FormValue("dates"), "Date")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, dateValidator, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	dates := strings.Split(r.FormValue("dates"), ",")
 	if len(dates) < 2 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
@@ -153,6 +166,12 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := VALIDATOR.Required(r.FormValue("user_id"), "User ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
 	}
 

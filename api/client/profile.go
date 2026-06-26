@@ -6,6 +6,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
+	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 
@@ -46,6 +47,12 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 	// 	return
 	// }
+
+	emailID, ok := VALIDATOR.Required(r.FormValue("email"), "Email")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
@@ -420,8 +427,14 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	cleintID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, cleintID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// check domain exists or not
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")})
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return

@@ -294,8 +294,6 @@ func LoadClientRoutes(router *mux.Router) {
 	// corporate in person search
 	clientRoutes.HandleFunc("/corporate_inperson_search", ListSearchForCorporateInPerson).Methods("GET")
 
-	// corporate in person search for testing
-	clientRoutes.HandleFunc("/corporate_test_inperson_search", ListSearchForCorporateInPersonDuplication).Methods("GET")
 
 	// therapist
 	clientRoutes.HandleFunc("/therapist", TherapistProfile).Queries(

@@ -222,6 +222,12 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	var results []string
 
 	// get assessment past results
@@ -308,6 +314,12 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	//const assessment_id = "ywlxbz8yrlp942"
 
 	var fileName, emailbody string
+
+	assessmentResultID, ok := VALIDATOR.Required(r.FormValue("assessment_result_id"), "Assessment Result ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, assessmentResultID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if DB.CheckIfExists(CONSTANT.AssessmentPdfTable, map[string]string{"assessment_result_id": r.FormValue("assessment_result_id")}) {
 

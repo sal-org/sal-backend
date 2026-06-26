@@ -6,6 +6,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
+	VALIDATOR "salbackend/validator"
 
 	UTIL "salbackend/util"
 	"strings"
@@ -178,10 +179,10 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 		return
 	// 	}
 	// } else {
-		// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
-		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-		// 	return
-		// }
+	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 	// }
 
 	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
@@ -266,6 +267,18 @@ func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
+
+	phoneNumber, ok := VALIDATOR.Required(r.FormValue("family_phone_no"), "Phone Number")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	otpValidator, ok := VALIDATOR.Required(r.FormValue("otp"), "OTP")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, otpValidator, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	//check if otp is correct
 	if !UTIL.VerifyOTP(r.FormValue("family_phone_no"), r.FormValue("otp")) {
@@ -384,6 +397,12 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	corEmailID, ok := VALIDATOR.Required(r.FormValue("cor_email"), "Email ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, corEmailID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	is_valid_email := UTIL.IsValidEmail(r.FormValue("cor_email"))
 	if is_valid_email == "" {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
@@ -393,7 +412,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 	domainName := strings.Split(r.FormValue("cor_email"), "@")
 
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
@@ -464,6 +483,12 @@ func SendOTPWithCorporateEmailForRegister(w http.ResponseWriter, r *http.Request
 
 	var response = make(map[string]any)
 
+	corEmailID, ok := VALIDATOR.Required(r.FormValue("cor_email"), "Email ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, corEmailID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	is_valid_email := UTIL.IsValidEmail(r.FormValue("cor_email"))
 	if is_valid_email == "" {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
@@ -473,7 +498,7 @@ func SendOTPWithCorporateEmailForRegister(w http.ResponseWriter, r *http.Request
 	domainName := strings.Split(r.FormValue("cor_email"), "@")
 
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
@@ -539,8 +564,14 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	accessCode, ok := VALIDATOR.Required(r.FormValue("access_code"), "Access Code")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, accessCode, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"access_code": r.FormValue("access_code"), "status": "1"})
+	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"access_code": r.FormValue("access_code"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientAccessCode, CONSTANT.ShowDialog, response)
 		return
@@ -570,8 +601,14 @@ func GetAddressForCorporateClient(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientAccessCode, CONSTANT.ShowDialog, response)
 		return
@@ -601,8 +638,14 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	phoneNumber, ok := VALIDATOR.Required(r.FormValue("phone"), "Phone")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientDependantInvaildPhoneNumber, CONSTANT.ShowDialog, response)
 		return
@@ -688,8 +731,14 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	phoneNumber, ok := VALIDATOR.Required(r.FormValue("phone"), "Phone")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientDependantInvaildPhoneNumber, CONSTANT.ShowDialog, response)
 		return
@@ -797,8 +846,14 @@ func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get client details
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
 		return
@@ -872,13 +927,25 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	emailID, ok := VALIDATOR.Required(r.FormValue("cor_email"), "Email ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	otpValidator, ok := VALIDATOR.Required(r.FormValue("otp"), "OTP")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, otpValidator, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	//check if otp is correct
 	if !UTIL.VerifyOTPWithCorporateEmail(r.FormValue("cor_email"), r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
 		return
@@ -985,14 +1052,21 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if len(r.FormValue("phone")) == 0 {
 		userType := "3"
 		userID := ""
+
+		emailID, ok := VALIDATOR.Required(r.FormValue("email"), "Email ID")
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
+			return
+		}
+
 		user, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1040,6 +1114,12 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 		userType := "3"
 
 		userID := ""
+
+		phoneNumber, ok := VALIDATOR.Required(r.FormValue("phone"), "Phone No.")
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
+			return
+		}
 
 		user, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone")})
 		if !ok {

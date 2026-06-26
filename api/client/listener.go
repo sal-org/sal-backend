@@ -6,6 +6,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
+	VALIDATOR "salbackend/validator"
 	"time"
 
 	UTIL "salbackend/util"
@@ -28,6 +29,12 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	listenerID, ok := VALIDATOR.Required(r.FormValue("listener_id"), "Listener ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, listenerID, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -95,6 +102,12 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	listenerID, ok := VALIDATOR.Required(r.FormValue("listener_id"), "Listener ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, listenerID, CONSTANT.ShowDialog, response)
 		return
 	}
 

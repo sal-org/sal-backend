@@ -10,6 +10,7 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
+	VALIDATOR "salbackend/validator"
 	"time"
 
 	UTIL "salbackend/util"
@@ -31,10 +32,16 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapistID, ok := VALIDATOR.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get therapist details
 	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "price", "video", "multiple_sessions", "education", "experience", "therapeutic_approach", "about", "slot_type"}, map[string]string{"therapist_id": r.FormValue("therapist_id")})
@@ -114,6 +121,12 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	therapistID, ok := VALIDATOR.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get therapist slots
 	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
 	if !ok {
@@ -134,6 +147,24 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapistID, ok := VALIDATOR.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	companyName, ok := VALIDATOR.Required(r.FormValue("companyName"), "Company Name")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyName, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	companyLocation, ok := VALIDATOR.Required(r.FormValue("companyLocation"), "Company Location")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyLocation, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -321,6 +352,12 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
+
+	dataRequired, ok := VALIDATOR.Required(r.FormValue("hashData"), "Data")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, dataRequired, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	data := r.FormValue("hashData") + CONFIG.PayUSalt
 	hash := sha512.New()

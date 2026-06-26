@@ -9,6 +9,8 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
+	VALIDATOR "salbackend/validator"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -27,10 +29,10 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get upcoming events
 	events, status, ok := DB.SelectProcess("select * from " + CONSTANT.OrderCounsellorEventTable + " where status = " + CONSTANT.EventToBeStarted + " order by date desc, time desc")
@@ -50,10 +52,16 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 	var events []map[string]string
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
@@ -61,7 +69,9 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" {
+	emailIDAccess := []string{"anand.shah@clovemind.com", "karishma.vora@clovemind.com"}
+
+	if slices.Contains(emailIDAccess, client[0]["email"]) {
 
 		eventsBooked, status, ok := DB.SelectProcess("select order_id from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and status = '1'", r.FormValue("client_id"))
 		if !ok {
@@ -144,6 +154,12 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	orderID, ok := VALIDATOR.Required(r.FormValue("order_id"), "Order ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get event details
 	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": r.FormValue("order_id")})
 	if !ok {
@@ -196,6 +212,12 @@ func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	orderID, ok := VALIDATOR.Required(r.FormValue("order_id"), "Order ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -281,6 +303,12 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -521,6 +549,12 @@ func GetEventInPersonRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	inpersonEventRequest, status, ok := DB.SelectSQL(CONSTANT.EventInPersonRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -626,6 +660,18 @@ func GetEventsInPersonRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, ok := VALIDATOR.Required(r.FormValue("user_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, userID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	orderID, ok := VALIDATOR.Required(r.FormValue("order_id"), "Order ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming booked events
 	events, status, ok := DB.SelectProcess("select question1, question2, question3, question4, question5 from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and event_order_id = ? and status != '4' ", r.FormValue("user_id"), r.FormValue("order_id"))
 	if !ok {
@@ -652,6 +698,12 @@ func EventsBookedInPerson(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -692,6 +744,12 @@ func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -1072,6 +1130,12 @@ func WebinarList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -1102,9 +1166,11 @@ func WebinarList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emailIDAccess := []string{"anand.shah@clovemind.com", "karishma.vora@clovemind.com", "shivam.tiwari@clovemind.com"}
+
 	if r.FormValue("webinar_id") == "" {
 
-		if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" || client[0]["email"] == "shivam.tiwari@clovemind.com" {
+		if slices.Contains(emailIDAccess, client[0]["email"]) {
 			// get upcoming events
 			events, status, ok = DB.SelectProcess("select * from " + CONSTANT.WebinarsTable + " where status = " + CONSTANT.EventToBeStarted + " and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' order by date desc, time desc")
 			if !ok {
@@ -1122,7 +1188,7 @@ func WebinarList(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		if client[0]["email"] == "anand.shah@clovemind.com" || client[0]["email"] == "karishma.vora@clovemind.com" || client[0]["email"] == "shivam.tiwari@clovemind.com" {
+		if slices.Contains(emailIDAccess, client[0]["email"]) {
 
 			// get event by id
 			events, status, ok = DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("webinar_id"))
@@ -1168,10 +1234,10 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
