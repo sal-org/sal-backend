@@ -82,6 +82,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 			content["counsellor_photo"] = endPointURLCounsellorPhoto
 		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
+		}
 	}
 
 	response["recommended"] = recommended

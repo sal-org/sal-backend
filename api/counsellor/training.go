@@ -35,7 +35,6 @@ func Training(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	for _, content := range training {
 		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
@@ -49,6 +48,12 @@ func Training(w http.ResponseWriter, r *http.Request) {
 			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
 			content["share_content"] = endPointURLShareContent
+		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
 		}
 	}
 

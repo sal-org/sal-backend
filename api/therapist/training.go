@@ -49,6 +49,12 @@ func Training(w http.ResponseWriter, r *http.Request) {
 			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
 			content["share_content"] = endPointURLShareContent
 		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
+		}
 	}
 
 	response["training"] = training

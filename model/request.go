@@ -956,6 +956,10 @@ type AgoraCallStopResponseModel struct {
 	} `json:"Body"`
 }
 
+type EmailBodyMessageWithNameModel struct {
+	Name    string
+}
+
 type EmailBodyMessageModel struct {
 	Name    string
 	Message string

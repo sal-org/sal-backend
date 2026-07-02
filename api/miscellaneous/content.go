@@ -24,7 +24,7 @@ import (
 func Content(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var categoryFilter string
 	var moodFilter string
@@ -43,6 +43,7 @@ func Content(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(r.FormValue("liked")) != 0 {
+
 
 		likedContent, status, ok := DB.SelectProcess("select content_id from "+CONSTANT.ContentLikesTable+" where user_id = ? order by created_at desc", r.FormValue("user_id"))
 		if !ok {
@@ -84,6 +85,12 @@ func Content(w http.ResponseWriter, r *http.Request) {
 				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 				content["counsellor_photo"] = endPointURLCounsellorPhoto
 			}
+
+			if content["type"] != "3" {
+				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+				content["content"] = endPointURLContent
+			}
 		}
 
 		if r.FormValue("type") == "1" {
@@ -112,6 +119,12 @@ func Content(w http.ResponseWriter, r *http.Request) {
 					urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 					_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 					content["counsellor_photo"] = endPointURLCounsellorPhoto
+				}
+
+				if content["type"] != "3" {
+					urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+					_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+					content["content"] = endPointURLContent
 				}
 			}
 
@@ -169,6 +182,12 @@ func Content(w http.ResponseWriter, r *http.Request) {
 				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 				content["counsellor_photo"] = endPointURLCounsellorPhoto
+			}
+
+			if content["type"] != "3" {
+				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+				content["content"] = endPointURLContent
 			}
 		}
 
@@ -318,9 +337,43 @@ func Content(w http.ResponseWriter, r *http.Request) {
 				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 				content["counsellor_photo"] = endPointURLCounsellorPhoto
 			}
+
+			if content["type"] != "3" {
+				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+				content["content"] = endPointURLContent
+			}
 		}
 
 		for _, content := range audios {
+			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			content["photo"] = endPointURL
+
+			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+			content["background_photo"] = endPointURLBackgroundPhoto
+
+			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+				content["share_content"] = endPointURLShareContent
+			}
+
+			if len(content["counsellor_photo"]) > 0 {
+				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+				content["counsellor_photo"] = endPointURLCounsellorPhoto
+			}
+
+			if content["type"] != "3" {
+				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+				content["content"] = endPointURLContent
+			}
+		}
+
+		for _, content := range articles {
 			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
 			content["photo"] = endPointURL
@@ -394,6 +447,12 @@ func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 			urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 			content["counsellor_photo"] = endPointURLCounsellorPhoto
+		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
 		}
 	}
 
@@ -479,6 +538,12 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 			content["counsellor_photo"] = endPointURLCounsellorPhoto
 		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
+		}
 	}
 
 	for _, content := range audios {
@@ -500,6 +565,12 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 			urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
 			content["counsellor_photo"] = endPointURLCounsellorPhoto
+		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
 		}
 	}
 

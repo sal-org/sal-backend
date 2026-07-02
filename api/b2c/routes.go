@@ -256,6 +256,8 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		CorporateCounsellorOrderCreate(w, r, decrypted)
 	case "/therapist/complete":
 		CorporateCounsellorOrderPaymentComplete(w, r, decrypted)
+	case "/client/content":
+		GetWebsiteContent(w, r, decrypted)
 	default:
 		w.Header().Set("Status", "200")
 		w.WriteHeader(200)

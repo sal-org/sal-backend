@@ -2,11 +2,11 @@ package miscellaneous
 
 import (
 	"net/http"
+	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	_ "salbackend/model"
 	UTIL "salbackend/util"
-	CONFIG "salbackend/config"
 )
 
 // Counsellor Content godoc
@@ -47,6 +47,12 @@ func ListCounsellorContent(w http.ResponseWriter, r *http.Request) {
 			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
 			content["share_content"] = endPointURLShareContent
+		}
+
+		if content["type"] != "3" {
+			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			content["content"] = endPointURLContent
 		}
 	}
 

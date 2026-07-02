@@ -1352,7 +1352,7 @@ func AppointmentInPersonNoShow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"asscoiate_id"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"asscoiate_id", "first_name", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1443,6 +1443,20 @@ func AppointmentInPersonNoShow(w http.ResponseWriter, r *http.Request) {
 	// 	CONSTANT.NotificationSent,
 	// 	r.FormValue("appointment_id"),
 	// )
+
+	// Payment receipt
+	emaildata1 := Model.EmailBodyMessageWithNameModel{
+		Name: client[0]["first_name"],
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForClientNoShowText(emaildata1, "htmlfile/noShowByTheClient.html")
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientAppointmentBookCounsellorTitle,
+		emailBody1,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

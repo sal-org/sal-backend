@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
+
 	"log"
 	"net/http"
-	Model "salbackend/model"
+	"os"
 	CONFIG "salbackend/config"
+	Model "salbackend/model"
 )
 
 func GetHTMLTemplateForEvent(data Model.EmailDataForEvent, filepath string) string {
@@ -19,7 +20,7 @@ func GetHTMLTemplateForEvent(data Model.EmailDataForEvent, filepath string) stri
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +44,7 @@ func GetHTMLTemplateForProfile(data Model.EmailDataForCounsellorProfile, filepat
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -67,7 +68,7 @@ func GetHTMLTemplateForCounsellorCancellation(data Model.EmailDataForCounsellorC
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -91,8 +92,9 @@ func GetHTMLTemplateForAppFeedBack(data Model.EmailDataForFeedback, filepath str
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
-{}
+	htmlData, err := os.ReadFile(filepath)
+	{
+	}
 	if err != nil {
 		log.Fatal(err)
 		return ""
@@ -115,7 +117,7 @@ func GetHTMLTemplateForWebB2CClientProfile(data Model.EmailDataForWebClientB2CPr
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -139,7 +141,7 @@ func GetHTMLTemplateForCounsellorRecord(data Model.EmailDataForCounsellorRecord,
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -158,14 +160,13 @@ func GetHTMLTemplateForCounsellorRecord(data Model.EmailDataForCounsellorRecord,
 	return templateBuffer.String()
 }
 
-
 // CounsellorRecordNewestVersion
 func GetHTMLTemplateForCounsellorRecordNewestVersion(data Model.EmailDataForCounsellorRecordForLastestVersion, filepath string) string {
 	var templateBuffer bytes.Buffer
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -189,7 +190,31 @@ func GetHTMLTemplateForCounsellorVisit(data Model.EmailDataForCounsellorVisit, f
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	htmlTemplate := template.Must(template.New("email.html").Parse(string(htmlData)))
+
+	err = htmlTemplate.ExecuteTemplate(&templateBuffer, "email.html", data)
+
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	return templateBuffer.String()
+}
+
+func GetHTMLTemplateForClientNoShowText(data Model.EmailBodyMessageWithNameModel, filepath string) string {
+	var templateBuffer bytes.Buffer
+
+	// You can bind custom data here as per requirements.
+
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -213,7 +238,7 @@ func GetHTMLTemplateForCounsellorProfileText(data Model.EmailBodyMessageModel, f
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -237,7 +262,7 @@ func GetHTMLTemplateForClientConfirmationWithAccessCodeText(data Model.EmailBody
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -261,7 +286,7 @@ func GetHTMLTemplateForWithDocument(data Model.EmailBodyMessageModelWithDocu, fi
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -285,7 +310,7 @@ func GetHTMLTemplateForClientAppointmentConfirmation(data Model.ClientAppointmen
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		log.Fatal(err)
@@ -309,7 +334,7 @@ func GetHTMLTemplateForReceipt(data Model.EmailDataForPaymentReceipt, filepath s
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -333,7 +358,7 @@ func GetHTMLTemplateForAssessmentAIS(data Model.AssessmentDownloadAIS, filepath 
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -357,7 +382,7 @@ func GetHTMLTemplateForAssessmentBDI(data Model.AssessmentDownloadBDIModel, file
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -381,7 +406,7 @@ func GetHTMLTemplateForAssessmentSRS(data Model.AssessmentDownloadSRSModel, file
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -405,7 +430,7 @@ func GetHTMLTemplateForAssessmentSelfEsteem(data Model.AssessmentDownloadSelfEst
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -424,13 +449,12 @@ func GetHTMLTemplateForAssessmentSelfEsteem(data Model.AssessmentDownloadSelfEst
 	return templateBuffer.String(), true
 }
 
-
 func GetHTMLTemplateForAssessmentPSYCHOLOGICALWELLBEING(data Model.AssessmentDownloadPSYCHOLOGICALWELLBEINGModel, filepath string) (string, bool) {
 	var templateBuffer bytes.Buffer
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -454,7 +478,7 @@ func GetHTMLTemplateForAssessmentBurnOut(data Model.AssessmentDownloadBurnOutMod
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -478,7 +502,7 @@ func GetHTMLTemplateForAssessmentGAD7(data Model.AssessmentDownloadGAD7Model, fi
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
@@ -502,7 +526,7 @@ func GetHTMLTemplateForAssessmentGWB(data Model.AssessmentDownloadGWBModel, file
 
 	// You can bind custom data here as per requirements.
 
-	htmlData, err := ioutil.ReadFile(filepath)
+	htmlData, err := os.ReadFile(filepath)
 
 	if err != nil {
 		fmt.Println("file is not read")
