@@ -38,7 +38,7 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request, body map[string]s
 		contentArgs = append(contentArgs, body["category_id"])
 	}
 	if len(body["name"]) > 0 {
-		wheres = append(wheres, " (content like '%%"+body["name"]+"%%'")
+		wheres = append(wheres, " content like '%%"+body["name"]+"%%'")
 	}
 	if len(body["type"]) > 0 {
 		wheres = append(wheres, " type = ? ")
@@ -94,6 +94,47 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request, body map[string]s
 	response["contents_count"] = contentsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(contentsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
+
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	if encrypt == "" {
+		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	encryptedResponse["data"] = encrypt
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
+}
+
+
+
+func GetResourceCategoryForWeb(w http.ResponseWriter, r *http.Request, body map[string]string) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	var encryptedResponse = make(map[string]any)
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	contentCategories, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentCategoriesInWebTable)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	contentResource, status, ok := DB.SelectProcess("select * from " + CONSTANT.ResourceCategoriesInWebTable)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["categories"] = contentCategories
+	response["resources"] = contentResource
 
 	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {

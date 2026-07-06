@@ -350,8 +350,8 @@ func ContentGetForWeb(w http.ResponseWriter, r *http.Request) {
 			}
 		case "category_id":
 			if len(val[0]) > 0 {
-				wheres = append(wheres, " category_id = ? ")
-				queryArgs = append(queryArgs, val[0])
+				wheres = append(wheres, " category_id like ? ")
+				queryArgs = append(queryArgs, "%"+val[0]+"%")
 			}
 		case "type":
 			if len(val[0]) > 0 {
@@ -374,8 +374,10 @@ func ContentGetForWeb(w http.ResponseWriter, r *http.Request) {
 				queryArgs = append(queryArgs, val[0])
 			}
 		case "content_id":
-			wheres = append(wheres, " content_id = ? ")
-			queryArgs = append(queryArgs, val[0])
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " content_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		}
 	}
 

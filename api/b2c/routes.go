@@ -258,6 +258,8 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		CorporateCounsellorOrderPaymentComplete(w, r, decrypted)
 	case "/client/content":
 		GetWebsiteContent(w, r, decrypted)
+	case "/client/resource-category":
+		GetResourceCategoryForWeb(w, r, decrypted)
 	default:
 		w.Header().Set("Status", "200")
 		w.WriteHeader(200)
