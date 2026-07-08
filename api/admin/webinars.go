@@ -2,7 +2,6 @@ package admin
 
 import (
 	"net/http"
-	"net/url"
 	"path/filepath"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -164,39 +163,20 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// counsellor photo
-	parsedCounsellorPhoto, err := url.Parse(body["counsellor_photo"])
-	if err != nil {
-		panic(err)
-	}
-	// Remove query string
-	parsedCounsellorPhoto.RawQuery = ""
+	endPointURLCounsellorPhoto := UTIL.GetEndpointFromURL(body["counsellor_photo"])
+	body["counsellor_photo"] = endPointURLCounsellorPhoto
 
+	endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+	body["photo"] = endPointURLPhoto
 
-
-	// event photo
-	parsedPhoto, err := url.Parse(body["photo"])
-	if err != nil {
-		panic(err)
-	}
-	// Remove query string
-	parsedPhoto.RawQuery = ""
-
-
-	
-	// event background photo
-	parsedBackgroundPhoto, err := url.Parse(body["background_photo"])
-	if err != nil {
-		panic(err)
-	}
-	// Remove query string
-	parsedBackgroundPhoto.RawQuery = ""
+	endPointURLBackgroundPhoto := UTIL.GetEndpointFromURL(body["background_photo"])
+	body["background_photo"] = endPointURLBackgroundPhoto
 
 	// add event
 	webinar := map[string]string{}
 	webinar["counsellor_name"] = body["counsellor_name"]
 	webinar["title"] = body["title"]
-	webinar["counsellor_photo"] = parsedCounsellorPhoto.String()
+	webinar["counsellor_photo"] = body["counsellor_photo"]
 	webinar["counsellor_qualification"] = body["counsellor_qualification"]
 	webinar["counsellor_about"] = body["counsellor_about"]
 	webinar["counsellor_experience"] = body["counsellor_experience"]
@@ -205,8 +185,8 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 	webinar["why_attend"] = body["why_attend"]
 	webinar["partner_name"] = body["partner_name"]
 	webinar["address"] = body["address"]
-	webinar["photo"] = parsedPhoto.String()
-	webinar["background_photo"] = parsedBackgroundPhoto.String()
+	webinar["photo"] = body["photo"]
+	webinar["background_photo"] = body["background_photo"]
 	webinar["date"] = body["date"]
 	webinar["time"] = body["time"]
 	webinar["duration"] = body["duration"]

@@ -269,6 +269,23 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 		counsellorPhoto = counsellor[0]["photo"]
 	}
 
+	endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+
+	body["photo"] = endPointURLPhoto
+
+	endPointURLBackgroundPhoto := UTIL.GetEndpointFromURL(body["background_photo"])
+	body["background_photo"] = endPointURLBackgroundPhoto
+
+	if len(body["share_content"]) != 0 {
+		endPointURLShareContent := UTIL.GetEndpointFromURL(body["share_content"])
+		body["share_content"] = endPointURLShareContent
+	}
+
+	if body["type"] == CONSTANT.VideoContentType || body["type"] == CONSTANT.AudioContentType {
+		endPointURLContent := UTIL.GetEndpointFromURL(body["content"])
+		body["content"] = endPointURLContent
+	}
+
 	// add content
 	content := map[string]string{}
 	content["counsellor_id"] = body["counsellor_id"]
@@ -581,6 +598,22 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 
 	if len(counsellor) != 0 {
 		counsellorPhoto = counsellor[0]["photo"]
+	}
+
+	endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+	body["photo"] = endPointURLPhoto
+
+	endPointURLBackgroundPhoto := UTIL.GetEndpointFromURL(body["background_photo"])
+	body["background_photo"] = endPointURLBackgroundPhoto
+
+	if len(body["share_content"]) != 0 {
+		endPointURLShareContent := UTIL.GetEndpointFromURL(body["share_content"])
+		body["share_content"] = endPointURLShareContent
+	}
+
+	if body["type"] == CONSTANT.VideoContentType || body["type"] == CONSTANT.AudioContentType {
+		endPointURLContent := UTIL.GetEndpointFromURL(body["content"])
+		body["content"] = endPointURLContent
 	}
 
 	// add content

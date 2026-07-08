@@ -363,6 +363,12 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+	body["photo"] = endPointURLPhoto
+
+	endPointURLBackgroundPhoto := UTIL.GetEndpointFromURL(body["background_photo"])
+	body["background_photo"] = endPointURLBackgroundPhoto
+
 	// add event
 	event := map[string]string{}
 	event["counsellor_id"] = body["counsellor_id"]

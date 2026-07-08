@@ -9,18 +9,18 @@ import (
 	UTIL "salbackend/util"
 )
 
-func ClientBookDemo(w http.ResponseWriter, r *http.Request, body map[string]string) {
+func ClientBookDemo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
 
 	// read request body
-	// body, ok := UTIL.ReadRequestBody(r)
-	// if !ok {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// check for required fields
 	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientBookDemoInWebsiteAddRequiredFields)

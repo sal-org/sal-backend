@@ -10,13 +10,13 @@ import (
 	"strings"
 )
 
-func GetWebsiteContent(w http.ResponseWriter, r *http.Request, body map[string]string) {
+func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
 
-	var encryptedResponse = make(map[string]any)
+	// var encryptedResponse = make(map[string]any)
 
 	var SQLQuery, contentSQLQuery string
 	args := []any{}
@@ -24,18 +24,27 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request, body map[string]s
 
 	wheres := []string{}
 
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	if !(len(body["content_mode"]) != 0 && len(body["content_mode"]) < 2) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ContentMoodIsRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	wheres = append(wheres, " content_mode = ? ")
+	contentArgs = append(contentArgs, body["content_mode"])
 
 	if len(body["resource_id"]) > 0 {
 		wheres = append(wheres, " resource_id = ? ")
 		contentArgs = append(contentArgs, body["resource_id"])
 	}
 	if len(body["category_id"]) > 0 {
-		wheres = append(wheres, " category_id = ? ")
-		contentArgs = append(contentArgs, body["category_id"])
+		wheres = append(wheres, " FIND_IN_SET("+body["category_id"]+", category_id) ")
 	}
 	if len(body["name"]) > 0 {
 		wheres = append(wheres, " content like '%%"+body["name"]+"%%'")
@@ -48,7 +57,7 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request, body map[string]s
 	wheres = append(wheres, " status = "+CONSTANT.ContentActive+" ") // only active therapists
 	contentSQLQuery += " where " + strings.Join(wheres, " and ")
 
-	SQLQuery = " ( " + contentSQLQuery + " ) "
+	SQLQuery = "select * from " + CONSTANT.ContentsInWebTable + contentSQLQuery + " "
 	args = append(args, contentArgs...)
 
 	sortBy := " created_at " // default ordering by
@@ -95,25 +104,23 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request, body map[string]s
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(contentsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
 	response["media_url"] = CONFIG.MediaURL
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
-	if encrypt == "" {
-		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	// if encrypt == "" {
+	// 	UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	encryptedResponse["data"] = encrypt
+	// encryptedResponse["data"] = encrypt
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
-
-
-func GetResourceCategoryForWeb(w http.ResponseWriter, r *http.Request, body map[string]string) {
+func GetResourceCategoryForWeb(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
 
-	var encryptedResponse = make(map[string]any)
+	// var encryptedResponse = make(map[string]any)
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -136,13 +143,13 @@ func GetResourceCategoryForWeb(w http.ResponseWriter, r *http.Request, body map[
 	response["categories"] = contentCategories
 	response["resources"] = contentResource
 
-	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
-	if encrypt == "" {
-		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	// if encrypt == "" {
+	// 	UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	encryptedResponse["data"] = encrypt
+	// encryptedResponse["data"] = encrypt
 
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

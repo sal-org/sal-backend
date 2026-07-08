@@ -100,13 +100,15 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	endPointURLVideoContent := UTIL.GetEndpointFromURL(body["video"])
+	body["video"] = endPointURLVideoContent
 
 	// add therapist
 	therapist := map[string]string{}
@@ -158,7 +160,6 @@ func PreSignedS3URLToUploadContent(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-
 
 	s3Path := CONSTANT.MiscellaneousS3Path
 	switch r.FormValue("type") {
