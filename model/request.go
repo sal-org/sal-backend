@@ -311,9 +311,9 @@ type AssessmentAddRequest struct {
 
 type AvailabilityUpdateRequestInAdminPanel struct {
 	ID              string `json:"id"`
-	CounsellorID    string `json:"counsellor_id"`
-	Date            string `json:"date"`
-	FromTime        string `json:"fromTime"`
+	CounsellorID    string `json:"counsellor_id" validate:"required,min=3,max=16"`
+	Date            string `json:"date" validate:"required,datetime=2006-01-02"`
+	FromTime        string `json:"fromTime" validate:"required,datetime=15:04"`
 	ToTime          string `json:"toTime"`
 	CompanyName     string `json:"companyName"`
 	CompanyLocation string `json:"companyLocation"`
