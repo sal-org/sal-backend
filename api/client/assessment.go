@@ -10,7 +10,6 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 
@@ -31,7 +30,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -85,7 +84,7 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	assessmentID, ok := VALIDATOR.Required(r.FormValue("assessment_id"), "Assessment ID")
+	assessmentID, ok := UTIL.Required(r.FormValue("assessment_id"), "Assessment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, assessmentID, CONSTANT.ShowDialog, response)
 		return
@@ -222,7 +221,7 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -315,7 +314,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 
 	var fileName, emailbody string
 
-	assessmentResultID, ok := VALIDATOR.Required(r.FormValue("assessment_result_id"), "Assessment Result ID")
+	assessmentResultID, ok := UTIL.Required(r.FormValue("assessment_result_id"), "Assessment Result ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, assessmentResultID, CONSTANT.ShowDialog, response)
 		return

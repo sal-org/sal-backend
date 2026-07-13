@@ -6,7 +6,6 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
-	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 
@@ -48,7 +47,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	emailID, ok := VALIDATOR.Required(r.FormValue("email"), "Email")
+	emailID, ok := UTIL.Required(r.FormValue("email"), "Email")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
 		return
@@ -427,7 +426,7 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	cleintID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	cleintID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, cleintID, CONSTANT.ShowDialog, response)
 		return

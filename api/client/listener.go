@@ -6,7 +6,6 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
-	VALIDATOR "salbackend/validator"
 	"time"
 
 	UTIL "salbackend/util"
@@ -32,7 +31,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listenerID, ok := VALIDATOR.Required(r.FormValue("listener_id"), "Listener ID")
+	listenerID, ok := UTIL.Required(r.FormValue("listener_id"), "Listener ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, listenerID, CONSTANT.ShowDialog, response)
 		return
@@ -105,7 +104,7 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	listenerID, ok := VALIDATOR.Required(r.FormValue("listener_id"), "Listener ID")
+	listenerID, ok := UTIL.Required(r.FormValue("listener_id"), "Listener ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, listenerID, CONSTANT.ShowDialog, response)
 		return

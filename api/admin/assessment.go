@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 	"path/filepath"
 	CONFIG "salbackend/config"
@@ -19,18 +17,29 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body := MODEL.AssessmentAddRequestInAdminPanel{}
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	defer r.Body.Close()
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+
+	body := MODEL.AssessmentAddRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// add assessment
@@ -110,18 +119,30 @@ func AssessmentUpdate(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body := MODEL.AssessmentUpdateRequestInAdminPanel{}
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	defer r.Body.Close()
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+
+	// read request body
+	body := MODEL.AssessmentUpdateRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// add assessment

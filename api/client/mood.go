@@ -8,7 +8,6 @@ import (
 
 	UTIL "salbackend/util"
 	CONFIG "salbackend/config"
-	VALIDATOR "salbackend/validator"
 )
 
 // MoodAdd godoc
@@ -121,13 +120,13 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	dateValidator, ok := VALIDATOR.Required(r.FormValue("dates"), "Date")
+	dateValidator, ok := UTIL.Required(r.FormValue("dates"), "Date")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, dateValidator, CONSTANT.ShowDialog, response)
 		return
@@ -169,7 +168,7 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("user_id"), "User ID")
+	clientID, ok := UTIL.Required(r.FormValue("user_id"), "User ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return

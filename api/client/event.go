@@ -9,7 +9,6 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
-	VALIDATOR "salbackend/validator"
 	"slices"
 	"strconv"
 	"strings"
@@ -57,7 +56,7 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -154,7 +153,7 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID, ok := VALIDATOR.Required(r.FormValue("order_id"), "Order ID")
+	orderID, ok := UTIL.Required(r.FormValue("order_id"), "Order ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
 		return
@@ -215,7 +214,7 @@ func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID, ok := VALIDATOR.Required(r.FormValue("order_id"), "Order ID")
+	orderID, ok := UTIL.Required(r.FormValue("order_id"), "Order ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
 		return
@@ -306,7 +305,7 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -549,7 +548,7 @@ func GetEventInPersonRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -660,13 +659,13 @@ func GetEventsInPersonRate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, ok := VALIDATOR.Required(r.FormValue("user_id"), "Client ID")
+	userID, ok := UTIL.Required(r.FormValue("user_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, userID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	orderID, ok := VALIDATOR.Required(r.FormValue("order_id"), "Order ID")
+	orderID, ok := UTIL.Required(r.FormValue("order_id"), "Order ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
 		return
@@ -701,7 +700,7 @@ func EventsBookedInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -747,7 +746,7 @@ func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -1130,7 +1129,7 @@ func WebinarList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return

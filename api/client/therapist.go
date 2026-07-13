@@ -10,7 +10,6 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
-	VALIDATOR "salbackend/validator"
 	"time"
 
 	UTIL "salbackend/util"
@@ -37,7 +36,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	therapistID, ok := VALIDATOR.Required(r.FormValue("therapist_id"), "Therapist ID")
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
 		return
@@ -121,7 +120,7 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	therapistID, ok := VALIDATOR.Required(r.FormValue("therapist_id"), "Therapist ID")
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
 		return
@@ -150,19 +149,19 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	therapistID, ok := VALIDATOR.Required(r.FormValue("therapist_id"), "Therapist ID")
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	companyName, ok := VALIDATOR.Required(r.FormValue("companyName"), "Company Name")
+	companyName, ok := UTIL.Required(r.FormValue("companyName"), "Company Name")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyName, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	companyLocation, ok := VALIDATOR.Required(r.FormValue("companyLocation"), "Company Location")
+	companyLocation, ok := UTIL.Required(r.FormValue("companyLocation"), "Company Location")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyLocation, CONSTANT.ShowDialog, response)
 		return
@@ -353,7 +352,7 @@ func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	dataRequired, ok := VALIDATOR.Required(r.FormValue("hashData"), "Data")
+	dataRequired, ok := UTIL.Required(r.FormValue("hashData"), "Data")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, dataRequired, CONSTANT.ShowDialog, response)
 		return

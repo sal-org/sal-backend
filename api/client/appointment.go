@@ -10,7 +10,6 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
-	VALIDATOR "salbackend/validator"
 	"slices"
 	"strconv"
 	"strings"
@@ -36,7 +35,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -118,7 +117,7 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -178,7 +177,7 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -239,7 +238,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -375,7 +374,7 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -435,7 +434,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -518,7 +517,7 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -896,7 +895,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -1256,7 +1255,7 @@ func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -1603,7 +1602,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -1984,7 +1983,7 @@ func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -2205,7 +2204,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_slot_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_slot_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -2846,7 +2845,7 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -2904,7 +2903,7 @@ func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -2950,7 +2949,7 @@ func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -3062,7 +3061,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -3269,7 +3268,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -3426,7 +3425,7 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := VALIDATOR.Required(r.FormValue("appointment_id"), "Appointment ID")
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
 		return
@@ -3666,7 +3665,7 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -3997,7 +3996,7 @@ func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -4026,7 +4025,7 @@ func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return

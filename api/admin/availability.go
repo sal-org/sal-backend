@@ -90,10 +90,10 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	body, ok := UTIL.ReadRequestBody(r)
 	if !ok {
@@ -540,7 +540,7 @@ func CounsellorConnectWithCorporateAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
-	
+
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
@@ -548,23 +548,29 @@ func CounsellorConnectWithCorporateAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	body := Model.InPersonCounsellorConnectWithCorporateAddRequest{}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateCounsellorAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	corporateCounsellor := map[string]string{}
-	corporateCounsellor["counsellor_id"] = body["counsellor_id"]
-	corporateCounsellor["partner_name"] = body["partner_name"]
-	corporateCounsellor["partner_location"] = body["partner_location"]
+	corporateCounsellor["counsellor_id"] = body.CounsellorID
+	corporateCounsellor["partner_name"] = body.PartnerName
+	corporateCounsellor["partner_location"] = body.PartnerLocation
 	corporateCounsellor["status"] = CONSTANT.ContentActive
 	corporateCounsellor["created_at"] = UTIL.GetCurrentTime().String()
 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.InPersonCounsellorConnectWithCorporateTable, CONSTANT.ContentDigits, corporateCounsellor, "connect_id")
@@ -587,19 +593,44 @@ func CounsellorConnectWithCorporateUpdate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	connectID, ok := UTIL.Required(r.FormValue("connect_id"), "Connect ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, connectID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body := Model.InPersonCounsellorConnectWithCorporateUpdateRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if connect_id exists
+	if !DB.CheckIfExists(CONSTANT.InPersonCounsellorConnectWithCorporateTable, map[string]string{"connect_id": connectID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	corporateCounsellor := map[string]string{}
-	corporateCounsellor["counsellor_id"] = body["counsellor_id"]
-	corporateCounsellor["partner_name"] = body["partner_name"]
-	corporateCounsellor["partner_location"] = body["partner_location"]
-	corporateCounsellor["status"] = body["status"]
-	corporateCounsellor["created_at"] = UTIL.GetCurrentTime().String()
+	corporateCounsellor["counsellor_id"] = body.CounsellorID
+	corporateCounsellor["partner_name"] = body.PartnerName
+	corporateCounsellor["partner_location"] = body.PartnerLocation
+	corporateCounsellor["status"] = body.Status
+	corporateCounsellor["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, map[string]string{"connect_id": r.FormValue("connect_id")}, corporateCounsellor)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

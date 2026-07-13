@@ -5,7 +5,6 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	VALIDATOR "salbackend/validator"
 	"slices"
 	"strconv"
 
@@ -272,7 +271,7 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return

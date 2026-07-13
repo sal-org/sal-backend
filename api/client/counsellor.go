@@ -8,7 +8,6 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
-	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +32,7 @@ func CounsellorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellorID, ok := VALIDATOR.Required(r.FormValue("counsellor_id"), "Counsellor ID")
+	counsellorID, ok := UTIL.Required(r.FormValue("counsellor_id"), "Counsellor ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
 		return
@@ -110,7 +109,7 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellorID, ok := VALIDATOR.Required(r.FormValue("counsellor_id"), "Counsellor ID")
+	counsellorID, ok := UTIL.Required(r.FormValue("counsellor_id"), "Counsellor ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
 		return
@@ -140,19 +139,19 @@ func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellorID, ok := VALIDATOR.Required(r.FormValue("counsellor_id"), "Counsellor ID")
+	counsellorID, ok := UTIL.Required(r.FormValue("counsellor_id"), "Counsellor ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	companyName, ok := VALIDATOR.Required(r.FormValue("companyName"), "Company Name")
+	companyName, ok := UTIL.Required(r.FormValue("companyName"), "Company Name")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyName, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	companyLocation, ok := VALIDATOR.Required(r.FormValue("companyLocation"), "Company Location")
+	companyLocation, ok := UTIL.Required(r.FormValue("companyLocation"), "Company Location")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyLocation, CONSTANT.ShowDialog, response)
 		return

@@ -6,7 +6,6 @@ import (
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	Model "salbackend/model"
-	VALIDATOR "salbackend/validator"
 
 	UTIL "salbackend/util"
 	"strings"
@@ -268,13 +267,13 @@ func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	phoneNumber, ok := VALIDATOR.Required(r.FormValue("family_phone_no"), "Phone Number")
+	phoneNumber, ok := UTIL.Required(r.FormValue("family_phone_no"), "Phone Number")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	otpValidator, ok := VALIDATOR.Required(r.FormValue("otp"), "OTP")
+	otpValidator, ok := UTIL.Required(r.FormValue("otp"), "OTP")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, otpValidator, CONSTANT.ShowDialog, response)
 		return
@@ -397,7 +396,7 @@ func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	corEmailID, ok := VALIDATOR.Required(r.FormValue("cor_email"), "Email ID")
+	corEmailID, ok := UTIL.Required(r.FormValue("cor_email"), "Email ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, corEmailID, CONSTANT.ShowDialog, response)
 		return
@@ -483,7 +482,7 @@ func SendOTPWithCorporateEmailForRegister(w http.ResponseWriter, r *http.Request
 
 	var response = make(map[string]any)
 
-	corEmailID, ok := VALIDATOR.Required(r.FormValue("cor_email"), "Email ID")
+	corEmailID, ok := UTIL.Required(r.FormValue("cor_email"), "Email ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, corEmailID, CONSTANT.ShowDialog, response)
 		return
@@ -564,7 +563,7 @@ func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	accessCode, ok := VALIDATOR.Required(r.FormValue("access_code"), "Access Code")
+	accessCode, ok := UTIL.Required(r.FormValue("access_code"), "Access Code")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, accessCode, CONSTANT.ShowDialog, response)
 		return
@@ -601,7 +600,7 @@ func GetAddressForCorporateClient(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -638,7 +637,7 @@ func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	phoneNumber, ok := VALIDATOR.Required(r.FormValue("phone"), "Phone")
+	phoneNumber, ok := UTIL.Required(r.FormValue("phone"), "Phone")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
 		return
@@ -731,7 +730,7 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	phoneNumber, ok := VALIDATOR.Required(r.FormValue("phone"), "Phone")
+	phoneNumber, ok := UTIL.Required(r.FormValue("phone"), "Phone")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
 		return
@@ -846,7 +845,7 @@ func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
@@ -927,13 +926,13 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	emailID, ok := VALIDATOR.Required(r.FormValue("cor_email"), "Email ID")
+	emailID, ok := UTIL.Required(r.FormValue("cor_email"), "Email ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	otpValidator, ok := VALIDATOR.Required(r.FormValue("otp"), "OTP")
+	otpValidator, ok := UTIL.Required(r.FormValue("otp"), "OTP")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, otpValidator, CONSTANT.ShowDialog, response)
 		return
@@ -1061,7 +1060,7 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 		userType := "3"
 		userID := ""
 
-		emailID, ok := VALIDATOR.Required(r.FormValue("email"), "Email ID")
+		emailID, ok := UTIL.Required(r.FormValue("email"), "Email ID")
 		if !ok {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
 			return
@@ -1115,7 +1114,7 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 
 		userID := ""
 
-		phoneNumber, ok := VALIDATOR.Required(r.FormValue("phone"), "Phone No.")
+		phoneNumber, ok := UTIL.Required(r.FormValue("phone"), "Phone No.")
 		if !ok {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
 			return

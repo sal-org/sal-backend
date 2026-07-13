@@ -5,7 +5,6 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
-	VALIDATOR "salbackend/validator"
 	"strconv"
 	"strings"
 	"time"
@@ -31,25 +30,25 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	accessCode := ""
 
-	clientID, ok := VALIDATOR.Required(r.FormValue("client_id"), "Client ID")
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	platform, ok := VALIDATOR.Required(r.FormValue("platform"), "Platform")
+	platform, ok := UTIL.Required(r.FormValue("platform"), "Platform")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, platform, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	version, ok := VALIDATOR.Required(r.FormValue("version"), "Version")
+	version, ok := UTIL.Required(r.FormValue("version"), "Version")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, version, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	timezone, ok := VALIDATOR.Required(r.FormValue("timezone"), "Timezone")
+	timezone, ok := UTIL.Required(r.FormValue("timezone"), "Timezone")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, timezone, CONSTANT.ShowDialog, response)
 		return

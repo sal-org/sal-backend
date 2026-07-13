@@ -13,7 +13,7 @@ var (
 	EventInPersonRequestRequiredFields              = []string{"order_id", "client_id"}
 	InPersonAppointmentRequestRequiredFields        = []string{"counsellor_id", "type", "client_id", "companyName", "companyLocation"}
 	ContentAddRequiredFields                        = []string{"title", "photo", "content", "type"}
-	CorporateCounsellorAddRequiredFields            = []string{"counsellor_id", "partner_name", "partner_location"}
+	// CorporateCounsellorAddRequiredFields            = []string{"counsellor_id", "partner_name", "partner_location"}
 	CounsellorOrderCreateRequiredFields             = []string{"client_id", "counsellor_id", "date", "time", "no_session"}
 	PartnersAddressAddRequiredFields                = []string{"partnerName", "domain", "address"}
 	PartnersAddRequiredFields                       = []string{"partnerName", "domain", "accessCode"}

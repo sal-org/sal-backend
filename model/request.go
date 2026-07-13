@@ -309,70 +309,154 @@ type AssessmentAddRequest struct {
 	} `json:"details"`
 }
 
+type AvailabilityUpdateRequestInAdminPanel struct {
+	ID              string `json:"id"`
+	CounsellorID    string `json:"counsellor_id"`
+	Date            string `json:"date"`
+	FromTime        string `json:"fromTime"`
+	ToTime          string `json:"toTime"`
+	CompanyName     string `json:"companyName"`
+	CompanyLocation string `json:"companyLocation"`
+	RoomNo          string `json:"roomNo"`
+	Address         string `json:"address"`
+	Status          string `json:"status"`
+	Zero            string `json:"0"`
+	One             string `json:"1"`
+	Two             string `json:"2"`
+	Three           string `json:"3"`
+	Four            string `json:"4"`
+	Five            string `json:"5"`
+	Six             string `json:"6"`
+	Seven           string `json:"7"`
+	Eight           string `json:"8"`
+	Nine            string `json:"9"`
+	Ten             string `json:"10"`
+	Eleven          string `json:"11"`
+	Twelve          string `json:"12"`
+	Thirteen        string `json:"13"`
+	Fourteen        string `json:"14"`
+	Fifteen         string `json:"15"`
+	Sixteen         string `json:"16"`
+	Seventeen       string `json:"17"`
+	Eighteen        string `json:"18"`
+	Nineteen        string `json:"19"`
+	Twenty          string `json:"20"`
+	TwentyOne       string `json:"21"`
+	TwentyTwo       string `json:"22"`
+	TwentyThree     string `json:"23"`
+	TwentyFour      string `json:"24"`
+	TwentyFive      string `json:"25"`
+	TwentySix       string `json:"26"`
+	TwentySeven     string `json:"27"`
+	TwentyEight     string `json:"28"`
+	TwentyNine      string `json:"29"`
+	Thirty          string `json:"30"`
+	ThirtyOne       string `json:"31"`
+	ThirtyTwo       string `json:"32"`
+	ThirtyThree     string `json:"33"`
+	ThirtyFour      string `json:"34"`
+	ThirtyFive      string `json:"35"`
+	ThirtySix       string `json:"36"`
+	ThirtySeven     string `json:"37"`
+	ThirtyEight     string `json:"38"`
+	ThirtyNine      string `json:"39"`
+	Forty           string `json:"40"`
+	FortyOne        string `json:"41"`
+	FortyTwo        string `json:"42"`
+	FortyThree      string `json:"43"`
+	FortyFour       string `json:"44"`
+	FortyFive       string `json:"45"`
+	FortySix        string `json:"46"`
+	FortySeven      string `json:"47"`
+}
+
+type AssessmentOption struct {
+	Option string `json:"option" validate:"required"`
+	Score  string `json:"score" validate:"required,numeric"`
+	Order  string `json:"order" validate:"required,numeric"`
+	Status string `json:"status" validate:"required,oneof=0 1"`
+}
+
+type AssessmentQuestion struct {
+	Question string             `json:"question" validate:"required"`
+	Order    string             `json:"order" validate:"required,numeric"`
+	Status   string             `json:"status" validate:"required,oneof=0 1"`
+	Options  []AssessmentOption `json:"options" validate:"required, min=1,dive"`
+}
+
+type AssessmentScore struct {
+	MinScore string `json:"min" validate:"required,numeric"`
+	MaxScore string `json:"max" validate:"required,numeric"`
+	Result   string `json:"result" validate:"required"`
+}
+
 // AssessmentAddRequest .
 type AssessmentAddRequestInAdminPanel struct {
-	Title       string `json:"title"`
-	SubTitles   string `json:"subtitles"`
-	Photo       string `json:"photo"`
-	Duration    string `json:"duration"`
-	Type        string `json:"type"`
-	Instruction string `json:"instruction"`
-	Source      string `json:"source"`
-	Reference   string `json:"reference"`
-	Feedback    string `json:"feedback"`
-	Order       string `json:"order"`
-	Status      string `json:"status"`
-	Questions   []struct {
-		Question string `json:"question"`
-		Order    string `json:"order"`
-		Status   string `json:"status"`
-		Options  []struct {
-			Option string `json:"option"`
-			Score  string `json:"score"`
-			Order  string `json:"order"`
-			Status string `json:"status"`
-		}
-	} `json:"questions"`
-	Scores []struct {
-		MinScore string `json:"min"`
-		MaxScore string `json:"max"`
-		Result   string `json:"result"`
-	} `json:"scores"`
+	Title       string               `json:"title" validate:"required,min=3,max=100"`
+	SubTitles   string               `json:"subtitles" validate:"required,min=20,max=500"`
+	Photo       string               `json:"photo" validate:"required"`
+	Duration    string               `json:"duration" validate:"required,min=1,max=15"`
+	Type        string               `json:"type" validate:"required,oneof=1 2"`
+	Instruction string               `json:"instruction" validate:"required,min=10"`
+	Source      string               `json:"source" validate:"required"`
+	Reference   string               `json:"reference" validate:"required"`
+	Order       string               `json:"order" validate:"required,numeric"`
+	Status      string               `json:"status" validate:"required,oneof=0 1"`
+	Questions   []AssessmentQuestion `json:"questions" validate:"required,min=1,dive"`
+	Scores      []AssessmentScore    `json:"scores" validate:"required,min=1,dive"`
+}
+
+type AssessmentUpdateOption struct {
+	AssessmentQuestionOptionID string `json:"assessment_question_option_id" validate:"required" min:"5" max:"25"`
+	Option                     string `json:"option" validate:"required" min:"3"`
+	Score                      string `json:"score" validate:"required,numeric"`
+	Order                      string `json:"order" validate:"required,numeric"`
+	Status                     string `json:"status" validate:"required,oneof=0 1"`
+}
+
+type AssessmentUpdateQuestion struct {
+	AssessmentQuestionID string                   `json:"assessment_question_id" validate:"required" min:"5" max:"25"`
+	Question             string                   `json:"question" validate:"required" min:"3"`
+	Order                string                   `json:"order" validate:"required,numeric"`
+	Status               string                   `json:"status" validate:"required,oneof=0 1"`
+	Options              []AssessmentUpdateOption `json:"options" validate:"required,min=1,dive"`
+}
+
+type AssessmentUpdateScore struct {
+	ScoreID  string `json:"id" validate:"required" min:"5" max:"25"`
+	MinScore string `json:"min" validate:"required,numeric"`
+	MaxScore string `json:"max" validate:"required,numeric"`
+	Result   string `json:"result" validate:"required"`
 }
 
 // AssessmentUpdateRequest .
 type AssessmentUpdateRequestInAdminPanel struct {
-	AssessmentID string `json:"assessment_id"`
-	Title        string `json:"title"`
-	SubTitles    string `json:"subtitles"`
-	Photo        string `json:"photo"`
-	Duration     string `json:"duration"`
-	Type         string `json:"type"`
-	Instruction  string `json:"instruction"`
-	Source       string `json:"source"`
-	Reference    string `json:"reference"`
-	Feedback     string `json:"feedback"`
-	Order        string `json:"order"`
-	Status       string `json:"status"`
-	Questions    []struct {
-		AssessmentQuestionID string `json:"assessment_question_id"`
-		Question             string `json:"question"`
-		Order                string `json:"order"`
-		Status               string `json:"status"`
-		Options              []struct {
-			AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
-			Option                     string `json:"option"`
-			Score                      string `json:"score"`
-			Order                      string `json:"order"`
-			Status                     string `json:"status"`
-		}
-	} `json:"questions"`
-	Scores []struct {
-		ScoreID  string `json:"id"`
-		MinScore string `json:"min"`
-		MaxScore string `json:"max"`
-		Result   string `json:"result"`
-	} `json:"scores"`
+	AssessmentID string                     `json:"assessment_id" validate:"required,min=5,max=18"`
+	Title        string                     `json:"title" validate:"required,min=3,max=100"`
+	SubTitles    string                     `json:"subtitles" validate:"required,min=20,max=500"`
+	Photo        string                     `json:"photo" validate:"required"`
+	Duration     string                     `json:"duration" validate:"required,min=1,max=15"`
+	Type         string                     `json:"type" validate:"required,oneof=1 2"`
+	Instruction  string                     `json:"instruction" validate:"required,min=10"`
+	Source       string                     `json:"source" validate:"required"`
+	Reference    string                     `json:"reference" validate:"required"`
+	Order        string                     `json:"order" validate:"required,numeric"`
+	Status       string                     `json:"status" validate:"required,oneof=0 1"`
+	Questions    []AssessmentUpdateQuestion `json:"questions" validate:"required,min=1,dive"`
+	Scores       []AssessmentUpdateScore    `json:"scores" validate:"required,min=1,dive"`
+}
+
+type InPersonCounsellorConnectWithCorporateAddRequest struct {
+	CounsellorID    string `json:"counsellor_id" validate:"required,min=5,max=16"`
+	PartnerName     string `json:"partner_name" validate:"required"`
+	PartnerLocation string `json:"partner_location" validate:"required"`
+}
+
+type InPersonCounsellorConnectWithCorporateUpdateRequest struct {
+	CounsellorID    string `json:"counsellor_id" validate:"required,min=5,max=16"`
+	PartnerName     string `json:"partner_name" validate:"required"`
+	PartnerLocation string `json:"partner_location" validate:"required"`
+	Status          string `json:"status" validate:"required,oneof=0 1 2 3"`
 }
 
 type CafeAttendedAddRequest struct {
