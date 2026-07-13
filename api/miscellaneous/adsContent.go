@@ -833,7 +833,7 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 	totalSessionTakenByTheClientWithSameTherapist = prevTotalSessions + newTotalSessions
 
 	if len(newVersionClientRecordForm) == 0 {
-		newVersionClientRecordForm, status, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and counsellor_id = ? order by created_at desc limit 1", r.FormValue("client_id"), r.FormValue("counsellor_id"))
+		newVersionClientRecordForm, status, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and counsellor_id = ? and appointment_id != '' order by created_at desc limit 1", r.FormValue("client_id"), r.FormValue("counsellor_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
