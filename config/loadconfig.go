@@ -38,6 +38,7 @@ func LoadConfig() {
 	JWTSecret = []byte(os.Getenv("JWT_SECRET"))
 	S3BUCKETAGORA = os.Getenv("S3_BUCKET_AGORA")
 	MediaURLFORAGORA = os.Getenv("Media_URL_FOR_AGORA")
+	WordPressURL = os.Getenv("WordPress_URL")
 	AGORA_APP_ID = os.Getenv("AGORA_APP_ID")
 	AGORA_APP_CERTIFICATE = os.Getenv("AGORA_APP_CERTIFICATE")
 	AGORA_Customer_Key = os.Getenv("AGORA_CUSTOMER_KEY")

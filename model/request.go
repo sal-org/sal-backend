@@ -957,7 +957,7 @@ type AgoraCallStopResponseModel struct {
 }
 
 type EmailBodyMessageWithNameModel struct {
-	Name    string
+	Name string
 }
 
 type EmailBodyMessageModel struct {
