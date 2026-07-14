@@ -18,7 +18,7 @@ import (
 func LoadWebB2CRoutes(router *mux.Router) {
 	webRoutes := router.PathPrefix("/web").Subrouter()
 
-	// webRoutes.HandleFunc("", CreateUserHandler).Methods("POST")
+	webRoutes.HandleFunc("", CreateUserHandler).Methods("POST")
 	// client login
 	webRoutes.HandleFunc("/book_demo", ClientBookDemo).Methods("POST")
 	webRoutes.HandleFunc("/client/content", GetWebsiteContent).Methods("POST")
@@ -213,8 +213,8 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	decrypted, _ := DecryptPayload(encryptedPayload.Payload, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB_PROD, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB_PROD)
 
 	switch decrypted["path"] {
-	// case "/book_demo":
-	// 	ClientBookDemo(w,r, decrypted)
+	case "/book_demo":
+		ClientBookDemoForEncrypted(w, r, decrypted)
 	case "/access_code":
 		CheckAccessCode(w, r, decrypted)
 	case "/send_otp":
