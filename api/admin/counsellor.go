@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	CONFIG "salbackend/config"
-	_ "salbackend/model"
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 )
 
@@ -89,38 +89,77 @@ func CounsellorUpdate(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
+	counsellorID, ok := UTIL.Required(r.FormValue("counsellor_id"), "ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, counsellorID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.UpdateCounsellorProfileRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if corporate_id exists
+	if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellorID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
 	// add counsellor
 	counsellor := map[string]string{}
-	counsellor["first_name"] = body["first_name"]
-	counsellor["last_name"] = body["last_name"]
-	counsellor["phone"] = body["phone"]
-	counsellor["email"] = body["email"]
-	counsellor["gender"] = body["gender"]
-	counsellor["price"] = body["price"]
-	counsellor["price_3"] = body["price_3"]
-	counsellor["price_5"] = body["price_5"]
-	counsellor["corporate_price"] = body["corporate_price"]
-	counsellor["education"] = body["education"]
-	counsellor["experience"] = body["experience"]
-	counsellor["about"] = body["about"]
-	counsellor["payout_percentage"] = body["payout_percentage"]
-	counsellor["payee_name"] = body["payee_name"]
-	counsellor["bank_account_no"] = body["bank_account_no"]
-	counsellor["ifsc"] = body["ifsc"]
-	counsellor["branch_name"] = body["branch_name"]
-	counsellor["bank_name"] = body["bank_name"]
-	counsellor["bank_account_type"] = body["bank_account_type"]
-	counsellor["pan"] = body["pan"]
-	counsellor["corporate_therpist"] = body["corporate_therpist"]
-	counsellor["status"] = body["status"]
-	counsellor["modified_by"] = body["modified_by"]
+	counsellor["first_name"] = body.FirstName
+	counsellor["last_name"] = body.LastName
+	counsellor["phone"] = body.Phone
+	counsellor["email"] = body.Email
+	counsellor["gender"] = body.Gender
+	counsellor["price"] = body.Price
+	counsellor["price_3"] = body.Price3
+	counsellor["price_5"] = body.Price5
+	counsellor["corporate_price"] = body.CorporatePrice
+	counsellor["education"] = body.Education
+	counsellor["experience"] = body.Experience
+	counsellor["about"] = body.About
+	counsellor["payout_percentage"] = body.PayoutPercentage
+	counsellor["payee_name"] = body.PayeeName
+	counsellor["bank_account_no"] = body.BankAccountNo
+	counsellor["ifsc"] = body.IFSC
+	counsellor["branch_name"] = body.BranchName
+	counsellor["bank_name"] = body.BankName
+	counsellor["bank_account_type"] = body.BankAccountType
+	counsellor["pan"] = body.PAN
+	counsellor["corporate_therpist"] = body.CorporateTherapist
+	counsellor["status"] = body.Status
+	counsellor["modified_by"] = id
 	counsellor["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("counsellor_id")}, counsellor)
 	if !ok {

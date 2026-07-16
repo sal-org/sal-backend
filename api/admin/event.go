@@ -7,6 +7,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
 	"strconv"
 	"strings"
 	"time"
@@ -117,25 +118,58 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	orderID, ok := UTIL.Required(r.FormValue("order_id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
 		return
 	}
 
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.EventUpdateRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if corporate_id exists
+	if !DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": orderID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
 	// add event
 	event := map[string]string{}
-	event["counsellor_id"] = body["counsellor_id"]
-	event["title"] = body["title"]
-	event["description"] = body["description"]
-	event["photo"] = body["photo"]
-	event["date"] = body["date"]
-	event["time"] = body["time"]
-	event["duration"] = body["duration"]
-	event["price"] = body["price"]
-	event["status"] = body["status"]
-	event["modified_by"] = body["modified_by"]
+	event["counsellor_id"] = body.CounsellorID
+	event["title"] = body.Title
+	event["description"] = body.Description
+	event["photo"] = body.Photo
+	event["date"] = body.Date
+	event["time"] = body.Time
+	event["duration"] = body.Duration
+	event["price"] = body.Price
+	event["status"] = body.Status
+	event["modified_by"] = id
 	event["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id")}, event)
 	if !ok {
@@ -144,12 +178,12 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counsellorType := CONSTANT.CounsellorType
-	if len(DB.QueryRowSQL("select device_id from "+CONSTANT.TherapistsTable+" where therapist_id = ?", body["counsellor_id"])) > 0 {
+	if len(DB.QueryRowSQL("select device_id from "+CONSTANT.TherapistsTable+" where therapist_id = ?", body.CounsellorID)) > 0 {
 		counsellorType = CONSTANT.TherapistType
 	}
 
 	// remove all previous notifications
-	UTIL.RemoveNotification(r.FormValue("order_id"), body["counsellor_id"])
+	UTIL.RemoveNotification(r.FormValue("order_id"), body.CounsellorID)
 
 	// send event reminder notification to counsellor before 15 min
 	UTIL.SendNotification(
@@ -158,9 +192,9 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.CounsellorEventReminderCounsellorContent,
 			map[string]string{},
 		),
-		body["counsellor_id"],
+		body.CounsellorID,
 		counsellorType,
-		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
+		UTIL.BuildDateTime(body.Date, body.Time).Add(-15*time.Minute).String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("order_id"),
 		"",
@@ -269,17 +303,38 @@ func EventInPersonAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.InPersonEventAddRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	type1 := "1"
 
-	if len(body["counsellor_id"]) != 0 {
+	if len(body.CounsellorID) != 0 {
 		// get client details
-		counsellor, _, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		counsellor, _, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email"}, map[string]string{"counsellor_id": body.CounsellorID})
 		if !ok {
 			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 			return
@@ -294,24 +349,24 @@ func EventInPersonAdd(w http.ResponseWriter, r *http.Request) {
 
 	// add event
 	event := map[string]string{}
-	event["counsellor_id"] = body["counsellor_id"]
-	event["title"] = body["title"]
-	event["description"] = body["description"]
-	event["total_seat"] = body["total_seat"]
-	event["remaining_seat"] = body["total_seat"]
-	event["document"] = body["document"]
-	event["carry_things"] = body["carry_things"]
-	event["company_name"] = body["company_name"]
-	event["company_location"] = body["company_location"]
-	event["address"] = body["address"]
-	event["photo"] = body["photo"]
-	event["background_photo"] = body["background_photo"]
-	event["date"] = body["date"]
-	event["time"] = body["time"]
+	event["counsellor_id"] = body.CounsellorID
+	event["title"] = body.Title
+	event["description"] = body.Description
+	event["total_seat"] = body.TotalSeat
+	event["remaining_seat"] = body.TotalSeat
+	event["document"] = body.Document
+	event["carry_things"] = body.CarryThings
+	event["company_name"] = body.CompanyName
+	event["company_location"] = body.CompanyLocation
+	event["address"] = body.Address
+	event["photo"] = body.Photo
+	event["background_photo"] = body.BackgroundPhoto
+	event["date"] = body.Date
+	event["time"] = body.Time
 	event["type"] = type1
-	event["duration"] = body["duration"]
-	event["status"] = body["status"]
-	event["created_by"] = body["created_by"]
+	event["duration"] = body.Duration
+	event["status"] = body.Status
+	event["created_by"] = id
 	event["created_at"] = UTIL.GetCurrentTime().String()
 	// status, ok := DB.UpdateSQL(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": r.FormValue("order_id")}, event)
 	// if !ok {

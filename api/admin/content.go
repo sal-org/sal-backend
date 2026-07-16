@@ -120,31 +120,52 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.ContentAddRequestInAdminPanel{}
+
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ContentAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ContentAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
-	}
+	counsellorPhoto := ""
 
-	var counsellor []map[string]string
+	var counsellors []map[string]string
 
-	if len(body["counsellor_id"]) != 0 {
+	if len(body.CounsellorID) != 0 {
 		// get client details
-		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		counsellor, _, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body.CounsellorID})
 		if !ok {
 			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 			return
 		}
 
 		if len(counsellor) == 0 {
-			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email", "photo"}, map[string]string{"listener_id": body.CounsellorID})
 			if !ok {
 				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 				return
@@ -152,38 +173,40 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(counsellor) == 0 {
-			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email", "photo"}, map[string]string{"therapist_id": body.CounsellorID})
 			if !ok {
 				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 				return
 			}
 		}
+
+		if len(counsellor) != 0 {
+			counsellorPhoto = counsellor[0]["photo"]
+			counsellors = append(counsellors, counsellor[0])
+		}
+
 	}
 
-	counsellorPhoto := ""
-
-	if len(counsellor) != 0 {
-		counsellorPhoto = counsellor[0]["photo"]
-	}
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	// add content
 	content := map[string]string{}
-	content["counsellor_id"] = body["counsellor_id"]
-	content["title"] = body["title"]
-	content["description"] = body["description"]
-	content["photo"] = body["photo"]
-	content["background_photo"] = body["background_photo"]
-	content["share_content"] = body["share_content"]
-	content["content"] = body["content"]
-	content["type"] = body["type"]
-	content["redirection"] = body["redirection"]
-	content["category_id"] = body["category_id"]
-	content["training"] = body["training"]
-	content["mood_id"] = body["mood_id"]
-	content["duration"] = body["duration"]
+	content["counsellor_id"] = body.CounsellorID
+	content["title"] = body.Title
+	content["description"] = body.Description
+	content["photo"] = body.Photo
+	content["background_photo"] = body.BackgroundPhoto
+	content["share_content"] = body.ShareContent
+	content["content"] = body.Content
+	content["type"] = body.Type
+	content["redirection"] = body.Redirection
+	content["category_id"] = body.CategoryID
+	content["training"] = body.Training
+	content["mood_id"] = body.MoodID
+	content["duration"] = body.Duration
 	content["counsellor_photo"] = counsellorPhoto
 	content["status"] = CONSTANT.ContentActive
-	content["created_by"] = body["created_by"]
+	content["created_by"] = id
 	content["created_at"] = UTIL.GetCurrentTime().String()
 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.ContentsTable, CONSTANT.ContentDigits, content, "content_id")
 	if !ok {
@@ -191,16 +214,16 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(counsellor) != 0 {
+	if len(counsellors) != 0 {
 
 		filepath_text := "htmlfile/emailmessagebody.html"
 		// send email for therapist
 		emaildata := Model.EmailBodyMessageModel{
-			Name: counsellor[0]["first_name"],
+			Name: counsellors[0]["first_name"],
 			Message: UTIL.ReplaceNotificationContentInString(
 				CONSTANT.CounsellorApprovedContentBody,
 				map[string]string{
-					"###content_name###": body["title"],
+					"###content_name###": body.Title,
 				},
 			),
 		}
@@ -210,7 +233,7 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.SendEmail(
 			CONSTANT.CounsellorApprovedContentTitle,
 			emailBody,
-			counsellor[0]["email"],
+			counsellors[0]["email"],
 			CONSTANT.InstantSendEmailMessage,
 		)
 	}
@@ -229,25 +252,57 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	contentID, ok := UTIL.Required(r.FormValue("content_id"), "Content ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, contentID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	var counsellor []map[string]string
+	body := Model.ContentUpdateRequestInAdminPanel{}
 
-	if len(body["counsellor_id"]) != 0 {
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if connect_id exists
+	if !DB.CheckIfExists(CONSTANT.ContentsTable, map[string]string{"content_id": contentID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	var counsellors []map[string]string
+	counsellorPhoto := ""
+
+	if len(body.CounsellorID) != 0 {
 		// get client details
-		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		counsellor, _, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body.CounsellorID})
 		if !ok {
 			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 			return
 		}
 
 		if len(counsellor) == 0 {
-			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, email", "photo"}, map[string]string{"listener_id": body.CounsellorID})
 			if !ok {
 				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 				return
@@ -255,39 +310,40 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(counsellor) == 0 {
-			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, email", "photo"}, map[string]string{"therapist_id": body.CounsellorID})
 			if !ok {
 				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 				return
 			}
 		}
+
+		if len(counsellor) != 0 {
+			counsellorPhoto = counsellor[0]["photo"]
+			counsellors = append(counsellors, counsellor[0])
+		}
+
 	}
 
-	counsellorPhoto := ""
-
-	if len(counsellor) != 0 {
-		counsellorPhoto = counsellor[0]["photo"]
-	}
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	// add content
 	content := map[string]string{}
-	content["counsellor_id"] = body["counsellor_id"]
-	content["title"] = body["title"]
-	content["description"] = body["description"]
-	content["photo"] = body["photo"]
-	content["background_photo"] = body["background_photo"]
-	content["share_content"] = body["share_content"]
-	content["content"] = body["content"]
-	content["type"] = body["type"]
-	content["redirection"] = body["redirection"]
-	content["category_id"] = body["category_id"]
-	content["training"] = body["training"]
+	content["counsellor_id"] = body.CounsellorID
+	content["title"] = body.Title
+	content["description"] = body.Description
+	content["photo"] = body.Photo
+	content["background_photo"] = body.BackgroundPhoto
+	content["share_content"] = body.ShareContent
+	content["content"] = body.Content
+	content["type"] = body.Type
+	content["redirection"] = body.Redirection
+	content["category_id"] = body.CategoryID
+	content["training"] = body.Training
 	content["counsellor_photo"] = counsellorPhoto
-	content["mood_id"] = body["mood_id"]
-	content["created_by"] = body["created_by"]
-	content["duration"] = body["duration"]
-	content["status"] = body["status"]
-	content["modified_by"] = body["modified_by"]
+	content["mood_id"] = body.MoodID
+	content["duration"] = body.Duration
+	content["status"] = body.Status
+	content["modified_by"] = id
 	content["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.ContentsTable, map[string]string{"content_id": r.FormValue("content_id")}, content)
 	if !ok {

@@ -309,65 +309,237 @@ type AssessmentAddRequest struct {
 	} `json:"details"`
 }
 
+type ClientUpdateProfileRequestInAdminPanel struct {
+	FirstName   string `json:"first_name" validate:"required,min=2,max=50"`
+	LastName    string `json:"last_name" validate:"required,min=2,max=50"`
+	Phone       string `json:"phone" validate:"required,len=12,numeric"`
+	Email       string `json:"email" validate:"required,email,max=100"`
+	DateOfBirth string `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
+	Gender      string `json:"gender" validate:"required,oneof=Male Female Other"`
+	Status      string `json:"status" validate:"required,oneof=0 1"`
+	ModifiedBy  string `json:"modified_by"`
+}
+
+type ContentAddRequestInAdminPanel struct {
+	CounsellorID    string `json:"counsellor_id"`
+	Title           string `json:"title" validate:"required,min=3,max=200"`
+	Description     string `json:"description" validate:"required,max=1000"`
+	Photo           string `json:"photo" validate:"required"`
+	BackgroundPhoto string `json:"background_photo" validate:"required"`
+	ShareContent    string `json:"share_content" validate:"required"`
+	Content         string `json:"content" validate:"required"`
+	Type            string `json:"type" validate:"required,oneof=1 2 3"`
+	Redirection     string `json:"redirection" validate:"omitempty, oneof=1 2 3"`
+	CategoryID      string `json:"category_id" validate:"required"`
+	Training        string `json:"training" validate:"required,oneof=0 1"`
+	MoodID          string `json:"mood_id" validate:"required"`
+	Duration        string `json:"duration" validate:"required"`
+}
+
+type ContentUpdateRequestInAdminPanel struct {
+	CounsellorID    string `json:"counsellor_id"`
+	Title           string `json:"title" validate:"required,min=3,max=200"`
+	Description     string `json:"description" validate:"required,max=1000"`
+	Photo           string `json:"photo" validate:"required"`
+	BackgroundPhoto string `json:"background_photo" validate:"required"`
+	ShareContent    string `json:"share_content" validate:"required"`
+	Content         string `json:"content" validate:"required"`
+	Type            string `json:"type" validate:"required,oneof=1 2 3"`
+	Redirection     string `json:"redirection" validate:"omitempty, oneof=1 2 3"`
+	CategoryID      string `json:"category_id" validate:"required"`
+	Training        string `json:"training" validate:"required,oneof=0 1"`
+	MoodID          string `json:"mood_id" validate:"required"`
+	Duration        string `json:"duration" validate:"required"`
+	Status          string `json:"status" validate:"required,oneof=0 1 2 3"`
+}
+
+type CorporatePartnerAddRequestInAdminPanel struct {
+	PartnerName string `json:"partnerName" validate:"required,min=2,max=100"`
+	Domain      string `json:"domain" validate:"required,min=4,max=25"`
+	AccessCode  string `json:"accessCode" validate:"required,min=4,max=20"`
+}
+
+type CorporatePartnerUpdateRequestInAdminPanel struct {
+	PartnerName string `json:"partnerName" validate:"required,min=2,max=100"`
+	Domain      string `json:"domain" validate:"required,min=4,max=25"`
+	AccessCode  string `json:"accessCode" validate:"required,min=4,max=20"`
+	Status      string `json:"status" validate:"required,oneof=0 1 2 3"`
+}
+
+type CorporatePartnerAddressAddRequestInAdminPanel struct {
+	PartnerName string `json:"partnerName" validate:"required,min=2,max=100"`
+	Domain      string `json:"domain" validate:"required,min=4,max=25"`
+	Address     string `json:"address" validate:"required,min=4,max=300"`
+}
+
+type CorporatePartnerAddressUpdateRequestInAdminPanel struct {
+	PartnerName string `json:"partnerName" validate:"required,min=2,max=100"`
+	Domain      string `json:"domain" validate:"required,min=4,max=25"`
+	Address     string `json:"address" validate:"required,min=4,max=300"`
+	Status      string `json:"status" validate:"required,oneof= 0 1 2"`
+}
+
+type UpdateCounsellorProfileRequestInAdminPanel struct {
+	FirstName string `json:"first_name" validate:"required,min=2,max=50"`
+	LastName  string `json:"last_name" validate:"required,min=2,max=50"`
+	Phone     string `json:"phone" validate:"required,len=12,numeric"`
+	Email     string `json:"email" validate:"required,email,max=100"`
+	Gender    string `json:"gender" validate:"required,oneof=Male Female Other"`
+
+	Price          string `json:"price" validate:"required,numeric"`
+	Price3         string `json:"price_3" validate:"required,numeric"`
+	Price5         string `json:"price_5" validate:"required,numeric"`
+	CorporatePrice string `json:"corporate_price" validate:"required,numeric"`
+
+	Education  string `json:"education" validate:"required,max=500"`
+	Experience string `json:"experience" validate:"required,max=500"`
+	About      string `json:"about" validate:"required,max=5000"`
+
+	PayoutPercentage string `json:"payout_percentage" validate:"required,numeric"`
+
+	PayeeName       string `json:"payee_name" validate:"required,max=100"`
+	BankAccountNo   string `json:"bank_account_no" validate:"required,numeric,min=9,max=18"`
+	IFSC            string `json:"ifsc" validate:"required,len=11,alphanum"`
+	BranchName      string `json:"branch_name" validate:"required,max=100"`
+	BankName        string `json:"bank_name" validate:"required,max=100"`
+	BankAccountType string `json:"bank_account_type" validate:"required,oneof=Savings Current"`
+
+	PAN string `json:"pan" validate:"required,len=10,alphanum"`
+
+	CorporateTherapist string `json:"corporate_therpist" validate:"required,oneof=0 1 2 3"`
+	Status             string `json:"status" validate:"required,oneof=0 1 2 3"`
+}
+
+type CouponAddRequestInAdminPanel struct {
+	CouponCode  string `json:"coupon_code" validate:"required,min=3,max=50"`
+	Description string `json:"description" validate:"required,max=500"`
+
+	ClientID     string `json:"client_id"`
+	CounsellorID string `json:"counsellor_id"`
+	TherapistID  string `json:"therapist_id"`
+
+	Discount             string `json:"discount" validate:"required,numeric"`
+	MinimumOrderValue    string `json:"minimum_order_value" validate:"required,numeric"`
+	MaximumDiscountValue string `json:"maximum_discount_value" validate:"required,numeric"`
+	ValidForOrder        string `json:"valid_for_order" validate:"required,numeric"`
+
+	Type      string `json:"type" validate:"required,oneof=1 2"`
+	OrderType string `json:"order_type" validate:"required,oneof=0 1 2"`
+
+	StartBy string `json:"start_by" validate:"required,datetime=2006-01-02 15:04:05"`
+	EndBy   string `json:"end_by" validate:"required,datetime=2006-01-02 15:04:05"`
+}
+
+type CouponUpdateRequestInAdminPanel struct {
+	CouponCode  string `json:"coupon_code" validate:"required,min=3,max=50"`
+	Description string `json:"description" validate:"required,max=500"`
+
+	ClientID     string `json:"client_id"`
+	CounsellorID string `json:"counsellor_id"`
+	TherapistID  string `json:"therapist_id"`
+
+	Discount             string `json:"discount" validate:"required,numeric"`
+	MinimumOrderValue    string `json:"minimum_order_value" validate:"required,numeric"`
+	MaximumDiscountValue string `json:"maximum_discount_value" validate:"required,numeric"`
+	ValidForOrder        string `json:"valid_for_order" validate:"required,numeric"`
+
+	Type      string `json:"type" validate:"required,oneof=1 2"`
+	OrderType string `json:"order_type" validate:"required,oneof=0 1 2"`
+
+	StartBy string `json:"start_by" validate:"required,datetime=2006-01-02 15:04:05"`
+	EndBy   string `json:"end_by" validate:"required,datetime=2006-01-02 15:04:05"`
+	Status  string `json:"status" validate:"required,oneof=0 1 2 3"`
+}
+
+type EventUpdateRequestInAdminPanel struct {
+	CounsellorID string `json:"counsellor_id" validate:"required,min=4,max=25"`
+	Title        string `json:"title" validate:"required,min=3,max=100"`
+	Description  string `json:"description" validate:"required,min=10,max=1000"`
+	Photo        string `json:"photo" validate:"required"`
+	Date         string `json:"date" validate:"required,datetime=2006-01-02"`
+	Time         string `json:"time" validate:"required,numeric"`
+	Duration     string `json:"duration" validate:"required"` // in minutes
+	Price        string `json:"price" validate:"required,numeric"`
+	Status       string `json:"status" validate:"required,oneof=0 1 2 3 4"`
+}
+
+type InPersonEventAddRequestInAdminPanel struct {
+	CounsellorID    string `json:"counsellor_id" validate:"required"`
+	Title           string `json:"title" validate:"required,min=3,max=100"`
+	Description     string `json:"description" validate:"required,min=10,max=1000"`
+	TotalSeat       string `json:"total_seat" validate:"required,numeric"`
+	Document        string `json:"document"`
+	CarryThings     string `json:"carry_things" validate:"required,max=500"`
+	CompanyName     string `json:"company_name" validate:"required,min=2,max=100"`
+	CompanyLocation string `json:"company_location" validate:"required,min=2,max=255"`
+	Address         string `json:"address" validate:"required,min=5,max=500"`
+	Photo           string `json:"photo" validate:"required"`
+	BackgroundPhoto string `json:"background_photo" validate:"required"`
+	Date            string `json:"date" validate:"required,datetime=2006-01-02"`
+	Time            string `json:"time" validate:"required,required"`
+	Duration        string `json:"duration" validate:"required,numeric"`
+	Status          string `json:"status" validate:"required,oneof=0 1 2 3 4"`
+}
+
 type AvailabilityUpdateRequestInAdminPanel struct {
 	ID              string `json:"id"`
 	CounsellorID    string `json:"counsellor_id" validate:"required,min=3,max=16"`
 	Date            string `json:"date" validate:"required,datetime=2006-01-02"`
 	FromTime        string `json:"fromTime" validate:"required,datetime=15:04"`
-	ToTime          string `json:"toTime"`
-	CompanyName     string `json:"companyName"`
-	CompanyLocation string `json:"companyLocation"`
-	RoomNo          string `json:"roomNo"`
-	Address         string `json:"address"`
-	Status          string `json:"status"`
-	Zero            string `json:"0"`
-	One             string `json:"1"`
-	Two             string `json:"2"`
-	Three           string `json:"3"`
-	Four            string `json:"4"`
-	Five            string `json:"5"`
-	Six             string `json:"6"`
-	Seven           string `json:"7"`
-	Eight           string `json:"8"`
-	Nine            string `json:"9"`
-	Ten             string `json:"10"`
-	Eleven          string `json:"11"`
-	Twelve          string `json:"12"`
-	Thirteen        string `json:"13"`
-	Fourteen        string `json:"14"`
-	Fifteen         string `json:"15"`
-	Sixteen         string `json:"16"`
-	Seventeen       string `json:"17"`
-	Eighteen        string `json:"18"`
-	Nineteen        string `json:"19"`
-	Twenty          string `json:"20"`
-	TwentyOne       string `json:"21"`
-	TwentyTwo       string `json:"22"`
-	TwentyThree     string `json:"23"`
-	TwentyFour      string `json:"24"`
-	TwentyFive      string `json:"25"`
-	TwentySix       string `json:"26"`
-	TwentySeven     string `json:"27"`
-	TwentyEight     string `json:"28"`
-	TwentyNine      string `json:"29"`
-	Thirty          string `json:"30"`
-	ThirtyOne       string `json:"31"`
-	ThirtyTwo       string `json:"32"`
-	ThirtyThree     string `json:"33"`
-	ThirtyFour      string `json:"34"`
-	ThirtyFive      string `json:"35"`
-	ThirtySix       string `json:"36"`
-	ThirtySeven     string `json:"37"`
-	ThirtyEight     string `json:"38"`
-	ThirtyNine      string `json:"39"`
-	Forty           string `json:"40"`
-	FortyOne        string `json:"41"`
-	FortyTwo        string `json:"42"`
-	FortyThree      string `json:"43"`
-	FortyFour       string `json:"44"`
-	FortyFive       string `json:"45"`
-	FortySix        string `json:"46"`
-	FortySeven      string `json:"47"`
+	ToTime          string `json:"toTime" validate:"required,datetime=15:04"`
+	CompanyName     string `json:"companyName" validate:"required,min=3,max=100"`
+	CompanyLocation string `json:"companyLocation" validate:"required,min=3,max=100"`
+	RoomNo          string `json:"roomNo" validate:"required,min=1,max=80"`
+	Address         string `json:"address" validate:"required,min=3,max=200"`
+	Status          string `json:"status" validate:"required,oneof=0 1 2"`
+	Zero            string `json:"0" validate:"required,oneof=0 1"`
+	One             string `json:"1" validate:"required,oneof=0 1"`
+	Two             string `json:"2" validate:"required,oneof=0 1"`
+	Three           string `json:"3" validate:"required,oneof=0 1"`
+	Four            string `json:"4" validate:"required,oneof=0 1"`
+	Five            string `json:"5" validate:"required,oneof=0 1"`
+	Six             string `json:"6" validate:"required,oneof=0 1"`
+	Seven           string `json:"7" validate:"required,oneof=0 1"`
+	Eight           string `json:"8" validate:"required,oneof=0 1"`
+	Nine            string `json:"9" validate:"required,oneof=0 1"`
+	Ten             string `json:"10" validate:"required,oneof=0 1"`
+	Eleven          string `json:"11" validate:"required,oneof=0 1"`
+	Twelve          string `json:"12" validate:"required,oneof=0 1"`
+	Thirteen        string `json:"13" validate:"required,oneof=0 1"`
+	Fourteen        string `json:"14" validate:"required,oneof=0 1"`
+	Fifteen         string `json:"15" validate:"required,oneof=0 1"`
+	Sixteen         string `json:"16" validate:"required,oneof=0 1"`
+	Seventeen       string `json:"17" validate:"required,oneof=0 1"`
+	Eighteen        string `json:"18" validate:"required,oneof=0 1"`
+	Nineteen        string `json:"19" validate:"required,oneof=0 1"`
+	Twenty          string `json:"20" validate:"required,oneof=0 1"`
+	TwentyOne       string `json:"21" validate:"required,oneof=0 1"`
+	TwentyTwo       string `json:"22" validate:"required,oneof=0 1"`
+	TwentyThree     string `json:"23" validate:"required,oneof=0 1"`
+	TwentyFour      string `json:"24" validate:"required,oneof=0 1"`
+	TwentyFive      string `json:"25" validate:"required,oneof=0 1"`
+	TwentySix       string `json:"26" validate:"required,oneof=0 1"`
+	TwentySeven     string `json:"27" validate:"required,oneof=0 1"`
+	TwentyEight     string `json:"28" validate:"required,oneof=0 1"`
+	TwentyNine      string `json:"29" validate:"required,oneof=0 1"`
+	Thirty          string `json:"30" validate:"required,oneof=0 1"`
+	ThirtyOne       string `json:"31" validate:"required,oneof=0 1"`
+	ThirtyTwo       string `json:"32" validate:"required,oneof=0 1"`
+	ThirtyThree     string `json:"33" validate:"required,oneof=0 1"`
+	ThirtyFour      string `json:"34" validate:"required,oneof=0 1"`
+	ThirtyFive      string `json:"35" validate:"required,oneof=0 1"`
+	ThirtySix       string `json:"36" validate:"required,oneof=0 1"`
+	ThirtySeven     string `json:"37" validate:"required,oneof=0 1"`
+	ThirtyEight     string `json:"38" validate:"required,oneof=0 1"`
+	ThirtyNine      string `json:"39" validate:"required,oneof=0 1"`
+	Forty           string `json:"40" validate:"required,oneof=0 1"`
+	FortyOne        string `json:"41" validate:"required,oneof=0 1"`
+	FortyTwo        string `json:"42" validate:"required,oneof=0 1"`
+	FortyThree      string `json:"43" validate:"required,oneof=0 1"`
+	FortyFour       string `json:"44" validate:"required,oneof=0 1"`
+	FortyFive       string `json:"45" validate:"required,oneof=0 1"`
+	FortySix        string `json:"46" validate:"required,oneof=0 1"`
+	FortySeven      string `json:"47" validate:"required,oneof=0 1"`
 }
 
 type AssessmentOption struct {

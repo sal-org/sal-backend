@@ -95,157 +95,164 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	body := Model.AvailabilityUpdateRequestInAdminPanel{}
 
-	// availabileDates, status, ok := DB.SelectProcess("select date,id from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and `date` = ?", r.FormValue("counsellor_id"), body["date"])
-	// if !ok {
-	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
 
 	slotsDate := map[string]string{}
 
-	slotsDate["counsellor_id"] = body["counsellor_id"]
-	slotsDate["date"] = body["date"]
-	slotsDate["from_time"] = body["fromTime"]
-	slotsDate["to_time"] = body["toTime"]
-	slotsDate["partner_name"] = body["companyName"]
-	slotsDate["partner_location"] = body["companyLocation"]
-	slotsDate["counselling_room"] = body["roomNo"]
-	slotsDate["counselling_address"] = body["address"]
+	slotsDate["counsellor_id"] = body.CounsellorID
+	slotsDate["date"] = body.Date
+	slotsDate["from_time"] = body.FromTime
+	slotsDate["to_time"] = body.ToTime
+	slotsDate["partner_name"] = body.CompanyName
+	slotsDate["partner_location"] = body.CompanyLocation
+	slotsDate["counselling_room"] = body.RoomNo
+	slotsDate["counselling_address"] = body.Address
 	slotsDate["schedules_status"] = CONSTANT.InPersonSlotsInProgress
-	slotsDate["status"] = body["status"]
-	slotsDate["0"] = body["0"]
-	slotsDate["1"] = body["1"]
-	slotsDate["2"] = body["2"]
-	slotsDate["3"] = body["3"]
-	slotsDate["4"] = body["4"]
-	slotsDate["5"] = body["5"]
-	slotsDate["6"] = body["6"]
-	slotsDate["7"] = body["7"]
-	slotsDate["8"] = body["8"]
-	slotsDate["9"] = body["9"]
-	slotsDate["10"] = body["10"]
-	slotsDate["11"] = body["11"]
-	slotsDate["12"] = body["12"]
-	slotsDate["13"] = body["13"]
-	slotsDate["14"] = body["14"]
-	slotsDate["15"] = body["15"]
-	slotsDate["16"] = body["16"]
-	slotsDate["17"] = body["17"]
-	slotsDate["18"] = body["18"]
-	slotsDate["19"] = body["19"]
-	slotsDate["20"] = body["20"]
-	slotsDate["21"] = body["21"]
-	slotsDate["22"] = body["22"]
-	slotsDate["23"] = body["23"]
-	slotsDate["24"] = body["24"]
-	slotsDate["25"] = body["25"]
-	slotsDate["26"] = body["26"]
-	slotsDate["27"] = body["27"]
-	slotsDate["28"] = body["28"]
-	slotsDate["29"] = body["29"]
-	slotsDate["30"] = body["30"]
-	slotsDate["31"] = body["31"]
-	slotsDate["32"] = body["32"]
-	slotsDate["33"] = body["33"]
-	slotsDate["34"] = body["34"]
-	slotsDate["35"] = body["35"]
-	slotsDate["36"] = body["36"]
-	slotsDate["37"] = body["37"]
-	slotsDate["38"] = body["38"]
-	slotsDate["39"] = body["39"]
-	slotsDate["40"] = body["40"]
-	slotsDate["41"] = body["41"]
-	slotsDate["42"] = body["42"]
-	slotsDate["43"] = body["43"]
-	slotsDate["44"] = body["44"]
-	slotsDate["45"] = body["45"]
-	slotsDate["46"] = body["46"]
-	slotsDate["47"] = body["47"]
+	slotsDate["status"] = body.Status
+	slotsDate["0"] = body.Zero
+	slotsDate["1"] = body.One
+	slotsDate["2"] = body.Two
+	slotsDate["3"] = body.Three
+	slotsDate["4"] = body.Four
+	slotsDate["5"] = body.Five
+	slotsDate["6"] = body.Six
+	slotsDate["7"] = body.Seven
+	slotsDate["8"] = body.Eight
+	slotsDate["9"] = body.Nine
+	slotsDate["10"] = body.Ten
+	slotsDate["11"] = body.Eleven
+	slotsDate["12"] = body.Twelve
+	slotsDate["13"] = body.Thirteen
+	slotsDate["14"] = body.Fourteen
+	slotsDate["15"] = body.Fifteen
+	slotsDate["16"] = body.Sixteen
+	slotsDate["17"] = body.Seventeen
+	slotsDate["18"] = body.Eighteen
+	slotsDate["19"] = body.Nineteen
+	slotsDate["20"] = body.Twenty
+	slotsDate["21"] = body.TwentyOne
+	slotsDate["22"] = body.TwentyTwo
+	slotsDate["23"] = body.TwentyThree
+	slotsDate["24"] = body.TwentyFour
+	slotsDate["25"] = body.TwentyFive
+	slotsDate["26"] = body.TwentySix
+	slotsDate["27"] = body.TwentySeven
+	slotsDate["28"] = body.TwentyEight
+	slotsDate["29"] = body.TwentyNine
+	slotsDate["30"] = body.Thirteen
+	slotsDate["31"] = body.ThirtyOne
+	slotsDate["32"] = body.ThirtyTwo
+	slotsDate["33"] = body.ThirtyThree
+	slotsDate["34"] = body.ThirtyFour
+	slotsDate["35"] = body.ThirtyFive
+	slotsDate["36"] = body.ThirtySix
+	slotsDate["37"] = body.ThirtySeven
+	slotsDate["38"] = body.ThirtyEight
+	slotsDate["39"] = body.ThirtyNine
+	slotsDate["40"] = body.Fourteen
+	slotsDate["41"] = body.FortyOne
+	slotsDate["42"] = body.FortyTwo
+	slotsDate["43"] = body.FortyThree
+	slotsDate["44"] = body.FortyFour
+	slotsDate["45"] = body.FortyFive
+	slotsDate["46"] = body.FortySix
+	slotsDate["47"] = body.FortySeven
 
 	slots := map[string]string{}
 
-	slots["available"] = body["status"]
-	slots["0"] = body["0"]
-	slots["1"] = body["1"]
-	slots["2"] = body["2"]
-	slots["3"] = body["3"]
-	slots["4"] = body["4"]
-	slots["5"] = body["5"]
-	slots["6"] = body["6"]
-	slots["7"] = body["7"]
-	slots["8"] = body["8"]
-	slots["9"] = body["9"]
-	slots["10"] = body["10"]
-	slots["11"] = body["11"]
-	slots["12"] = body["12"]
-	slots["13"] = body["13"]
-	slots["14"] = body["14"]
-	slots["15"] = body["15"]
-	slots["16"] = body["16"]
-	slots["17"] = body["17"]
-	slots["18"] = body["18"]
-	slots["19"] = body["19"]
-	slots["20"] = body["20"]
-	slots["21"] = body["21"]
-	slots["22"] = body["22"]
-	slots["23"] = body["23"]
-	slots["24"] = body["24"]
-	slots["25"] = body["25"]
-	slots["26"] = body["26"]
-	slots["27"] = body["27"]
-	slots["28"] = body["28"]
-	slots["29"] = body["29"]
-	slots["30"] = body["30"]
-	slots["31"] = body["31"]
-	slots["32"] = body["32"]
-	slots["33"] = body["33"]
-	slots["34"] = body["34"]
-	slots["35"] = body["35"]
-	slots["36"] = body["36"]
-	slots["37"] = body["37"]
-	slots["38"] = body["38"]
-	slots["39"] = body["39"]
-	slots["40"] = body["40"]
-	slots["41"] = body["41"]
-	slots["42"] = body["42"]
-	slots["43"] = body["43"]
-	slots["44"] = body["44"]
-	slots["45"] = body["45"]
-	slots["46"] = body["46"]
-	slots["47"] = body["47"]
+	slots["available"] = body.Status
+	slots["0"] = body.Zero
+	slots["1"] = body.One
+	slots["2"] = body.Two
+	slots["3"] = body.Three
+	slots["4"] = body.Four
+	slots["5"] = body.Five
+	slots["6"] = body.Six
+	slots["7"] = body.Seven
+	slots["8"] = body.Eight
+	slots["9"] = body.Nine
+	slots["10"] = body.Ten
+	slots["11"] = body.Eleven
+	slots["12"] = body.Twelve
+	slots["13"] = body.Thirteen
+	slots["14"] = body.Fourteen
+	slots["15"] = body.Fifteen
+	slots["16"] = body.Sixteen
+	slots["17"] = body.Seventeen
+	slots["18"] = body.Eighteen
+	slots["19"] = body.Nineteen
+	slots["20"] = body.Twenty
+	slots["21"] = body.TwentyOne
+	slots["22"] = body.TwentyTwo
+	slots["23"] = body.TwentyThree
+	slots["24"] = body.TwentyFour
+	slots["25"] = body.TwentyFive
+	slots["26"] = body.TwentySix
+	slots["27"] = body.TwentySeven
+	slots["28"] = body.TwentyEight
+	slots["29"] = body.TwentyNine
+	slots["30"] = body.Thirty
+	slots["31"] = body.ThirtyOne
+	slots["32"] = body.ThirtyTwo
+	slots["33"] = body.ThirtyThree
+	slots["34"] = body.ThirtyFour
+	slots["35"] = body.ThirtyFive
+	slots["36"] = body.ThirtySix
+	slots["37"] = body.ThirtySeven
+	slots["38"] = body.ThirtyEight
+	slots["39"] = body.ThirtyNine
+	slots["40"] = body.Forty
+	slots["41"] = body.FortyOne
+	slots["42"] = body.FortyTwo
+	slots["43"] = body.FortyThree
+	slots["44"] = body.FortyFour
+	slots["45"] = body.FortyFive
+	slots["46"] = body.FortySix
+	slots["47"] = body.FortySeven
 
-	if len(body["id"]) > 0 {
+	if len(body.ID) > 0 {
 
-		inpersonSlotList, status, ok := DB.SelectSQL(CONSTANT.InPersonSLotsScheduleTable, []string{"*"}, map[string]string{"id": body["id"]})
+		inpersonSlotList, status, ok := DB.SelectSQL(CONSTANT.InPersonSLotsScheduleTable, []string{"*"}, map[string]string{"id": body.ID})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
-		DB.UpdateSQL(CONSTANT.InPersonSLotsScheduleTable, map[string]string{"id": body["id"]}, slotsDate)
+		DB.UpdateSQL(CONSTANT.InPersonSLotsScheduleTable, map[string]string{"id": body.ID}, slotsDate)
 
-		if body["status"] == "0" {
-			appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": body["counsellor_id"], "date": body["date"]})
+		if body.Status == "0" {
+			appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": body.CounsellorID, "date": body.Date})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
 
 			// get counsellor details
-			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body.CounsellorID})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
 
 			if len(counsellor) == 0 {
-				counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["counsellor_id"]})
+				counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body.CounsellorID})
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
@@ -359,15 +366,15 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 				UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistInPersonAppointmentCancellationTherapistContent,
 					map[string]string{
-						"###date###":     body["date"],
-						"###location###": body["roomNo"] + ", " + body["address"],
+						"###date###":     body.Date,
+						"###location###": body.RoomNo + ", " + body.Address,
 					},
 				),
 				appointment[0]["counsellor_id"],
 				"1",
 				UTIL.GetCurrentTime().String(),
 				CONSTANT.NotificationSent,
-				body["id"],
+				body.ID,
 				"",
 			)
 
@@ -376,14 +383,14 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 				UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistInPersonAppointmentCancellationTherapistTextMeassage,
 					map[string]string{
-						"###date###":     body["date"],
-						"###location###": body["roomNo"] + ", " + body["address"],
+						"###date###":     body.Date,
+						"###location###": body.RoomNo + ", " + body.Address,
 					},
 				),
 				CONSTANT.TransactionalRouteTextMessage,
 				counsellor[0]["phone"],
 				UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
-				body["id"],
+				body.ID,
 				CONSTANT.InstantSendTextMessage,
 			)
 
@@ -393,8 +400,8 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 				Message: UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistInPersonAppointmentCancellationTherapistBody,
 					map[string]string{
-						"###date###":     body["date"],
-						"###location###": body["roomNo"] + ", " + body["address"],
+						"###date###":     body.Date,
+						"###location###": body.RoomNo + ", " + body.Address,
 					},
 				),
 			}
@@ -409,22 +416,22 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		if body["roomNo"] != inpersonSlotList[0]["roomNo"] || body["address"] != inpersonSlotList[0]["address"] {
-			inpersonAppointments, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": body["counsellor_id"], "date": body["date"]})
+		if body.RoomNo != inpersonSlotList[0]["roomNo"] || body.Address != inpersonSlotList[0]["address"] {
+			inpersonAppointments, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"counsellor_id": body.CounsellorID, "date": body.Date})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
 
 			for _, appoint := range inpersonAppointments {
-				DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": appoint["appointment_id"]}, map[string]string{"counselling_room": body["roomNo"], "counselling_address": body["address"]})
+				DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": appoint["appointment_id"]}, map[string]string{"counselling_room": body.RoomNo, "counselling_address": body.Address})
 			}
 
 		}
 
 		for key, val := range slots {
 
-			DB.ExecuteSQL("update "+CONSTANT.InPersonSLotsTable+" set `"+key+"` = "+val+" where counsellor_id = ? and date = ? and company_name = ? and company_location = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", body["counsellor_id"], body["date"], body["companyName"], body["companyLocation"]) // dont update already booked slots
+			DB.ExecuteSQL("update "+CONSTANT.InPersonSLotsTable+" set `"+key+"` = "+val+" where counsellor_id = ? and date = ? and company_name = ? and company_location = ? and `"+key+"` in ("+CONSTANT.SlotUnavailable+", "+CONSTANT.SlotAvailable+")", body.CounsellorID, body.Date, body.CompanyName, body.CompanyLocation) // dont update already booked slots
 
 		}
 

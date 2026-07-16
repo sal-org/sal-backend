@@ -4,10 +4,10 @@ import (
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
+	UTIL "salbackend/util"
 	"strconv"
 	"strings"
-
-	UTIL "salbackend/util"
 )
 
 func CouponGet(w http.ResponseWriter, r *http.Request) {
@@ -16,10 +16,10 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get coupons
 	wheres := []string{}
@@ -69,37 +69,64 @@ func CouponAdd(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CouponAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CouponAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.CouponAddRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	// add coupon
 	coupon := map[string]string{}
-	coupon["coupon_code"] = body["coupon_code"]
-	coupon["description"] = body["description"]
-	coupon["client_id"] = body["client_id"]
-	coupon["counsellor_id"] = body["counsellor_id"]
-	coupon["therapist_id"] = body["therapist_id"]
-	coupon["discount"] = body["discount"]
-	coupon["minimum_order_value"] = body["minimum_order_value"]
-	coupon["maximum_discount_value"] = body["maximum_discount_value"]
-	coupon["valid_for_order"] = body["valid_for_order"]
-	coupon["type"] = body["type"]
-	coupon["order_type"] = body["order_type"]
-	coupon["start_by"] = body["start_by"]
-	coupon["end_by"] = body["end_by"]
+	coupon["coupon_code"] = body.CouponCode
+	coupon["description"] = body.Description
+	coupon["client_id"] = body.ClientID
+	coupon["counsellor_id"] = body.CounsellorID
+	coupon["therapist_id"] = body.TherapistID
+	coupon["discount"] = body.Discount
+	coupon["minimum_order_value"] = body.MinimumOrderValue
+	coupon["maximum_discount_value"] = body.MaximumDiscountValue
+	coupon["valid_for_order"] = body.ValidForOrder
+	coupon["type"] = body.Type
+	coupon["order_type"] = body.OrderType
+	coupon["start_by"] = body.StartBy
+	coupon["end_by"] = body.EndBy
 	coupon["status"] = CONSTANT.CouponActive
-	coupon["created_by"] = body["created_by"]
+	coupon["created_by"] = id
 	coupon["created_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.InsertSQL(CONSTANT.CouponsTable, coupon)
 	if !ok {
@@ -115,30 +142,64 @@ func CouponUpdate(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	couponID, ok := UTIL.Required(r.FormValue("id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, couponID, CONSTANT.ShowDialog, response)
 		return
 	}
 
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.CouponUpdateRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if corporate_id exists
+	if !DB.CheckIfExists(CONSTANT.CouponsTable, map[string]string{"id": couponID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
+
 	// update coupon
 	coupon := map[string]string{}
-	coupon["coupon_code"] = body["coupon_code"]
-	coupon["description"] = body["description"]
-	coupon["client_id"] = body["client_id"]
-	coupon["counsellor_id"] = body["counsellor_id"]
-	coupon["therapist_id"] = body["therapist_id"]
-	coupon["discount"] = body["discount"]
-	coupon["minimum_order_value"] = body["minimum_order_value"]
-	coupon["maximum_discount_value"] = body["maximum_discount_value"]
-	coupon["valid_for_order"] = body["valid_for_order"]
-	coupon["type"] = body["type"]
-	coupon["order_type"] = body["order_type"]
-	coupon["start_by"] = body["start_by"]
-	coupon["end_by"] = body["end_by"]
-	coupon["status"] = body["status"]
-	coupon["modified_by"] = body["modified_by"]
+	coupon["coupon_code"] = body.CouponCode
+	coupon["description"] = body.Description
+	coupon["client_id"] = body.ClientID
+	coupon["counsellor_id"] = body.CounsellorID
+	coupon["therapist_id"] = body.TherapistID
+	coupon["discount"] = body.Discount
+	coupon["minimum_order_value"] = body.MinimumOrderValue
+	coupon["maximum_discount_value"] = body.MaximumDiscountValue
+	coupon["valid_for_order"] = body.ValidForOrder
+	coupon["type"] = body.Type
+	coupon["order_type"] = body.OrderType
+	coupon["start_by"] = body.StartBy
+	coupon["end_by"] = body.EndBy
+	coupon["status"] = body.Status
+	coupon["modified_by"] = id
 	coupon["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.CouponsTable, map[string]string{"id": r.FormValue("id")}, coupon)
 	if !ok {
