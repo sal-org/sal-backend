@@ -99,6 +99,12 @@ const (
 	AdminBlocked = "2"
 )
 
+// admin status
+const (
+	AccessRoleActive  = "1"
+	AccessRoleBlocked = "2"
+)
+
 // payment status
 const (
 	PaymentValid   = "1"

@@ -446,81 +446,95 @@ type UpdateUserProfileRequestInAdminPanel struct {
 	Status   string `json:"status" validate:"required,oneof= 0 1 2 3 4"`
 }
 
+type AttachPermissionAddRequestInAdminPanel struct {
+	RoleID      string `json:"role_id" validate:"required,min=2,max=25"`
+	Username    string `json:"username" validate:"required,min=2,max=50"`
+	Password    string `json:"password" validate:"required,min=2,max=200"`
+	ProfileName string `json:"profile_name" validate:"required,min=3,max=50"`
+}
 
-type CreateProfileRequest struct {
-	ProfileName      string `json:"profile_name" validate:"required,min=2,max=100"`
+type AttachPermissionUpdateRequestInAdminPanel struct {
+	RoleID      string `json:"role_id" validate:"required,min=2,max=25"`
+	Username    string `json:"username" validate:"required,min=2,max=50"`
+	Password    string `json:"password" validate:"required,min=2,max=200"`
+	ProfileName string `json:"profile_name" validate:"required,min=3,max=50"`
+	Status      string `json:"status" validate:"required,oneof= 0 1 2 3 4"`
+}
 
-	PCAdd            string `json:"pc_add" validate:"omitempty,oneof=check"`
-	PCEdit           string `json:"pc_edit" validate:"omitempty,oneof=check"`
-	PCView           string `json:"pc_view" validate:"omitempty,oneof=check"`
+type CreateProfileForRoleRequestInAdminPanel struct {
+	ProfileName string `json:"profile_name" validate:"required,min=2,max=100"`
 
-	AssessmentAdd    string `json:"assessment_add" validate:"omitempty,oneof=check"`
-	AssessmentEdit   string `json:"assessment_edit" validate:"omitempty,oneof=check"`
-	AssessmentView   string `json:"assessment_view" validate:"omitempty,oneof=check"`
+	PCAdd  string `json:"pc_add" validate:"omitempty,oneof=check"`
+	PCEdit string `json:"pc_edit" validate:"omitempty,oneof=check"`
+	PCView string `json:"pc_view" validate:"omitempty,oneof=check"`
 
-	HomeAdd          string `json:"home_add" validate:"omitempty,oneof=check"`
-	HomeEdit         string `json:"home_edit" validate:"omitempty,oneof=check"`
-	HomeView         string `json:"home_view" validate:"omitempty,oneof=check"`
+	AssessmentAdd  string `json:"assessment_add" validate:"omitempty,oneof=check"`
+	AssessmentEdit string `json:"assessment_edit" validate:"omitempty,oneof=check"`
+	AssessmentView string `json:"assessment_view" validate:"omitempty,oneof=check"`
 
-	SlotAdd          string `json:"slot_add" validate:"omitempty,oneof=check"`
-	SlotEdit         string `json:"slot_edit" validate:"omitempty,oneof=check"`
-	SlotView         string `json:"slot_view" validate:"omitempty,oneof=check"`
+	HomeAdd  string `json:"home_add" validate:"omitempty,oneof=check"`
+	HomeEdit string `json:"home_edit" validate:"omitempty,oneof=check"`
+	HomeView string `json:"home_view" validate:"omitempty,oneof=check"`
+
+	SlotAdd  string `json:"slot_add" validate:"omitempty,oneof=check"`
+	SlotEdit string `json:"slot_edit" validate:"omitempty,oneof=check"`
+	SlotView string `json:"slot_view" validate:"omitempty,oneof=check"`
 
 	InpersonCafeAdd  string `json:"inperson_cafe_add" validate:"omitempty,oneof=check"`
 	InpersonCafeEdit string `json:"inperson_cafe_edit" validate:"omitempty,oneof=check"`
 	InpersonCafeView string `json:"inperson_cafe_view" validate:"omitempty,oneof=check"`
 
-	LinkAdd          string `json:"link_add" validate:"omitempty,oneof=check"`
-	LinkEdit         string `json:"link_edit" validate:"omitempty,oneof=check"`
-	LinkView         string `json:"link_view" validate:"omitempty,oneof=check"`
+	LinkAdd  string `json:"link_add" validate:"omitempty,oneof=check"`
+	LinkEdit string `json:"link_edit" validate:"omitempty,oneof=check"`
+	LinkView string `json:"link_view" validate:"omitempty,oneof=check"`
 
-	NotiAdd          string `json:"noti_add" validate:"omitempty,oneof=check"`
-	NotiEdit         string `json:"noti_edit" validate:"omitempty,oneof=check"`
-	NotiView         string `json:"noti_view" validate:"omitempty,oneof=check"`
+	NotiAdd  string `json:"noti_add" validate:"omitempty,oneof=check"`
+	NotiEdit string `json:"noti_edit" validate:"omitempty,oneof=check"`
+	NotiView string `json:"noti_view" validate:"omitempty,oneof=check"`
 
-	ContAdd          string `json:"cont_add" validate:"omitempty,oneof=check"`
-	ContEdit         string `json:"cont_edit" validate:"omitempty,oneof=check"`
-	ContView         string `json:"cont_view" validate:"omitempty,oneof=check"`
+	ContAdd  string `json:"cont_add" validate:"omitempty,oneof=check"`
+	ContEdit string `json:"cont_edit" validate:"omitempty,oneof=check"`
+	ContView string `json:"cont_view" validate:"omitempty,oneof=check"`
 
-	MQAdd            string `json:"mq_add" validate:"omitempty,oneof=check"`
-	MQEdit           string `json:"mq_edit" validate:"omitempty,oneof=check"`
-	MQView           string `json:"mq_view" validate:"omitempty,oneof=check"`
+	MQAdd  string `json:"mq_add" validate:"omitempty,oneof=check"`
+	MQEdit string `json:"mq_edit" validate:"omitempty,oneof=check"`
+	MQView string `json:"mq_view" validate:"omitempty,oneof=check"`
 
-	CentAdd          string `json:"cent_add" validate:"omitempty,oneof=check"`
-	CentEdit         string `json:"cent_edit" validate:"omitempty,oneof=check"`
-	CentView         string `json:"cent_view" validate:"omitempty,oneof=check"`
+	CentAdd  string `json:"cent_add" validate:"omitempty,oneof=check"`
+	CentEdit string `json:"cent_edit" validate:"omitempty,oneof=check"`
+	CentView string `json:"cent_view" validate:"omitempty,oneof=check"`
 
-	CounAdd          string `json:"coun_add" validate:"omitempty,oneof=check"`
-	CounEdit         string `json:"coun_edit" validate:"omitempty,oneof=check"`
-	CounView         string `json:"coun_view" validate:"omitempty,oneof=check"`
+	CounAdd  string `json:"coun_add" validate:"omitempty,oneof=check"`
+	CounEdit string `json:"coun_edit" validate:"omitempty,oneof=check"`
+	CounView string `json:"coun_view" validate:"omitempty,oneof=check"`
 
-	PartAdd          string `json:"part_add" validate:"omitempty,oneof=check"`
-	PartEdit         string `json:"part_edit" validate:"omitempty,oneof=check"`
-	PartView         string `json:"part_view" validate:"omitempty,oneof=check"`
+	PartAdd  string `json:"part_add" validate:"omitempty,oneof=check"`
+	PartEdit string `json:"part_edit" validate:"omitempty,oneof=check"`
+	PartView string `json:"part_view" validate:"omitempty,oneof=check"`
 
-	PartLocAdd       string `json:"part_loc_add" validate:"omitempty,oneof=check"`
-	PartLocEdit      string `json:"part_loc_edit" validate:"omitempty,oneof=check"`
-	PartLocView      string `json:"part_loc_view" validate:"omitempty,oneof=check"`
+	PartLocAdd  string `json:"part_loc_add" validate:"omitempty,oneof=check"`
+	PartLocEdit string `json:"part_loc_edit" validate:"omitempty,oneof=check"`
+	PartLocView string `json:"part_loc_view" validate:"omitempty,oneof=check"`
 
-	ListAdd          string `json:"list_add" validate:"omitempty,oneof=check"`
-	ListEdit         string `json:"list_edit" validate:"omitempty,oneof=check"`
-	ListView         string `json:"list_view" validate:"omitempty,oneof=check"`
+	ListAdd  string `json:"list_add" validate:"omitempty,oneof=check"`
+	ListEdit string `json:"list_edit" validate:"omitempty,oneof=check"`
+	ListView string `json:"list_view" validate:"omitempty,oneof=check"`
 
-	TherAdd          string `json:"ther_add" validate:"omitempty,oneof=check"`
-	TherEdit         string `json:"ther_edit" validate:"omitempty,oneof=check"`
-	TherView         string `json:"ther_view" validate:"omitempty,oneof=check"`
+	TherAdd  string `json:"ther_add" validate:"omitempty,oneof=check"`
+	TherEdit string `json:"ther_edit" validate:"omitempty,oneof=check"`
+	TherView string `json:"ther_view" validate:"omitempty,oneof=check"`
 
-	AppointAdd       string `json:"appoint_add" validate:"omitempty,oneof=check"`
-	AppointEdit      string `json:"appoint_edit" validate:"omitempty,oneof=check"`
-	AppointView      string `json:"appoint_view" validate:"omitempty,oneof=check"`
+	AppointAdd  string `json:"appoint_add" validate:"omitempty,oneof=check"`
+	AppointEdit string `json:"appoint_edit" validate:"omitempty,oneof=check"`
+	AppointView string `json:"appoint_view" validate:"omitempty,oneof=check"`
 
-	CafeAdd          string `json:"cafe_add" validate:"omitempty,oneof=check"`
-	CafeEdit         string `json:"cafe_edit" validate:"omitempty,oneof=check"`
-	CafeView         string `json:"cafe_view" validate:"omitempty,oneof=check"`
+	CafeAdd  string `json:"cafe_add" validate:"omitempty,oneof=check"`
+	CafeEdit string `json:"cafe_edit" validate:"omitempty,oneof=check"`
+	CafeView string `json:"cafe_view" validate:"omitempty,oneof=check"`
 
-	ReptAdd          string `json:"rept_add" validate:"omitempty,oneof=check"`
-	ReptEdit         string `json:"rept_edit" validate:"omitempty,oneof=check"`
-	ReptView         string `json:"rept_view" validate:"omitempty,oneof=check"`
+	ReptAdd  string `json:"rept_add" validate:"omitempty,oneof=check"`
+	ReptEdit string `json:"rept_edit" validate:"omitempty,oneof=check"`
+	ReptView string `json:"rept_view" validate:"omitempty,oneof=check"`
 }
 
 type CouponAddRequestInAdminPanel struct {
