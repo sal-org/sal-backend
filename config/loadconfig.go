@@ -32,6 +32,7 @@ func LoadConfig() {
 	OneSignalApiKeyForTherapist = os.Getenv("ONESIGNAL_API_KEY_FOR_THERAPIST")
 	S3Bucket = os.Getenv("S3_BUCKET")
 	MediaURL = os.Getenv("MEDIA_URL")
+	MediaURLInCLOUDFRONT = os.Getenv("MEDIA_URL_CLOUDFRONT")
 	AWSAccesKey = os.Getenv("AWSACCESSKEY")
 	AWSSecretKey = os.Getenv("AWSSECRETKEY")
 	AWSRegion = os.Getenv("AWSREGION")

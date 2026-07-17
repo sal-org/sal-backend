@@ -133,6 +133,22 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, appoint := range appointments {
+		lastAppointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and client_id = ? and status = 3 order by date desc", appoint["counsellor_id"], appoint["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(lastAppointments) == 0 {
+			appoint["last_session_date"] = ""
+			appoint["session_type"] = "New"
+		} else {
+			appoint["last_session_date"] = UTIL.BuildDate(lastAppointments[0]["date"])
+			appoint["session_type"] = "Repeat"
+		}
+	}
+
 	for _, counsellor := range counsellors {
 		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
 		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)

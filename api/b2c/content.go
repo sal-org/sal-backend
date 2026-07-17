@@ -65,7 +65,7 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 
 	SQLQuery += " order by " + sortBy + orderBy
 
-	contents, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.ContentPerPageUser)+" offset "+strconv.Itoa((UTIL.GetPageNumber(body["page"])-1)*CONSTANT.CounsellorsListPerPageClient), args...)
+	contents, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.ContentForWebPerPageUser)+" offset "+strconv.Itoa((UTIL.GetPageNumber(body["page"])-1)*CONSTANT.ContentForWebPerPageUser), args...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -122,8 +122,8 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 
 	response["contents"] = contents
 	response["contents_count"] = contentsCount[0]["ctn"]
-	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(contentsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-	response["media_url"] = CONFIG.MediaURL
+	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(contentsCount[0]["ctn"], CONSTANT.ContentForWebPerPageUser))
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	// encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	// if encrypt == "" {

@@ -11,6 +11,7 @@ var S3BUCKETAGORA string
 var MediaURLFORAGORA string
 
 var MediaURL string // media url to access files
+var MediaURLInCLOUDFRONT string
 // s3 credentials to upload file
 var AWSAccesKey string
 var AWSSecretKey string
