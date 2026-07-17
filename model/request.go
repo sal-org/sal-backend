@@ -410,6 +410,119 @@ type UpdateCounsellorProfileRequestInAdminPanel struct {
 	Status             string `json:"status" validate:"required,oneof=0 1 2 3"`
 }
 
+type UpdateListenerProfileRequestInAdminPanel struct {
+	FirstName  string `json:"first_name" validate:"required,min=2,max=50"`
+	LastName   string `json:"last_name" validate:"required,min=2,max=50"`
+	Phone      string `json:"phone" validate:"required,len=12,numeric"`
+	Email      string `json:"email" validate:"required,email,max=100"`
+	Gender     string `json:"gender" validate:"required,oneof=Male Female Other"`
+	Occupation string `json:"occupation" validate:"required,min=2,max=100"`
+	AgeGroup   string `json:"age_group" validate:"required,min=2,max=50"`
+	About      string `json:"about" validate:"required,min=10,max=5000"`
+	Status     string `json:"status" validate:"required,oneof=0 1 2 3"`
+}
+
+type AddNotificationRequestInAdminPanel struct {
+	Title            string `json:"title" validate:"required,min=2,max=50"`
+	Body             string `json:"body" validate:"required,min=2,max=200"`
+	UserIds          string `json:"user_ids" validate:"required,min=3,max=20"`
+	Type             string `json:"type" validate:"required,oneof= 1 2 3 4 5 6"`
+	NotificationType string `json:"notification_type" validate:"required,oneof=1 2 3 4 5 6"`
+	UserType         string `json:"user_type" validate:"required,oneof=1 2 3 4 5"`
+	PartnerName      string `json:"partner_name" validate:"omitempty,min=6,max=90"`
+	PartnerLocation  string `json:"partner_location" validate:"omitempty,min=6,max=120"`
+}
+
+type AddUserProfileRequestInAdminPanel struct {
+	Username string `json:"username" validate:"required,min=2,max=50"`
+	Password string `json:"password" validate:"required,min=2,max=200"`
+	Type     string `json:"type" validate:"required,oneof= 1 2 3 4"`
+}
+
+type UpdateUserProfileRequestInAdminPanel struct {
+	Username string `json:"username" validate:"required,min=2,max=50"`
+	Password string `json:"password" validate:"required,min=2,max=200"`
+	Type     string `json:"type" validate:"required,oneof= 1 2 3 4"`
+	Status   string `json:"status" validate:"required,oneof= 0 1 2 3 4"`
+}
+
+
+type CreateProfileRequest struct {
+	ProfileName      string `json:"profile_name" validate:"required,min=2,max=100"`
+
+	PCAdd            string `json:"pc_add" validate:"omitempty,oneof=check"`
+	PCEdit           string `json:"pc_edit" validate:"omitempty,oneof=check"`
+	PCView           string `json:"pc_view" validate:"omitempty,oneof=check"`
+
+	AssessmentAdd    string `json:"assessment_add" validate:"omitempty,oneof=check"`
+	AssessmentEdit   string `json:"assessment_edit" validate:"omitempty,oneof=check"`
+	AssessmentView   string `json:"assessment_view" validate:"omitempty,oneof=check"`
+
+	HomeAdd          string `json:"home_add" validate:"omitempty,oneof=check"`
+	HomeEdit         string `json:"home_edit" validate:"omitempty,oneof=check"`
+	HomeView         string `json:"home_view" validate:"omitempty,oneof=check"`
+
+	SlotAdd          string `json:"slot_add" validate:"omitempty,oneof=check"`
+	SlotEdit         string `json:"slot_edit" validate:"omitempty,oneof=check"`
+	SlotView         string `json:"slot_view" validate:"omitempty,oneof=check"`
+
+	InpersonCafeAdd  string `json:"inperson_cafe_add" validate:"omitempty,oneof=check"`
+	InpersonCafeEdit string `json:"inperson_cafe_edit" validate:"omitempty,oneof=check"`
+	InpersonCafeView string `json:"inperson_cafe_view" validate:"omitempty,oneof=check"`
+
+	LinkAdd          string `json:"link_add" validate:"omitempty,oneof=check"`
+	LinkEdit         string `json:"link_edit" validate:"omitempty,oneof=check"`
+	LinkView         string `json:"link_view" validate:"omitempty,oneof=check"`
+
+	NotiAdd          string `json:"noti_add" validate:"omitempty,oneof=check"`
+	NotiEdit         string `json:"noti_edit" validate:"omitempty,oneof=check"`
+	NotiView         string `json:"noti_view" validate:"omitempty,oneof=check"`
+
+	ContAdd          string `json:"cont_add" validate:"omitempty,oneof=check"`
+	ContEdit         string `json:"cont_edit" validate:"omitempty,oneof=check"`
+	ContView         string `json:"cont_view" validate:"omitempty,oneof=check"`
+
+	MQAdd            string `json:"mq_add" validate:"omitempty,oneof=check"`
+	MQEdit           string `json:"mq_edit" validate:"omitempty,oneof=check"`
+	MQView           string `json:"mq_view" validate:"omitempty,oneof=check"`
+
+	CentAdd          string `json:"cent_add" validate:"omitempty,oneof=check"`
+	CentEdit         string `json:"cent_edit" validate:"omitempty,oneof=check"`
+	CentView         string `json:"cent_view" validate:"omitempty,oneof=check"`
+
+	CounAdd          string `json:"coun_add" validate:"omitempty,oneof=check"`
+	CounEdit         string `json:"coun_edit" validate:"omitempty,oneof=check"`
+	CounView         string `json:"coun_view" validate:"omitempty,oneof=check"`
+
+	PartAdd          string `json:"part_add" validate:"omitempty,oneof=check"`
+	PartEdit         string `json:"part_edit" validate:"omitempty,oneof=check"`
+	PartView         string `json:"part_view" validate:"omitempty,oneof=check"`
+
+	PartLocAdd       string `json:"part_loc_add" validate:"omitempty,oneof=check"`
+	PartLocEdit      string `json:"part_loc_edit" validate:"omitempty,oneof=check"`
+	PartLocView      string `json:"part_loc_view" validate:"omitempty,oneof=check"`
+
+	ListAdd          string `json:"list_add" validate:"omitempty,oneof=check"`
+	ListEdit         string `json:"list_edit" validate:"omitempty,oneof=check"`
+	ListView         string `json:"list_view" validate:"omitempty,oneof=check"`
+
+	TherAdd          string `json:"ther_add" validate:"omitempty,oneof=check"`
+	TherEdit         string `json:"ther_edit" validate:"omitempty,oneof=check"`
+	TherView         string `json:"ther_view" validate:"omitempty,oneof=check"`
+
+	AppointAdd       string `json:"appoint_add" validate:"omitempty,oneof=check"`
+	AppointEdit      string `json:"appoint_edit" validate:"omitempty,oneof=check"`
+	AppointView      string `json:"appoint_view" validate:"omitempty,oneof=check"`
+
+	CafeAdd          string `json:"cafe_add" validate:"omitempty,oneof=check"`
+	CafeEdit         string `json:"cafe_edit" validate:"omitempty,oneof=check"`
+	CafeView         string `json:"cafe_view" validate:"omitempty,oneof=check"`
+
+	ReptAdd          string `json:"rept_add" validate:"omitempty,oneof=check"`
+	ReptEdit         string `json:"rept_edit" validate:"omitempty,oneof=check"`
+	ReptView         string `json:"rept_view" validate:"omitempty,oneof=check"`
+}
+
 type CouponAddRequestInAdminPanel struct {
 	CouponCode  string `json:"coupon_code" validate:"required,min=3,max=50"`
 	Description string `json:"description" validate:"required,max=500"`

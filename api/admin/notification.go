@@ -9,7 +9,7 @@ import (
 	"time"
 
 	CONFIG "salbackend/config"
-	_ "salbackend/model"
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 )
 
@@ -83,39 +83,60 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+	body := MODEL.AddNotificationRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
 	notification := map[string]string{}
-	notification["title"] = body["title"]
-	notification["body"] = body["body"]
-	notification["user_ids"] = body["user_ids"]
-	notification["type"] = body["type"]
-	notification["notification_type"] = body["notification_type"]
-	notification["user_type"] = body["user_type"]
-	notification["status"] = "1"
-	notification["created_by"] = body["created_by"]
+	notification["title"] = body.Title
+	notification["body"] = body.Body
+	notification["user_ids"] = body.UserIds
+	notification["type"] = body.Type
+	notification["notification_type"] = body.NotificationType
+	notification["user_type"] = body.UserType
+	notification["status"] = CONSTANT.NotificationActive
+	notification["created_by"] = id
 	notification["created_at"] = UTIL.GetCurrentTime().String()
 
 	// get all deivce_ids and send notifications
 	var (
 		devices  []map[string]string
 		status   string
+		ok       bool
 		userType string
 	)
 	if strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
 		if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) {
 
+			// check if Partner Name exists
+			if !DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"partner_name": body.PartnerName}) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid name", CONSTANT.ShowDialog, response)
+				return
+			}
+
 			userType = "3"
 
-			domain := DB.QueryRowSQL("select domain from "+CONSTANT.CorporatePartnersTable+" where partner_name = ? ", body["partner_name"])
+			domain := DB.QueryRowSQL("select domain from "+CONSTANT.CorporatePartnersTable+" where partner_name = ? ", body.PartnerName)
 
-			if body["partner_location"] != "" {
-				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id, '3' as type from " + CONSTANT.ClientsTable + " where email like '%" + domain + "' and location = '" + body["partner_location"] + "' and push_notification_status = '1'")
+			if body.PartnerLocation != "" {
+				devices, status, ok = DB.SelectProcess("select client_id as user_id, device_id, '3' as type from " + CONSTANT.ClientsTable + " where email like '%" + domain + "' and location = '" + body.PartnerLocation + "' and push_notification_status = '1'")
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
@@ -193,28 +214,28 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.EqualFold(notification["user_type"], CONSTANT.ClientType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
-		UTIL.SendBulkNotification(body["title"], body["body"], CONSTANT.ClientType)
+		UTIL.SendBulkNotification(body.Title, body.Body, CONSTANT.ClientType)
 		// } else if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
 		// 	for _, device := range devices {
 		// 		UTIL.SendNotification(body["title"], body["body"], device["user_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, device["user_id"])
 		// 	}
 		// }
 	} else if strings.EqualFold(notification["user_type"], CONSTANT.CounsellorType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
-		UTIL.SendBulkNotification(body["title"], body["body"], CONSTANT.CounsellorType)
+		UTIL.SendBulkNotification(body.Title, body.Body, CONSTANT.CounsellorType)
 		// } else if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
 		// 	for _, device := range devices {
 		// 		UTIL.SendNotification(body["title"], body["body"], device["user_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, device["user_id"])
 		// 	}
 		// }
 	} else if strings.EqualFold(notification["user_type"], CONSTANT.ListenerType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
-		UTIL.SendBulkNotification(body["title"], body["body"], CONSTANT.ListenerType)
+		UTIL.SendBulkNotification(body.Title, body.Body, CONSTANT.ListenerType)
 		// } else if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
 		// 	for _, device := range devices {
 		// 		UTIL.SendNotification(body["title"], body["body"], device["user_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, device["user_id"])
 		// 	}
 		// }
 	} else if strings.EqualFold(notification["user_type"], CONSTANT.TherapistType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
-		UTIL.SendBulkNotification(body["title"], body["body"], CONSTANT.TherapistType)
+		UTIL.SendBulkNotification(body.Title, body.Body, CONSTANT.TherapistType)
 		// } else if strings.EqualFold(notification["user_type"], CONSTANT.CompanyType) && strings.EqualFold(notification["type"], CONSTANT.BulkNotificationAll) {
 		// 	for _, device := range devices {
 		// 		UTIL.SendNotification(body["title"], body["body"], device["user_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, device["user_id"])

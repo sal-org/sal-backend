@@ -6,6 +6,7 @@ import (
 	DB "salbackend/database"
 	"strings"
 
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 )
 
@@ -20,31 +21,50 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AdminProfileAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AdminProfileAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.AddUserProfileRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// check if admin already exists with specified username
-	if DB.CheckIfExists(CONSTANT.AdminsTable, map[string]string{"username": body["username"]}) {
+	if DB.CheckIfExists(CONSTANT.AdminsTable, map[string]string{"username": body.Username}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AdminExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// add admin details
 	admin := map[string]string{}
-	admin["username"] = body["username"]
-	admin["password"] = UTIL.GetStringMD5Hash(body["password"])
-	admin["type"] = body["type"]
+	admin["username"] = body.Username
+	admin["password"] = UTIL.GetStringMD5Hash(body.Password)
+	admin["type"] = body.Type
 	admin["status"] = CONSTANT.AdminActive
 	admin["created_at"] = UTIL.GetCurrentTime().String()
 	adminID, status, ok := DB.InsertWithUniqueID(CONSTANT.AdminsTable, CONSTANT.AdminDigits, admin, "admin_id")
@@ -68,28 +88,52 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	adminID, ok := UTIL.Required(r.FormValue("admin_id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, adminID, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// update admin details
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.UpdateUserProfileRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if admin already exists with specified username
+	if DB.CheckIfExists(CONSTANT.AdminsTable, map[string]string{"admin_id": r.FormValue("admin_id")}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AdminExistsMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// add admin details
 	admin := map[string]string{}
-	if len(body["username"]) > 0 {
-		admin["username"] = body["username"]
-	}
-	if len(body["password"]) > 0 {
-		admin["password"] = UTIL.GetStringMD5Hash(body["password"])
-	}
-	if len(body["type"]) > 0 {
-		admin["type"] = body["type"]
-	}
-	if len(body["status"]) > 0 {
-		admin["status"] = body["status"]
-	}
+	admin["username"] = body.Username
+	admin["password"] = UTIL.GetStringMD5Hash(body.Password)
+	admin["type"] = body.Type
+	admin["status"] = body.Status
 	admin["modified_at"] = UTIL.GetCurrentTime().String()
+
 	status, ok := DB.UpdateSQL(CONSTANT.AdminsTable, map[string]string{"admin_id": r.FormValue("admin_id")}, admin)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -117,7 +161,6 @@ func AddProfileForUsers(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 	// 	return
 	// }
-
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -451,7 +494,6 @@ func AttachPermission(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
@@ -518,7 +560,6 @@ func UpdateUserPermission(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
-
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {

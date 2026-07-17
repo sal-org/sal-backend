@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	CONFIG "salbackend/config"
-	_ "salbackend/model"
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 )
 
@@ -83,25 +83,57 @@ func ListenerUpdate(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
+	listenerID, ok := UTIL.Required(r.FormValue("listener_id"), "ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, listenerID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	body := MODEL.UpdateListenerProfileRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if order_id exists
+	if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": listenerID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
 	// add listener
 	listener := map[string]string{}
-	listener["first_name"] = body["first_name"]
-	listener["last_name"] = body["last_name"]
-	listener["phone"] = body["phone"]
-	listener["email"] = body["email"]
-	listener["gender"] = body["gender"]
-	listener["occupation"] = body["occupation"]
-	listener["age_group"] = body["age_group"]
-	listener["about"] = body["about"]
-	listener["status"] = body["status"]
-	listener["modified_by"] = body["modified_by"]
+	listener["first_name"] = body.FirstName
+	listener["last_name"] = body.LastName
+	listener["phone"] = body.Phone
+	listener["email"] = body.Email
+	listener["gender"] = body.Gender
+	listener["occupation"] = body.Occupation
+	listener["age_group"] = body.AgeGroup
+	listener["about"] = body.About
+	listener["status"] = body.Status
+	listener["modified_by"] = id
 	listener["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": r.FormValue("listener_id")}, listener)
 	if !ok {
