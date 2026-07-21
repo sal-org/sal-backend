@@ -245,11 +245,11 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 
 	for _, m := range assessments {
 
-		photo := ""
-		photo = m["photo"]
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, photo, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		m["photo"] = endPointURL
+		// photo := ""
+		// photo = m["photo"]
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, photo, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// m["photo"] = endPointURL
 
 		conv := make(map[string]interface{})
 		for k, v := range m {
@@ -307,7 +307,7 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 
 	response["assessments"] = assessmentswithDetails
 	response["assessments_count"] = assessmentsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(assessmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

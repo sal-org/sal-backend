@@ -453,6 +453,12 @@ type EmailDataForCounsellorCancellation struct {
 	Lastest_Client_Email  string
 }
 
+type SlotUpdateModelInTherapistAvailability struct {
+	Date  string
+	Key   string
+	Value string
+}
+
 type AppSummaryReport struct {
 	AppointmentTotal              string `json:"appointment_total"`
 	ClientTotal                   string `json:"client_total"`

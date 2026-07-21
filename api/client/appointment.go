@@ -88,15 +88,15 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 
 	// }
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -133,32 +133,16 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, appoint := range appointments {
-		lastAppointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ? and client_id = ? and status = 3 order by date desc", appoint["counsellor_id"], appoint["client_id"])
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-
-		if len(lastAppointments) == 0 {
-			appoint["last_session_date"] = ""
-			appoint["session_type"] = "New"
-		} else {
-			appoint["last_session_date"] = UTIL.BuildDate(lastAppointments[0]["date"])
-			appoint["session_type"] = "Repeat"
-		}
-	}
-
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
 	response["slots"] = slots
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -204,16 +188,16 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointment_slots"] = appointmentSlots
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -285,11 +269,11 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	// }
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email", "location"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
@@ -351,7 +335,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -389,15 +373,15 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -482,7 +466,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -530,7 +514,7 @@ func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -2759,12 +2743,12 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	fileName = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// fileName = endPointURL
 
 	response["file"] = fileName
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

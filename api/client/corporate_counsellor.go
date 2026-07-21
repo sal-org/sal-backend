@@ -406,30 +406,9 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	}
 
-	counsellor_fullname := counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
-
-	client_fullname := client[0]["first_name"] + " " + client[0]["last_name"]
-
-	qualitycheck_details := map[string]string{}
-	qualitycheck_details["appointment_id"] = appointmentID
-	qualitycheck_details["client_id"] = order[0]["client_id"]
-	qualitycheck_details["client_name"] = client_fullname
-	qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
-	qualitycheck_details["counsellor_name"] = counsellor_fullname
-	qualitycheck_details["type"] = order[0]["type"]
-	qualitycheck_details["date"] = order[0]["date"]
-	qualitycheck_details["time"] = order[0]["time"]
-	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
-	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
 
 	// send email to client
 	filepath_text := "htmlfile/appointmentConfirmation.html"
-
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
 
 	// client notification
 

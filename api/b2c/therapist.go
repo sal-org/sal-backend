@@ -29,7 +29,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]st
 
 	lang := []string{}
 	expert := []string{}
-	counsellor := map[string]interface{}{}
+	counsellor := map[string]any{}
 
 	// // check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -97,7 +97,7 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request, body map[string]st
 	counsellor["topics"] = expert
 
 	response["therapist"] = counsellor
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {

@@ -100,7 +100,7 @@ func EventGet(w http.ResponseWriter, r *http.Request) {
 	response["topics"] = UTIL.ConvertMapToKeyMap(topics, "id")
 	response["events_booked_count"] = UTIL.ConvertMapToKeyMap(eventBookedCount, "event_order_id")
 	response["events_count"] = eventsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(eventsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -237,21 +237,21 @@ func EventInPersonGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, event := range events {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		event["photo"] = endPointURLPhoto
+	// for _, event := range events {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	event["photo"] = endPointURLPhoto
 
-		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
-		event["background_photo"] = endPointURLBackGroundPhoto
-	}
+	// 	urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+	// 	event["background_photo"] = endPointURLBackGroundPhoto
+	// }
 
 	response["events"] = events
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["events_booked_count"] = UTIL.ConvertMapToKeyMap(eventBookedCount, "event_order_id")
 	response["events_count"] = eventsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(eventsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -493,12 +493,12 @@ func UploadEventFile(w http.ResponseWriter, r *http.Request) {
 		fileName = name
 	}
 
-	urlFile := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlFile)
-	fileName = endPointURL
+	// urlFile := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlFile)
+	// fileName = endPointURL
 
 	response["file"] = fileName
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

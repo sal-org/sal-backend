@@ -247,16 +247,16 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		client[0]["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// client[0]["photo"] = endPointURL
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
 		response["access_control"] = givenAccess[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -326,16 +326,16 @@ func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
 		// 	return
 		// }
 
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		client[0]["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// client[0]["photo"] = endPointURL
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
 		// response["access_control"] = givenAccess[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -778,16 +778,16 @@ func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	client[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// client[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 	response["topic"] = topics
 	response["client"] = client[0]
 	response["access_control"] = givenAccess[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -951,16 +951,16 @@ func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	client[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// client[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 	response["topic"] = topics
 	response["client"] = client[0]
 	response["access_control"] = givenAccess[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

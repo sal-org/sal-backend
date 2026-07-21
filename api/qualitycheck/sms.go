@@ -12,7 +12,7 @@ func SendSMS(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 
 	// create an variable for response
-	response := make(map[string]interface{})
+	response := make(map[string]any)
 
 	// Read all body request
 	body, ok := UTIL.ReadRequestBody(r)

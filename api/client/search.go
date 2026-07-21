@@ -249,7 +249,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 	response["slots"] = filteredCounsellorSlots
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["next_available"] = filteredCounsellorSlotsNextAvaliable
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -377,17 +377,17 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			for _, counsellor := range counsellors {
-				url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-				counsellor["photo"] = endPointURL
-			}
+			// for _, counsellor := range counsellors {
+			// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+			// 	counsellor["photo"] = endPointURL
+			// }
 
 			response["counsellors"] = counsellors
 			response["slots"] = filteredCounsellorSlots
 			response["counsellors_count"] = counsellorsCount[0]["ctn"]
 			response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-			response["media_url"] = CONFIG.MediaURL
+			response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 			response["next_available"] = filteredCounsellorSlotsNextAvaliable
 
 		} else {
@@ -502,17 +502,17 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			for _, counsellor := range counsellors {
-				url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-				counsellor["photo"] = endPointURL
-			}
+			// for _, counsellor := range counsellors {
+			// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+			// 	counsellor["photo"] = endPointURL
+			// }
 
 			response["counsellors"] = counsellors
 			response["slots"] = filteredCounsellorSlots
 			response["counsellors_count"] = counsellorsCount[0]["ctn"]
 			response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-			response["media_url"] = CONFIG.MediaURL
+			response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 			response["next_available"] = filteredCounsellorSlotsNextAvaliable
 
 		}
@@ -591,17 +591,17 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for _, counsellor := range counsellors {
-			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-			counsellor["photo"] = endPointURL
-		}
+		// for _, counsellor := range counsellors {
+		// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// 	counsellor["photo"] = endPointURL
+		// }
 
 		response["counsellors"] = counsellors
 		response["slots"] = filteredCounsellorSlots
 		response["counsellors_count"] = counsellorsCount[0]["ctn"]
 		response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 		response["next_available"] = filteredCounsellorSlotsNextAvaliable
 	}
 
@@ -796,17 +796,17 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["counsellors"] = counsellors
 	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["next_available"] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
 	response["location"] = inPersonConnect
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -988,17 +988,17 @@ func ListSearchForCorporateInPersonDuplication(w http.ResponseWriter, r *http.Re
 
 	}
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["counsellors"] = counsellors
 	response["slots"] = UTIL.FilterAvailableForInPersonSlots(slots)
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["next_available"] = UTIL.FilterAvailableForInPersonSlots(nextSlots)
 	response["location"] = inPersonConnect
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

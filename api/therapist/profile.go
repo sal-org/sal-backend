@@ -98,16 +98,16 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			therapist[0]["in_person_connect"] = "0"
 		}
 
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		therapist[0]["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// therapist[0]["photo"] = endPointURL
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["languages"] = languages
 		response["topics"] = topics
 		response["therapist"] = therapist[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -291,7 +291,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:            CONFIG.MediaURL,
+		Media_URL:            CONFIG.MediaURLInCLOUDFRONT,
 		First_Name:           therapist_details[0]["first_name"],
 		Last_Name:            therapist_details[0]["last_name"],
 		Pronoun:              therapist_details[0]["pronoun"],
@@ -350,14 +350,14 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)*/
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	therapist_details[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// therapist_details[0]["photo"] = endPointURL
 
 	response["therapist"] = therapist_details[0]
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

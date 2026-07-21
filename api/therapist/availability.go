@@ -5,18 +5,13 @@ import (
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
 	"strconv"
 	"strings"
 	"time"
 
 	UTIL "salbackend/util"
 )
-
-type SlotUpdate struct {
-	Date  string
-	Key   string
-	Value string
-}
 
 // AvailabilityGet godoc
 // @Tags Therapist Availability
@@ -2257,7 +2252,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		// 	}
 		// }
 
-		var updates []SlotUpdate
+		var updates []MODEL.SlotUpdateModelInTherapistAvailability
 		currentDate := UTIL.GetCurrentTime().Add(330*time.Minute).AddDate(0, 0, -1).Format("2006-01-02")
 		// skipDate := false
 		for _, day := range days {
@@ -2328,7 +2323,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 					// 	value = CONSTANT.SlotUnavailable
 					// }
 
-					updates = append(updates, SlotUpdate{
+					updates = append(updates, MODEL.SlotUpdateModelInTherapistAvailability{
 						Date:  date,
 						Key:   key,
 						Value: value,

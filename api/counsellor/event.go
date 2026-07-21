@@ -38,6 +38,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response["events"] = events
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -96,7 +97,7 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 	if len(topics) > 0 && len(topics[0]) > 0 {
 		response["topic"] = topics[0]["topic"]
 	}
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -134,6 +135,7 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response["past_events"] = events
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -492,6 +494,7 @@ func EventsBlocked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response["past_events"] = events
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

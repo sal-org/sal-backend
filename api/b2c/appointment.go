@@ -21,7 +21,7 @@ import (
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -81,9 +81,9 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string
 
 	// response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -102,7 +102,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request,body map[string
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func AppointmentsPast(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -152,16 +152,16 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]str
 
 	// response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	encryptedResponse["data"] = encrypt
-	
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, encryptedResponse)
 }
 
@@ -173,7 +173,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request,body map[string]str
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func AppointmentDetail(w http.ResponseWriter, r *http.Request,body map[string]string) {
+func AppointmentDetail(w http.ResponseWriter, r *http.Request, body map[string]string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]interface{})
@@ -215,9 +215,9 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request,body map[string]st
 
 	response["appointment"] = appointment[0]
 	response["order"] = order[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -842,7 +842,8 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 
 	uidStr = generateRandomID()
 
-	if body["session"] == "1" {
+	switch body["session"] {
+	case "1":
 		exists := DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
@@ -850,11 +851,12 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 		}
 
 		channelName = body["appointment_id"]
-		if body["type"] == "1" {
+		switch body["type"] {
+		case "1":
 			roleStr = CONSTANT.RolePublisher
-		} else if body["type"] == "2" {
+		case "2":
 			roleStr = CONSTANT.RoleSubscriber
-		} else {
+		default:
 			roleStr = "attended"
 		}
 
@@ -872,7 +874,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 			return
 		}
 		agora_token = token
-	} else if body["session"] == "2" {
+	case "2":
 		exists := DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": body["appointment_id"]})
 		if !exists {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
@@ -906,7 +908,7 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request, body map[string]
 	response["token"] = agora_token
 	response["UID"] = uidStr
 
-	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
+	encrypt, _ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {
 		UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
 		return

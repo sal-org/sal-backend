@@ -3,7 +3,7 @@ package listener
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"path/filepath"
@@ -53,7 +53,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 
 	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
 	response["assessments"] = assessments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -128,7 +128,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 
 	// read request body
 	body := MODEL.AssessmentAddRequest{}
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
@@ -977,19 +977,19 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 			}
 
 			assessment_data := MODEL.AssessmentDownloadGAD7Model{
-				Name:     assessment_result[0]["name"],
-				Date:     UTIL.BuildDate(assessment_result[0]["created_at"]),
-				Age:      assessment_result[0]["age"],
-				Gender:   assessment_result[0]["gender"],
-				Score:    assessment_result[0]["final_score"],
-				Answer1:  assessment_result_details[0]["score"],
-				Answer2:  assessment_result_details[1]["score"],
-				Answer3:  assessment_result_details[2]["score"],
-				Answer4:  assessment_result_details[3]["score"],
-				Answer5:  assessment_result_details[4]["score"],
-				Answer6:  assessment_result_details[5]["score"],
-				Answer7:  assessment_result_details[6]["score"],
-				Answer8:  assessment_result_details[7]["score"],
+				Name:    assessment_result[0]["name"],
+				Date:    UTIL.BuildDate(assessment_result[0]["created_at"]),
+				Age:     assessment_result[0]["age"],
+				Gender:  assessment_result[0]["gender"],
+				Score:   assessment_result[0]["final_score"],
+				Answer1: assessment_result_details[0]["score"],
+				Answer2: assessment_result_details[1]["score"],
+				Answer3: assessment_result_details[2]["score"],
+				Answer4: assessment_result_details[3]["score"],
+				Answer5: assessment_result_details[4]["score"],
+				Answer6: assessment_result_details[5]["score"],
+				Answer7: assessment_result_details[6]["score"],
+				Answer8: assessment_result_details[7]["score"],
 			}
 
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGAD7(assessment_data, filePath)
@@ -1217,7 +1217,7 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	//receipt := map[string]string{}
 
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["pdf_name"] = fileName
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

@@ -65,33 +65,33 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for _, content := range contentType {
-			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-			content["photo"] = endPointURL
+		// for _, content := range contentType {
+		// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		// 	content["photo"] = endPointURL
 
-			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-			content["background_photo"] = endPointURLBackgroundPhoto
+		// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-				content["share_content"] = endPointURLShareContent
-			}
+		// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+		// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+		// 		content["share_content"] = endPointURLShareContent
+		// 	}
 
-			if len(content["counsellor_photo"]) > 0 {
-				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-				content["counsellor_photo"] = endPointURLCounsellorPhoto
-			}
+		// 	if len(content["counsellor_photo"]) > 0 {
+		// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+		// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+		// 	}
 
-			if content["type"] != "3" {
-				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-				content["content"] = endPointURLContent
-			}
-		}
+		// 	if content["type"] != "3" {
+		// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+		// 		content["content"] = endPointURLContent
+		// 	}
+		// }
 
 		if r.FormValue("type") == "1" {
 			contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
@@ -100,33 +100,33 @@ func Content(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			for _, content := range contentVideo {
-				urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-				content["photo"] = endPointURL
+			// for _, content := range contentVideo {
+			// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			// 	content["photo"] = endPointURL
 
-				urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-				content["background_photo"] = endPointURLBackgroundPhoto
+			// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+			// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-				if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-					urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-					_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-					content["share_content"] = endPointURLShareContent
-				}
+			// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+			// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+			// 		content["share_content"] = endPointURLShareContent
+			// 	}
 
-				if len(content["counsellor_photo"]) > 0 {
-					urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-					_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-					content["counsellor_photo"] = endPointURLCounsellorPhoto
-				}
+			// 	if len(content["counsellor_photo"]) > 0 {
+			// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+			// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+			// 	}
 
-				if content["type"] != "3" {
-					urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-					_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-					content["content"] = endPointURLContent
-				}
-			}
+			// 	if content["type"] != "3" {
+			// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+			// 		content["content"] = endPointURLContent
+			// 	}
+			// }
 
 			response["videos"] = contentVideo
 			response["videos_count"] = videosCount[0]["ctn"]
@@ -163,33 +163,33 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for _, content := range contentType {
-			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-			content["photo"] = endPointURL
+		// for _, content := range contentType {
+		// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		// 	content["photo"] = endPointURL
 
-			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-			content["background_photo"] = endPointURLBackgroundPhoto
+		// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-				content["share_content"] = endPointURLShareContent
-			}
+		// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+		// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+		// 		content["share_content"] = endPointURLShareContent
+		// 	}
 
-			if len(content["counsellor_photo"]) > 0 {
-				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-				content["counsellor_photo"] = endPointURLCounsellorPhoto
-			}
+		// 	if len(content["counsellor_photo"]) > 0 {
+		// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+		// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+		// 	}
 
-			if content["type"] != "3" {
-				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-				content["content"] = endPointURLContent
-			}
-		}
+		// 	if content["type"] != "3" {
+		// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+		// 		content["content"] = endPointURLContent
+		// 	}
+		// }
 
 		if r.FormValue("type") == "1" {
 			// contentVideo, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where type = " + r.FormValue("type") + categoryFilter + moodFilter + " and training = 0 and status = 1 order by created_at asc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
@@ -317,83 +317,83 @@ func Content(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for _, content := range videos {
-			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-			content["photo"] = endPointURL
+		// for _, content := range videos {
+		// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		// 	content["photo"] = endPointURL
 
-			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-			content["background_photo"] = endPointURLBackgroundPhoto
+		// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-				content["share_content"] = endPointURLShareContent
-			}
+		// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+		// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+		// 		content["share_content"] = endPointURLShareContent
+		// 	}
 
-			if len(content["counsellor_photo"]) > 0 {
-				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-				content["counsellor_photo"] = endPointURLCounsellorPhoto
-			}
+		// 	if len(content["counsellor_photo"]) > 0 {
+		// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+		// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+		// 	}
 
-			if content["type"] != "3" {
-				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-				content["content"] = endPointURLContent
-			}
-		}
+		// 	if content["type"] != "3" {
+		// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+		// 		content["content"] = endPointURLContent
+		// 	}
+		// }
 
-		for _, content := range audios {
-			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-			content["photo"] = endPointURL
+		// for _, content := range audios {
+		// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		// 	content["photo"] = endPointURL
 
-			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-			content["background_photo"] = endPointURLBackgroundPhoto
+		// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-				content["share_content"] = endPointURLShareContent
-			}
+		// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+		// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+		// 		content["share_content"] = endPointURLShareContent
+		// 	}
 
-			if len(content["counsellor_photo"]) > 0 {
-				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-				content["counsellor_photo"] = endPointURLCounsellorPhoto
-			}
+		// 	if len(content["counsellor_photo"]) > 0 {
+		// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+		// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+		// 	}
 
-			if content["type"] != "3" {
-				urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-				content["content"] = endPointURLContent
-			}
-		}
+		// 	if content["type"] != "3" {
+		// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+		// 		content["content"] = endPointURLContent
+		// 	}
+		// }
 
-		for _, content := range articles {
-			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-			content["photo"] = endPointURL
+		// for _, content := range articles {
+		// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		// 	content["photo"] = endPointURL
 
-			urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-			content["background_photo"] = endPointURLBackgroundPhoto
+		// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+		// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-			if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-				urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-				content["share_content"] = endPointURLShareContent
-			}
+		// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+		// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+		// 		content["share_content"] = endPointURLShareContent
+		// 	}
 
-			if len(content["counsellor_photo"]) > 0 {
-				urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-				_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-				content["counsellor_photo"] = endPointURLCounsellorPhoto
-			}
-		}
+		// 	if len(content["counsellor_photo"]) > 0 {
+		// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+		// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+		// 	}
+		// }
 
 		response["videos"] = videos
 		response["audios"] = audios
@@ -407,7 +407,7 @@ func Content(w http.ResponseWriter, r *http.Request) {
 		response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(likedContent, "content_id")
 	}
 
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -428,38 +428,38 @@ func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, content := range contentType {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		content["photo"] = endPointURL
+	// for _, content := range contentType {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
 
-		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-		content["background_photo"] = endPointURLBackgroundPhoto
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-			content["share_content"] = endPointURLShareContent
-		}
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
 
-		if len(content["counsellor_photo"]) > 0 {
-			urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-			content["counsellor_photo"] = endPointURLCounsellorPhoto
-		}
+	// 	if len(content["counsellor_photo"]) > 0 {
+	// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+	// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+	// 	}
 
-		if content["type"] != "3" {
-			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-			content["content"] = endPointURLContent
-		}
-	}
+	// 	if content["type"] != "3" {
+	// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+	// 		content["content"] = endPointURLContent
+	// 	}
+	// }
 
 	response["contents_name"] = contentType
 	response["contents_count"] = contentCount[0]["ctn"]
 	response["no_pages_contents"] = strconv.Itoa(UTIL.GetNumberOfPages(contentCount[0]["ctn"], CONSTANT.ContentPerPageUser))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -518,67 +518,67 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, content := range videos {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		content["photo"] = endPointURL
+	// for _, content := range videos {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
 
-		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-		content["background_photo"] = endPointURLBackgroundPhoto
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-			content["share_content"] = endPointURLShareContent
-		}
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
 
-		if len(content["counsellor_photo"]) > 0 {
-			urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-			content["counsellor_photo"] = endPointURLCounsellorPhoto
-		}
+	// 	if len(content["counsellor_photo"]) > 0 {
+	// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+	// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+	// 	}
 
-		if content["type"] != "3" {
-			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-			content["content"] = endPointURLContent
-		}
-	}
+	// 	if content["type"] != "3" {
+	// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+	// 		content["content"] = endPointURLContent
+	// 	}
+	// }
 
-	for _, content := range audios {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		content["photo"] = endPointURL
+	// for _, content := range audios {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
 
-		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-		content["background_photo"] = endPointURLBackgroundPhoto
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
-			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-			content["share_content"] = endPointURLShareContent
-		}
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
 
-		if len(content["counsellor_photo"]) > 0 {
-			urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-			content["counsellor_photo"] = endPointURLCounsellorPhoto
-		}
+	// 	if len(content["counsellor_photo"]) > 0 {
+	// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+	// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+	// 	}
 
-		if content["type"] != "3" {
-			urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
-			content["content"] = endPointURLContent
-		}
-	}
+	// 	if content["type"] != "3" {
+	// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+	// 		content["content"] = endPointURLContent
+	// 	}
+	// }
 
 	response["videos"] = videos
 	response["audios"] = audios
 	response["articles"] = articles
 	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(contentLiked, "content_id")
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

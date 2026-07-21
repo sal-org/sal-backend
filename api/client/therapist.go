@@ -82,16 +82,16 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	therapist[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// therapist[0]["photo"] = endPointURL
 
 	response["therapist"] = therapist[0]
 	response["languages"] = therapistLang
 	response["topics"] = topics
 	response["reviews"] = reviews
 	response["contents"] = contents
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -465,39 +465,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
-	}
-
-	counsellor_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", order[0]["counsellor_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
-
-	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	client_fullname := client_name[0]["first_name"] + " " + client_name[0]["last_name"]
-
-	qualitycheck_details := map[string]string{}
-	qualitycheck_details["appointment_id"] = appointmentID
-	qualitycheck_details["client_id"] = order[0]["client_id"]
-	qualitycheck_details["client_name"] = client_fullname
-	qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
-	qualitycheck_details["counsellor_name"] = counsellor_fullname
-	qualitycheck_details["type"] = order[0]["type"]
-	qualitycheck_details["date"] = order[0]["date"]
-	qualitycheck_details["time"] = order[0]["time"]
-	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
-	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	}	
 
 	// update order with invoice id and change status
 	orderUpdate := map[string]string{}

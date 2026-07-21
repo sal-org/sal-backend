@@ -85,16 +85,16 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor[0]["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// counsellor[0]["photo"] = endPointURL
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["languages"] = languages
 		response["topics"] = topics
 		response["counsellor"] = counsellor[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -254,7 +254,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:            CONFIG.MediaURL,
+		Media_URL:            CONFIG.MediaURLInCLOUDFRONT,
 		First_Name:           counsellor_details[0]["first_name"],
 		Last_Name:            counsellor_details[0]["last_name"],
 		Pronoun:              counsellor_details[0]["pronoun"],
@@ -288,15 +288,15 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	counsellor_details[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// counsellor_details[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 
 	response["counsellor"] = counsellor_details[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
