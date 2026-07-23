@@ -341,14 +341,34 @@ func EventsInPersonCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.CancelInPersonEventForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get upcoming booked events
-	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and event_order_id = ? and status != '4' ", body["user_id"], body["order_id"])
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and event_order_id = ? and status != '4' ", body.UserID, body.OrderID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -360,13 +380,13 @@ func EventsInPersonCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["user_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.UserID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -377,7 +397,7 @@ func EventsInPersonCancel(w http.ResponseWriter, r *http.Request) {
 			"order_id": events[0]["order_id"],
 		},
 		map[string]string{
-			"cancellation_reason": body["cancellation_reason"],
+			"cancellation_reason": body.CancellationReason,
 			"status":              CONSTANT.OrderCancel,
 		},
 	)
@@ -469,26 +489,52 @@ func EventsInPersonRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventInPersonRequestRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.RequestInPersonEventForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventInPersonRequestRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
-	}
-
-	clients, status, ok := DB.SelectProcess("select first_name, last_name, phone from "+CONSTANT.ClientsTable+" where client_id = ?", body["client_id"])
+	clients, status, ok := DB.SelectProcess("select first_name, last_name, phone from "+CONSTANT.ClientsTable+" where client_id = ?", body.ClientID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	getInPersonEventRequest, status, ok := DB.SelectSQL(CONSTANT.EventInPersonRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "order_id": body["order_id"], "status": "1"})
+	getInPersonEventRequest, status, ok := DB.SelectSQL(CONSTANT.EventInPersonRequestTable, []string{"*"}, map[string]string{"client_id": body.ClientID, "order_id": body.OrderID, "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -499,15 +545,15 @@ func EventsInPersonRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	eventInPersonRequest := map[string]string{}
-	eventInPersonRequest["order_id"] = body["order_id"]
-	eventInPersonRequest["client_id"] = body["client_id"]
+	eventInPersonRequest["order_id"] = body.OrderID
+	eventInPersonRequest["client_id"] = body.ClientID
 	eventInPersonRequest["status"] = CONSTANT.AppointmentRequestProgress
 	eventInPersonRequest["created_at"] = UTIL.GetCurrentTime().String()
 
@@ -578,14 +624,34 @@ func EventsInPersonRate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.RateInPersonEventForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get upcoming booked events
-	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and event_order_id = ? and status != '4' ", body["user_id"], body["order_id"])
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and event_order_id = ? and status != '4' ", body.UserID, body.OrderID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -602,21 +668,21 @@ func EventsInPersonRate(w http.ResponseWriter, r *http.Request) {
 			"order_id": events[0]["order_id"],
 		},
 		map[string]string{
-			"question1": body["question1"],
-			"question2": body["question2"],
-			"question3": body["question3"],
-			"question4": body["question4"],
-			"question5": body["question5"],
+			"question1": body.Question1,
+			"question2": body.Question2,
+			"question3": body.Question3,
+			"question4": body.Question4,
+			"question5": body.Question5,
 		},
 	)
 
-	eventsOrder, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status != '4' and question1 != ''", body["order_id"])
+	eventsOrder, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status != '4' and question1 != ''", body.OrderID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	eventsOrderCount, status, ok := DB.SelectProcess("select count(*) as cnt from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status != '4' and question1 != ''", body["order_id"])
+	eventsOrderCount, status, ok := DB.SelectProcess("select count(*) as cnt from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status != '4' and question1 != ''", body.OrderID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -807,21 +873,41 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.OrderEventForB2CRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["user_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.UserID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -838,7 +924,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get event details
-	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": body["event_order_id"]})
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": body.EventOrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -856,17 +942,17 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["user_id"] = body["user_id"]
-	order["event_order_id"] = body["event_order_id"]
+	order["user_id"] = body.UserID
+	order["event_order_id"] = body.EventOrderID
 	order["user_type"] = CONSTANT.ClientType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	price := event[0]["price"]
 
-	if len(body["coupon_code"]) > 0 {
+	if len(body.CouponCode) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderEventBookType+" or order_type = 0) and (client_id = ? or client_id = '') order by created_at desc limit 1", body["coupon_code"], body["user_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderEventBookType+" or order_type = 0) and (client_id = ? or client_id = '') order by created_at desc limit 1", body.CouponCode, body.UserID)
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -877,7 +963,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 		}
 		if !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
 			// get total number of client appointment/event orders
-			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body["user_id"])
+			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body.UserID)
 			// check if coupon applicable by order count and valid for order
 			if !strings.EqualFold(coupon[0]["valid_for_order"], strconv.Itoa(noOrders+1)) { // add 1 to equal to valid for order value
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponNotApplicableMessage, CONSTANT.ShowDialog, response)
@@ -904,7 +990,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		order["coupon_code"] = body["coupon_code"]
+		order["coupon_code"] = body.CouponCode
 		order["coupon_id"] = coupon[0]["id"]
 	}
 
@@ -944,21 +1030,41 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.OrderInPersonEventForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["user_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.UserID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -975,7 +1081,7 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get event details
-	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": body["event_order_id"]})
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": body.EventOrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -997,7 +1103,7 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ordertoCheck, status, ok := DB.SelectSQL(CONSTANT.OrderEventInPersonTable, []string{"*"}, map[string]string{"event_order_id": body["event_order_id"], "user_id": body["user_id"], "status": "1"})
+	ordertoCheck, status, ok := DB.SelectSQL(CONSTANT.OrderEventInPersonTable, []string{"*"}, map[string]string{"event_order_id": body.EventOrderID, "user_id": body.UserID, "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1010,8 +1116,8 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["user_id"] = body["user_id"]
-	order["event_order_id"] = body["event_order_id"]
+	order["user_id"] = body.UserID
+	order["event_order_id"] = body.EventOrderID
 	order["user_type"] = CONSTANT.ClientType
 	order["status"] = CONSTANT.OrderInProgress
 	order["created_at"] = UTIL.GetCurrentTime().String()
@@ -1046,7 +1152,7 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 				"###topic###": event[0]["title"],
 			},
 		),
-		body["user_id"],
+		body.UserID,
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
@@ -1064,7 +1170,7 @@ func EventOrderInPersonCreate(w http.ResponseWriter, r *http.Request) {
 				"###time###":  UTIL.GetTimeFromTimeSlotIN12Hour(event[0]["time"]),
 			},
 		),
-		body["user_id"],
+		body.UserID,
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(event[0]["date"], event[0]["time"]).Add(-30*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
@@ -1238,22 +1344,42 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.WebinarOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.WebinarOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.OrderWebniarForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.ClientID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1270,7 +1396,7 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get event details
-	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["webinar_id"])
+	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.WebinarsTable+" where webinar_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body.WebinarID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1287,7 +1413,7 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ordertoCheck, status, ok := DB.SelectSQL(CONSTANT.WebinarsBookTable, []string{"*"}, map[string]string{"webinar_id": body["webinar_id"], "client_id": body["client_id"], "status": "1"})
+	ordertoCheck, status, ok := DB.SelectSQL(CONSTANT.WebinarsBookTable, []string{"*"}, map[string]string{"webinar_id": body.WebinarID, "client_id": body.ClientID, "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1300,8 +1426,8 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["client_id"] = body["client_id"]
-	order["webinar_id"] = body["webinar_id"]
+	order["client_id"] = body.ClientID
+	order["webinar_id"] = body.WebinarID
 	order["status"] = CONSTANT.OrderInProgress
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
@@ -1321,7 +1447,7 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 				"###time###":  UTIL.GetTimeFromTimeSlotIN12Hour(event[0]["time"]),
 			},
 		),
-		body["client_id"],
+		body.ClientID,
 		CONSTANT.ClientType,
 		UTIL.BuildDateTime(event[0]["date"], event[0]["time"]).Add(-60*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
@@ -1353,21 +1479,41 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderPaymentCompleteRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderPaymentCompleteRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.OrderConfirmationEventForB2CRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrderEventTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	order, status, ok := DB.SelectSQL(CONSTANT.OrderEventTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -1395,9 +1541,9 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create invoice for the order
 	invoice := map[string]string{}
-	invoice["order_id"] = body["order_id"]
-	invoice["payment_method"] = body["payment_method"]
-	invoice["payment_id"] = body["payment_id"]
+	invoice["order_id"] = body.OrderID
+	invoice["payment_method"] = body.PaymentMethod
+	invoice["payment_id"] = body.PaymentID
 	invoice["user_id"] = order[0]["user_id"]
 	invoice["user_type"] = CONSTANT.ClientType
 	invoice["order_type"] = CONSTANT.OrderEventBookType
@@ -1425,7 +1571,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["invoice_id"] = invoiceID
 	DB.UpdateSQL(CONSTANT.OrderEventTable,
 		map[string]string{
-			"order_id": body["order_id"],
+			"order_id": body.OrderID,
 		},
 		orderUpdate,
 	)

@@ -1,8 +1,6 @@
 package client
 
 import (
-	"encoding/json"
-	"io"
 	"math"
 	"net/http"
 	"path/filepath"
@@ -136,17 +134,35 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 
 	// read request body
 	body := MODEL.AssessmentAddRequest{}
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
-	defer r.Body.Close()
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+
+	// b, err := io.ReadAll(r.Body)
+	// if err != nil {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// defer r.Body.Close()
+	// err = json.Unmarshal(b, &body)
+	// if err != nil {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	assessmentName := DB.QueryRowSQL("select title from "+CONSTANT.AssessmentsTable+" where assessment_id = ?", body.AssessmentID)
 
@@ -935,13 +951,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 				Answer6: assessment_result_details[5]["score"],
 			}
 
-
 			emailbody, ok = UTIL.GetHTMLTemplateForAssessmentGWB(assessment_data, filePath)
 			if !ok {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.HTMLTemplateNotCreateMessage, CONSTANT.ShowDialog, response)
 				return
 			}
-
 
 		} else if title == "Grit Scale" || assessment_result[0]["assessment_id"] == "yu6h98081msq" {
 			var filePath string

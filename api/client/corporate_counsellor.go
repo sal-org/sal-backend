@@ -29,21 +29,41 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	body := Model.OrderAppointmentForB2BRequest{}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.ClientID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -136,7 +156,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["listener_id"]})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body.CounsellorID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -144,7 +164,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// check if listener is valid
 	if len(counsellor) == 0 {
-		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["listener_id"]})
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body.CounsellorID})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -171,7 +191,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	// body["date"] = systemDate
 
 	// check 2nd appointment with the same listener
-	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
+	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body.ClientID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -230,7 +250,7 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 		// }
 	}
 
-	isPresent, err := UTIL.IsCurrentOrFutureDate(body["date"])
+	isPresent, err := UTIL.IsCurrentOrFutureDate(body.Date)
 	if err != nil {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid date format", CONSTANT.ShowDialog, response)
 		return
@@ -243,17 +263,17 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if slots available
-	if !UTIL.CheckIfAppointmentSlotAvailable(body["listener_id"], body["date"], body["time"]) {
+	if !UTIL.CheckIfAppointmentSlotAvailable(body.CounsellorID, body.Date, body.Time) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["client_id"] = body["client_id"]
-	order["counsellor_id"] = body["listener_id"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
+	order["client_id"] = body.ClientID
+	order["counsellor_id"] = body.CounsellorID
+	order["date"] = body.Date
+	order["time"] = body.Time
 	order["type"] = counsellorType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
@@ -280,22 +300,41 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderPaymentCompleteRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderPaymentCompleteRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.OrderConfirmAppointmentForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -349,14 +388,14 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{
-			"order_id": body["order_id"],
+			"order_id": body.OrderID,
 		},
 		orderUpdate,
 	)
 
 	// create appointment between listener and client
 	appointment := map[string]string{}
-	appointment["order_id"] = body["order_id"]
+	appointment["order_id"] = body.OrderID
 	appointment["client_id"] = order[0]["client_id"]
 	appointment["counsellor_id"] = order[0]["counsellor_id"]
 	appointment["type"] = order[0]["type"]
@@ -406,30 +445,30 @@ func CorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Requ
 
 	}
 
-	counsellor_fullname := counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
+	// counsellor_fullname := counsellor[0]["first_name"] + " " + counsellor[0]["last_name"]
 
-	client_fullname := client[0]["first_name"] + " " + client[0]["last_name"]
+	// client_fullname := client[0]["first_name"] + " " + client[0]["last_name"]
 
-	qualitycheck_details := map[string]string{}
-	qualitycheck_details["appointment_id"] = appointmentID
-	qualitycheck_details["client_id"] = order[0]["client_id"]
-	qualitycheck_details["client_name"] = client_fullname
-	qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
-	qualitycheck_details["counsellor_name"] = counsellor_fullname
-	qualitycheck_details["type"] = order[0]["type"]
-	qualitycheck_details["date"] = order[0]["date"]
-	qualitycheck_details["time"] = order[0]["time"]
-	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
-	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
+	// qualitycheck_details := map[string]string{}
+	// qualitycheck_details["appointment_id"] = appointmentID
+	// qualitycheck_details["client_id"] = order[0]["client_id"]
+	// qualitycheck_details["client_name"] = client_fullname
+	// qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
+	// qualitycheck_details["counsellor_name"] = counsellor_fullname
+	// qualitycheck_details["type"] = order[0]["type"]
+	// qualitycheck_details["date"] = order[0]["date"]
+	// qualitycheck_details["time"] = order[0]["time"]
+	// qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
+	// qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
 
 	// send email to client
 	filepath_text := "htmlfile/appointmentConfirmation.html"
 
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// _, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// client notification
 
@@ -667,21 +706,41 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	body := Model.OrderAppointmentForB2BRequest{}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.ClientID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -698,7 +757,7 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// get counsellor details
-	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["listener_id"]})
+	counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body.CounsellorID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -706,7 +765,7 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 
 	// check if listener is valid
 	if len(counsellor) == 0 {
-		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["listener_id"]})
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body.CounsellorID})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -726,13 +785,13 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 	}
 
 	// check if slots available
-	if !UTIL.CheckIfAppointmentzInPersonSlotAvailable(body["listener_id"], body["date"], body["time"]) {
+	if !UTIL.CheckIfAppointmentzInPersonSlotAvailable(body.CounsellorID, body.Date, body.Time) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check 2nd appoimtent with the same listener
-	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"])
+	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status = "+CONSTANT.AppointmentToBeStarted+" and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body.ClientID)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -767,10 +826,10 @@ func InPersonCorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Reque
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["client_id"] = body["client_id"]
-	order["counsellor_id"] = body["listener_id"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
+	order["client_id"] = body.ClientID
+	order["counsellor_id"] = body.CounsellorID
+	order["date"] = body.Date
+	order["time"] = body.Time
 	order["type"] = counsellorType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
@@ -797,22 +856,41 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderPaymentCompleteRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ListenerOrderPaymentCompleteRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.OrderConfirmAppointmentForB2BRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get order details
-	order, status, ok := DB.SelectSQL(CONSTANT.InPersonOrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	order, status, ok := DB.SelectSQL(CONSTANT.InPersonOrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -865,14 +943,14 @@ func InPersonCorporateCounsellorOrderPaymentComplete(w http.ResponseWriter, r *h
 
 	DB.UpdateSQL(CONSTANT.InPersonOrderClientAppointmentTable,
 		map[string]string{
-			"order_id": body["order_id"],
+			"order_id": body.OrderID,
 		},
 		orderUpdate,
 	)
 
 	// create appointment between listener and client
 	appointment := map[string]string{}
-	appointment["order_id"] = body["order_id"]
+	appointment["order_id"] = body.OrderID
 	appointment["client_id"] = order[0]["client_id"]
 	appointment["counsellor_id"] = order[0]["counsellor_id"]
 	appointment["type"] = order[0]["type"]

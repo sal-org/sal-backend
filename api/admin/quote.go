@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	UTIL "salbackend/util"
+	MODEL "salbackend/model"
 )
 
 func QuoteGet(w http.ResponseWriter, r *http.Request) {
@@ -69,24 +70,44 @@ func QuoteAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.QuoteAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.QuoteAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+
+	body := MODEL.AddMotivationalQuotaInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// add quote
 	quote := map[string]string{}
-	quote["quote"] = body["quote"]
-	quote["mood_id"] = body["mood_id"]
+	quote["quote"] = body.Quota
+	quote["mood_id"] = body.MoodID
 	status, ok := DB.InsertSQL(CONSTANT.QuotesTable, quote)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

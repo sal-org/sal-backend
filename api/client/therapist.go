@@ -199,21 +199,42 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.TherapistOrderAppointmentForB2CRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
+
 	// get client details
-	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.ClientID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -230,7 +251,7 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["therapist_id"]})
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body.TherapistID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -247,25 +268,25 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if slots available
-	if !UTIL.CheckIfAppointmentSlotAvailable(body["therapist_id"], body["date"], body["time"]) {
+	if !UTIL.CheckIfAppointmentSlotAvailable(body.TherapistID, body.Date, body.Time) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["client_id"] = body["client_id"]
-	order["counsellor_id"] = body["therapist_id"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
+	order["client_id"] = body.ClientID
+	order["counsellor_id"] = body.TherapistID
+	order["date"] = body.Date
+	order["time"] = body.Time
 	order["type"] = CONSTANT.TherapistType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	price := therapist[0]["price"] // default 1 session price
-	if strings.EqualFold(body["no_session"], "3") {
+	if strings.EqualFold(body.NoSession, "3") {
 		price = therapist[0]["price_3"]
-	} else if strings.EqualFold(body["no_session"], "5") {
+	} else if strings.EqualFold(body.NoSession, "5") {
 		price = therapist[0]["price_5"]
 	}
 
@@ -275,12 +296,12 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order["slots_bought"] = body["no_session"]
+	order["slots_bought"] = body.NoSession
 	order["actual_amount"] = price
 
-	if len(body["coupon_code"]) > 0 {
+	if len(body.CouponCode) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderAppointmentType+" or order_type = 0) and (client_id = ? or client_id = '') and (therapist_id = ? or therapist_id = '') order by created_at desc limit 1", body["coupon_code"], body["client_id"], body["therapist_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderAppointmentType+" or order_type = 0) and (client_id = ? or client_id = '') and (therapist_id = ? or therapist_id = '') order by created_at desc limit 1", body.CouponCode, body.ClientID, body.TherapistID)
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -291,7 +312,7 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 		}
 		if !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
 			// get total number of client appointment/event orders
-			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body["client_id"])
+			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body.ClientID)
 			// check if coupon applicable by order count and valid for order
 			if !strings.EqualFold(coupon[0]["valid_for_order"], strconv.Itoa(noOrders+1)) { // add 1 to equal to valid for order value
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponNotApplicableMessage, CONSTANT.ShowDialog, response)
@@ -318,7 +339,7 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		order["coupon_code"] = body["coupon_code"]
+		order["coupon_code"] = body.CouponCode
 		order["coupon_id"] = coupon[0]["id"]
 	}
 
@@ -388,21 +409,42 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderPaymentCompleteRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistOrderPaymentCompleteRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+
+	// read request body
+	body := Model.TherapistOrderConfirmAppointmentForB2CRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -424,7 +466,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// verify payment signature
-	verifyPayment := UTIL.GetPayUPayment(body["order_id"])
+	verifyPayment := UTIL.GetPayUPayment(body.OrderID)
 	if !verifyPayment {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PaymentFailedMessage, CONSTANT.ShowDialog, response)
 		return
@@ -448,9 +490,9 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create invoice for the order
 	invoice := map[string]string{}
-	invoice["order_id"] = body["order_id"]
-	invoice["payment_method"] = body["payment_method"]
-	invoice["payment_id"] = body["payment_id"]
+	invoice["order_id"] = body.OrderID
+	invoice["payment_method"] = body.PaymentMethod
+	invoice["payment_id"] = body.PaymentID
 	invoice["user_id"] = order[0]["client_id"]
 	invoice["user_type"] = CONSTANT.ClientType
 	invoice["order_type"] = CONSTANT.OrderAppointmentType
@@ -473,7 +515,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create appointment slots between therapist and client
 	appointmentSlots := map[string]string{}
-	appointmentSlots["order_id"] = body["order_id"]
+	appointmentSlots["order_id"] = body.OrderID
 	appointmentSlots["client_id"] = order[0]["client_id"]
 	appointmentSlots["counsellor_id"] = order[0]["counsellor_id"]
 	appointmentSlots["slots_bought"] = order[0]["slots_bought"]
@@ -489,7 +531,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create appointment between therapist and client
 	appointment := map[string]string{}
-	appointment["order_id"] = body["order_id"]
+	appointment["order_id"] = body.OrderID
 	appointment["client_id"] = order[0]["client_id"]
 	appointment["counsellor_id"] = order[0]["counsellor_id"]
 	appointment["type"] = order[0]["type"]
@@ -503,37 +545,37 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	counsellor_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", order[0]["counsellor_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
+	// counsellor_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", order[0]["counsellor_id"])
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
 
-	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	client_fullname := client_name[0]["first_name"] + " " + client_name[0]["last_name"]
+	// client_fullname := client_name[0]["first_name"] + " " + client_name[0]["last_name"]
 
-	qualitycheck_details := map[string]string{}
-	qualitycheck_details["appointment_id"] = appointmentID
-	qualitycheck_details["client_id"] = order[0]["client_id"]
-	qualitycheck_details["client_name"] = client_fullname
-	qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
-	qualitycheck_details["counsellor_name"] = counsellor_fullname
-	qualitycheck_details["type"] = order[0]["type"]
-	qualitycheck_details["date"] = order[0]["date"]
-	qualitycheck_details["time"] = order[0]["time"]
-	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
-	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
-	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// qualitycheck_details := map[string]string{}
+	// qualitycheck_details["appointment_id"] = appointmentID
+	// qualitycheck_details["client_id"] = order[0]["client_id"]
+	// qualitycheck_details["client_name"] = client_fullname
+	// qualitycheck_details["counsellor_id"] = order[0]["counsellor_id"]
+	// qualitycheck_details["counsellor_name"] = counsellor_fullname
+	// qualitycheck_details["type"] = order[0]["type"]
+	// qualitycheck_details["date"] = order[0]["date"]
+	// qualitycheck_details["time"] = order[0]["time"]
+	// qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
+	// qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
+	// _, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// update order with invoice id and change status
 	orderUpdate := map[string]string{}
@@ -542,7 +584,7 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["invoice_id"] = invoiceID
 	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{
-			"order_id": body["order_id"],
+			"order_id": body.OrderID,
 		},
 		orderUpdate,
 	)

@@ -4,10 +4,11 @@ import (
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
 	"strings"
 
-	UTIL "salbackend/util"
 	CONFIG "salbackend/config"
+	UTIL "salbackend/util"
 )
 
 // MoodAdd godoc
@@ -30,36 +31,55 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.MoodAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.MoodAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.AddMoodInClientRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// add mood result
 	moodResultID, _, ok := DB.InsertWithUniqueID(CONSTANT.MoodResultsTable, CONSTANT.MoodResultsDigits, map[string]string{
-		"client_id":  body["client_id"],
-		"name":       body["name"],
-		"age":        body["age"],
-		"gender":     body["gender"],
-		"phone":      body["phone"],
-		"mood_id":    body["mood_id"],
-		"notes":      body["notes"],
-		"date":       body["date"],
+		"client_id":  body.ClientID,
+		"name":       body.Name,
+		"age":        body.Age,
+		"gender":     body.Gender,
+		"phone":      body.Phone,
+		"mood_id":    body.MoodID,
+		"notes":      body.Notes,
+		"date":       body.Date,
 		"status":     CONSTANT.MoodResultActive,
 		"created_at": UTIL.GetCurrentTime().UTC().String(),
 	}, "mood_result_id")
 	if !ok {
-		status, ok := DB.UpdateSQL(CONSTANT.MoodResultsTable, map[string]string{"client_id": body["client_id"], "date": body["date"]}, map[string]string{
-			"mood_id":     body["mood_id"],
-			"notes":       body["notes"],
+		status, ok := DB.UpdateSQL(CONSTANT.MoodResultsTable, map[string]string{"client_id": body.ClientID, "date": body.Date}, map[string]string{
+			"mood_id":     body.MoodID,
+			"notes":       body.Notes,
 			"modified_at": UTIL.GetCurrentTime().UTC().String(),
 		})
 		if !ok {
@@ -70,9 +90,9 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		// return
 	}
 
-	if !(body["mood_id"] == "1" || body["mood_id"] == "7" || body["mood_id"] == "8") {
+	if !(body.MoodID == "1" || body.MoodID == "7" || body.MoodID == "8") {
 
-		moodTitle, status, ok := DB.SelectProcess("select title from "+CONSTANT.MoodsTable+" where id = ?", body["mood_id"])
+		moodTitle, status, ok := DB.SelectProcess("select title from "+CONSTANT.MoodsTable+" where id = ?", body.MoodID)
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -86,7 +106,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 					"###mood###": moodTitle[0]["title"],
 				},
 			),
-			body["client_id"],
+			body.ClientID,
 			CONSTANT.ClientType,
 			UTIL.GetCurrentTime().String(),
 			CONSTANT.NotificationSent,

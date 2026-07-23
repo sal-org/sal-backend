@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	CONFIG "salbackend/config"
-	_ "salbackend/model"
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 )
 
@@ -100,44 +100,76 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
 		return
 	}
 
+	body := MODEL.UpdateTherapistProfileRequestInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if corporate_id exists
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
 	// add therapist
 	therapist := map[string]string{}
-	therapist["first_name"] = body["first_name"]
-	therapist["last_name"] = body["last_name"]
-	therapist["phone"] = body["phone"]
-	therapist["email"] = body["email"]
-	therapist["gender"] = body["gender"]
-	therapist["price"] = body["price"]
-	therapist["price_3"] = body["price_3"]
-	therapist["price_5"] = body["price_5"]
-	therapist["corporate_price"] = body["corporate_price"]
-	therapist["education"] = body["education"]
-	therapist["experience"] = body["experience"]
-	therapist["about"] = body["about"]
-	therapist["start_date"] = body["start_date"]
-	therapist["gap_years"] = body["gap_years"]
-	therapist["gap_months"] = body["gap_months"]
-	therapist["location"] = body["location"]
-	therapist["video"] = body["video"]
-	therapist["payout_percentage"] = body["payout_percentage"]
-	therapist["payee_name"] = body["payee_name"]
-	therapist["bank_account_no"] = body["bank_account_no"]
-	therapist["ifsc"] = body["ifsc"]
-	therapist["branch_name"] = body["branch_name"]
-	therapist["bank_name"] = body["bank_name"]
-	therapist["bank_account_type"] = body["bank_account_type"]
-	therapist["pan"] = body["pan"]
-	therapist["corporate_therpist"] = body["corporate_therpist"]
-	therapist["status"] = body["status"]
-	therapist["modified_by"] = body["modified_by"]
+	therapist["first_name"] = body.FirstName
+	therapist["last_name"] = body.LastName
+	therapist["phone"] = body.Phone
+	therapist["email"] = body.Email
+	therapist["gender"] = body.Gender
+	therapist["price"] = body.Price
+	therapist["price_3"] = body.Price3
+	therapist["price_5"] = body.Price5
+	therapist["corporate_price"] = body.CorporatePrice
+	therapist["education"] = body.Education
+	therapist["experience"] = body.Experience
+	therapist["about"] = body.About
+	therapist["start_date"] = body.StartDate
+	therapist["gap_years"] = body.GapYears
+	therapist["gap_months"] = body.GapMonths
+	therapist["location"] = body.Location
+	therapist["video"] = body.Video
+	therapist["payout_percentage"] = body.PayoutPercentage
+	therapist["payee_name"] = body.PayeeName
+	therapist["bank_account_no"] = body.BankAccountNo
+	therapist["ifsc"] = body.IFSC
+	therapist["branch_name"] = body.BranchName
+	therapist["bank_name"] = body.BankName
+	therapist["bank_account_type"] = body.BankAccountType
+	therapist["pan"] = body.PAN
+	therapist["corporate_therpist"] = body.CorporateTherapist
+	therapist["status"] = body.Status
+	therapist["modified_by"] = id
 	therapist["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("therapist_id")}, therapist)
 	if !ok {
@@ -158,7 +190,6 @@ func PreSignedS3URLToUploadContent(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-
 
 	s3Path := CONSTANT.MiscellaneousS3Path
 	switch r.FormValue("type") {

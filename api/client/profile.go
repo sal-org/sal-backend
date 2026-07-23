@@ -114,59 +114,78 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientProfileAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientProfileAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.ClientProfileAddRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["phone"]}) {
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if user already signed up with specified email
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]}) {
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body.Email}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if phone is verfied by OTP
-	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]}) {
+	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.VerifyPhoneRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if len(body["notification_status"]) == 0 {
-		body["notification_status"] = "1"
+	if len(body.NotificationStatus) == 0 {
+		body.NotificationStatus = "1"
 	}
 
 	// add client details
 	client := map[string]string{}
-	client["first_name"] = body["first_name"]
-	client["last_name"] = body["last_name"]
-	client["phone"] = body["phone"]
-	client["email"] = body["email"]
-	client["date_of_birth"] = body["date_of_birth"]
-	client["photo"] = body["photo"]
-	client["topic_ids"] = body["topic_ids"]
-	client["gender"] = body["gender"]
-	client["location"] = body["location"]
-	client["timezone"] = body["timezone"]
-	client["device_id"] = body["device_id"]
-	client["platform"] = body["platform"]
-	client["version"] = body["version"]
+	client["first_name"] = body.FirstName
+	client["last_name"] = body.LastName
+	client["phone"] = body.Phone
+	client["email"] = body.Email
+	client["date_of_birth"] = body.DateOfBirth
+	client["photo"] = body.Photo
+	client["topic_ids"] = body.TopicIDs
+	client["gender"] = body.Gender
+	client["location"] = body.Location
+	client["timezone"] = body.Timezone
+	client["device_id"] = body.DeviceID
+	client["platform"] = body.Platform
+	client["version"] = body.Version
 	client["status"] = CONSTANT.ClientActive
-	client["notification_status"] = body["notification_status"]
+	client["notification_status"] = body.NotificationStatus
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
@@ -183,7 +202,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	// using phone verified table to check if phone has been really verified by OTP
 	// currently deleting if phone number is already present
-	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]})
+	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body.Phone})
 
 	// generate access and refresh token
 	// access token - jwt token with short expiry added in header for authorization
@@ -213,7 +232,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	filepath_text := "htmlfile/emailmessagebody.html"
 
 	emaildata := Model.EmailBodyMessageModel{
-		Name:    body["first_name"],
+		Name:    body.FirstName,
 		Message: CONSTANT.ClientSignupClientEmailBody,
 	}
 
@@ -222,7 +241,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.ClientSignupProfileTitle,
 		emailBody,
-		body["email"],
+		body.Email,
 		CONSTANT.InstantSendEmailMessage,
 	)
 
@@ -230,11 +249,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientProfileTitleMessage,
 			map[string]string{
-				"###client_name###": body["first_name"],
+				"###client_name###": body.FirstName,
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		body["phone"],
+		body.Phone,
 		UTIL.GetCurrentTime().String(),
 		clientID,
 		CONSTANT.InstantSendTextMessage,
@@ -259,50 +278,69 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateClientProfileAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateClientProfileAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.ClientB2BProfileAddRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	//check if otp is correct
-	if !UTIL.VerifyOTPWithCorporateEmail(body["email"], body["otp"]) {
+	if !UTIL.VerifyOTPWithCorporateEmail(body.Email, body.OTP) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check email format
-	is_valid_email := UTIL.IsValidEmail(body["email"])
+	is_valid_email := UTIL.IsValidEmail(body.Email)
 	if is_valid_email == "" {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get domain
-	domainName := strings.Split(body["email"], "@")
+	domainName := strings.Split(body.Email, "@")
 
 	// check domain exists or not
-	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["phone"]}) {
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if user already signed up with specified email
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]}) {
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body.Email}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -318,29 +356,29 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	// 	body["photo"] = CONSTANT.DefaultPhotoForClientAndListerner
 	// }
 
-	if len(body["notification_status"]) == 0 {
-		body["notification_status"] = "1"
+	if len(body.NotificationStatus) == 0 {
+		body.NotificationStatus = "1"
 	}
 
 	// add client details
 	client := map[string]string{}
-	client["emp_id"] = body["emp_id"]
-	client["first_name"] = body["first_name"]
-	client["last_name"] = body["last_name"]
-	client["phone"] = body["phone"]
-	client["email"] = body["email"]
-	client["date_of_birth"] = body["date_of_birth"]
-	client["photo"] = body["photo"]
-	client["topic_ids"] = body["topic_ids"]
-	client["gender"] = body["gender"]
-	client["location"] = body["location"]
-	client["department"] = body["cor_darpartment"]
-	client["timezone"] = body["timezone"]
-	client["device_id"] = body["device_id"]
-	client["platform"] = body["platform"]
-	client["version"] = body["version"]
+	client["emp_id"] = body.EmpID
+	client["first_name"] = body.FirstName
+	client["last_name"] = body.LastName
+	client["phone"] = body.Phone
+	client["email"] = body.Email
+	client["date_of_birth"] = body.DateOfBirth
+	client["photo"] = body.Photo
+	client["topic_ids"] = body.TopicIDs
+	client["gender"] = body.Gender
+	client["location"] = body.Location
+	client["department"] = body.CorDarpartment
+	client["timezone"] = body.Timezone
+	client["device_id"] = body.DeviceID
+	client["platform"] = body.Platform
+	client["version"] = body.Version
 	client["status"] = CONSTANT.ClientActive
-	client["notification_status"] = body["notification_status"]
+	client["notification_status"] = body.NotificationStatus
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
@@ -381,7 +419,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	filepath_text := "htmlfile/emailmessagebody.html"
 
 	emaildata := Model.EmailBodyMessageModel{
-		Name:    body["first_name"],
+		Name:    body.FirstName,
 		Message: CONSTANT.ClientSignupClientEmailBody,
 	}
 
@@ -390,7 +428,7 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.ClientSignupProfileTitle,
 		emailBody,
-		body["email"],
+		body.Email,
 		CONSTANT.InstantSendEmailMessage,
 	)
 
@@ -398,11 +436,11 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientProfileTitleMessage,
 			map[string]string{
-				"###client_name###": body["first_name"],
+				"###client_name###": body.FirstName,
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		body["phone"],
+		body.Phone,
 		UTIL.GetCurrentTime().String(),
 		clientID,
 		CONSTANT.InstantSendTextMessage,
@@ -457,27 +495,46 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateClientRelativeProfileAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CorporateClientRelativeProfileAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.ClientB2BFamilyProfileAddRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// check domain exists or not
-	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]})
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID})
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
 	}
 
-	clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["client_id"]})
+	clientD, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.ClientID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -493,19 +550,19 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body["phone"]}) {
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if user already signed up with specified email
-	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body["email"]}) {
+	if DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": body.Email}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if phone is verfied by OTP
-	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]}) {
+	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.VerifyPhoneRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
@@ -516,27 +573,27 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body["notification_status"]) == 0 {
-		body["notification_status"] = "1"
+	if len(body.NotificationStatus) == 0 {
+		body.NotificationStatus = "1"
 	}
 
 	// add client details
 	client := map[string]string{}
-	client["asscoiate_id"] = body["client_id"]
+	client["asscoiate_id"] = body.ClientID
 	client["emp_id"] = clientD[0]["emp_id"]
-	client["relation"] = body["relation"]
-	client["first_name"] = body["first_name"]
-	client["last_name"] = body["last_name"]
-	client["photo"] = body["photo"]
-	client["phone"] = body["phone"]
-	client["email"] = body["email"]
-	client["date_of_birth"] = body["date_of_birth"]
-	client["topic_ids"] = body["topic_ids"]
-	client["gender"] = body["gender"]
-	client["location"] = body["location"]
-	client["timezone"] = body["timezone"]
+	client["relation"] = body.Relation
+	client["first_name"] = body.FirstName
+	client["last_name"] = body.LastName
+	client["photo"] = body.Photo
+	client["phone"] = body.Phone
+	client["email"] = body.Email
+	client["date_of_birth"] = body.DateOfBirth
+	client["topic_ids"] = body.TopicIDs
+	client["gender"] = body.Gender
+	client["location"] = body.Location
+	client["timezone"] = body.Timezone
 	client["status"] = CONSTANT.ClientActive
-	client["notification_status"] = body["notification_status"]
+	client["notification_status"] = body.NotificationStatus
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
 	if !ok {
@@ -550,16 +607,16 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// send email to client
 	filepath_text := "htmlfile/family_registration_confirmation.html"
 
-	age, _ := UTIL.CalculateAge(body["date_of_birth"])
+	age, _ := UTIL.CalculateAge(body.DateOfBirth)
 
 	emaildata := Model.EmailBodyMessageModelWithDocu{
 		Name: clientD[0]["first_name"],
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientSignupClientTpFamilyMemeberCorEmailBody,
 			map[string]string{
-				"###familymembername###": body["first_name"],
+				"###familymembername###": body.FirstName,
 				"###age###":              strconv.Itoa(age),
-				"###gender###":           body["gender"],
+				"###gender###":           body.Gender,
 			},
 		),
 		Message1: "They would receive all futher communications on their registered email id.",
@@ -580,7 +637,7 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	htmlFileForFamilyMember := "htmlfile/family_registration_login_step.html"
 
 	emaildata1 := Model.EmailBodyMessageModelWithDocu{
-		Name: body["first_name"],
+		Name: body.FirstName,
 		Message: UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientSignupClientTpFamilyMemeberToLoginStepCorEmailBody,
 			map[string]string{
@@ -599,23 +656,23 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.ClientFamilyMemberStepLoginToCorEmpTitle,
 		emailBody1,
-		body["email"],
+		body.Email,
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	email := UTIL.EncodeEmailID(body["email"])
+	email := UTIL.EncodeEmailID(body.Email)
 
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientFamilyMemeberProfileAddedSuccessfullyTextMessage,
 			map[string]string{
-				"###family_member_name###":     body["first_name"],
+				"###family_member_name###":     body.FirstName,
 				"###client_name###":            clientD[0]["first_name"],
 				"###family_member_email_id###": email,
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		body["phone"],
+		body.Phone,
 		UTIL.GetCurrentTime().String(),
 		clientID,
 		CONSTANT.InstantSendTextMessage,
@@ -645,47 +702,68 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	body := Model.ClientProfileUpdateRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// update client details
 	client := map[string]string{}
-	if len(body["emp_id"]) > 0 {
-		client["emp_id"] = body["emp_id"]
+
+	if len(body.FirstName) > 0 {
+		client["first_name"] = body.FirstName
 	}
-	if len(body["first_name"]) > 0 {
-		client["first_name"] = body["first_name"]
+	if len(body.LastName) > 0 {
+		client["last_name"] = body.LastName
 	}
-	if len(body["last_name"]) > 0 {
-		client["last_name"] = body["last_name"]
+	if len(body.DateOfBirth) > 0 {
+		client["date_of_birth"] = body.DateOfBirth
 	}
-	if len(body["location"]) > 0 {
-		client["location"] = body["location"]
+	if len(body.Photo) > 0 {
+		client["photo"] = body.Photo
 	}
-	if len(body["department"]) > 0 {
-		client["department"] = body["department"]
+	if len(body.TopicIDs) > 0 {
+		client["topic_ids"] = body.TopicIDs
 	}
-	if len(body["date_of_birth"]) > 0 {
-		client["date_of_birth"] = body["date_of_birth"]
+	if len(body.Gender) > 0 {
+		client["gender"] = body.Gender
 	}
-	if len(body["photo"]) > 0 {
-		client["photo"] = body["photo"]
+	if len(body.DeviceID) > 0 {
+		client["device_id"] = body.DeviceID
 	}
-	if len(body["topic_ids"]) > 0 {
-		client["topic_ids"] = body["topic_ids"]
-	}
-	if len(body["gender"]) > 0 {
-		client["gender"] = body["gender"]
-	}
-	if len(body["device_id"]) > 0 {
-		client["device_id"] = body["device_id"]
-	}
-	if len(body["timezone"]) > 0 {
-		client["timezone"] = body["timezone"]
-	}
+
 	client["last_login_time"] = UTIL.GetCurrentTime().String()
 	client["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, client)

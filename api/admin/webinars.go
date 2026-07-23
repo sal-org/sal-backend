@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	_ "salbackend/model"
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 )
 
@@ -108,33 +108,54 @@ func WebinarsAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := MODEL.AddWebinarSessionInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
+
+	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	// add event
 	webinar := map[string]string{}
-	webinar["counsellor_name"] = body["counsellor_name"]
-	webinar["title"] = body["title"]
-	webinar["counsellor_photo"] = body["counsellor_photo"]
-	webinar["counsellor_qualification"] = body["counsellor_qualification"]
-	webinar["counsellor_about"] = body["counsellor_about"]
-	webinar["counsellor_experience"] = body["counsellor_experience"]
-	webinar["counsellor_rating"] = body["counsellor_rating"]
-	webinar["about"] = body["about"]
-	webinar["partner_name"] = body["partner_name"]
-	webinar["why_attend"] = body["why_attend"]
-	webinar["address"] = body["address"]
-	webinar["photo"] = body["photo"]
-	webinar["background_photo"] = body["background_photo"]
-	webinar["date"] = body["date"]
-	webinar["time"] = body["time"]
-	webinar["duration"] = body["duration"]
-	webinar["mode"] = body["mode"]
-	webinar["status"] = body["status"]
-	webinar["created_by"] = body["created_by"]
+	webinar["counsellor_name"] = body.CounsellorName
+	webinar["title"] = body.Title
+	webinar["counsellor_photo"] = body.CounsellorPhoto
+	webinar["counsellor_qualification"] = body.CounsellorQualification
+	webinar["counsellor_about"] = body.CounsellorAbout
+	webinar["counsellor_experience"] = body.CounsellorExperience
+	webinar["counsellor_rating"] = body.CounsellorRating
+	webinar["about"] = body.About
+	webinar["partner_name"] = body.PartnerName
+	webinar["why_attend"] = body.WhyAttend
+	webinar["address"] = body.Address
+	webinar["photo"] = body.Photo
+	webinar["background_photo"] = body.BackgroundPhoto
+	webinar["date"] = body.Date
+	webinar["time"] = body.Time
+	webinar["duration"] = body.Duration
+	webinar["mode"] = body.Mode
+	webinar["status"] = body.Status
+	webinar["created_by"] = id
 	webinar["created_at"] = UTIL.GetCurrentTime().String()
 
 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.WebinarsTable, CONSTANT.WebinarsDigits, webinar, "webinar_id")
@@ -158,14 +179,48 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	webinarID, ok := UTIL.Required(r.FormValue("webinar_id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, webinarID, CONSTANT.ShowDialog, response)
 		return
 	}
 
+
+	body := MODEL.AddWebinarSessionInAdminPanel{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if corporate_id exists
+	if !DB.CheckIfExists(CONSTANT.WebinarsTable, map[string]string{"webinar_id": webinarID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
 	// counsellor photo
-	parsedCounsellorPhoto, err := url.Parse(body["counsellor_photo"])
+	parsedCounsellorPhoto, err := url.Parse(body.CounsellorPhoto)
 	if err != nil {
 		panic(err)
 	}
@@ -175,7 +230,7 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 
 
 	// event photo
-	parsedPhoto, err := url.Parse(body["photo"])
+	parsedPhoto, err := url.Parse(body.Photo)
 	if err != nil {
 		panic(err)
 	}
@@ -185,7 +240,7 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 
 	
 	// event background photo
-	parsedBackgroundPhoto, err := url.Parse(body["background_photo"])
+	parsedBackgroundPhoto, err := url.Parse(body.BackgroundPhoto)
 	if err != nil {
 		panic(err)
 	}
@@ -194,31 +249,31 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// add event
 	webinar := map[string]string{}
-	webinar["counsellor_name"] = body["counsellor_name"]
-	webinar["title"] = body["title"]
+	webinar["counsellor_name"] = body.CounsellorName
+	webinar["title"] = body.Title
 	webinar["counsellor_photo"] = parsedCounsellorPhoto.String()
-	webinar["counsellor_qualification"] = body["counsellor_qualification"]
-	webinar["counsellor_about"] = body["counsellor_about"]
-	webinar["counsellor_experience"] = body["counsellor_experience"]
-	webinar["counsellor_rating"] = body["counsellor_rating"]
-	webinar["about"] = body["about"]
-	webinar["why_attend"] = body["why_attend"]
-	webinar["partner_name"] = body["partner_name"]
-	webinar["address"] = body["address"]
+	webinar["counsellor_qualification"] = body.CounsellorQualification
+	webinar["counsellor_about"] = body.CounsellorAbout
+	webinar["counsellor_experience"] = body.CounsellorExperience
+	webinar["counsellor_rating"] = body.CounsellorRating
+	webinar["about"] = body.About
+	webinar["why_attend"] = body.WhyAttend
+	webinar["partner_name"] = body.PartnerName
+	webinar["address"] = body.Address
 	webinar["photo"] = parsedPhoto.String()
 	webinar["background_photo"] = parsedBackgroundPhoto.String()
-	webinar["date"] = body["date"]
-	webinar["time"] = body["time"]
-	webinar["duration"] = body["duration"]
-	webinar["mode"] = body["mode"]
-	webinar["status"] = body["status"]
+	webinar["date"] = body.Date
+	webinar["time"] = body.Time
+	webinar["duration"] = body.Duration
+	webinar["mode"] = body.Mode
+	webinar["status"] = body.Status
 	status, ok := DB.UpdateSQL(CONSTANT.WebinarsTable, map[string]string{"webinar_id": r.FormValue("webinar_id")}, webinar)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if body["status"] == CONSTANT.WebinarCancelledByAdmin {
+	if body.Status == CONSTANT.WebinarCancelledByAdmin {
 		// send notification to clients who have booked the webinar
 		webinarBookings, status, ok := DB.SelectProcess("select * from " + CONSTANT.WebinarsBookTable + " where webinar_id = '" + r.FormValue("webinar_id") + "' and status = " + CONSTANT.WebinarBooked + "")
 		if !ok {
@@ -232,12 +287,12 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 				UTIL.ReplaceNotificationContentInString(
 					CONSTANT.AdminCancelledWebinarContent,
 					map[string]string{
-						"###webinarName###": body["title"],
+						"###webinarName###": body.Title,
 					},
 				),
 				booking["user_id"],
 				CONSTANT.ClientType,
-				UTIL.BuildDateTime(body["date"], body["time"]).String(),
+				UTIL.BuildDateTime(body.Date, body.Time).String(),
 				CONSTANT.NotificationSent,
 				booking["order_id"],
 				"",
