@@ -560,11 +560,11 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 	var response = make(map[string]interface{})
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
 	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CounsellorRecordFormNewVersionAddRequiredFields)
@@ -573,25 +573,44 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 	// 	return
 	// }
 
+	body := Model.NewVersionOfCounsellorRecordFormRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
 	var noshow, incompleteSession, mentalHealth string
 	var newVersionClientRecordForm []map[string]string
 
-	if len(body["mental_health"]) > 0 {
-		mentalHealth = body["mental_health"]
+	if len(body.MentalHealth) > 0 {
+		mentalHealth = body.MentalHealth
 	} else {
 		mentalHealth = "0"
 	}
 
 	mentalStatus, _ := strconv.Atoi(mentalHealth)
 
-	if len(body["noshow"]) > 0 {
-		noshow = body["noshow"]
+	if len(body.NoShow) > 0 {
+		noshow = body.NoShow
 	} else {
 		noshow = "0"
 	}
 
-	if len(body["incomplete_session"]) > 0 {
-		incompleteSession = body["incomplete_session"]
+	if len(body.IncompleteSession) > 0 {
+		incompleteSession = body.IncompleteSession
 	} else {
 		incompleteSession = "0"
 	}
@@ -604,9 +623,9 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 	// 	sessionType = ""
 	// }
 
-	if len(body["record_id"]) > 0 {
+	if len(body.RecordID) > 0 {
 
-		newVersionClientRecordForm, _, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where record_id = ? and status = '2'", body["record_id"])
+		newVersionClientRecordForm, _, _ = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where record_id = ? and status = '2'", body.RecordID)
 
 		if len(newVersionClientRecordForm) > 0 {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Record already exists for the given record ID", CONSTANT.ShowDialog, response)
@@ -614,30 +633,30 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		}
 
 		counsellorRecord := map[string]string{}
-		counsellorRecord["session_type"] = body["session_type"]
-		counsellorRecord["family_relation"] = body["family_relation"]
-		counsellorRecord["out_time"] = body["out_time"]
+		counsellorRecord["session_type"] = body.SessionType
+		counsellorRecord["family_relation"] = body.FamilyRelation
+		counsellorRecord["out_time"] = body.OutTime
 		counsellorRecord["no_show"] = noshow
 		counsellorRecord["incomplete_session"] = incompleteSession
-		counsellorRecord["presenting_concers"] = body["presenting_concers"]
+		counsellorRecord["presenting_concers"] = body.PresentingConcerns
 		counsellorRecord["mental_health"] = mentalHealth
-		counsellorRecord["mental_health_check"] = body["mental_health_check"]
-		counsellorRecord["downgrading_high_risk_case"] = body["downgrading_high_risk_case"]
-		counsellorRecord["is_clinical_psychologist_required_reason"] = body["is_clinical_psychologist_required_reason"]
-		counsellorRecord["psychiatric_intervention_required_reason"] = body["psychiatric_intervention_required_reason"]
-		counsellorRecord["category"] = body["category"]
-		counsellorRecord["sub_category"] = body["sub_category"]
-		counsellorRecord["emotional_state"] = body["emotional_state"]
-		counsellorRecord["therapy_notes"] = body["therapy_notes"]
-		counsellorRecord["goals_achieved"] = body["goals_achieved"]
-		counsellorRecord["goals_achieved_reason"] = body["goals_achieved_reason"]
-		counsellorRecord["total_session_needed"] = body["total_session_needed"]
-		counsellorRecord["taken_sessions"] = body["taken_sessions"]
-		counsellorRecord["next_session_plan"] = body["next_session_plan"]
-		counsellorRecord["next_follow_up_date"] = body["next_follow_up_date"]
-		counsellorRecord["client_notes"] = body["client_notes"]
-		counsellorRecord["self_work_material"] = body["self_work_material"]
-		counsellorRecord["assessment"] = body["assessment"]
+		counsellorRecord["mental_health_check"] = body.MentalHealthCheck
+		counsellorRecord["downgrading_high_risk_case"] = body.DowngradingHighRiskCase
+		counsellorRecord["is_clinical_psychologist_required_reason"] = body.IsClinicalPsychologistRequiredReason
+		counsellorRecord["psychiatric_intervention_required_reason"] = body.PsychiatricInterventionRequiredReason
+		counsellorRecord["category"] = body.Category
+		counsellorRecord["sub_category"] = body.SubCategory
+		counsellorRecord["emotional_state"] = body.EmotionalState
+		counsellorRecord["therapy_notes"] = body.TherapyNotes
+		counsellorRecord["goals_achieved"] = body.GoalsAchieved
+		counsellorRecord["goals_achieved_reason"] = body.GoalsAchievedReason
+		counsellorRecord["total_session_needed"] = body.TotalSessionNeeded
+		counsellorRecord["taken_sessions"] = body.TakenSessions
+		counsellorRecord["next_session_plan"] = body.NextSessionPlan
+		counsellorRecord["next_follow_up_date"] = body.NextFollowUpDate
+		counsellorRecord["client_notes"] = body.ClientNotes
+		counsellorRecord["self_work_material"] = body.SelfWorkMaterial
+		counsellorRecord["assessment"] = body.Assessment
 		counsellorRecord["status"] = CONSTANT.CounsellorRecordFormCompleted
 		counsellorRecord["modified_at"] = UTIL.GetCurrentTime().String()
 
@@ -649,16 +668,16 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 		DB.UpdateSQL(CONSTANT.CounsellorRecordsFormLastestVersionTable,
 			map[string]string{
-				"record_id": body["record_id"],
+				"record_id": body.RecordID,
 			},
 			counsellorRecord,
 		)
 
-		newVersionClientRecordForm, _, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where record_id = ? ", body["record_id"])
+		newVersionClientRecordForm, _, _ = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where record_id = ? ", body.RecordID)
 
 	} else {
 
-		checkCounsellorRecordFormExistsOrNot, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? ", body["appointment_id"])
+		checkCounsellorRecordFormExistsOrNot, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where appointment_id = ? ", body.AppointmentID)
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -670,37 +689,37 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		}
 
 		counsellorRecord := map[string]string{}
-		counsellorRecord["counsellor_id"] = body["counsellor_id"]
-		counsellorRecord["client_id"] = body["client_id"]
-		counsellorRecord["appointment_id"] = body["appointment_id"]
-		counsellorRecord["session_for"] = body["session_for"]
-		counsellorRecord["family_relation"] = body["family_relation"]
-		counsellorRecord["session_type"] = body["session_type"]
-		counsellorRecord["session_mode"] = body["session_mode"]
-		counsellorRecord["session_date"] = body["session_date"]
-		counsellorRecord["in_time"] = body["in_time"]
-		counsellorRecord["out_time"] = body["out_time"]
+		counsellorRecord["counsellor_id"] = body.CounsellorID
+		counsellorRecord["client_id"] = body.ClientID
+		counsellorRecord["appointment_id"] = body.AppointmentID
+		counsellorRecord["session_for"] = body.SessionFor
+		counsellorRecord["family_relation"] = body.FamilyRelation
+		counsellorRecord["session_type"] = body.SessionType
+		counsellorRecord["session_mode"] = body.SessionMood
+		counsellorRecord["session_date"] = body.SessionDate
+		counsellorRecord["in_time"] = body.InTime
+		counsellorRecord["out_time"] = body.OutTime
 		counsellorRecord["no_show"] = noshow
-		counsellorRecord["incomplete_session"] = body["incomplete_session"]
-		counsellorRecord["presenting_concers"] = body["presenting_concers"]
+		counsellorRecord["incomplete_session"] = body.IncompleteSession
+		counsellorRecord["presenting_concers"] = body.PresentingConcerns
 		counsellorRecord["mental_health"] = mentalHealth
-		counsellorRecord["mental_health_check"] = body["mental_health_check"]
-		counsellorRecord["downgrading_high_risk_case"] = body["downgrading_high_risk_case"]
-		counsellorRecord["is_clinical_psychologist_required_reason"] = body["is_clinical_psychologist_required_reason"]
-		counsellorRecord["psychiatric_intervention_required_reason"] = body["psychiatric_intervention_required_reason"]
-		counsellorRecord["category"] = body["category"]
-		counsellorRecord["sub_category"] = body["sub_category"]
-		counsellorRecord["emotional_state"] = body["emotional_state"]
-		counsellorRecord["therapy_notes"] = body["therapy_notes"]
-		counsellorRecord["goals_achieved"] = body["goals_achieved"]
-		counsellorRecord["goals_achieved_reason"] = body["goals_achieved_reason"]
-		counsellorRecord["total_session_needed"] = body["total_session_needed"]
-		counsellorRecord["taken_sessions"] = body["taken_sessions"]
-		counsellorRecord["next_session_plan"] = body["next_session_plan"]
-		counsellorRecord["next_follow_up_date"] = body["next_follow_up_date"]
-		counsellorRecord["client_notes"] = body["client_notes"]
-		counsellorRecord["self_work_material"] = body["self_work_material"]
-		counsellorRecord["assessment"] = body["assessment"]
+		counsellorRecord["mental_health_check"] = body.MentalHealthCheck
+		counsellorRecord["downgrading_high_risk_case"] = body.DowngradingHighRiskCase
+		counsellorRecord["is_clinical_psychologist_required_reason"] = body.IsClinicalPsychologistRequiredReason
+		counsellorRecord["psychiatric_intervention_required_reason"] = body.PsychiatricInterventionRequiredReason
+		counsellorRecord["category"] = body.Category
+		counsellorRecord["sub_category"] = body.SubCategory
+		counsellorRecord["emotional_state"] = body.EmotionalState
+		counsellorRecord["therapy_notes"] = body.TherapyNotes
+		counsellorRecord["goals_achieved"] = body.GoalsAchieved
+		counsellorRecord["goals_achieved_reason"] = body.GoalsAchievedReason
+		counsellorRecord["total_session_needed"] = body.TotalSessionNeeded
+		counsellorRecord["taken_sessions"] = body.TakenSessions
+		counsellorRecord["next_session_plan"] = body.NextSessionPlan
+		counsellorRecord["next_follow_up_date"] = body.NextFollowUpDate
+		counsellorRecord["client_notes"] = body.ClientNotes
+		counsellorRecord["self_work_material"] = body.SelfWorkMaterial
+		counsellorRecord["assessment"] = body.Assessment
 		counsellorRecord["status"] = CONSTANT.CounsellorRecordFormCompleted
 		counsellorRecord["created_at"] = UTIL.GetCurrentTime().String()
 		counsellorRecord["modified_at"] = UTIL.GetCurrentTime().String()
@@ -769,25 +788,25 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		InTime:                                newVersionClientRecordForm[0]["in_time"],
 		OutTime:                               newVersionClientRecordForm[0]["out_time"],
 		NoShow:                                noshow,
-		PresentingConcerns:                    body["presenting_concers"],
+		PresentingConcerns:                    body.PresentingConcerns,
 		MentalHealthScale:                     mentalHealth,
-		MentalHealthCheck:                     body["mental_health_check"],
-		DowngradingHighRiskCase:               body["downgrading_high_risk_case"],
-		IsClinicalPsychologistRequiredReason:  body["is_clinical_psychologist_required_reason"],
-		PsychiatricInterventionRequiredReason: body["psychiatric_intervention_required_reason"],
-		Category:                              body["category"],
-		SubCategory:                           body["sub_category"],
-		EmotionalState:                        body["emotional_state"],
-		GoalsAchieved:                         body["goals_achieved"],
-		GoalsAchievedReason:                   body["goals_achieved_reason"],
-		TotalSessionNeeded:                    body["total_session_needed"],
+		MentalHealthCheck:                     body.MentalHealthCheck,
+		DowngradingHighRiskCase:               body.DowngradingHighRiskCase,
+		IsClinicalPsychologistRequiredReason:  body.IsClinicalPsychologistRequiredReason,
+		PsychiatricInterventionRequiredReason: body.PsychiatricInterventionRequiredReason,
+		Category:                              body.Category,
+		SubCategory:                           body.SubCategory,
+		EmotionalState:                        body.EmotionalState,
+		GoalsAchieved:                         body.GoalsAchieved,
+		GoalsAchievedReason:                   body.GoalsAchievedReason,
+		TotalSessionNeeded:                    body.TotalSessionNeeded,
 		TakenSessions:                         newVersionClientRecordForm[0]["taken_sessions"],
-		TherapyNotes:                          body["therapy_notes"],
-		NextSessionPlan:                       body["next_session_plan"],
+		TherapyNotes:                          body.TherapyNotes,
+		NextSessionPlan:                       body.NextSessionPlan,
 		NextFollowDate:                        nextFollowDate,
-		ClientNotes:                           body["client_notes"],
-		Assessment:                            body["assessment"],
-		SelfWorkMaterial:                      body["self_work_material"],
+		ClientNotes:                           body.ClientNotes,
+		Assessment:                            body.Assessment,
+		SelfWorkMaterial:                      body.SelfWorkMaterial,
 	}
 
 	filepath := "htmlfile/counsellorRecordNewVersion.html"
@@ -801,7 +820,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	if mentalStatus > 7 || len(body["psychiatric_intervention_required_reason"]) != 0 || len(body["is_clinical_psychologist_required_reason"]) != 0 {
+	if mentalStatus > 7 || len(body.PsychiatricInterventionRequiredReason) != 0 || len(body.IsClinicalPsychologistRequiredReason) != 0 {
 
 		ccAddressess := []string{CONFIG.QCEmailID1, CONFIG.QCEmailID3}
 
@@ -816,7 +835,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 	message, message1, message2, subjectLine := "", "", "", ""
 
-	if len(body["next_follow_up_date"]) != 0 {
+	if len(body.NextFollowUpDate) != 0 {
 		// 15 min push notification before appointment start
 
 		if newVersionClientRecordForm[0]["session_mode"] == "In-Person" {
@@ -831,7 +850,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 				),
 				newVersionClientRecordForm[0]["client_id"],
 				CONSTANT.ClientType,
-				UTIL.BuildDateTime(body["next_follow_up_date"], "26").Add(-24*time.Hour).UTC().String(),
+				UTIL.BuildDateTime(body.NextFollowUpDate, "26").Add(-24*time.Hour).UTC().String(),
 				CONSTANT.NotificationInProgress,
 				newVersionClientRecordForm[0]["client_id"],
 				"",
@@ -850,7 +869,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 				),
 				newVersionClientRecordForm[0]["client_id"],
 				CONSTANT.ClientType,
-				UTIL.BuildDateTime(body["next_follow_up_date"], "26").Add(-24*time.Hour).UTC().String(),
+				UTIL.BuildDateTime(body.NextFollowUpDate, "26").Add(-24*time.Hour).UTC().String(),
 				CONSTANT.NotificationInProgress,
 				newVersionClientRecordForm[0]["client_id"],
 				"",
@@ -869,13 +888,13 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 	if len(newVersionClientRecordForm[0]["client_id"]) != 0 {
 
-		if len(body["self_work_material"]) != 0 || len(body["client_notes"]) != 0 || len(body["assessment"]) != 0 {
+		if len(body.SelfWorkMaterial) != 0 || len(body.ClientNotes) != 0 || len(body.Assessment) != 0 {
 
 			client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "last_name", "email"}, map[string]string{"client_id": newVersionClientRecordForm[0]["client_id"]})
 
 			var listofDocuments []Model.DocumentList
-			if len(body["self_work_material"]) != 0 {
-				clientDocuments := strings.Split(body["self_work_material"], ",")
+			if len(body.SelfWorkMaterial) != 0 {
+				clientDocuments := strings.Split(body.SelfWorkMaterial, ",")
 
 				for _, value := range clientDocuments {
 					document, _, _ := DB.SelectSQL(CONSTANT.CounsellorDocumentListTable, []string{"document"}, map[string]string{"document_name": value})
@@ -893,7 +912,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 
 			var emaildata Model.EmailBodyMessageModelWithDocu
 
-			if len(body["self_work_material"]) != 0 {
+			if len(body.SelfWorkMaterial) != 0 {
 				message = UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistAttachDocumentsWithClientBody,
 					map[string]string{
@@ -912,21 +931,21 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 				)
 			}
 
-			if len(body["assessment"]) != 0 {
+			if len(body.Assessment) != 0 {
 				message2 = UTIL.ReplaceNotificationContentInString(
 					CONSTANT.TherapistAttachAssessmentWithClientBody,
 					map[string]string{
-						"###assessment_name###": body["assessment"],
+						"###assessment_name###": body.Assessment,
 					},
 				)
 			}
 
-			if len(body["client_notes"]) != 0 {
+			if len(body.ClientNotes) != 0 {
 				emaildata = Model.EmailBodyMessageModelWithDocu{
 					Name:     client[0]["first_name"],
 					Message:  message,
 					Message1: "Your therapist has suggested the following guidelines:",
-					Message2: body["client_notes"],
+					Message2: body.ClientNotes,
 					Message3: message2,
 					Message4: message1,
 				}
@@ -936,7 +955,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 					Message:  message,
 					Message1: "Your therapist has suggested the following guidelines:",
 					Message2: "Notes not provided.",
-					Message3: body["links"],
+					Message3: body.Links,
 					Message4: message1,
 				}
 			}

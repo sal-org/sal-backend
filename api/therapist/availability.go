@@ -5,18 +5,13 @@ import (
 	"net/http"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
 	"strconv"
 	"strings"
 	"time"
 
 	UTIL "salbackend/util"
 )
-
-type SlotUpdate struct {
-	Date  string
-	Key   string
-	Value string
-}
 
 // AvailabilityGet godoc
 // @Tags Therapist Availability
@@ -72,7 +67,7 @@ func AvailabilityGet(w http.ResponseWriter, r *http.Request) {
 func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	// var isDayWithin15Days = false
 	// var isSlotsAreActive = false
 
@@ -85,9 +80,41 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBodyInListMap(r)
+	// body, ok := UTIL.ReadRequestBodyInListMap(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body := []MODEL.AvailabilityUpdateTherapistRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if corporate_id exists
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -119,13 +146,16 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	for _, day := range body {
-		if day["dates"] == "" {
-			if strings.EqualFold(day["status"], "0") {
+		if day.Dates == "" {
+			if strings.EqualFold(day.Status, "0") {
 				// delete schedule
-				DB.DeleteSQL(CONSTANT.SchedulesTable, map[string]string{"id": day["id"]})
+				DB.DeleteSQL(CONSTANT.SchedulesTable, map[string]string{"id": day.ID})
 			} else {
-				if len(day["id"]) > 0 {
-					DB.UpdateSQL(CONSTANT.SchedulesTable, map[string]string{"id": day["id"]}, day)
+				if len(day.ID) > 0 {
+					DB.UpdateSQL(CONSTANT.SchedulesTable, map[string]string{"id": day.ID}, map[string]string{
+						"counsellor_id": day.CounsellorID,
+						"weekday": day
+					})
 				} else {
 					// newly added schedule
 					DB.InsertSQL(CONSTANT.SchedulesTable, day)
@@ -2257,7 +2287,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 		// 	}
 		// }
 
-		var updates []SlotUpdate
+		var updates []MODEL.SlotUpdateAvailabilityModel
 		currentDate := UTIL.GetCurrentTime().Add(330*time.Minute).AddDate(0, 0, -1).Format("2006-01-02")
 		// skipDate := false
 		for _, day := range days {
@@ -2328,7 +2358,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 					// 	value = CONSTANT.SlotUnavailable
 					// }
 
-					updates = append(updates, SlotUpdate{
+					updates = append(updates, MODEL.SlotUpdateAvailabilityModel{
 						Date:  date,
 						Key:   key,
 						Value: value,
@@ -2350,7 +2380,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 		for date, slotMap := range updatesByDate {
 			var sets []string
-			var args []interface{}
+			var args []any
 
 			for key, value := range slotMap {
 				sets = append(sets, fmt.Sprintf("`%s` = ?", key))

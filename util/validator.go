@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	CONSTANT "salbackend/constant"
 	"strings"
 
@@ -14,11 +15,45 @@ import (
 
 var Validate = validator.New()
 
-func ParseAndValidate(dst interface{}) error {
-	if err := Validate.Struct(dst); err != nil {
-		return err
+func ParseAndValidate(dst any) error {
+	rv := reflect.ValueOf(dst)
+
+	// Invalid value
+	if !rv.IsValid() {
+		return errors.New("invalid request")
 	}
-	return nil
+
+	// Dereference pointer
+	if rv.Kind() == reflect.Pointer {
+		if rv.IsNil() {
+			return errors.New("request body is nil")
+		}
+		rv = rv.Elem()
+	}
+
+	// Expect struct or slice
+	switch rv.Kind() {
+
+	case reflect.Struct:
+		return Validate.Struct(rv.Interface())
+
+	case reflect.Slice:
+
+		if rv.Len() == 0 {
+			return errors.New("request body must contain at least one item")
+		}
+
+		for i := 0; i < rv.Len(); i++ {
+			if err := Validate.Struct(rv.Index(i).Interface()); err != nil {
+				return fmt.Errorf("item %d: %w", i+1, err)
+			}
+		}
+
+		return nil
+
+	default:
+		return errors.New("request body must be a struct or slice")
+	}
 }
 
 func Required(value string, field string) (string, bool) {
@@ -65,7 +100,7 @@ func ValidationError(err error) string {
 
 const MaxRequestBodySize = 2 * 1024 * 1024 // 2 MB
 
-func DecodeAndValidate(w http.ResponseWriter, r *http.Request, method string, body interface{}) error {
+func DecodeAndValidate(w http.ResponseWriter, r *http.Request, method string, body any) error {
 
 	// Check HTTP Method
 	if r.Method != method {

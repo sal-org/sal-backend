@@ -421,29 +421,48 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 	var firstName, lastName, email string
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientAppFeedbackRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientAppFeedbackRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.AppFeedbackRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// check if user already signed up with specified email
-	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["user_id"]}) {
-		if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": body["user_id"]}) {
-			if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": body["user_id"]}) {
-				if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": body["user_id"]}) {
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.UserID}) {
+		if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": body.UserID}) {
+			if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": body.UserID}) {
+				if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": body.UserID}) {
 					UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
 					return
 				} else {
 					// get counsellor details
-					counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["user_id"]})
+					counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body.UserID})
 					if !ok {
 						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 						return
@@ -459,7 +478,7 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 
 			} else {
 				// get listener details
-				listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": body["user_id"]})
+				listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": body.UserID})
 				if !ok {
 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 					return
@@ -474,7 +493,7 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			// get therapist details
-			therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["user_id"]})
+			therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body.UserID})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -489,7 +508,7 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// get client details
-		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["user_id"]})
+		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.UserID})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -506,13 +525,13 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 
 	// add client details
 	user := map[string]string{}
-	user["user_id"] = body["user_id"]
-	user["type"] = body["type"]
-	user["concern_area"] = body["concern_area"]
-	user["details"] = body["details"]
-	user["attach_1"] = body["attach_1"]
-	user["attach_2"] = body["attach_2"]
-	user["attach_3"] = body["attach_3"]
+	user["user_id"] = body.UserID
+	user["type"] = body.Type
+	user["concern_area"] = body.ConcernArea
+	user["details"] = body.Details
+	user["attach_1"] = body.Attach1
+	user["attach_2"] = body.Attach2
+	user["attach_3"] = body.Attach3
 	user["platform"] = "Mobile"
 	user["status"] = CONSTANT.ClientActive
 	user["created_at"] = UTIL.GetCurrentTime().String()
@@ -528,10 +547,10 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientFeedBackContent,
 			map[string]string{
-				"###type###": body["type"],
+				"###type###": body.Type,
 			},
 		),
-		body["user_id"],
+		body.UserID,
 		CONSTANT.ClientType,
 		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
 		CONSTANT.NotificationSent,
@@ -544,12 +563,12 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 		ClientFirstName: firstName,
 		ClientLastName:  lastName,
 		ClientEmail:     email,
-		ConcernsType:    body["type"],
-		ConcernArea:     body["concern_area"],
-		Details:         body["details"],
-		Attach1:         body["attach_1"],
-		Attach2:         body["attach_2"],
-		Attach3:         body["attach_3"],
+		ConcernsType:    body.Type,
+		ConcernArea:     body.ConcernArea,
+		Details:         body.Details,
+		Attach1:         body.Attach1,
+		Attach2:         body.Attach2,
+		Attach3:         body.Attach3,
 	}
 
 	filepath := "htmlfile/FeedBackForApp.html"
@@ -558,7 +577,7 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 
 	// email for client
 	UTIL.SendEmail(
-		body["type"],
+		body.Type,
 		emailbody,
 		CONFIG.CustomerCareEmailID,
 		CONSTANT.InstantSendEmailMessage,

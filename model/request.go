@@ -649,31 +649,56 @@ type TherapistOrderConfirmAppointmentForB2CRequest struct {
 	PaymentID     string `json:"payment_id" validate:"required,min=3"`
 }
 
-type SessionRequest struct {
+type SlotUpdateAvailabilityModel struct {
+	Date  string
+	Key   string
+	Value string
+}
+
+type NewVersionOfCounsellorRecordFormRequest struct {
+	RecordID                              string `json:"record_id" validate:"omitempty,min=4,max=45"`
+	CounsellorID                          string `json:"counsellor_id" validate:"omitempty,min=4,max=45"`
+	ClientID                              string `json:"client_id" validate:"omitempty,min=4,max=45"`
+	AppointmentID                         string `json:"appointment_id" validate:"omitempty,min=4,max=45"`
+	SessionFor                            string `json:"session_for" validate:"omitempty,oneof=Self Couple Family"`
 	SessionType                           string `json:"session_type" validate:"required,oneof=Self Couple"`
+	SessionMood                           string `json:"session_mood" validate:"omitempty,oneof=In-Person Virtual"`
+	SessionDate                           string `json:"session_date" validate:"omitempty,datetime=2006-01-02"`
 	FamilyRelation                        string `json:"family_relation" validate:"required"`
+	InTime                                string `json:"in_time" validate:"omitempty,datetime=15:04"`
 	OutTime                               string `json:"out_time" validate:"required,datetime=15:04"`
-	NoShow                                string `json:"noshow" validate:"required,oneof=yes no"`
-	IncompleteSession                     string `json:"incomplete_session" validate:"required,oneof=yes no"`
-	PresentingConcerns                    string `json:"presenting_concers" validate:"required"`
-	MentalHealth                          string `json:"mental_health" validate:"required"`
-	MentalHealthCheck                     string `json:"mental_health_check" validate:"required"`
-	DowngradingHighRiskCase               string `json:"downgrading_high_risk_case" validate:"required,oneof=yes no"`
+	NoShow                                string `json:"noshow" validate:"required,oneof=0 1"`
+	IncompleteSession                     string `json:"incomplete_session" validate:"omitempty,oneof=0 1"`
+	PresentingConcerns                    string `json:"presenting_concers" validate:"omitempty"`
+	MentalHealth                          string `json:"mental_health" validate:"omitempty,numeric"`
+	MentalHealthCheck                     string `json:"mental_health_check" validate:"omitempty"`
+	DowngradingHighRiskCase               string `json:"downgrading_high_risk_case" validate:"omitempty"`
 	IsClinicalPsychologistRequiredReason  string `json:"is_clinical_psychologist_required_reason" validate:"omitempty"`
 	PsychiatricInterventionRequiredReason string `json:"psychiatric_intervention_required_reason" validate:"omitempty"`
-	Category                              string `json:"category" validate:"required"`
-	SubCategory                           string `json:"sub_category" validate:"required"`
-	EmotionalState                        string `json:"emotional_state" validate:"required"`
-	TherapyNotes                          string `json:"therapy_notes" validate:"required"`
-	GoalsAchieved                         string `json:"goals_achieved" validate:"required,oneof=yes no partial"`
+	Category                              string `json:"category" validate:"omitempty"`
+	SubCategory                           string `json:"sub_category" validate:"omitempty"`
+	EmotionalState                        string `json:"emotional_state" validate:"omitempty"`
+	TherapyNotes                          string `json:"therapy_notes" validate:"omitempty"`
+	GoalsAchieved                         string `json:"goals_achieved" validate:"omitempty,oneof=No Yes"`
 	GoalsAchievedReason                   string `json:"goals_achieved_reason" validate:"omitempty"`
-	TotalSessionNeeded                    string `json:"total_session_needed" validate:"required,numeric"`
-	TakenSessions                         string `json:"taken_sessions" validate:"required,numeric"`
-	NextSessionPlan                       string `json:"next_session_plan" validate:"required"`
-	NextFollowUpDate                      string `json:"next_follow_up_date" validate:"required,datetime=2006-01-02"`
+	TotalSessionNeeded                    string `json:"total_session_needed" validate:"omitempty,numeric"`
+	TakenSessions                         string `json:"taken_sessions" validate:"omitempty,numeric"`
+	NextSessionPlan                       string `json:"next_session_plan" validate:"omitempty"`
+	NextFollowUpDate                      string `json:"next_follow_up_date" validate:"omitempty,datetime=2006-01-02"`
 	ClientNotes                           string `json:"client_notes" validate:"omitempty"`
 	SelfWorkMaterial                      string `json:"self_work_material" validate:"omitempty"`
 	Assessment                            string `json:"assessment" validate:"omitempty"`
+	Links                                 string `json:"links" validate:"omitempty"`
+}
+
+type AppFeedbackRequest struct {
+	UserID      string `json:"user_id" validate:"required,min=3,max=45"`
+	Type        string `json:"type" validate:"required"`
+	ConcernArea string `json:"concern_area" validate:"omitempty"`
+	Details     string `json:"details" validate:"required"`
+	Attach1     string `json:"attach_1" validate:"omitempty"`
+	Attach2     string `json:"attach_2" validate:"omitempty"`
+	Attach3     string `json:"attach_3" validate:"omitempty"`
 }
 
 type UpdateListenerProfileRequestInAdminPanel struct {
@@ -884,6 +909,69 @@ type AvailabilityUpdateRequestInAdminPanel struct {
 	CompanyLocation string `json:"companyLocation" validate:"required,min=3,max=100"`
 	RoomNo          string `json:"roomNo" validate:"required,min=1,max=80"`
 	Address         string `json:"address" validate:"required,min=3,max=200"`
+	Status          string `json:"status" validate:"required,oneof=0 1 2"`
+	Zero            string `json:"0" validate:"required,oneof=0 1"`
+	One             string `json:"1" validate:"required,oneof=0 1"`
+	Two             string `json:"2" validate:"required,oneof=0 1"`
+	Three           string `json:"3" validate:"required,oneof=0 1"`
+	Four            string `json:"4" validate:"required,oneof=0 1"`
+	Five            string `json:"5" validate:"required,oneof=0 1"`
+	Six             string `json:"6" validate:"required,oneof=0 1"`
+	Seven           string `json:"7" validate:"required,oneof=0 1"`
+	Eight           string `json:"8" validate:"required,oneof=0 1"`
+	Nine            string `json:"9" validate:"required,oneof=0 1"`
+	Ten             string `json:"10" validate:"required,oneof=0 1"`
+	Eleven          string `json:"11" validate:"required,oneof=0 1"`
+	Twelve          string `json:"12" validate:"required,oneof=0 1"`
+	Thirteen        string `json:"13" validate:"required,oneof=0 1"`
+	Fourteen        string `json:"14" validate:"required,oneof=0 1"`
+	Fifteen         string `json:"15" validate:"required,oneof=0 1"`
+	Sixteen         string `json:"16" validate:"required,oneof=0 1"`
+	Seventeen       string `json:"17" validate:"required,oneof=0 1"`
+	Eighteen        string `json:"18" validate:"required,oneof=0 1"`
+	Nineteen        string `json:"19" validate:"required,oneof=0 1"`
+	Twenty          string `json:"20" validate:"required,oneof=0 1"`
+	TwentyOne       string `json:"21" validate:"required,oneof=0 1"`
+	TwentyTwo       string `json:"22" validate:"required,oneof=0 1"`
+	TwentyThree     string `json:"23" validate:"required,oneof=0 1"`
+	TwentyFour      string `json:"24" validate:"required,oneof=0 1"`
+	TwentyFive      string `json:"25" validate:"required,oneof=0 1"`
+	TwentySix       string `json:"26" validate:"required,oneof=0 1"`
+	TwentySeven     string `json:"27" validate:"required,oneof=0 1"`
+	TwentyEight     string `json:"28" validate:"required,oneof=0 1"`
+	TwentyNine      string `json:"29" validate:"required,oneof=0 1"`
+	Thirty          string `json:"30" validate:"required,oneof=0 1"`
+	ThirtyOne       string `json:"31" validate:"required,oneof=0 1"`
+	ThirtyTwo       string `json:"32" validate:"required,oneof=0 1"`
+	ThirtyThree     string `json:"33" validate:"required,oneof=0 1"`
+	ThirtyFour      string `json:"34" validate:"required,oneof=0 1"`
+	ThirtyFive      string `json:"35" validate:"required,oneof=0 1"`
+	ThirtySix       string `json:"36" validate:"required,oneof=0 1"`
+	ThirtySeven     string `json:"37" validate:"required,oneof=0 1"`
+	ThirtyEight     string `json:"38" validate:"required,oneof=0 1"`
+	ThirtyNine      string `json:"39" validate:"required,oneof=0 1"`
+	Forty           string `json:"40" validate:"required,oneof=0 1"`
+	FortyOne        string `json:"41" validate:"required,oneof=0 1"`
+	FortyTwo        string `json:"42" validate:"required,oneof=0 1"`
+	FortyThree      string `json:"43" validate:"required,oneof=0 1"`
+	FortyFour       string `json:"44" validate:"required,oneof=0 1"`
+	FortyFive       string `json:"45" validate:"required,oneof=0 1"`
+	FortySix        string `json:"46" validate:"required,oneof=0 1"`
+	FortySeven      string `json:"47" validate:"required,oneof=0 1"`
+}
+
+type AvailabilityUpdateTherapistRequest struct {
+	ID              string `json:"id"`
+	CounsellorID    string `json:"counsellor_id" validate:"required,min=3,max=16"`
+	WeekDay         string `json:"weekday" validate:"omitempty,oneof=0 1 2 3 4 5 6 7"`
+	Date            string `json:"date" validate:"required,datetime=2006-01-02"`
+	FromTime        string `json:"fromTime" validate:"required,datetime=15:04"`
+	ToTime          string `json:"toTime" validate:"required,datetime=15:04"`
+	CompanyName     string `json:"companyName" validate:"required,min=3,max=100"`
+	CompanyLocation string `json:"companyLocation" validate:"required,min=3,max=100"`
+	RoomNo          string `json:"roomNo" validate:"required,min=1,max=80"`
+	Address         string `json:"address" validate:"required,min=3,max=200"`
+	Dates           string `json:"dates" validate:"omitempty"`
 	Status          string `json:"status" validate:"required,oneof=0 1 2"`
 	Zero            string `json:"0" validate:"required,oneof=0 1"`
 	One             string `json:"1" validate:"required,oneof=0 1"`
