@@ -252,13 +252,13 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		if len(events) > 0 {
 			// get counsellor details
 			// get upcoming booked events
-			urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, events[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-			events[0]["photo"] = endPointURLPhoto
+			// urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, events[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// _, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+			// events[0]["photo"] = endPointURLPhoto
 
-			urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, events[0]["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
-			events[0]["background_photo"] = endPointURLBackGroundPhoto
+			// urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, events[0]["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			// _, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+			// events[0]["background_photo"] = endPointURLBackGroundPhoto
 			response["upcoming_events"] = events[0]
 		} else {
 			response["upcoming_events"] = make(map[string]string)
