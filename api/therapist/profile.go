@@ -123,37 +123,56 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistProfileAddRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.TherapistProfileAddRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.AddTherapistProfileRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"phone": body["phone"]}) {
+	if DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// check if phone is verfied by OTP
-	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]}) {
+	if !DB.CheckIfExists(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body.Phone}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.VerifyPhoneRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	var typeOfService string
 
-	switch body["corporate_therpist"] {
+	switch body.CorporateTherapist {
 	case "Individual Clients":
 		typeOfService = "0"
 	case "Corporate Clients":
@@ -162,53 +181,53 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		typeOfService = "1"
 	}
 
-	joinDate := body["start_date"]
+	joinDate := body.StartDate
 
 	currentTime := time.Now()
 
 	nowDate := currentTime.Format("2006-01-02")
 
-	gapYears := body["gap_years"]
+	gapYears := body.GapYears
 
-	gapMonths := body["gap_months"]
+	gapMonths := body.GapMonths
 
 	experience := UTIL.CalculateExperience(joinDate, nowDate, gapYears, gapMonths)
 
 	// add therapist details
 	therapist := map[string]string{}
-	therapist["first_name"] = body["first_name"]
-	therapist["last_name"] = body["last_name"]
-	therapist["pronoun"] = body["pronoun"]
-	therapist["gender"] = body["gender"]
-	therapist["location"] = body["location"]
-	therapist["phone"] = body["phone"]
-	therapist["photo"] = body["photo"]
-	therapist["email"] = body["email"]
-	therapist["price"] = body["price"]
-	therapist["multiple_sessions"] = body["multiple_sessions"]
-	therapist["price_3"] = body["price_3"]
-	therapist["price_5"] = body["price_5"]
-	therapist["education"] = body["education"]
+	therapist["first_name"] = body.FirstName
+	therapist["last_name"] = body.LastName
+	therapist["pronoun"] = body.Pronoun
+	therapist["gender"] = body.Gender
+	therapist["location"] = body.Location
+	therapist["phone"] = body.Phone
+	therapist["photo"] = body.Photo
+	therapist["email"] = body.Email
+	therapist["price"] = body.Price
+	therapist["multiple_sessions"] = body.MultipleSessions
+	therapist["price_3"] = body.Price3
+	therapist["price_5"] = body.Price5
+	therapist["education"] = body.Education
 	therapist["experience"] = experience
 	therapist["start_date"] = joinDate
 	therapist["gap_years"] = gapYears
 	therapist["gap_months"] = gapMonths
-	therapist["therapeutic_approach"] = body["therapeutic_approach"]
-	therapist["about"] = body["about"]
-	therapist["timezone"] = body["timezone"]
-	therapist["resume"] = body["resume"]
-	therapist["certificate"] = body["certificate"]
-	therapist["aadhar"] = body["aadhar"]
-	therapist["linkedin"] = body["linkedin"]
-	therapist["device_id"] = body["device_id"]
+	therapist["therapeutic_approach"] = body.TherapeuticApproach
+	therapist["about"] = body.About
+	therapist["timezone"] = body.Timezone
+	therapist["resume"] = body.Resume
+	therapist["certificate"] = body.Certificate
+	therapist["aadhar"] = body.Aadhar
+	therapist["linkedin"] = body.Linkedin
+	therapist["device_id"] = body.DeviceID
 	therapist["payout_percentage"] = CONSTANT.CounsellorPayoutPercentageColumns
-	therapist["payee_name"] = body["payee_name"]
-	therapist["bank_account_no"] = body["bank_account_no"]
-	therapist["ifsc"] = body["ifsc"]
-	therapist["branch_name"] = body["branch_name"]
-	therapist["bank_name"] = body["bank_name"]
-	therapist["bank_account_type"] = body["bank_account_type"]
-	therapist["pan"] = body["pan"]
+	therapist["payee_name"] = body.PayeeName
+	therapist["bank_account_no"] = body.BankAccountNo
+	therapist["ifsc"] = body.IFSC
+	therapist["branch_name"] = body.BranchName
+	therapist["bank_name"] = body.BankName
+	therapist["bank_account_type"] = body.BankAccountType
+	therapist["pan"] = body.PAN
 	therapist["corporate_therpist"] = typeOfService
 	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["notification_status"] = CONSTANT.NotificationActive
@@ -222,10 +241,10 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 
 	// using phone verified table to check if phone has been really verified by OTP
 	// currently deleting if phone number is already present
-	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body["phone"]})
+	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": body.Phone})
 
 	// add languages, topics to therapist
-	UTIL.AssociateLanguagesAndTopics(body["topic_ids"], body["language_ids"], therapistID)
+	UTIL.AssociateLanguagesAndTopics(body.TopicIDs, body.LanguageIDs, therapistID)
 
 	// not available for next 30 days. change here when you change in add new slot cron
 	for i := 0; i < 30; i++ {
@@ -253,11 +272,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
 			map[string]string{
-				"###counsellor_name###": body["first_name"],
+				"###counsellor_name###": body.FirstName,
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
-		body["phone"],
+		body.Phone,
 		UTIL.GetCurrentTime().String(),
 		therapistID,
 		CONSTANT.InstantSendTextMessage,
@@ -382,103 +401,127 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// // read request body
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.AddTherapistProfileRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// check if user already signed up with specified phone
+	if DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"phone": body.Phone}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// update therapist details
 	therapist := map[string]string{}
-	if len(body["first_name"]) > 0 {
-		therapist["first_name"] = body["first_name"]
+	if len(body.FirstName) > 0 {
+		therapist["first_name"] = body.FirstName
 	}
-	if len(body["last_name"]) > 0 {
-		therapist["last_name"] = body["last_name"]
+	if len(body.LastName) > 0 {
+		therapist["last_name"] = body.LastName
 	}
-	if len(body["pronoun"]) > 0 {
-		therapist["pronoun"] = body["pronoun"]
+	if len(body.Pronoun) > 0 {
+		therapist["pronoun"] = body.Pronoun
 	}
-	if len(body["gender"]) > 0 {
-		therapist["gender"] = body["gender"]
+	if len(body.Gender) > 0 {
+		therapist["gender"] = body.Gender
 	}
-	if len(body["location"]) > 0 {
-		therapist["location"] = body["location"]
+	if len(body.Location) > 0 {
+		therapist["location"] = body.Location
 	}
-	if len(body["photo"]) > 0 {
-		therapist["photo"] = body["photo"]
+	if len(body.Photo) > 0 {
+		therapist["photo"] = body.Photo
 	}
-	if len(body["price"]) > 0 {
-		therapist["price"] = body["price"]
+	if len(body.Price) > 0 {
+		therapist["price"] = body.Price
 	}
-	if len(body["multiple_sessions"]) > 0 {
-		therapist["multiple_sessions"] = body["multiple_sessions"]
+	if len(body.MultipleSessions) > 0 {
+		therapist["multiple_sessions"] = body.MultipleSessions
 	}
-	if len(body["price_3"]) > 0 {
-		therapist["price_3"] = body["price_3"]
+	if len(body.Price3) > 0 {
+		therapist["price_3"] = body.Price3
 	}
-	if len(body["price_5"]) > 0 {
-		therapist["price_5"] = body["price_5"]
+	if len(body.Price5) > 0 {
+		therapist["price_5"] = body.Price5
 	}
-	if len(body["education"]) > 0 {
-		therapist["education"] = body["education"]
+	if len(body.Education) > 0 {
+		therapist["education"] = body.Education
 	}
-	if len(body["experience"]) > 0 {
-		therapist["experience"] = body["experience"]
+	if len(body.Experience) > 0 {
+		therapist["experience"] = body.Experience
 	}
-	if len(body["therapeutic_approach"]) > 0 {
-		therapist["therapeutic_approach"] = body["therapeutic_approach"]
+	if len(body.TherapeuticApproach) > 0 {
+		therapist["therapeutic_approach"] = body.TherapeuticApproach
 	}
-	if len(body["about"]) > 0 {
-		therapist["about"] = body["about"]
+	if len(body.About) > 0 {
+		therapist["about"] = body.About
 	}
-	if len(body["resume"]) > 0 {
-		therapist["resume"] = body["resume"]
+	if len(body.Resume) > 0 {
+		therapist["resume"] = body.Resume
 	}
-	if len(body["certificate"]) > 0 {
-		therapist["certificate"] = body["certificate"]
+	if len(body.Certificate) > 0 {
+		therapist["certificate"] = body.Certificate
 	}
-	if len(body["aadhar"]) > 0 {
-		therapist["aadhar"] = body["aadhar"]
+	if len(body.Aadhar) > 0 {
+		therapist["aadhar"] = body.Aadhar
 	}
-	if len(body["linkedin"]) > 0 {
-		therapist["linkedin"] = body["linkedin"]
+	if len(body.Linkedin) > 0 {
+		therapist["linkedin"] = body.Linkedin
 	}
-	if len(body["device_id"]) > 0 {
-		therapist["device_id"] = body["device_id"]
+	if len(body.DeviceID) > 0 {
+		therapist["device_id"] = body.DeviceID
 	}
-	if len(body["timezone"]) > 0 {
-		therapist["timezone"] = body["timezone"]
+	if len(body.Timezone) > 0 {
+		therapist["timezone"] = body.Timezone
 	}
-	if len(body["timezone"]) > 0 {
-		therapist["timezone"] = body["timezone"]
+	if len(body.PayoutPercentage) > 0 {
+		therapist["payout_percentage"] = body.PayoutPercentage
 	}
-	if len(body["payout_percentage"]) > 0 {
-		therapist["payout_percentage"] = body["payout_percentage"]
+	if len(body.BankAccountNo) > 0 {
+		therapist["bank_account_no"] = body.BankAccountNo
 	}
-	if len(body["bank_account_no"]) > 0 {
-		therapist["bank_account_no"] = body["bank_account_no"]
-	}
-	if len(body["ifsc"]) > 0 {
-		therapist["ifsc"] = body["ifsc"]
+	if len(body.IFSC) > 0 {
+		therapist["ifsc"] = body.IFSC
 	}
 
-	if len(body["payee_name"]) > 0 {
-		therapist["payee_name"] = body["payee_name"]
+	if len(body.PayeeName) > 0 {
+		therapist["payee_name"] = body.PayeeName
 	}
 
-	if len(body["branch_name"]) > 0 {
-		therapist["branch_name"] = body["branch_name"]
+	if len(body.BranchName) > 0 {
+		therapist["branch_name"] = body.BranchName
 	}
-	if len(body["bank_name"]) > 0 {
-		therapist["bank_name"] = body["bank_name"]
+	if len(body.BankAccountType) > 0 {
+		therapist["bank_account_type"] = body.BankAccountType
 	}
-	if len(body["bank_account_type"]) > 0 {
-		therapist["bank_account_type"] = body["bank_account_type"]
+	if len(body.PAN) > 0 {
+		therapist["pan"] = body.PAN
 	}
-	if len(body["pan"]) > 0 {
-		therapist["pan"] = body["pan"]
+
+	if len(therapist) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid request", CONSTANT.ShowDialog, response)
+		return
 	}
 
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
@@ -490,7 +533,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update languages, topics to therapist
-	UTIL.AssociateLanguagesAndTopics(body["topic_ids"], body["language_ids"], r.FormValue("therapist_id"))
+	UTIL.AssociateLanguagesAndTopics(body.TopicIDs, body.LanguageIDs, r.FormValue("therapist_id"))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

@@ -1,9 +1,7 @@
 package therapist
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -159,21 +157,41 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// // check for required fields
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderCreateRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// read request body
+	body := Model.CreateOrderEvent{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["user_id"]})
+	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body.UserID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -190,7 +208,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get event details
-	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": body["event_order_id"]})
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"*"}, map[string]string{"order_id": body.EventOrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -208,17 +226,17 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// order object to be inserted
 	order := map[string]string{}
-	order["user_id"] = body["user_id"]
-	order["event_order_id"] = body["event_order_id"]
+	order["user_id"] = body.UserID
+	order["event_order_id"] = body.EventOrderID
 	order["user_type"] = CONSTANT.TherapistType
 	order["status"] = CONSTANT.OrderWaiting
 	order["created_at"] = UTIL.GetCurrentTime().String()
 
 	price := event[0]["price"]
 
-	if len(body["coupon_code"]) > 0 {
+	if len(body.CouponCode) > 0 {
 		// get coupon details
-		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderEventBookType+" or order_type = 0) and (counsellor_id = ? or counsellor_id = '') order by created_at desc limit 1", body["coupon_code"], body["user_id"])
+		coupon, status, ok := DB.SelectProcess("select * from "+CONSTANT.CouponsTable+" where coupon_code = ? and status = 1 and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by and (order_type = "+CONSTANT.OrderEventBookType+" or order_type = 0) and (counsellor_id = ? or counsellor_id = '') order by created_at desc limit 1", body.CouponCode, body.UserID)
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -229,7 +247,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 		}
 		if !strings.EqualFold(coupon[0]["valid_for_order"], "0") { // coupon is valid for particular order
 			// get total number of therapist appointment/event orders
-			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body["user_id"])
+			noOrders := DB.RowCount(CONSTANT.InvoicesTable, " user_id = ?", body.UserID)
 			// check if coupon applicable by order count and valid for order
 			if !strings.EqualFold(coupon[0]["valid_for_order"], strconv.Itoa(noOrders+1)) { // add 1 to equal to valid for order value
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CouponNotApplicableMessage, CONSTANT.ShowDialog, response)
@@ -256,7 +274,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		order["coupon_code"] = body["coupon_code"]
+		order["coupon_code"] = body.CouponCode
 		order["coupon_id"] = coupon[0]["id"]
 	}
 
@@ -304,21 +322,40 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderPaymentCompleteRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
+	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventOrderPaymentCompleteRequiredFields)
+	// if len(fieldCheck) > 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.OrderPaymentCompleteEvent{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	// get order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrderEventTable, []string{"*"}, map[string]string{"order_id": body["order_id"]})
+	order, status, ok := DB.SelectSQL(CONSTANT.OrderEventTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -346,9 +383,9 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// create invoice for the order
 	invoice := map[string]string{}
-	invoice["order_id"] = body["order_id"]
-	invoice["payment_method"] = body["payment_method"]
-	invoice["payment_id"] = body["payment_id"]
+	invoice["order_id"] = body.OrderID
+	invoice["payment_method"] = body.PaymentMethod
+	invoice["payment_id"] = body.PaymentID
 	invoice["user_id"] = order[0]["user_id"]
 	invoice["user_type"] = CONSTANT.TherapistType
 	invoice["order_type"] = CONSTANT.OrderEventBookType
@@ -376,7 +413,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["invoice_id"] = invoiceID
 	DB.UpdateSQL(CONSTANT.OrderEventTable,
 		map[string]string{
-			"order_id": body["order_id"],
+			"order_id": body.OrderID,
 		},
 		orderUpdate,
 	)
@@ -665,22 +702,28 @@ func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]interface{})
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
-
-	body := Model.CafeAttendedAddRequest{}
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	defer r.Body.Close()
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
+
+	body := Model.CafeAttendedAddRequest{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	for _, clientID := range body.ClientIDs {
@@ -926,139 +969,142 @@ func EventInPersonEnd(w http.ResponseWriter, r *http.Request) {
 // @Security JWTAuth
 // @Produce json
 // @Success 200
-func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+// func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
 
-	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+// 	var response = make(map[string]interface{})
 
-	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+// 	// check if access token is valid, not expired
+// 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+// 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+// 		return
+// 	}
 
-	// check for required fields
-	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventBlockOrderCreateRequiredFields)
-	if len(fieldCheck) > 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
-		return
-	}
+// 	// read request body
+// 	// body, ok := UTIL.ReadRequestBody(r)
+// 	// if !ok {
+// 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+// 	// 	return
+// 	// }
 
-	// get therapist details
-	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"status"}, map[string]string{"therapist_id": body["counsellor_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
-	// check if therapist is valid
-	if len(therapist) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
-	// check if therapist is active
-	if !strings.EqualFold(therapist[0]["status"], CONSTANT.TherapistActive) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotActiveMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+// 	// check for required fields
+// 	// fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.EventBlockOrderCreateRequiredFields)
+// 	// if len(fieldCheck) > 0 {
+// 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+// 	// 	return
+// 	// }
 
-	// order object to be inserted
-	order := map[string]string{}
-	order["counsellor_id"] = body["counsellor_id"]
-	order["title"] = body["title"]
-	order["description"] = body["description"]
-	order["topic_id"] = body["topic_id"]
-	order["type"] = CONSTANT.TherapistType
-	order["duration"] = CONSTANT.EventDuration
-	order["price"] = body["price"]
-	order["photo"] = body["photo"]
-	order["date"] = body["date"]
-	order["time"] = body["time"]
-	order["status"] = CONSTANT.EventWaiting
-	order["created_at"] = UTIL.GetCurrentTime().String()
 
-	// calculate bill
-	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
-	order["actual_amount"] = billing["actual_amount"]
-	order["tax"] = billing["tax"]
-	order["cgst"] = billing["cgst"]
-	order["sgst"] = billing["sgst"]
-	order["paid_amount"] = billing["paid_amount"]
 
-	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
-	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
-	response["paid_amount_razorpay"] = order["paid_amount_razorpay"]
+// 	// get therapist details
+// 	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"status"}, map[string]string{"therapist_id": body["counsellor_id"]})
+// 	if !ok {
+// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+// 		return
+// 	}
+// 	// check if therapist is valid
+// 	if len(therapist) == 0 {
+// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotExistMessage, CONSTANT.ShowDialog, response)
+// 		return
+// 	}
+// 	// check if therapist is active
+// 	if !strings.EqualFold(therapist[0]["status"], CONSTANT.TherapistActive) {
+// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistNotActiveMessage, CONSTANT.ShowDialog, response)
+// 		return
+// 	}
 
-	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderCounsellorEventTable, CONSTANT.EventDigits, order, "order_id")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+// 	// order object to be inserted
+// 	order := map[string]string{}
+// 	order["counsellor_id"] = body["counsellor_id"]
+// 	order["title"] = body["title"]
+// 	order["description"] = body["description"]
+// 	order["topic_id"] = body["topic_id"]
+// 	order["type"] = CONSTANT.TherapistType
+// 	order["duration"] = CONSTANT.EventDuration
+// 	order["price"] = body["price"]
+// 	order["photo"] = body["photo"]
+// 	order["date"] = body["date"]
+// 	order["time"] = body["time"]
+// 	order["status"] = CONSTANT.EventWaiting
+// 	order["created_at"] = UTIL.GetCurrentTime().String()
 
-	//body := HTMLDATA.GetHTMLTemplate(orderdetails)
-	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "title", "description", "photo", "topic_id", "date", "time", "duration", "price"}, map[string]string{"order_id": orderID})
-	counsellordetails, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name"}, map[string]string{"therapist_id": orderdetails[0]["counsellor_id"]})
-	topic_name, _, _ := DB.SelectSQL(CONSTANT.TopicsTable, []string{"topic"}, map[string]string{"id": orderdetails[0]["topic_id"]})
+// 	// calculate bill
+// 	billing := UTIL.GetBillingDetails(CONSTANT.EventPrice, "0")
+// 	order["actual_amount"] = billing["actual_amount"]
+// 	order["tax"] = billing["tax"]
+// 	order["cgst"] = billing["cgst"]
+// 	order["sgst"] = billing["sgst"]
+// 	order["paid_amount"] = billing["paid_amount"]
 
-	data := Model.EmailDataForEvent{
-		First_Name:  counsellordetails[0]["first_name"],
-		Last_Name:   counsellordetails[0]["last_name"],
-		Title:       orderdetails[0]["title"],
-		Type:        "Therapists",
-		Description: orderdetails[0]["description"],
-		Photo:       orderdetails[0]["photo"],
-		Topic_Name:  topic_name[0]["topic"],
-		Date:        orderdetails[0]["date"],
-		Time:        orderdetails[0]["time"],
-		Duration:    orderdetails[0]["duration"],
-		Price:       orderdetails[0]["price"],
-	}
+// 	amount, _ := strconv.ParseFloat(order["paid_amount"], 64)
+// 	order["paid_amount_razorpay"] = strconv.Itoa(int(math.Round(amount * 100)))
+// 	response["paid_amount_razorpay"] = order["paid_amount_razorpay"]
 
-	filepath := "htmlfile/Event.html"
+// 	orderID, status, ok := DB.InsertWithUniqueID(CONSTANT.OrderCounsellorEventTable, CONSTANT.EventDigits, order, "order_id")
+// 	if !ok {
+// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+// 		return
+// 	}
 
-	emailbody := UTIL.GetHTMLTemplateForEvent(data, filepath)
+// 	//body := HTMLDATA.GetHTMLTemplate(orderdetails)
+// 	orderdetails, _, _ := DB.SelectSQL(CONSTANT.OrderCounsellorEventTable, []string{"counsellor_id", "title", "description", "photo", "topic_id", "date", "time", "duration", "price"}, map[string]string{"order_id": orderID})
+// 	counsellordetails, _, _ := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name"}, map[string]string{"therapist_id": orderdetails[0]["counsellor_id"]})
+// 	topic_name, _, _ := DB.SelectSQL(CONSTANT.TopicsTable, []string{"topic"}, map[string]string{"id": orderdetails[0]["topic_id"]})
 
-	UTIL.SendEmail(
-		CONSTANT.NewEventWaitingForApprovalTitle,
-		emailbody,
-		CONFIG.EventEmailID,
-		CONSTANT.InstantSendEmailMessage,
-	)
+// 	data := Model.EmailDataForEvent{
+// 		First_Name:  counsellordetails[0]["first_name"],
+// 		Last_Name:   counsellordetails[0]["last_name"],
+// 		Title:       orderdetails[0]["title"],
+// 		Type:        "Therapists",
+// 		Description: orderdetails[0]["description"],
+// 		Photo:       orderdetails[0]["photo"],
+// 		Topic_Name:  topic_name[0]["topic"],
+// 		Date:        orderdetails[0]["date"],
+// 		Time:        orderdetails[0]["time"],
+// 		Duration:    orderdetails[0]["duration"],
+// 		Price:       orderdetails[0]["price"],
+// 	}
 
-	// Email send with string replace with dynamic value in html format
+// 	filepath := "htmlfile/Event.html"
 
-	/*UTIL.SendEmail(
-		CONSTANT.NewEventWaitingForApprovalTitle,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.EventWaitingForApprovalBody,
-			map[string]string{
-				"###First_name###":  counsellordetails[0]["first_name"],
-				"###Last_name###":   counsellordetails[0]["last_name"],
-				"###Type###":        "Therapists",
-				"###Title###":       orderdetails[0]["title"],
-				"###Description###": orderdetails[0]["description"],
-				"###Photo###":       orderdetails[0]["photo"],
-				"###Topic_id###":    topic_name[0]["topic"],
-				"###Date###":        orderdetails[0]["date"],
-				"###Time###":        orderdetails[0]["time"],
-				"###Duration###":    orderdetails[0]["duration"],
-				"###Price###":       orderdetails[0]["price"],
-			},
-		),
-		CONSTANT.SameerEmailID,
-		CONSTANT.InstantSendEmailMessage,
-	)*/
+// 	emailbody := UTIL.GetHTMLTemplateForEvent(data, filepath)
 
-	response["billing"] = billing
-	response["order_id"] = orderID
-	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
-}
+// 	UTIL.SendEmail(
+// 		CONSTANT.NewEventWaitingForApprovalTitle,
+// 		emailbody,
+// 		CONFIG.EventEmailID,
+// 		CONSTANT.InstantSendEmailMessage,
+// 	)
+
+// 	// Email send with string replace with dynamic value in html format
+
+// 	/*UTIL.SendEmail(
+// 		CONSTANT.NewEventWaitingForApprovalTitle,
+// 		UTIL.ReplaceNotificationContentInString(
+// 			CONSTANT.EventWaitingForApprovalBody,
+// 			map[string]string{
+// 				"###First_name###":  counsellordetails[0]["first_name"],
+// 				"###Last_name###":   counsellordetails[0]["last_name"],
+// 				"###Type###":        "Therapists",
+// 				"###Title###":       orderdetails[0]["title"],
+// 				"###Description###": orderdetails[0]["description"],
+// 				"###Photo###":       orderdetails[0]["photo"],
+// 				"###Topic_id###":    topic_name[0]["topic"],
+// 				"###Date###":        orderdetails[0]["date"],
+// 				"###Time###":        orderdetails[0]["time"],
+// 				"###Duration###":    orderdetails[0]["duration"],
+// 				"###Price###":       orderdetails[0]["price"],
+// 			},
+// 		),
+// 		CONSTANT.SameerEmailID,
+// 		CONSTANT.InstantSendEmailMessage,
+// 	)*/
+
+// 	response["billing"] = billing
+// 	response["order_id"] = orderID
+// 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+// }
 
 // EventBlockOrderPaymentComplete godoc
 // @Tags Therapist Event

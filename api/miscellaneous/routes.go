@@ -91,7 +91,7 @@ func LoadMiscellaneousRoutes(router *mux.Router) {
 		"appointment_id", "{appointment_id}",
 	).Methods("GET")
 
-	router.HandleFunc("/counsellor-record", CounsellorClientRecord).Methods("POST")
+	// router.HandleFunc("/counsellor-record", CounsellorClientRecord).Methods("POST")
 	router.HandleFunc("/counsellor-record/category", GetCounsellorRecordFromMainCategory).Methods("GET")
 	router.HandleFunc("/counsellor-record/sub_category", GetCounsellorRecordFromSubCategory).Methods("GET")
 	router.HandleFunc("/document-list", GetDocumentList).Methods("GET")

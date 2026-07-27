@@ -145,17 +145,77 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	// 	}
 	// }
 
-	for _, day := range body {
-		if day.Dates == "" {
-			if strings.EqualFold(day.Status, "0") {
+	var bodyInMap []map[string]string
+
+	for _, p := range body {
+		bodyInMap = append(bodyInMap, map[string]string{
+			"id":                  p.ID,
+			"status":              p.Status,
+			"dates":               p.Dates,
+			"counsellor_id":       p.CounsellorID,
+			"weekday":             p.WeekDay,
+			"format":              p.Format,
+			"availability_status": p.AvailabilityStatus,
+			"break":               p.Break,
+			"0":                   p.Zero,
+			"1":                   p.One,
+			"2":                   p.Two,
+			"3":                   p.Three,
+			"4":                   p.Four,
+			"5":                   p.Five,
+			"6":                   p.Six,
+			"7":                   p.Seven,
+			"8":                   p.Eight,
+			"9":                   p.Nine,
+			"10":                  p.Ten,
+			"11":                  p.Eleven,
+			"12":                  p.Twelve,
+			"13":                  p.Thirteen,
+			"14":                  p.Fourteen,
+			"15":                  p.Fifteen,
+			"16":                  p.Sixteen,
+			"17":                  p.Seventeen,
+			"18":                  p.Eight,
+			"19":                  p.Nineteen,
+			"20":                  p.Twenty,
+			"21":                  p.TwentyOne,
+			"22":                  p.TwentyTwo,
+			"23":                  p.TwentyThree,
+			"24":                  p.TwentyFour,
+			"25":                  p.TwentyFive,
+			"26":                  p.TwentySix,
+			"27":                  p.TwentySeven,
+			"28":                  p.TwentyEight,
+			"29":                  p.TwentyNine,
+			"30":                  p.Thirty,
+			"31":                  p.ThirtyOne,
+			"32":                  p.ThirtyTwo,
+			"33":                  p.ThirtyThree,
+			"34":                  p.ThirtyFour,
+			"35":                  p.ThirtyFive,
+			"36":                  p.ThirtySix,
+			"37":                  p.ThirtySeven,
+			"38":                  p.ThirtyEight,
+			"39":                  p.ThirtyNine,
+			"40":                  p.Forty,
+			"41":                  p.FortyOne,
+			"42":                  p.FortyTwo,
+			"43":                  p.FortyThree,
+			"44":                  p.FortyFour,
+			"45":                  p.FortyFive,
+			"46":                  p.FortySix,
+			"47":                  p.FortySeven,
+		})
+	}
+
+	for _, day := range bodyInMap {
+		if day["dates"] == "" {
+			if strings.EqualFold(day["status"], "0") {
 				// delete schedule
-				DB.DeleteSQL(CONSTANT.SchedulesTable, map[string]string{"id": day.ID})
+				DB.DeleteSQL(CONSTANT.SchedulesTable, map[string]string{"id": day["id"]})
 			} else {
-				if len(day.ID) > 0 {
-					DB.UpdateSQL(CONSTANT.SchedulesTable, map[string]string{"id": day.ID}, map[string]string{
-						"counsellor_id": day.CounsellorID,
-						"weekday": day
-					})
+				if len(day["id"]) > 0 {
+					DB.UpdateSQL(CONSTANT.SchedulesTable, map[string]string{"id": day["id"]}, day)
 				} else {
 					// newly added schedule
 					DB.InsertSQL(CONSTANT.SchedulesTable, day)
@@ -182,7 +242,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	if dayInBool {
-		for _, day := range body {
+		for _, day := range bodyInMap {
 
 			if strings.EqualFold(day["status"], "0") {
 
@@ -1346,7 +1406,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 		// group weekdays
 		days := map[string]map[string]string{}
-		for _, day := range body {
+		for _, day := range bodyInMap {
 			if days[day["weekday"]] == nil {
 				days[day["weekday"]] = map[string]string{
 					"weekday": day["weekday"],
