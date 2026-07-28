@@ -63,7 +63,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	fileName = endPointURL
 
 	response["file"] = fileName
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -88,5 +88,6 @@ func PreSignedS3URLToUpload(w http.ResponseWriter, r *http.Request) {
 
 	response["file_name"] = fileName
 	response["url"] = url
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

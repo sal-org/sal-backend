@@ -70,15 +70,15 @@ func CounsellorGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
 	response["counsellors"] = counsellors
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

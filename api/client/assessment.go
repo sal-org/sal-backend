@@ -49,9 +49,9 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, assessment := range assessments {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		assessment["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// assessment["photo"] = endPointURL
 
 		// get assessment questions
 		questions, status, ok := DB.SelectProcess("select count(assessment_question_id) as question_count from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", assessment["assessment_id"])
@@ -65,7 +65,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 
 	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
 	response["assessments"] = assessments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -297,16 +297,17 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		results = append(results, result)
 	}
 
-	for _, assessment := range assessmentDetails {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		assessment["photo"] = endPointURL
-	}
+	// for _, assessment := range assessmentDetails {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	assessment["photo"] = endPointURL
+	// }
 
 	response["assessment_results"] = assessmentResults
 	//response["assessment_result_details"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResultDetails, "assessment_result_id")
 	response["result"] = results
 	response["assessment"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentDetails, "assessment_id")
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	//response["assessment"] = assessment
 	//response["assessment_questions"] = assessmentQuestions
 	//response["assessment_options"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentOptions, "assessment_question_id")
@@ -1265,11 +1266,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	//receipt := map[string]string{}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	fileName = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// fileName = endPointURL
 
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["pdf_name"] = fileName
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

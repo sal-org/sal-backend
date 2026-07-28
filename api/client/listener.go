@@ -81,7 +81,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	response["topics"] = topics
 	response["reviews"] = reviews
 	response["contents"] = contents
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

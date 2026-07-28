@@ -72,7 +72,7 @@ func ListenerGet(w http.ResponseWriter, r *http.Request) {
 
 	response["listeners"] = listeners
 	response["listeners_count"] = listenersCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(listenersCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

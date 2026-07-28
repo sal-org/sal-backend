@@ -66,7 +66,7 @@ func NotificationGet(w http.ResponseWriter, r *http.Request) {
 
 	response["notifications"] = notifications
 	response["notifications_count"] = notificationsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(notificationsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

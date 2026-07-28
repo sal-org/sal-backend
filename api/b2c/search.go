@@ -19,7 +19,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	var encryptedResponse = make(map[string]interface{})
 
 	var SQLQuery, therapistSQLQuery string
-	args := []interface{}{}
+	args := []any{}
 	therapistArgs := []interface{}{}
 	counsellorlist := []map[string]interface{}{}
 
@@ -190,7 +190,7 @@ func ListSearch(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	response["counsellors"] = counsellorlist
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.CounsellorsListPerPageClient))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {

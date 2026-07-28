@@ -69,6 +69,6 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 	response["rating_types"] = ratingTypes
 	response["moods"] = moods
 	response["urls"] = CONSTANT.URLs
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

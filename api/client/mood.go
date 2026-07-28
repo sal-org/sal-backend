@@ -213,23 +213,36 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, content := range contents {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		content["photo"] = endPointURL
+	// for _, content := range contents {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
 
-		urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
-		content["background_photo"] = endPointURLBackgroundPhoto
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
 
-		if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
-			urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-			_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
-			content["share_content"] = endPointURLShareContent
-		}
-	}
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
+
+	// 	if len(content["counsellor_photo"]) > 0 {
+	// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+	// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+	// 	}
+
+	// 	if content["type"] != "3" {
+	// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+	// 		content["content"] = endPointURLContent
+	// 	}
+	// }
 
 	response["mood_content"] = contents
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(contentLiked, "content_id")
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

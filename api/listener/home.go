@@ -66,7 +66,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	// response["videos"] = videos
 	// response["audios"] = audios
 	// response["articles"] = articles
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["urls"] = CONSTANT.URLs
 	response["android_version"] = appInfo[0]["therapist_android_version"]
 	response["ios_version"] = appInfo[0]["therapist_ios_version"]

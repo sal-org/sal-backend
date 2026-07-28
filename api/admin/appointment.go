@@ -103,17 +103,17 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, counsellor := range counsellors {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		counsellor["photo"] = endPointURL
-	}
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
 
-	for _, client := range clients {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		client["photo"] = endPointURL
-	}
+	// for _, client := range clients {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	client["photo"] = endPointURL
+	// }
 
 	response["appointments"] = appointments
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
@@ -122,7 +122,7 @@ func AppointmentGet(w http.ResponseWriter, r *http.Request) {
 	response["refunds"] = UTIL.ConvertMapToKeyMap(refunds, "invoice_id")
 	response["appointments_count"] = appointmentsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(appointmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -205,7 +205,7 @@ func InPersonAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments_count"] = appointmentsCount[0]["ctn"]
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(appointmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

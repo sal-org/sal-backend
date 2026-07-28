@@ -77,6 +77,7 @@ const (
 	TherapistAccountBlockedMessage                = "Your account is blocked. Please contact Clove team"
 	TherapistAccountDeletedMessage                = "Your account is deleted. Please contact Clove team"
 	TherapistNotExistMessage                      = "Therapist doesn't exist"
+	ContentMoodIsRequiredMessage                  = "Content mood is invalid"
 	TherapistNotActiveMessage                     = "Therapist is not active"
 	TherapistSessionsPriceNotFoundMessage         = "Sessions price not found"
 	TherapistSlotNotAvailableMessage              = "Therapist not available in this hour. Book a different slot"
@@ -84,4 +85,5 @@ const (
 	VerifyPhoneRequiredMessage                    = "Verify phone number wth OTP"
 	HTMLTemplateNotCreateMessage                  = "Unable to generate PDF. Please try again later."
 	AgoraCredentialsIssueMessage                  = "FATAL ERROR: ENV not properly configured, check APP_ID and APP_CERTIFICATE"
+	StatusCodeNoDataFoundMessage                  = "No data found"
 )

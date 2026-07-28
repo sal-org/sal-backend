@@ -2,7 +2,6 @@ package admin
 
 import (
 	"net/http"
-	"net/url"
 	"path/filepath"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -74,23 +73,23 @@ func WebinarsGet(w http.ResponseWriter, r *http.Request) {
 		event["booked_count"] = webinarBookedCount[0]["ctn"]
 	}
 
-	for _, event := range events {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		event["photo"] = endPointURLPhoto
+	// for _, event := range events {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	event["photo"] = endPointURLPhoto
 
-		urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
-		event["background_photo"] = endPointURLBackGroundPhoto
+	// 	urlBackGroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackGroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackGroundPhoto)
+	// 	event["background_photo"] = endPointURLBackGroundPhoto
 
-		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
-		event["counsellor_photo"] = endPointURLCounsellorPhoto
-	}
+	// 	urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+	// 	event["counsellor_photo"] = endPointURLCounsellorPhoto
+	// }
 
 	response["events"] = events
 	response["events_count"] = eventsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(eventsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -220,38 +219,40 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 	// id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	// counsellor photo
-	parsedCounsellorPhoto, err := url.Parse(body.CounsellorPhoto)
-	if err != nil {
-		panic(err)
-	}
-	// Remove query string
-	parsedCounsellorPhoto.RawQuery = ""
+	// parsedCounsellorPhoto, err := url.Parse(body.CounsellorPhoto)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// // Remove query string
+	// parsedCounsellorPhoto.RawQuery = ""
+
+	// endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+	// body["photo"] = endPointURLPhoto
 
 
-
-	// event photo
-	parsedPhoto, err := url.Parse(body.Photo)
-	if err != nil {
-		panic(err)
-	}
-	// Remove query string
-	parsedPhoto.RawQuery = ""
+	// // event photo
+	// parsedPhoto, err := url.Parse(body.Photo)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// // Remove query string
+	// parsedPhoto.RawQuery = ""
 
 
 	
-	// event background photo
-	parsedBackgroundPhoto, err := url.Parse(body.BackgroundPhoto)
-	if err != nil {
-		panic(err)
-	}
-	// Remove query string
-	parsedBackgroundPhoto.RawQuery = ""
+	// // event background photo
+	// parsedBackgroundPhoto, err := url.Parse(body.BackgroundPhoto)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// // Remove query string
+	// parsedBackgroundPhoto.RawQuery = ""
 
 	// add event
 	webinar := map[string]string{}
 	webinar["counsellor_name"] = body.CounsellorName
 	webinar["title"] = body.Title
-	webinar["counsellor_photo"] = parsedCounsellorPhoto.String()
+	webinar["counsellor_photo"] = body.CounsellorPhoto
 	webinar["counsellor_qualification"] = body.CounsellorQualification
 	webinar["counsellor_about"] = body.CounsellorAbout
 	webinar["counsellor_experience"] = body.CounsellorExperience
@@ -260,8 +261,8 @@ func WebinarsUpdate(w http.ResponseWriter, r *http.Request) {
 	webinar["why_attend"] = body.WhyAttend
 	webinar["partner_name"] = body.PartnerName
 	webinar["address"] = body.Address
-	webinar["photo"] = parsedPhoto.String()
-	webinar["background_photo"] = parsedBackgroundPhoto.String()
+	webinar["photo"] = body.Photo
+	webinar["background_photo"] = body.BackgroundPhoto
 	webinar["date"] = body.Date
 	webinar["time"] = body.Time
 	webinar["duration"] = body.Duration

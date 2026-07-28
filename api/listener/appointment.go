@@ -52,7 +52,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -93,7 +93,7 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 
 	response["clients"] = UTIL.ConvertMapToKeyMap(clients, "client_id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

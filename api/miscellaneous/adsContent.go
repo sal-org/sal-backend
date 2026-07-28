@@ -31,14 +31,14 @@ func AdsContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, adsCont := range adsContent {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, adsCont["image"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		adsCont["image"] = endPointURL
-	}
+	// for _, adsCont := range adsContent {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, adsCont["image"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	adsCont["image"] = endPointURL
+	// }
 
 	response["ads"] = adsContent
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -54,14 +54,14 @@ func GetDocumentList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, document := range getDocuments {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, document["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		document["document"] = endPointURL
-	}
+	// for _, document := range getDocuments {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, document["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	document["document"] = endPointURL
+	// }
 
 	response["documents"] = getDocuments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -490,7 +490,7 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 	totalSessionTakenByTheClientWithSameTherapist = prevTotalSessions + newTotalSessions
 
 	if len(newVersionClientRecordForm) == 0 {
-		newVersionClientRecordForm, status, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and counsellor_id = ? order by created_at desc limit 1", r.FormValue("client_id"), r.FormValue("counsellor_id"))
+		newVersionClientRecordForm, status, ok = DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+" where client_id = ? and counsellor_id = ? and appointment_id != '' order by created_at desc limit 1", r.FormValue("client_id"), r.FormValue("counsellor_id"))
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return

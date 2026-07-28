@@ -27,7 +27,7 @@ import (
 func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -50,9 +50,9 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, assessment := range assessments {
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		assessment["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, assessment["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// assessment["photo"] = endPointURL
 
 		// get assessment questions
 		questions, status, ok := DB.SelectProcess("select count(assessment_question_id) as question_count from "+CONSTANT.AssessmentQuestionsTable+" where assessment_id = ? and status = "+CONSTANT.AssessmentQuestionActive+" order by `order` asc", assessment["assessment_id"])
@@ -67,7 +67,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 
 	response["assessment_results"] = UTIL.ConvertArrayMapToKeyMapArray(assessmentResults, "assessment_id")
 	response["assessments"] = assessments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -82,7 +82,7 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -132,7 +132,7 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -225,7 +225,7 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1244,11 +1244,11 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	fileName = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// fileName = endPointURL
 
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["pdf_name"] = fileName
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

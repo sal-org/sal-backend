@@ -91,7 +91,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 		response["refresh_token"] = refreshToken
 
 		response["listener"] = listener[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -196,7 +196,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := Model.EmailDataForCounsellorProfile{
-		Media_URL:   CONFIG.MediaURL,
+		Media_URL:   CONFIG.MediaURLInCLOUDFRONT,
 		First_Name:  listeners[0]["first_name"],
 		Last_Name:   listeners[0]["last_name"],
 		Pronoun:     listeners[0]["pronoun"],
@@ -245,7 +245,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["listener"] = listeners[0]
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

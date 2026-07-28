@@ -311,6 +311,43 @@ type ContentAddRequestInAdminPanel struct {
 	Duration        string `json:"duration" validate:"required"`
 }
 
+type ContentInWebAddRequestInAdminPanel struct {
+	CounsellorID    string `json:"counsellor_id"`
+	Title           string `json:"title" validate:"required,min=3,max=200"`
+	SubTitle        string `json:"subtitle" validate:"required,min=3,max=1000"`
+	Description     string `json:"description" validate:"required,max=1000"`
+	Photo           string `json:"photo" validate:"required"`
+	BackgroundPhoto string `json:"background_photo" validate:"required"`
+	ShareContent    string `json:"share_content" validate:"required"`
+	Content         string `json:"content" validate:"required"`
+	Type            string `json:"type" validate:"required,oneof=1 2 3"`
+	Redirection     string `json:"redirection" validate:"omitempty,oneof=1 2 3 4"`
+	CategoryID      string `json:"category_id" validate:"required"`
+	ResourceID      string `json:"resource_id" validate:"required,oneof=1 2 3 4"`
+	ContentMood     string `json:"content_mode" validate:"required,oneof=1 2 3 4"`
+	MoodID          string `json:"mood_id" validate:"required"`
+	Duration        string `json:"duration" validate:"required"`
+}
+
+type ContentInWebUpdateRequestInAdminPanel struct {
+	CounsellorID    string `json:"counsellor_id"`
+	Title           string `json:"title" validate:"required,min=3,max=200"`
+	SubTitle        string `json:"subtitle" validate:"required,min=3,max=1000"`
+	Description     string `json:"description" validate:"required,max=1000"`
+	Photo           string `json:"photo" validate:"required"`
+	BackgroundPhoto string `json:"background_photo" validate:"required"`
+	ShareContent    string `json:"share_content" validate:"required"`
+	Content         string `json:"content" validate:"required"`
+	Type            string `json:"type" validate:"required,oneof=1 2 3"`
+	Redirection     string `json:"redirection" validate:"omitempty,oneof=1 2 3 4"`
+	CategoryID      string `json:"category_id" validate:"required"`
+	ResourceID      string `json:"resource_id" validate:"required,oneof=1 2 3 4"`
+	ContentMood     string `json:"content_mode" validate:"required,oneof=1 2 3 4"`
+	MoodID          string `json:"mood_id" validate:"required"`
+	Duration        string `json:"duration" validate:"required"`
+	Status          string `json:"status" validate:"required"`
+}
+
 type ContentUpdateRequestInAdminPanel struct {
 	CounsellorID    string `json:"counsellor_id"`
 	Title           string `json:"title" validate:"required,min=3,max=200"`
@@ -1278,6 +1315,12 @@ type EmailDataForCounsellorCancellation struct {
 	Lastest_Client_Email  string
 }
 
+type SlotUpdateModelInTherapistAvailability struct {
+	Date  string
+	Key   string
+	Value string
+}
+
 type AppSummaryReport struct {
 	AppointmentTotal              string `json:"appointment_total"`
 	ClientTotal                   string `json:"client_total"`
@@ -1779,6 +1822,10 @@ type AgoraCallStopResponseModel struct {
 			UploadingStatus string `json:"uploadingStatus"`
 		} `json:"serverResponse"`
 	} `json:"Body"`
+}
+
+type EmailBodyMessageWithNameModel struct {
+	Name string
 }
 
 type EmailBodyMessageModel struct {

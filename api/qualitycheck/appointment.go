@@ -34,7 +34,7 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 
 	// get appointment details
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	if len(body["name"]) > 0 { // get counsellors with specified topic
 		wheres = append(wheres, " counsellor_name like '%%"+body["name"]+"%%' ")

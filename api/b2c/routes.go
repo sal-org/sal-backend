@@ -19,11 +19,10 @@ func LoadWebB2CRoutes(router *mux.Router) {
 	webRoutes := router.PathPrefix("/web").Subrouter()
 
 	webRoutes.HandleFunc("", CreateUserHandler).Methods("POST")
-
 	// client login
-	// webClientRoutes.HandleFunc("/access_code", CheckAccessCode).Methods("POST")
-	// webClientRoutes.HandleFunc("/send_otp", SendOTPWithCorporateEmail).Methods("POST")
-	// webClientRoutes.HandleFunc("/verify_otp", VerifyOTPWithCorporateEmail).Methods("POST")
+	webRoutes.HandleFunc("/book_demo", ClientBookDemo).Methods("POST")
+	webRoutes.HandleFunc("/client/content", GetWebsiteContent).Methods("POST")
+	webRoutes.HandleFunc("/client/resource-category", GetResourceCategoryForWeb).Methods("GET")
 
 	// // client profile
 	// webClientRoutes.HandleFunc("/profile/get", ProfileGet).Methods("POST")
@@ -215,7 +214,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch decrypted["path"] {
 	case "/book_demo":
-		ClientBookDemo(w,r, decrypted)
+		ClientBookDemoForEncrypted(w, r, decrypted)
 	case "/access_code":
 		CheckAccessCode(w, r, decrypted)
 	case "/send_otp":
@@ -256,6 +255,10 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		CorporateCounsellorOrderCreate(w, r, decrypted)
 	case "/therapist/complete":
 		CorporateCounsellorOrderPaymentComplete(w, r, decrypted)
+	// case "/client/content":
+	// 	GetWebsiteContent(w, r, decrypted)
+	// case "/client/resource-category":
+	// 	GetResourceCategoryForWeb(w, r, decrypted)
 	default:
 		w.Header().Set("Status", "200")
 		w.WriteHeader(200)

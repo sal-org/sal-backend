@@ -88,15 +88,15 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		client[0]["photo"] = endPointURL
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// client[0]["photo"] = endPointURL
 
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -259,15 +259,15 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendTextMessage,
 	)
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, clientD[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	clientD[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, clientD[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// clientD[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 	response["access_control"] = givenAccess[0]
 	response["client"] = clientD[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -446,15 +446,15 @@ func ProfileAddForCor(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendTextMessage,
 	)
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, clientD[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	clientD[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, clientD[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// clientD[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 
 	response["client"] = clientD[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -484,7 +484,7 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response["relation_list"] = client
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

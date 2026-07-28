@@ -78,7 +78,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request, body map[string]string) 
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
@@ -222,7 +222,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request, body map[string]string) 
 	response["refresh_token"] = refreshToken
 
 	response["client"] = clientD[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	encrypt ,_ := EncryptPayload(response, CONSTANT.ENCRYPTION_SECRET_KEY_FOR_WEB, CONSTANT.ENCRYPTION_SECRET_IV_FOR_WEB)
 	if encrypt == "" {

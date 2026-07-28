@@ -145,6 +145,10 @@ func AssessmentUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	endPointURL := UTIL.GetEndpointFromURL(body.Photo)
+
+	body.Photo = endPointURL
+
 	// add assessment
 	status, ok := DB.UpdateSQL(CONSTANT.AssessmentsTable, map[string]string{"assessment_id": body.AssessmentID}, map[string]string{
 		"title":       body.Title,
@@ -261,6 +265,13 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 	assessmentswithDetails := []map[string]interface{}{}
 
 	for _, m := range assessments {
+
+		// photo := ""
+		// photo = m["photo"]
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, photo, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// m["photo"] = endPointURL
+
 		conv := make(map[string]interface{})
 		for k, v := range m {
 			conv[k] = v
@@ -315,17 +326,9 @@ func AssessmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, assessment := range assessmentswithDetails {
-		photo := ""
-		photo = assessment["photo"].(string)
-		url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, photo, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-		assessment["photo"] = endPointURL
-	}
-
 	response["assessments"] = assessmentswithDetails
 	response["assessments_count"] = assessmentsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(assessmentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

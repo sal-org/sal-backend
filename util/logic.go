@@ -116,6 +116,18 @@ func GetBaseURLAndEndpointFromURL(fullURL string) (string, string) {
 	return baseURL, endpoint
 }
 
+func GetEndpointFromURL(fullURL string) string {
+
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		panic(err)
+	}
+
+	u.RawQuery = ""
+
+	return u.String()
+}
+
 // CapitalizeFirst - capitalize first letter of the string
 func CapitalizeFirst(s string) string {
 	if s == "" {

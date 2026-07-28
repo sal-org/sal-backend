@@ -88,16 +88,16 @@ func TherapistProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
-	therapist[0]["photo"] = endPointURL
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// therapist[0]["photo"] = endPointURL
 
 	response["therapist"] = therapist[0]
 	response["languages"] = therapistLang
 	response["topics"] = topics
 	response["reviews"] = reviews
 	response["contents"] = contents
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 

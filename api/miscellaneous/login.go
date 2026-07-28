@@ -146,7 +146,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	if len(r.FormValue("device_id")) < 0 {
+	if len(r.FormValue("device_id")) == 0 {
 		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 		return
 	}
