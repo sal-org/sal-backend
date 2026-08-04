@@ -28,6 +28,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	var ok bool
 	var status string
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	accessCode := ""
 
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
@@ -56,7 +62,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	active := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"status": "1", "client_id": r.FormValue("client_id")})
 	if !active {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 

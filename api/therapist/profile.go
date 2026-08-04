@@ -24,7 +24,7 @@ import (
 func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -393,7 +393,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -410,7 +410,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	body := Model.AddTherapistProfileRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:

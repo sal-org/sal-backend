@@ -23,6 +23,7 @@ const (
 	ClientCorLoginIfRegister                      = "Client already Register"
 	ClientEmptyBodyPass                           = "Pass the parameters"
 	ClientCorEmailInvalid                         = "Email id is incorrect"
+	InValidIDError                                = "Invalid id"
 	CorporateClientAccessCode                     = "Invalid access code"
 	CorporateClientDependantInvaildPhoneNumber    = "You are not registered as a family member"
 	CorporateClientNotDependant                   = "Not registered as a family member. Try employee login"

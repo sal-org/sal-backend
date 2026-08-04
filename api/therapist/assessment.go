@@ -35,6 +35,12 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get all available assessments
 	assessments, status, ok := DB.SelectProcess("select * from " + CONSTANT.AssessmentsTable + " where status = " + CONSTANT.AssessmentActive + " order by `order` asc")
 	if !ok {
@@ -314,7 +320,7 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//const assessment_id = "ywlxbz8yrlp942"
 

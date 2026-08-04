@@ -19,7 +19,7 @@ import (
 func ListMeta(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get topics
 	topics, status, ok := DB.SelectSQL(CONSTANT.TopicsTable, []string{"*"}, map[string]string{})
@@ -56,11 +56,11 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, image := range CONSTANT.EventImages {
-		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, image, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
-		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
-		image = endPointURL
-	}
+	// for _, image := range CONSTANT.EventImages {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, image, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	image = endPointURL
+	// }
 
 	response["event_images"] = CONSTANT.EventImages
 	response["topics"] = topics

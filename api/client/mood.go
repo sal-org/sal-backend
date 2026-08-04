@@ -63,6 +63,12 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// add mood result
 	moodResultID, _, ok := DB.InsertWithUniqueID(CONSTANT.MoodResultsTable, CONSTANT.MoodResultsDigits, map[string]string{
 		"client_id":  body.ClientID,
@@ -191,6 +197,12 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("user_id"), "User ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 

@@ -157,7 +157,7 @@ func CouponUpdate(w http.ResponseWriter, r *http.Request) {
 
 	body := MODEL.CouponUpdateRequestInAdminPanel{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:

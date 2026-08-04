@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	MODEL "salbackend/model"
 	UTIL "salbackend/util"
 	"strconv"
 	"strings"
@@ -25,33 +26,47 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 	wheres := []string{}
 
 	// read request body
-	body, ok := UTIL.ReadRequestBody(r)
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// body, ok := UTIL.ReadRequestBody(r)
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	if !(len(body["content_mode"]) != 0 && len(body["content_mode"]) < 2) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ContentMoodIsRequiredMessage, CONSTANT.ShowDialog, response)
-		return
+	body := MODEL.GetContentRequestInWebSite{}
+
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+
+		switch err {
+		case CONSTANT.ErrMethodNotAllowed:
+			UTIL.SetReponse(w, CONSTANT.StatusMethodNotAllowed, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		case CONSTANT.ErrInvalidContentType:
+			UTIL.SetReponse(w, CONSTANT.StatusUnsupportedMediaType, err.Error(), CONSTANT.ShowDialog, response)
+			return
+
+		default:
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
+			return
+		}
 	}
 
 	wheres = append(wheres, " content_mode = ? ")
-	contentArgs = append(contentArgs, body["content_mode"])
+	contentArgs = append(contentArgs, body.ContentMood)
 
-	if len(body["resource_id"]) > 0 {
+	if len(body.ResourceID) > 0 {
 		wheres = append(wheres, " resource_id = ? ")
-		contentArgs = append(contentArgs, body["resource_id"])
+		contentArgs = append(contentArgs, body.ResourceID)
 	}
-	if len(body["category_id"]) > 0 {
-		wheres = append(wheres, " FIND_IN_SET("+body["category_id"]+", category_id) ")
+	if len(body.CategoryID) > 0 {
+		wheres = append(wheres, " FIND_IN_SET("+body.CategoryID+", category_id) ")
 	}
-	if len(body["name"]) > 0 {
-		wheres = append(wheres, " content like '%%"+body["name"]+"%%'")
+	if len(body.Name) > 0 {
+		wheres = append(wheres, " content like '%%"+body.Name+"%%'")
 	}
-	if len(body["type"]) > 0 {
+	if len(body.Type) > 0 {
 		wheres = append(wheres, " type = ? ")
-		contentArgs = append(contentArgs, body["type"])
+		contentArgs = append(contentArgs, body.Type)
 	}
 
 	wheres = append(wheres, " status = "+CONSTANT.ContentActive+" ") // only active therapists
@@ -65,7 +80,7 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 
 	SQLQuery += " order by " + sortBy + orderBy
 
-	contents, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.ContentForWebPerPageUser)+" offset "+strconv.Itoa((UTIL.GetPageNumber(body["page"])-1)*CONSTANT.ContentForWebPerPageUser), args...)
+	contents, status, ok := DB.SelectProcess(SQLQuery+" limit "+strconv.Itoa(CONSTANT.ContentForWebPerPageUser)+" offset "+strconv.Itoa((UTIL.GetPageNumber(body.Page)-1)*CONSTANT.ContentForWebPerPageUser), args...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

@@ -272,7 +272,7 @@ type TherapistProfileUpdateRequest struct {
 type AssessmentAddRequest struct {
 	UserID       string `json:"user_id" validate:"required,min=5,max=45"`
 	Name         string `json:"name" validate:"required"`
-	Age          string `json:"age" validate:"required,numeric"`
+	Age          string `json:"age" validate:"omitempty,numeric"`
 	Gender       string `json:"gender" validate:"required,oneof=Male Female Other"`
 	Phone        string `json:"phone" validate:"required,len=12,numeric"`
 	AssessmentID string `json:"assessment_id" validate:"required,min=5,max=45"`
@@ -322,10 +322,9 @@ type ContentInWebAddRequestInAdminPanel struct {
 	Content         string `json:"content" validate:"required"`
 	Type            string `json:"type" validate:"required,oneof=1 2 3"`
 	Redirection     string `json:"redirection" validate:"omitempty,oneof=1 2 3 4"`
-	CategoryID      string `json:"category_id" validate:"required"`
-	ResourceID      string `json:"resource_id" validate:"required,oneof=1 2 3 4"`
-	ContentMood     string `json:"content_mode" validate:"required,oneof=1 2 3 4"`
-	MoodID          string `json:"mood_id" validate:"required"`
+	CategoryID      string `json:"category_id"`
+	ResourceID      string `json:"resource_id" validate:"required,numeric"`
+	ContentMood     string `json:"content_mode" validate:"required,oneof=0 1 2 3 4 5"`
 	Duration        string `json:"duration" validate:"required"`
 }
 
@@ -340,10 +339,9 @@ type ContentInWebUpdateRequestInAdminPanel struct {
 	Content         string `json:"content" validate:"required"`
 	Type            string `json:"type" validate:"required,oneof=1 2 3"`
 	Redirection     string `json:"redirection" validate:"omitempty,oneof=1 2 3 4"`
-	CategoryID      string `json:"category_id" validate:"required"`
-	ResourceID      string `json:"resource_id" validate:"required,oneof=1 2 3 4"`
-	ContentMood     string `json:"content_mode" validate:"required,oneof=1 2 3 4"`
-	MoodID          string `json:"mood_id" validate:"required"`
+	CategoryID      string `json:"category_id"`
+	ResourceID      string `json:"resource_id" validate:"required,numeric"`
+	ContentMood     string `json:"content_mode" validate:"required,oneof=0 1 2 3 4"`
 	Duration        string `json:"duration" validate:"required"`
 	Status          string `json:"status" validate:"required"`
 }
@@ -357,12 +355,21 @@ type ContentUpdateRequestInAdminPanel struct {
 	ShareContent    string `json:"share_content" validate:"required"`
 	Content         string `json:"content" validate:"required"`
 	Type            string `json:"type" validate:"required,oneof=1 2 3"`
-	Redirection     string `json:"redirection" validate:"omitempty, oneof=1 2 3"`
+	Redirection     string `json:"redirection" validate:"omitempty,oneof=1 2 3"`
 	CategoryID      string `json:"category_id" validate:"required"`
 	Training        string `json:"training" validate:"required,oneof=0 1"`
 	MoodID          string `json:"mood_id" validate:"required"`
 	Duration        string `json:"duration" validate:"required"`
 	Status          string `json:"status" validate:"required,oneof=0 1 2 3"`
+}
+
+type GetContentRequestInWebSite struct {
+	ContentMood string `json:"content_mode" validate:"required,oneof=0 1 2 3 4"`
+	ResourceID  string `json:"resource_id" validate:"omitempty,numeric"`
+	CategoryID  string `json:"category_id"`
+	Name        string `json:"name"`
+	Type        string `json:"type" validate:"omitempty,oneof=1 2 3"`
+	Page        string `json:"page" validate:"required,numeric"`
 }
 
 type CorporatePartnerAddRequestInAdminPanel struct {
@@ -667,7 +674,7 @@ type OrderInPersonEventForB2BRequest struct {
 	EventOrderID string `json:"event_order_id" validate:"required,min=3,max=45"`
 }
 
-type OrderWebniarForB2BRequest struct {
+type OrderWebinarForB2BRequest struct {
 	ClientID  string `json:"client_id" validate:"required,min=3,max=45"`
 	WebinarID string `json:"webinar_id" validate:"required,min=3,max=45"`
 }
@@ -679,7 +686,7 @@ type AddMoodInClientRequest struct {
 	Gender   string `json:"gender" validate:"required,oneof=Male Female Other"`
 	Phone    string `json:"phone" validate:"required,len=12,numeric"`
 	MoodID   string `json:"mood_id" validate:"required,numeric"`
-	Notes    string `json:"notes" validate:"required,min=2,max=1000"`
+	Notes    string `json:"notes" validate:"omitempty,min=2,max=1000"`
 	Date     string `json:"date" validate:"required,datetime=2006-01-02"`
 }
 
@@ -722,7 +729,6 @@ type ClientB2BProfileAddRequest struct {
 
 type ClientB2BFamilyProfileAddRequest struct {
 	ClientID           string `json:"client_id" validate:"required,min=4,max=45"`
-	EmpID              string `json:"emp_id" validate:"required"`
 	Relation           string `json:"relation" validate:"required"`
 	FirstName          string `json:"first_name" validate:"required,min=2,max=100"`
 	LastName           string `json:"last_name" validate:"required,min=2,max=100"`
@@ -730,7 +736,7 @@ type ClientB2BFamilyProfileAddRequest struct {
 	Email              string `json:"email" validate:"required,email"`
 	DateOfBirth        string `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
 	Photo              string `json:"photo"`
-	TopicIDs           string `json:"topic_ids" validate:"required"`
+	TopicIDs           string `json:"topic_ids"`
 	Gender             string `json:"gender" validate:"required,oneof=Male Female Other"`
 	Location           string `json:"location" validate:"required"`
 	CorDarpartment     string `json:"cor_darpartment" validate:"required"`

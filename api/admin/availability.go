@@ -557,7 +557,7 @@ func CounsellorConnectWithCorporateAdd(w http.ResponseWriter, r *http.Request) {
 	// read request body
 	body := Model.InPersonCounsellorConnectWithCorporateAddRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:

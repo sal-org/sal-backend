@@ -26,6 +26,12 @@ func Content(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	var categoryFilter string
 	var moodFilter string
 	if len(r.FormValue("category_id")) > 0 {
@@ -414,7 +420,13 @@ func Content(w http.ResponseWriter, r *http.Request) {
 func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	contentType, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where title like '%" + r.FormValue("content_name") + "%'" + "and training = 0 and type = '" + r.FormValue("type") + "' and status = 1 order by created_at desc limit " + strconv.Itoa(CONSTANT.ContentPerPageUser) + " offset " + strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ContentPerPageUser))
 	if !ok {
@@ -474,7 +486,7 @@ func GetContentUsedTitle(w http.ResponseWriter, r *http.Request) {
 func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -594,7 +606,7 @@ func ContentLikeGet(w http.ResponseWriter, r *http.Request) {
 func ContentLikeAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -627,7 +639,7 @@ func ContentLikeAdd(w http.ResponseWriter, r *http.Request) {
 func ContentLikeDelete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -651,7 +663,13 @@ func IncreaseContentViewCount(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	content, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where content_id = '" + r.FormValue("content_id") + "'")
 	if !ok {

@@ -25,11 +25,23 @@ import (
 func PaymentsGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if therapist_id exists
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -219,12 +231,24 @@ func PaymentsDownload(w http.ResponseWriter, r *http.Request) {
 	fileName := "payment_report_" + startBy.Format("02Jan2006") + "_to_" + endBy.Format("02Jan2006") + ".csv"
 	w.Header().Set("Content-Disposition", "attachment; filename="+fileName)
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	data := [][]string{}
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if therapist_id exists
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 

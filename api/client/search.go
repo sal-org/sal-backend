@@ -33,6 +33,24 @@ func ListSearch(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	var SQLQuery, therapistSQLQuery string // counsellorSQLQuery, listenerSQLQuery,
 	args := []any{}
 	// counsellorArgs := []interface{}{}
@@ -274,6 +292,13 @@ func ListSearchForCorporate(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check domain exists or not
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -535,6 +560,25 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 	var inPersonConnect []map[string]string
 	var slots []map[string]string
 	var nextSlots []map[string]string
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check domain exists or not
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {

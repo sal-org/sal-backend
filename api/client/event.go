@@ -63,6 +63,12 @@ func InPersonEventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -313,6 +319,12 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming booked events
 	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") order by date asc, time asc", r.FormValue("client_id"))
 	if !ok {
@@ -353,7 +365,7 @@ func EventsInPersonCancel(w http.ResponseWriter, r *http.Request) {
 	// read request body
 	body := Model.CancelInPersonEventForB2BRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -527,7 +539,7 @@ func EventsInPersonRequest(w http.ResponseWriter, r *http.Request) {
 
 	// check if client_id exists
 	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -600,6 +612,12 @@ func GetEventInPersonRequest(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -775,6 +793,12 @@ func EventsBookedInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming booked events
 	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status = "+CONSTANT.OrderInProgress+") and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc, time asc", r.FormValue("client_id"))
 	if !ok {
@@ -819,6 +843,12 @@ func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -1365,7 +1395,7 @@ func WebinarOrderCreate(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// read request body
-	body := Model.OrderWebniarForB2BRequest{}
+	body := Model.OrderWebinarForB2BRequest{}
 
 	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
 

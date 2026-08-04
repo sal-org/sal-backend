@@ -76,10 +76,34 @@ func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	phoneNumber, ok := UTIL.Required(r.FormValue("family_phone_no"), "Phone No.")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	emailID, ok := UTIL.Required(r.FormValue("family_email_id"), "Email ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	if len(r.FormValue("family_phone_no")) < 8 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// check if client_id exists
+	// if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("family_phone_no")}) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"phone": r.FormValue("family_phone_no")})
@@ -183,6 +207,18 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	// }
+
+	phoneNumber, ok := UTIL.Required(r.FormValue("phone"), "Phone Number")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, phoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	otpValidator, ok := UTIL.Required(r.FormValue("otp"), "OTP")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, otpValidator, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
@@ -845,6 +881,12 @@ func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
@@ -1049,12 +1091,6 @@ func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
-
-	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
 
 	if len(r.FormValue("phone")) == 0 {
 		userType := "3"

@@ -126,6 +126,13 @@ func TherapistSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check domain exists or not
+	ok = DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("therapist_id")})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get therapist slots
 	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("therapist_id"))
 	if !ok {
@@ -164,6 +171,13 @@ func InPersonTherapistSlots(w http.ResponseWriter, r *http.Request) {
 	companyLocation, ok := UTIL.Required(r.FormValue("companyLocation"), "Company Location")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, companyLocation, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check domain exists or not
+	ok = DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("therapist_id")})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -231,7 +245,6 @@ func TherapistOrderCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body.ClientID})
@@ -373,6 +386,12 @@ func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	dataRequired, ok := UTIL.Required(r.FormValue("hashData"), "Data")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, dataRequired, CONSTANT.ShowDialog, response)
@@ -421,7 +440,6 @@ func TherapistOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 	// 	return
 	// }
-
 
 	// read request body
 	body := Model.TherapistOrderConfirmAppointmentForB2CRequest{}

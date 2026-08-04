@@ -28,9 +28,21 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -82,9 +94,21 @@ func AssessmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	assessmentID, ok := UTIL.Required(r.FormValue("assessment_id"), "Assessment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, assessmentID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if assessment_id exists
+	if !DB.CheckIfExists(CONSTANT.AssessmentsTable, map[string]string{"assessment_id": assessmentID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -131,6 +155,12 @@ func AssessmentAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body := MODEL.AssessmentAddRequest{}
@@ -243,6 +273,12 @@ func AssessmentHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	var results []string
 
 	// get assessment past results
@@ -326,6 +362,12 @@ func AssessmentDownload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	//const assessment_id = "ywlxbz8yrlp942"
 

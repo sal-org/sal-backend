@@ -85,7 +85,7 @@ func NotificationAdd(w http.ResponseWriter, r *http.Request) {
 
 	body := MODEL.AddNotificationRequestInAdminPanel{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:

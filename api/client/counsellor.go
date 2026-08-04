@@ -115,6 +115,12 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if counsellor_id exists
+	if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellorID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get counsellor slots
 	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"))
 	if !ok {
@@ -126,7 +132,6 @@ func CounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	response["slots"] = UTIL.FilterAvailableSlots(slots)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
-
 
 func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -157,8 +162,14 @@ func InPersonCounsellorSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if counsellor_id exists
+	if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellorID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get counsellor slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"),r.FormValue("companyName"),r.FormValue("companyLocation"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonSLotsTable+" where counsellor_id = ? and company_name = ? and company_location = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("counsellor_id"), r.FormValue("companyName"), r.FormValue("companyLocation"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -220,6 +231,12 @@ func CounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, err.Error(), CONSTANT.ShowDialog, response)
 			return
 		}
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
 	}
 
 	// get client details
@@ -410,6 +427,12 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.OrderClientAppointmentTable, map[string]string{"order_id": body.OrderID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get order details
 	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": body.OrderID})
 	if !ok {
@@ -510,7 +533,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	
+
 	counsellor_fullname := counsellor_name[0]["first_name"] + " " + counsellor_name[0]["last_name"]
 
 	client_name, status, ok := DB.SelectProcess("select first_name , last_name from "+CONSTANT.ClientsTable+" where client_id = ?", order[0]["client_id"])
@@ -591,7 +614,7 @@ func CounsellorOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// send appointment booking notification to client
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID,"",
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().Add(330*time.Minute).String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// send appointment reminder notification to client before 15 min

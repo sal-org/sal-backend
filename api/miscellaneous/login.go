@@ -24,7 +24,7 @@ import (
 func SendOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	if len(r.FormValue("phone")) < 8 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
@@ -138,7 +138,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if otp is correct
 	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
@@ -387,7 +387,7 @@ func AppInfo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	appInfo, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppInfoTable + " where status = 1 ")
 	if !ok {
@@ -403,7 +403,7 @@ func AppInfo(w http.ResponseWriter, r *http.Request) {
 func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -416,7 +416,7 @@ func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
 func AppFeedback(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var firstName, lastName, email string
 

@@ -23,7 +23,7 @@ import (
 func EventsList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -53,7 +53,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 func EventDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -112,7 +112,7 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 func EventsBooked(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -149,7 +149,7 @@ func EventsBooked(w http.ResponseWriter, r *http.Request) {
 func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -314,7 +314,7 @@ func EventOrderCreate(w http.ResponseWriter, r *http.Request) {
 func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -508,11 +508,23 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 func EventsBlocked(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if therapist_id exists
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -547,11 +559,29 @@ func EventsBlocked(w http.ResponseWriter, r *http.Request) {
 func EventUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	orderID, ok := UTIL.Required(r.FormValue("order_id"), "Order ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if therapist_id exists
+	if !DB.CheckIfExists(CONSTANT.OrderCounsellorEventTable, map[string]string{"order_id": orderID, "counsellor_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -575,7 +605,7 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 func EventInPersonStart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -626,6 +656,24 @@ func UpcomingEventsInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	orderID, ok := UTIL.Required(r.FormValue("order_id"), "Order ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if therapist_id exists
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming booked events
 	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where counsellor_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc, time asc", r.FormValue("therapist_id"))
 	if !ok {
@@ -656,13 +704,13 @@ func UpcomingEventsInPerson(w http.ResponseWriter, r *http.Request) {
 func InPersonEventsPersonList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	eventsAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 1", r.FormValue("order_id"))
 	if !ok {
@@ -700,7 +748,7 @@ func InPersonEventsPersonList(w http.ResponseWriter, r *http.Request) {
 func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -710,7 +758,7 @@ func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
 
 	body := Model.CafeAttendedAddRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -776,7 +824,7 @@ func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
 func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -903,7 +951,7 @@ func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
 func EventInPersonEnd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -996,8 +1044,6 @@ func EventInPersonEnd(w http.ResponseWriter, r *http.Request) {
 // 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
 // 	// 	return
 // 	// }
-
-
 
 // 	// get therapist details
 // 	therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"status"}, map[string]string{"therapist_id": body["counsellor_id"]})

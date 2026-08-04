@@ -41,6 +41,12 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming appointments both to be started and started
 	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02")+"' order by date asc", clientID)
 	if !ok {
@@ -123,6 +129,12 @@ func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get upcoming appointments both to be started and started
 	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", clientID)
 	if !ok {
@@ -180,6 +192,12 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -241,6 +259,12 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -380,6 +404,12 @@ func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get past completed appointments
 	// appointments, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"client_id": clientID, "status": CONSTANT.AppointmentCompleted})
 	// if !ok {
@@ -437,6 +467,12 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": appointmentID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -2472,7 +2508,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 	// check if corporate_id exists
 	if !DB.CheckIfExists(CONSTANT.AppointmentsTable, map[string]string{"appointment_id": body.AppointmentID}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -2653,7 +2689,7 @@ func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 
 	// check if appointment_id exists
 	if !DB.CheckIfExists(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": body.AppointmentID}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -2979,7 +3015,7 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 
 	body := Model.CancellationReasonAppointmentRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -3056,7 +3092,7 @@ func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
 
 	body := Model.CancellationReasonAppointmentRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -3811,10 +3847,10 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
@@ -3881,7 +3917,7 @@ func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
 
 	// check if client_id exists
 	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -4056,7 +4092,7 @@ func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 
 	// check if client_id exists
 	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body.ClientID}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -4203,6 +4239,12 @@ func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
@@ -4229,6 +4271,12 @@ func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
 	clientID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, clientID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 

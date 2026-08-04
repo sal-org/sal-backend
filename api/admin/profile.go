@@ -103,7 +103,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	body := MODEL.UpdateUserProfileRequestInAdminPanel{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -453,7 +453,7 @@ func UserProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	// get quotes
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "role_id":

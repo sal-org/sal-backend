@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	CONFIG "salbackend/config"
 	_ "salbackend/model"
 	UTIL "salbackend/util"
@@ -522,7 +524,9 @@ func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var counsellor []map[string]string
+	var counsellors []map[string]string
+
+	counsellorPhoto := ""
 
 	if len(body.CounsellorID) != 0 {
 		// get client details
@@ -547,22 +551,44 @@ func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-	}
 
-	counsellorPhoto := ""
-
-	if len(counsellor) != 0 {
-		counsellorPhoto = counsellor[0]["photo"]
+		if len(counsellor) != 0 {
+			counsellorPhoto = counsellor[0]["photo"]
+			counsellors = append(counsellors, counsellor[0])
+		}
 	}
 
 	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+
+	policy := bluemonday.NewPolicy()
+
+	policy.AllowStandardURLs()
+
+	policy.AllowElements(
+		"p",
+		"br",
+		"h1",
+		"h2",
+		"h3",
+		"h4",
+		"ul",
+		"ol",
+		"li",
+		"strong",
+		"em",
+	)
+
+	policy.AllowAttrs("href").OnElements("a")
+	policy.AllowElements("a")
+
+	safeHTML := policy.Sanitize(body.Description)
 
 	// add content
 	content := map[string]string{}
 	content["counsellor_id"] = body.CounsellorID
 	content["title"] = body.Title
 	content["subtitle"] = body.SubTitle
-	content["description"] = body.Description
+	content["description"] = safeHTML
 	content["photo"] = body.Photo
 	content["background_photo"] = body.BackgroundPhoto
 	content["share_content"] = body.ShareContent
@@ -583,12 +609,12 @@ func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(counsellor) != 0 {
+	if len(counsellors) != 0 {
 
 		filepath_text := "htmlfile/emailmessagebody.html"
 		// send email for therapist
 		emaildata := Model.EmailBodyMessageModel{
-			Name: counsellor[0]["first_name"],
+			Name: counsellors[0]["first_name"],
 			Message: UTIL.ReplaceNotificationContentInString(
 				CONSTANT.CounsellorApprovedContentBody,
 				map[string]string{
@@ -602,7 +628,7 @@ func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
 		UTIL.SendEmail(
 			CONSTANT.CounsellorApprovedContentTitle,
 			emailBody,
-			counsellor[0]["email"],
+			counsellors[0]["email"],
 			CONSTANT.InstantSendEmailMessage,
 		)
 	}
@@ -630,7 +656,7 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 
 	body := Model.ContentInWebUpdateRequestInAdminPanel{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -647,7 +673,8 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var counsellor []map[string]string
+	var counsellors []map[string]string
+	counsellorPhoto := ""
 
 	if len(body.CounsellorID) != 0 {
 		// get client details
@@ -672,12 +699,12 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-	}
 
-	counsellorPhoto := ""
+		if len(counsellor) != 0 {
+			counsellorPhoto = counsellor[0]["photo"]
 
-	if len(counsellor) != 0 {
-		counsellorPhoto = counsellor[0]["photo"]
+			counsellors = append(counsellors, counsellor[0])
+		}
 	}
 
 	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
@@ -697,8 +724,6 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 	// 	endPointURLContent := UTIL.GetEndpointFromURL(body["content"])
 	// 	body["content"] = endPointURLContent
 	// }
-
-
 
 	// add content
 	content := map[string]string{}

@@ -20,6 +20,12 @@ func ReportGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	startBy, _ := time.Parse("2006-01-02", r.FormValue("start_by"))
 	endBy, _ := time.Parse("2006-01-02", r.FormValue("end_by"))
 

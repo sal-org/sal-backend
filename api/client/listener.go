@@ -37,6 +37,12 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if listener_id exists
+	if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": listenerID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get listener details
 	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "slot_type", "age_group", "about"}, map[string]string{"listener_id": r.FormValue("listener_id")})
 	if !ok {
@@ -110,8 +116,14 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": listenerID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// get listener slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0,0,15).Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -157,7 +169,6 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 
 	// read request body
 	body := Model.OrderAppointmentForB2BRequest{}
-
 
 	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
 
@@ -405,7 +416,7 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 
 	// Booking confirmation
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,"",
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID, "",
 	)
 
 	// 15 min push notification before appointment start

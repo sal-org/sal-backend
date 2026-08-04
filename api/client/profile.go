@@ -25,6 +25,12 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// if len(r.FormValue("device_id")) < 0 {
 	// 	UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 	// 	return
@@ -50,6 +56,12 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 	emailID, ok := UTIL.Required(r.FormValue("email"), "Email")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, emailID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client_id exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": emailID}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -464,6 +476,12 @@ func GetRelativeProfile(w http.ResponseWriter, r *http.Request) {
 
 	var response = make(map[string]any)
 
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	cleintID, ok := UTIL.Required(r.FormValue("client_id"), "Client ID")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, cleintID, CONSTANT.ShowDialog, response)
@@ -716,7 +734,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	body := Model.ClientProfileUpdateRequest{}
 
-	if err := UTIL.DecodeAndValidate(w, r, http.MethodPost, &body); err != nil {
+	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
 		switch err {
 		case CONSTANT.ErrMethodNotAllowed:
@@ -735,7 +753,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// check if client_id exists
 	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": clientID}) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.InValidIDError, CONSTANT.ShowDialog, response)
 		return
 	}
 

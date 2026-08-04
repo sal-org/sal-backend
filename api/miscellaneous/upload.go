@@ -23,7 +23,7 @@ import (
 func UploadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	s3Path := CONSTANT.MiscellaneousS3Path
 	switch r.FormValue("type") {

@@ -30,6 +30,12 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	if len(r.FormValue("therapist_id")) > 0 {
 		active := DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"status": "1", "therapist_id": r.FormValue("therapist_id")})
 		if !active {

@@ -22,7 +22,13 @@ import (
 func AdsContent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get moods
 	adsContent, status, ok := DB.SelectSQL(CONSTANT.AdsContentTable, []string{"title", "target", "image"}, map[string]string{"status": "1"})
@@ -45,7 +51,13 @@ func AdsContent(w http.ResponseWriter, r *http.Request) {
 func GetDocumentList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get moods
 	getDocuments, status, ok := DB.SelectSQL(CONSTANT.CounsellorDocumentListTable, []string{"*"}, map[string]string{"status": "1"})
@@ -68,7 +80,13 @@ func GetDocumentList(w http.ResponseWriter, r *http.Request) {
 func GetCounsellorRecordFromMainCategory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	category, status, ok := DB.SelectProcess("select * from " + CONSTANT.CounsellorRecordFormCategoryTable + " where status = 1")
 	if !ok {
@@ -91,7 +109,13 @@ func GetCounsellorRecordFromMainCategory(w http.ResponseWriter, r *http.Request)
 func GetCounsellorRecordFromSubCategory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	subCategory, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordFormSubCategoryTable+" where status = 1 and category_id = ? ", r.FormValue("category_id"))
 	if !ok {
@@ -107,7 +131,7 @@ func GetCounsellorRecordFromSubCategory(w http.ResponseWriter, r *http.Request) 
 func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -147,7 +171,7 @@ func GetCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 func CheckCounsellorClientRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -194,7 +218,7 @@ func CheckGetCounsellorClientRecordForNewest(w http.ResponseWriter, r *http.Requ
 
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var clients []map[string]string
 
@@ -309,7 +333,7 @@ func CheckGetCounsellorClientRecordForNewest(w http.ResponseWriter, r *http.Requ
 func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -454,7 +478,7 @@ func GetCounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Re
 func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 	var sessionDetails = make(map[string]string)
 
 	// check if access token is valid, not expired
@@ -557,7 +581,7 @@ func GetLastHistoryRecord(w http.ResponseWriter, r *http.Request) {
 func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	// body, ok := UTIL.ReadRequestBody(r)
