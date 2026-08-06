@@ -377,7 +377,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -559,7 +559,7 @@ func AppFeedback(w http.ResponseWriter, r *http.Request) {
 	)
 
 	data := Model.EmailDataForFeedback{
-		MediaURL:        CONFIG.MediaURL,
+		MediaURL:        CONFIG.MediaURLInCLOUDFRONT,
 		ClientFirstName: firstName,
 		ClientLastName:  lastName,
 		ClientEmail:     email,

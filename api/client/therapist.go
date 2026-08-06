@@ -392,7 +392,7 @@ func GenerateHashForPayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataRequired, ok := UTIL.Required(r.FormValue("hashData"), "Data")
+	dataRequired, ok := UTIL.LongHashValueRequired(r.FormValue("hashData"), "Data")
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, dataRequired, CONSTANT.ShowDialog, response)
 		return

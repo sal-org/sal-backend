@@ -591,10 +591,6 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body.NotificationStatus) == 0 {
-		body.NotificationStatus = "1"
-	}
-
 	// add client details
 	client := map[string]string{}
 	client["asscoiate_id"] = body.ClientID
@@ -606,12 +602,9 @@ func RelativeProfileAdd(w http.ResponseWriter, r *http.Request) {
 	client["phone"] = body.Phone
 	client["email"] = body.Email
 	client["date_of_birth"] = body.DateOfBirth
-	client["topic_ids"] = body.TopicIDs
 	client["gender"] = body.Gender
 	client["location"] = body.Location
-	client["timezone"] = body.Timezone
 	client["status"] = CONSTANT.ClientActive
-	client["notification_status"] = body.NotificationStatus
 	client["created_at"] = UTIL.GetCurrentTime().String()
 	clientID, status, ok := DB.InsertWithUniqueID(CONSTANT.ClientsTable, CONSTANT.ClientDigits, client, "client_id")
 	if !ok {

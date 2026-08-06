@@ -69,6 +69,19 @@ func Required(value string, field string) (string, bool) {
 	return value, true
 }
 
+func LongHashValueRequired(value string, field string) (string, bool) {
+
+	if value == "" {
+		return field + " is required", false
+	}
+
+	if len(value) > 500 {
+		return field + " is too long", false
+	}
+
+	return value, true
+}
+
 func ValidationError(err error) string {
 
 	if errs, ok := err.(validator.ValidationErrors); ok {

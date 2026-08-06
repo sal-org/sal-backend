@@ -708,7 +708,7 @@ type ClientProfileAddRequest struct {
 }
 
 type ClientB2BProfileAddRequest struct {
-	EmpID              string `json:"emp_id" validate:"required"`
+	EmpID              string `json:"emp_id" validate:"required,numeric"`
 	FirstName          string `json:"first_name" validate:"required,min=2,max=100"`
 	LastName           string `json:"last_name" validate:"required,min=2,max=100"`
 	Phone              string `json:"phone" validate:"required,len=12,numeric"`
@@ -728,23 +728,16 @@ type ClientB2BProfileAddRequest struct {
 }
 
 type ClientB2BFamilyProfileAddRequest struct {
-	ClientID           string `json:"client_id" validate:"required,min=4,max=45"`
-	Relation           string `json:"relation" validate:"required"`
-	FirstName          string `json:"first_name" validate:"required,min=2,max=100"`
-	LastName           string `json:"last_name" validate:"required,min=2,max=100"`
-	Phone              string `json:"phone" validate:"required,len=12,numeric"`
-	Email              string `json:"email" validate:"required,email"`
-	DateOfBirth        string `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
-	Photo              string `json:"photo"`
-	TopicIDs           string `json:"topic_ids"`
-	Gender             string `json:"gender" validate:"required,oneof=Male Female Other"`
-	Location           string `json:"location" validate:"required"`
-	CorDarpartment     string `json:"cor_darpartment" validate:"required"`
-	Timezone           string `json:"timezone" validate:"required"`
-	DeviceID           string `json:"device_id" validate:"required"`
-	Platform           string `json:"platform" validate:"required,oneof=ios android web"`
-	Version            string `json:"version" validate:"required"`
-	NotificationStatus string `json:"notification_status" validate:"required,oneof=0 1 2"`
+	ClientID    string `json:"client_id" validate:"required,min=4,max=45"`
+	Relation    string `json:"relation" validate:"required"`
+	FirstName   string `json:"first_name" validate:"required,min=2,max=100"`
+	LastName    string `json:"last_name" validate:"required,min=2,max=100"`
+	Phone       string `json:"phone" validate:"required,len=12,numeric"`
+	Email       string `json:"email" validate:"required,email"`
+	DateOfBirth string `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
+	Photo       string `json:"photo"`
+	Gender      string `json:"gender" validate:"required,oneof=Male Female Other"`
+	Location    string `json:"location" validate:"required"`
 }
 
 type ClientProfileUpdateRequest struct {

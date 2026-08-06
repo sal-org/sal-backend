@@ -586,7 +586,7 @@ func ListSearchForCorporateInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	emailIDAccess := []string{"anand.shah@clovemind.com", "shivam.tiwari@clovemind.com", "karishma.vora@clovemind.com"}
+	emailIDAccess := []string{CONFIG.CorporateInpersonAccessEmailId1, CONFIG.CorporateInpersonAccessEmailId2, CONFIG.CorporateInpersonAccessEmailId3}
 
 	if slices.Contains(emailIDAccess, client[0]["email"]) {
 
