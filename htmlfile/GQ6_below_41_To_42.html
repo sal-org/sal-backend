@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>The Gratitude Questionnaire - GQ6</title>
+      <style>
+        body{
+				  min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>The Gratitude Questionnaire - GQ6</b></p>
+          <p style="text-align: center;">References: McCullough, M. E., Emmons, R. A., & Tsang, J. (2002). The Grateful Disposition: A conceptual and Empirical Topography. Journal of Personality and Social Psychology. </p>
+          <p style="font-size:large;text-align: end;">Source: <a href="https://ppc.sas.upenn.edu/sites/default/files/gratitudequestionnaire6.pdf">https://ppc.sas.upenn.edu/sites/default/files/gratitudequestionnaire6.pdf</a></p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p>The Questionnaire-Six-Item Form (GQ-6) is one of the most frequently used assessments in gratitude. It measures three dimensions of gratitude, including the tendency to recognize, respond to, and experience gratitude. The GQ-6 is designed to assess individual differences in the proneness to experience gratitude in daily life.</p><br>
+          <p><b>What's your GQ6 Score?</b></p>
+          <p>People who can feel gratitude regularly, are more satisfied with their lives. Studies show that the connection of gratitude to physical well-being is vital. Gratitude lowers blood pressure, decreases stress, and improves sleep. A successful practice in gratitude can lessen symptoms of depression and anxiety. Improvements in gratitude improve humans. Being aware of one’s level of gratitude could be the starting line for someone racing toward improved well-being. Grateful people are less inclined to feel resentment and envy.</p><br>
+          <p>Although higher scores on the GQ-6 are positively correlated with a range of positive outcomes the emphasis should be on self-awareness (i.e., learning about where there may be room to grow) and not on overall score.</p>
+          <p>Gratitude is like a muscle. The more you practice it, the stronger it becomes.</p>
+        </div><br><br><br> 
+        <div style="text-align: center; font-size: x-large;">
+          <p><b>Questionnaire</b></p>
+        </div>
+        <div>
+          <p><b>SCORE</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Strongly disagree</th>
+              <th style="border: 1px solid black;">Disagree</th>
+              <th style="border: 1px solid black;">Slightly disagree</th>
+              <th style="border: 1px solid black;">Neutral</th>
+              <th style="border: 1px solid black;">Slightly agree</th>
+              <th style="border: 1px solid black;">Agree</th>
+              <th style="border: 1px solid black;">Strongly Agree</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">1</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">4</td>
+              <td style="border: 1px solid black;">5</td>
+              <td style="border: 1px solid black;">6</td>
+              <td style="border: 1px solid black;">7</td>
+            </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. I have so much in life to be thankful for.</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. If I had to list everything that I felt grateful for, it would be a very long list.</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. When I look at the world, I don’t see much to be grateful for.</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. I am grateful to a wide variety of people.</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. As I get older, I find myself more able to appreciate the people, events, and situations that have been part of my life history.</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. Long amounts of time can go by before I feel grateful to something or someone.</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table>
+        <p>Scoring: Total Score Range: 6-42. The higher the level of the experience of gratitude as an emotion, the more likely the instance of higher levels of positive affect.</p>
+        </div><br><br>
+        <p><b>Score Interpretation:</b></p>
+        <p>1. Higher scores: Greater gratitude, life satisfaction, and well-being.</p>
+        <p>2. Lower scores: Potential gratitude deficits, increased stress.</p><br>
+        <table style="border: 1px solid black; width: 60%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">SCORE</th> 
+            <th style="border: 1px solid black;">Inference</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">6-24</td>
+            <td style="border: 1px solid black;">Low Gratitude</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">25-34</td>
+            <td style="border: 1px solid black;">Moderate Gratitude</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">35-40</td>
+            <td style="border: 1px solid black;">High Gratitude</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">41-42</td>
+            <td style="border: 1px solid black;">Very High Gratitude</td>
+          </tr>
+        </table>
+        <p><b>Inference:</b></p>
+        <p>Your overall score range is 41 or higher, based on the assessment. Your score suggests you have an exceptional ability to notice, appreciate, and respond to the positive aspects of life. Gratitude is likely a key part of your daily experience, and it shapes how you see the world. This mindset not only enhances your personal happiness but also contributes to stronger, more meaningful relationships with others.</p><br>
+        <p>Since you’re already a gratitude leader, consider using your practice to inspire others. You could start a gratitude group or introduce gratitude exercises in your workplace, home, or community. Additionally, reflect on how you can deepen your gratitude, such as by appreciating challenges as learning experiences or by offering gratitude to yourself for your strengths and achievements. Keep spreading positivity, as your outlook can have a powerful ripple effect on those around you.</p>
+      </div>
+    </body>
+</html>

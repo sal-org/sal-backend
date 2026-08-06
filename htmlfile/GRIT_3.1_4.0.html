@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>THE GRIT TEST</title>
+      <style>
+        body{
+		    min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>THE GRIT TEST</b></p>
+          <p style="text-align: center;">It is a brief, self-report measure of individual levels of grit, which is perseverance and passion for long-term goals. (Duckworth, A. L., Peterson, C., Matthews, M. D., & Kelly, D. R. (2007)</p>
+          <p style="font-size:large;text-align: end;">Source: <a href="https://mcnairscholars.com/wp-content/uploads/2015/02/12-item-Grit-Scale-Angela-Duckworth.pdf">https://mcnairscholars.com/wp-content/uploads/2015/02/12-item-Grit-Scale-Angela-Duckworth.pdf</a></p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p>What is GRIT?</p>
+          <ul>
+            <li>Grit is defined as perseverance and passion for long-term goals</li>
+            <li>It entails working strenuously toward challenges, maintaining effort and interest over years despite failure, adversity, and plateaus in progress</li>
+            <li>Grit is unrelated to talent and can be built through a growth mindset</li>
+          </ul><br>
+          <p>Grit is a multidimensional construct including perseverance of effort and consistency of interests
+            as its dimensions. In essence grit refers to determination to achieve long term goals of life despite
+            of unfavourable and unavoidable circumstances.</p>
+          <p><b>What is your GRIT Scale?</b></p><br>
+          <p>This scale is designed to help individuals understand how much grit they possess, which is
+            associated with achieving success in various fields, such as education, career, and personal
+            development.</p><br>
+          <p>This interpretation of the grit score is aimed at helping individuals understand where they
+            stand in terms of their perseverance and passion for long-term goals. By using this
+            awareness, you can focus on strategies to increase your grit, whether you're trying to stay
+            focused on personal projects, career goals, or other areas of life.</p>
+        </div><br>
+        <div>
+          <p><b>SCORE</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Question Numbers</th>
+              <th style="border: 1px solid black;">Very much like me</th>
+              <th style="border: 1px solid black;">Mostly like me</th>
+              <th style="border: 1px solid black;">Somewhat like me</th>
+              <th style="border: 1px solid black;">Not much like me</th>
+              <th style="border: 1px solid black;">Not like me at all</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">1, 4, 6, 9, 10, 12</td>
+              <td style="border: 1px solid black;">5</td>
+              <td style="border: 1px solid black;">4</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">1</td>
+            </tr>
+            <tr style="text-align: center;">
+                <td style="border: 1px solid black;">2, 3, 5, 7, 8, 11</td>
+                <td style="border: 1px solid black;">1</td>
+                <td style="border: 1px solid black;">2</td>
+                <td style="border: 1px solid black;">3</td>
+                <td style="border: 1px solid black;">4</td>
+                <td style="border: 1px solid black;">5</td>
+              </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. I have overcome setbacks to conquer an important challenge.</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. New ideas and projects sometimes distract me from previous ones.</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. My interests change from year to year.</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. Setbacks do not discourage me.</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. I have been obsessed with a certain idea or project for a short time but later lost interest.</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. I am a hard worker.</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">7. I often set a goal but later choose to pursue a different one.</td>
+                <td style="text-align: center;">{{.Answer7}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">8. I have difficulty maintaining my focus on projects that take more than a few months to complete.</td>
+                <td style="text-align: center;">{{.Answer8}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">9. I finish what I begin.</td>
+                <td style="text-align: center;">{{.Answer9}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">10. I have achieved a goal that took years of work.</td>
+                <td style="text-align: center;">{{.Answer10}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">11. I become interested in new pursuits every few months.</td>
+                <td style="text-align: center;">{{.Answer11}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">12. I am diligent.</td>
+                <td style="text-align: center;">{{.Answer12}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table><br>
+          <ul>
+            <li>The maximum score on this scale is 5 for extremely gritty.</li>
+            <li>The lowest score on this scale is 1 for not at all gritty.</li>
+          </ul>
+        <p>Add up all the points and divide by 12.</p>
+        </div><br><br>
+        <p><b>Score Interpretation:</b></p>
+        <p>If you score low: It’s important to understand that grit is a trait that can be developed.
+            The goal is to focus on developing both passion for a specific long-term goal and the
+            perseverance to push through setbacks. Start with small, manageable goals and increase
+            your effort gradually over time. Consider finding a mentor or a role model who
+            demonstrates grit to guide and inspire you.</p>
+        <p>If you score high: You likely have strong perseverance and a clear sense of long-term
+            direction. Keep refining your skills and goals but be cautious about burnout. Even highly
+            gritty people need rest and balance in their lives. Make sure to maintain flexibility and re-
+            evaluate your long-term goals when necessary to avoid stagnation.</p><br><br><br>
+        <table style="border: 1px solid black; width: 60%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">SCORE</th> 
+            <th style="border: 1px solid black;">Locus of Control</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">1.0 to 2.0</td>
+            <td style="border: 1px solid black;">Low Grit</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">2.1 to 3.0</td>
+            <td style="border: 1px solid black;">Moderate Grit</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">3.1 to 4.0</td>
+            <td style="border: 1px solid black;">High Grit</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">4.1 to 5.0</td>
+            <td style="border: 1px solid black;">Very High Grit</td>
+          </tr>
+        </table>
+        <p><b>Inference:</b></p>
+        <p>Your overall score range is 3.1 to 4.0, based on the assessment. Your score suggests you have
+            good perseverance and tend to stay committed to your goals, though occasional
+            distractions or setbacks may still affect your progress.</p><br>
+        <p>Suggestions: Continue to build on your strengths. Seek out new challenges that allow you
+            to practice your grit even further. Engage in activities that align with your long-term
+            interests to maintain motivation. You may also consider mentoring others who need help
+            building their grit.</p>
+        <p>In such scenarios, working with a counsellor can help strengthen and maintain a balanced
+            perspective and to enhance grit in an individual while still harnessing its positive aspects for
+            mental health and well-being.</p>
+      </div>
+    </body>
+</html>

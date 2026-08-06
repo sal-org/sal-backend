@@ -7,6 +7,7 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	"strings"
+	"time"
 
 	UTIL "salbackend/util"
 )
@@ -85,12 +86,28 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		inPersonConnect, status, ok := DB.SelectSQL(CONSTANT.InPersonCounsellorConnectWithCorporateTable, []string{"*"}, map[string]string{"counsellor_id": therapist[0]["therapist_id"], "status": "1"})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(inPersonConnect) > 0 {
+			therapist[0]["in_person_connect"] = inPersonConnect[0]["status"]
+		} else {
+			therapist[0]["in_person_connect"] = "0"
+		}
+
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// therapist[0]["photo"] = endPointURL
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["languages"] = languages
 		response["topics"] = topics
 		response["therapist"] = therapist[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -134,11 +151,36 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var typeOfService string
+
+	switch body["corporate_therpist"] {
+	case "Individual Clients":
+		typeOfService = "0"
+	case "Corporate Clients":
+		typeOfService = "2"
+	case "Both":
+		typeOfService = "1"
+	}
+
+	joinDate := body["start_date"]
+
+	currentTime := time.Now()
+
+	nowDate := currentTime.Format("2006-01-02")
+
+	gapYears := body["gap_years"]
+
+	gapMonths := body["gap_months"]
+
+	experience := UTIL.CalculateExperience(joinDate, nowDate, gapYears, gapMonths)
+
 	// add therapist details
 	therapist := map[string]string{}
 	therapist["first_name"] = body["first_name"]
 	therapist["last_name"] = body["last_name"]
+	therapist["pronoun"] = body["pronoun"]
 	therapist["gender"] = body["gender"]
+	therapist["location"] = body["location"]
 	therapist["phone"] = body["phone"]
 	therapist["photo"] = body["photo"]
 	therapist["email"] = body["email"]
@@ -147,7 +189,11 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["price_3"] = body["price_3"]
 	therapist["price_5"] = body["price_5"]
 	therapist["education"] = body["education"]
-	therapist["experience"] = body["experience"]
+	therapist["experience"] = experience
+	therapist["start_date"] = joinDate
+	therapist["gap_years"] = gapYears
+	therapist["gap_months"] = gapMonths
+	therapist["therapeutic_approach"] = body["therapeutic_approach"]
 	therapist["about"] = body["about"]
 	therapist["timezone"] = body["timezone"]
 	therapist["resume"] = body["resume"]
@@ -163,6 +209,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["bank_name"] = body["bank_name"]
 	therapist["bank_account_type"] = body["bank_account_type"]
 	therapist["pan"] = body["pan"]
+	therapist["corporate_therpist"] = typeOfService
 	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["notification_status"] = CONSTANT.NotificationActive
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
@@ -201,7 +248,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send account signup notification, message to therapist
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, therapistID)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, therapistID, CONSTANT.TherapistType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, therapistID, "")
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -213,7 +260,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		body["phone"],
 		UTIL.GetCurrentTime().String(),
 		therapistID,
-		CONSTANT.LaterSendTextMessage,
+		CONSTANT.InstantSendTextMessage,
 	)
 
 	/*orderdetails, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "gender", "phone", "photo", "email", "education", "experience", "about", "resume", "certificate", "aadhar", "linkedin", "status"}, map[string]string{"therapist_id": therapistID})
@@ -244,21 +291,27 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	data := Model.EmailDataForCounsellorProfile{
-		First_Name:  therapist_details[0]["first_name"],
-		Last_Name:   therapist_details[0]["last_name"],
-		Gender:      therapist_details[0]["gender"],
-		Type:        "Counsellor",
-		Phone:       therapist_details[0]["phone"],
-		Photo:       therapist_details[0]["photo"],
-		Email:       therapist_details[0]["email"],
-		Education:   therapist_details[0]["education"],
-		Experience:  therapist_details[0]["experience"],
-		About:       therapist_details[0]["about"],
-		Resume:      therapist_details[0]["resume"],
-		Certificate: therapist_details[0]["certificate"],
-		Aadhar:      therapist_details[0]["aadhar"],
-		Linkedin:    therapist_details[0]["linkedin"],
-		Status:      therapist_details[0]["status"],
+		Media_URL:            CONFIG.MediaURLInCLOUDFRONT,
+		First_Name:           therapist_details[0]["first_name"],
+		Last_Name:            therapist_details[0]["last_name"],
+		Pronoun:              therapist_details[0]["pronoun"],
+		Gender:               therapist_details[0]["gender"],
+		Location:             therapist_details[0]["location"],
+		Type:                 "Therapist",
+		Phone:                therapist_details[0]["phone"],
+		Photo:                therapist_details[0]["photo"],
+		Email:                therapist_details[0]["email"],
+		Education:            therapist_details[0]["education"],
+		CounsellingStartDate: UTIL.BuildOnlyDate(therapist_details[0]["start_date"]),
+		CounsellingGap:       therapist_details[0]["gap_years"] + "Y" + " " + therapist_details[0]["gap_months"] + "M",
+		Experience:           therapist_details[0]["experience"],
+		TherapeuticApproach:  therapist_details[0]["therapeutic_approach"],
+		About:                therapist_details[0]["about"],
+		Resume:               therapist_details[0]["resume"],
+		Certificate:          therapist_details[0]["certificate"],
+		Aadhar:               therapist_details[0]["aadhar"],
+		Linkedin:             therapist_details[0]["linkedin"],
+		Status:               therapist_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -268,7 +321,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AnandEmailID,
+		CONFIG.OnboardingEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 
@@ -297,10 +350,14 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendEmailMessage,
 	)*/
 
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// therapist_details[0]["photo"] = endPointURL
+
 	response["therapist"] = therapist_details[0]
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -340,8 +397,14 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["last_name"]) > 0 {
 		therapist["last_name"] = body["last_name"]
 	}
+	if len(body["pronoun"]) > 0 {
+		therapist["pronoun"] = body["pronoun"]
+	}
 	if len(body["gender"]) > 0 {
 		therapist["gender"] = body["gender"]
+	}
+	if len(body["location"]) > 0 {
+		therapist["location"] = body["location"]
 	}
 	if len(body["photo"]) > 0 {
 		therapist["photo"] = body["photo"]
@@ -363,6 +426,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["experience"]) > 0 {
 		therapist["experience"] = body["experience"]
+	}
+	if len(body["therapeutic_approach"]) > 0 {
+		therapist["therapeutic_approach"] = body["therapeutic_approach"]
 	}
 	if len(body["about"]) > 0 {
 		therapist["about"] = body["about"]

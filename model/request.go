@@ -309,6 +309,79 @@ type AssessmentAddRequest struct {
 	} `json:"details"`
 }
 
+// AssessmentAddRequest .
+type AssessmentAddRequestInAdminPanel struct {
+	Title       string `json:"title"`
+	SubTitles   string `json:"subtitles"`
+	Photo       string `json:"photo"`
+	Duration    string `json:"duration"`
+	Type        string `json:"type"`
+	Instruction string `json:"instruction"`
+	Source      string `json:"source"`
+	Reference   string `json:"reference"`
+	Feedback    string `json:"feedback"`
+	Order       string `json:"order"`
+	Status      string `json:"status"`
+	Questions   []struct {
+		Question string `json:"question"`
+		Order    string `json:"order"`
+		Status   string `json:"status"`
+		Options  []struct {
+			Option string `json:"option"`
+			Score  string `json:"score"`
+			Order  string `json:"order"`
+			Status string `json:"status"`
+		}
+	} `json:"questions"`
+	Scores []struct {
+		MinScore string `json:"min"`
+		MaxScore string `json:"max"`
+		Result   string `json:"result"`
+	} `json:"scores"`
+}
+
+// AssessmentUpdateRequest .
+type AssessmentUpdateRequestInAdminPanel struct {
+	AssessmentID string `json:"assessment_id"`
+	Title        string `json:"title"`
+	SubTitles    string `json:"subtitles"`
+	Photo        string `json:"photo"`
+	Duration     string `json:"duration"`
+	Type         string `json:"type"`
+	Instruction  string `json:"instruction"`
+	Source       string `json:"source"`
+	Reference    string `json:"reference"`
+	Feedback     string `json:"feedback"`
+	Order        string `json:"order"`
+	Status       string `json:"status"`
+	Questions    []struct {
+		AssessmentQuestionID string `json:"assessment_question_id"`
+		Question             string `json:"question"`
+		Order                string `json:"order"`
+		Status               string `json:"status"`
+		Options              []struct {
+			AssessmentQuestionOptionID string `json:"assessment_question_option_id"`
+			Option                     string `json:"option"`
+			Score                      string `json:"score"`
+			Order                      string `json:"order"`
+			Status                     string `json:"status"`
+		}
+	} `json:"questions"`
+	Scores []struct {
+		ScoreID  string `json:"id"`
+		MinScore string `json:"min"`
+		MaxScore string `json:"max"`
+		Result   string `json:"result"`
+	} `json:"scores"`
+}
+
+type CafeAttendedAddRequest struct {
+	OrderID   string `json:"order_id"`
+	ClientIDs []struct {
+		UserID string `json:"user_id"`
+	} `json:"clientids"`
+}
+
 // MoodAddRequest .
 type MoodAddRequest struct {
 	ClientID string `json:"client_id"`
@@ -336,21 +409,167 @@ type EmailDataForEvent struct {
 }
 
 type EmailDataForCounsellorProfile struct {
-	First_Name  string
-	Last_Name   string
-	Gender      string
-	Type        string
-	Phone       string
-	Email       string
-	Photo       string
-	Education   string
-	Experience  string
-	About       string
-	Resume      string
-	Certificate string
-	Aadhar      string
-	Linkedin    string
-	Status      string
+	Media_URL            string
+	First_Name           string
+	Last_Name            string
+	Pronoun              string
+	Gender               string
+	Location             string
+	Type                 string
+	Phone                string
+	Email                string
+	Photo                string
+	Education            string
+	CounsellingStartDate string
+	CounsellingGap       string
+	Experience           string
+	TherapeuticApproach  string
+	About                string
+	Resume               string
+	Certificate          string
+	Aadhar               string
+	Linkedin             string
+	Status               string
+}
+
+type EmailDataForWebClientB2CProfile struct {
+	Name            string
+	Phone           string
+	Email           string
+	CompanyName     string
+	CompanyLocation string
+	CompanySize     string
+	Message         string
+}
+
+type EmailDataForCounsellorCancellation struct {
+	First_Name            string
+	Last_Name             string
+	Previous_Date         string
+	Previous_Client_Name  string
+	Previous_Client_Email string
+	Latest_Date           string
+	Lastest_Client_Name   string
+	Lastest_Client_Email  string
+}
+
+type SlotUpdateModelInTherapistAvailability struct {
+	Date  string
+	Key   string
+	Value string
+}
+
+type AppSummaryReport struct {
+	AppointmentTotal              string `json:"appointment_total"`
+	ClientTotal                   string `json:"client_total"`
+	AppointmentsInPersonTotal     string `json:"appointments_inperson_total"`
+	EmeCaseVirtualTotal           string `json:"emecase_virtual_total"`
+	EmeCaseInPersonTotal          string `json:"emecase_inperson_total"`
+	ContentsTotal                 string `json:"contents_total"`
+	MoodsTotal                    string `json:"moods_total"`
+	AssessmentsTotal              string `json:"assessments_total"`
+	TotalRatingTotal              string `json:"total_rating_total"`
+	AvgRatingTotal                string `json:"avgrating_total"`
+	AppointmentsCancellationTotal string `json:"appointments_cancellation_total"`
+	AppointmentsNoShowTotal       string `json:"appointments_noshow_total"`
+}
+
+type PaymentRequest struct {
+	MerchantKey string `json:"merchant_key"`
+	Amount      string `json:"amount"`
+	OrderId     string `json:"order_id"`
+	ProductInfo string `json:"product_info"`
+	FirstName   string `json:"first_name"`
+	Email       string `json:"email"`
+}
+
+type PaymentVerify struct {
+	Status             int                          `json:"status"`
+	Msg                string                       `json:"msg"`
+	TransactionDetails map[string]map[string]string `json:"transaction_details"`
+}
+
+type EmailDataForCounsellorRecord struct {
+	TherapistName                 string
+	SessionFor                    string
+	First_Name                    string
+	Last_Name                     string
+	Gender                        string
+	Age                           string
+	NoShow                        string
+	PresentingConcerns            string
+	PsychiatricIntervention       string
+	PsychiatricInterventionReason string
+	TherapyNotes                  string
+	SubCategory                   string
+	EmotionalState                string
+	NextFollowDate                string
+	SessionMode                   string
+	SessionDate                   string
+	InTime                        string
+	OutTime                       string
+	MentalHealth                  string
+	TherapeuticGoal               string
+	TherapyPlan                   string
+	AssessmentTool                string
+	ClientNotes                   string
+	ClientAttach                  string
+	SendingStatus                 string
+}
+
+type EmailDataForCounsellorRecordForLastestVersion struct {
+	TherapistName                         string
+	Client_First_Name                     string
+	Client_Last_Name                      string
+	Client_Gender                         string
+	Client_Age                            string
+	SessionFor                            string
+	SessionType                           string
+	FamilyRelation                        string
+	SessionMode                           string
+	SessionDate                           string
+	InTime                                string
+	OutTime                               string
+	NoShow                                string
+	PresentingConcerns                    string
+	MentalHealthScale                     string
+	MentalHealthCheck                     string
+	DowngradingHighRiskCase               string
+	IsClinicalPsychologistRequiredReason  string
+	PsychiatricInterventionRequiredReason string
+	Category                              string
+	SubCategory                           string
+	EmotionalState                        string
+	TotalSessionNeeded                    string
+	TakenSessions                         string
+	TherapyNotes                          string
+	NextSessionPlan                       string
+	GoalsAchieved                         string
+	GoalsAchievedReason                   string
+	NextFollowDate                        string
+	ClientNotes                           string
+	Assessment                            string
+	SelfWorkMaterial                      string
+}
+
+type EmailDataForFeedback struct {
+	ClientFirstName string
+	ClientLastName  string
+	ClientEmail     string
+	ConcernsType    string
+	ConcernArea     string
+	Details         string
+	Attach1         string
+	Attach2         string
+	Attach3         string
+	MediaURL        string
+}
+
+type EmailDataForCounsellorVisit struct {
+	Client_Name     string
+	Client_Location string
+	InTime          string
+	OutTime         string
 }
 
 type EmailDataForPaymentReceipt struct {
@@ -409,6 +628,20 @@ type AssessmentDownloadGAD7Model struct {
 	Answer8 string `json:"answer8"`
 }
 
+type AssessmentDownloadGWBModel struct {
+	Name    string `json:"name"`
+	Date    string `json:"date"`
+	Age     string `json:"age"`
+	Gender  string `json:"gender"`
+	Score   string `json:"score"`
+	Answer1 string `json:"answer1"`
+	Answer2 string `json:"answer2"`
+	Answer3 string `json:"answer3"`
+	Answer4 string `json:"answer4"`
+	Answer5 string `json:"answer5"`
+	Answer6 string `json:"answer6"`
+}
+
 type AssessmentDownloadSRSModel struct {
 	Name     string `json:"name"`
 	Date     string `json:"date"`
@@ -436,6 +669,70 @@ type AssessmentDownloadSRSModel struct {
 	Answer19 string `json:"answer19"`
 	Answer20 string `json:"answer20"`
 	Answer21 string `json:"answer21"`
+}
+
+type AssessmentDownloadBurnOutModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+	Answer11 string `json:"answer11"`
+	Answer12 string `json:"answer12"`
+}
+
+type AssessmentDownloadSelfEsteemModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+}
+
+type AssessmentDownloadPSYCHOLOGICALWELLBEINGModel struct {
+	Name     string `json:"name"`
+	Date     string `json:"date"`
+	Age      string `json:"age"`
+	Gender   string `json:"gender"`
+	Score    string `json:"score"`
+	Answer1  string `json:"answer1"`
+	Answer2  string `json:"answer2"`
+	Answer3  string `json:"answer3"`
+	Answer4  string `json:"answer4"`
+	Answer5  string `json:"answer5"`
+	Answer6  string `json:"answer6"`
+	Answer7  string `json:"answer7"`
+	Answer8  string `json:"answer8"`
+	Answer9  string `json:"answer9"`
+	Answer10 string `json:"answer10"`
+	Answer11 string `json:"answer11"`
+	Answer12 string `json:"answer12"`
+	Answer13 string `json:"answer13"`
+	Answer14 string `json:"answer14"`
+	Answer15 string `json:"answer15"`
+	Answer16 string `json:"answer16"`
+	Answer17 string `json:"answer17"`
+	Answer18 string `json:"answer18"`
 }
 
 type AssessmentDownloadBDIModel struct {
@@ -488,6 +785,16 @@ type AssessmentDownloadBDIModel struct {
 	Response21 string `json:"response21"`
 }
 
+type TokenRequest struct {
+	UserUUID string `json:"user_uuid,omitempty"` // Optional for App Token
+	Expire   uint32 `json:"expire"`
+}
+
+type TokenResponse struct {
+	Token string `json:"token"`
+	Error string `json:"error,omitempty"`
+}
+
 type ClientAppointmentConfirmation struct {
 	First_Name      string `json:"first_name"`
 	Counsellor_Name string `json:"counsellor_name"`
@@ -506,12 +813,29 @@ type PostRequestForAgora struct {
 	ClientRequest ClientRequestS `json:"clientRequest"`
 }
 
+type PostRequestForHTMLToPDF struct {
+	HtmlContent string `json:"html_content"`
+}
+
 type RecordingConfigModel struct {
 	MaxIdleTime int `json:"maxIdleTime"`
+	// StreamMode         string `json:"streamMode"`
 	StreamTypes int `json:"streamTypes"`
-	ChannelType int `json:"channelType"`
-	// SubscribeUidGroup int `json:"subscribeUidGroup"`
-	// StreamMode        string `json:"streamMode"`
+	// AudioProfile       int `json:"audioProfile"`
+	ChannelType        int `json:"channelType"`
+	VideoStreamType    int `json:"videoStreamType"`
+	TranscodingConfigs TranscodingConfig
+	// SubscribeVideoUids []string `json:"subscribeVideoUids"`
+	// SubscribeAudioUids []string `json:"subscribeAudioUids"`
+	// SubscribeUidGroup  int      `json:"subscribeUidGroup"`
+}
+
+type TranscodingConfig struct {
+	Height           int `json:"height"`
+	Width            int `json:"width"`
+	Bitrate          int `json:"bitrate"`
+	Fps              int `json:"fps"`
+	MixedVideoLayout int `json:"mixedVideoLayout"`
 }
 
 type Tags struct {
@@ -541,6 +865,25 @@ type ClientRequestForStartCall struct {
 	RecordingConfig     RecordingConfigModel     `json:"recordingConfig"`
 	RecordingFileConfig RecordingFileConfigModel `json:"recordingFileConfig"`
 	StorageConfig       StorageConfigModel       `json:"storageConfig"`
+}
+
+type ClientRequestForUpdateStartCall struct {
+	UID           string        `json:"uid"`
+	Cname         string        `json:"cname"`
+	ClientRequest ClientRequest `json:"clientRequest"`
+}
+type AudioUIDList struct {
+	SubscribeAudioUids []string `json:"subscribeAudioUids"`
+}
+type VideoUIDList struct {
+	SubscribeVideoUids []string `json:"subscribeVideoUids"`
+}
+type StreamSubscribe struct {
+	AudioUIDList AudioUIDList `json:"audioUidList"`
+	VideoUIDList VideoUIDList `json:"videoUidList"`
+}
+type ClientRequest struct {
+	StreamSubscribe StreamSubscribe `json:"streamSubscribe"`
 }
 
 type AgoraCallStartModel struct {
@@ -582,26 +925,65 @@ type AgoraCallStatus struct {
 	} `json:"serverResponse"`
 }
 
+// type AgoraCallStopResponseModel struct {
+// 	ResourceID     string `json:"resourceId"`
+// 	Sid            string `json:"sid"`
+// 	ServerResponse struct {
+// 		FileListMode string `json:"fileListMode"`
+// 		FileList     []struct {
+// 			FileName       string `json:"fileName"`
+// 			TrackType      string `json:"trackType"`
+// 			UID            string `json:"uid"`
+// 			MixedAllUser   bool   `json:"mixedAllUser"`
+// 			IsPlayable     bool   `json:"isPlayable"`
+// 			SliceStartTime int64  `json:"sliceStartTime"`
+// 		} `json:"fileList"`
+// 		UploadingStatus string `json:"uploadingStatus"`
+// 	} `json:"serverResponse"`
+// }
+
 type AgoraCallStopResponseModel struct {
-	ResourceID     string `json:"resourceId"`
-	Sid            string `json:"sid"`
-	ServerResponse struct {
-		FileListMode string `json:"fileListMode"`
-		FileList     []struct {
-			FileName       string `json:"fileName"`
-			TrackType      string `json:"trackType"`
-			UID            string `json:"uid"`
-			MixedAllUser   bool   `json:"mixedAllUser"`
-			IsPlayable     bool   `json:"isPlayable"`
-			SliceStartTime int64  `json:"sliceStartTime"`
-		} `json:"fileList"`
-		UploadingStatus string `json:"uploadingStatus"`
-	} `json:"serverResponse"`
+	Code int `json:"Code"`
+	Body struct {
+		ResourceID     string `json:"resourceId"`
+		Sid            string `json:"sid"`
+		ServerResponse struct {
+			FileListMode string `json:"fileListMode"`
+			FileList     []struct {
+				FileName       string `json:"fileName"`
+				TrackType      string `json:"trackType"`
+				UID            string `json:"uid"`
+				MixedAllUser   bool   `json:"mixedAllUser"`
+				IsPlayable     bool   `json:"isPlayable"`
+				SliceStartTime int64  `json:"sliceStartTime"`
+			} `json:"fileList"`
+			UploadingStatus string `json:"uploadingStatus"`
+		} `json:"serverResponse"`
+	} `json:"Body"`
+}
+
+type EmailBodyMessageWithNameModel struct {
+	Name string
 }
 
 type EmailBodyMessageModel struct {
 	Name    string
 	Message string
+}
+
+type EmailBodyWithAccessCodeMessageModel struct {
+	Name       string
+	Message    string
+	AccessCode string
+}
+
+type EmailBodyMessageModelWithDocu struct {
+	Name     string
+	Message  string
+	Message1 string
+	Message2 string
+	Message3 string
+	Message4 string
 }
 
 type EmailRecipientModel struct {
@@ -613,4 +995,17 @@ type EmailRecipientModel struct {
 type NotificationAllowSettingModel struct {
 	UserType string `json:"userType"`
 	Status   string `json:"status"`
+}
+
+type DocumentList struct {
+	DocumentName string
+	DocumentLink string
+}
+
+type OneSignalNotificationBulkData struct {
+	AppID            string            `json:"app_id"`
+	Headings         map[string]string `json:"headings"`
+	Contents         map[string]string `json:"contents"`
+	IncludedSegments []string          `json:"included_segments"`
+	Data             map[string]string `json:"data"`
 }

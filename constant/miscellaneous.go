@@ -40,3 +40,12 @@ const (
 const (
 	DefaultPhotoForClientAndListerner = "miscellaneous/kmPlQ123NSP123.jpg"
 )
+
+const ENCRYPTION_SECRET_KEY="3t6w9z$C&F)J@NcR4e6f9w0s$D*G-KaP"
+const ENCRYPTION_SECRET_IV= "4e6f9w0s$D*G-KaP"
+
+const ENCRYPTION_SECRET_KEY_FOR_WEB_PROD="38c4nz$C&F)J@NcR4e6f9w0s$D*G-KaP"
+const ENCRYPTION_SECRET_IV_FOR_WEB_PROD="4eS3cZ0s$D*G-KaP"
+
+const ENCRYPTION_SECRET_KEY_FOR_WEB="B34ds1a3sdf5f30mfhjr5fj3d3as33cv"
+const ENCRYPTION_SECRET_IV_FOR_WEB= "W3x5cks4kd23jsdc"

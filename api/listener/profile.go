@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strings"
 
 	UTIL "salbackend/util"
@@ -90,7 +91,7 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 		response["refresh_token"] = refreshToken
 
 		response["listener"] = listener[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -143,6 +144,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	listener := map[string]string{}
 	listener["first_name"] = body["first_name"]
 	listener["last_name"] = body["last_name"]
+	listener["pronoun"] = body["pronoun"]
 	listener["gender"] = body["gender"]
 	listener["age_group"] = body["age_group"]
 	listener["phone"] = body["phone"]
@@ -193,8 +195,39 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data := Model.EmailDataForCounsellorProfile{
+		Media_URL:   CONFIG.MediaURLInCLOUDFRONT,
+		First_Name:  listeners[0]["first_name"],
+		Last_Name:   listeners[0]["last_name"],
+		Pronoun:     listeners[0]["pronoun"],
+		Gender:      listeners[0]["gender"],
+		Type:        "Listener",
+		Phone:       listeners[0]["phone"],
+		Photo:       listeners[0]["photo"],
+		Email:       listeners[0]["email"],
+		Education:   listeners[0]["occupation"],
+		Experience:  listeners[0]["age_group"],
+		About:       listeners[0]["about"],
+		Resume:      "NULL",
+		Certificate: "NULL",
+		Aadhar:      listeners[0]["aadhar"],
+		Linkedin:    "NULL",
+		Status:      listeners[0]["status"],
+	}
+
+	filepath := "htmlfile/CounsellorProfile.html"
+
+	emailbody := UTIL.GetHTMLTemplateForProfile(data, filepath)
+
+	UTIL.SendEmail(
+		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
+		emailbody,
+		CONFIG.OnboardingEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
+		CONSTANT.InstantSendEmailMessage,
+	)
+
 	// send account signup notification to listener
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, listenerID)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, listenerID, CONSTANT.ListenerType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, listenerID,"")
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -212,7 +245,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	response["listener"] = listeners[0]
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -251,6 +284,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["last_name"]) > 0 {
 		listener["last_name"] = body["last_name"]
+	}
+	if len(body["pronoun"]) > 0 {
+		listener["pronoun"] = body["pronoun"]
 	}
 	if len(body["gender"]) > 0 {
 		listener["gender"] = body["gender"]

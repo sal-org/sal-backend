@@ -21,7 +21,7 @@ import (
 func NotificationsGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -30,7 +30,7 @@ func NotificationsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get notifications for client
-	notifications, status, ok := DB.SelectProcess("select * from "+CONSTANT.NotificationsTable+" where user_id = ? and notification_status='2' order by created_at desc limit "+strconv.Itoa(CONSTANT.NotificationsPerPage)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.NotificationsPerPage), r.FormValue("client_id"))
+	notifications, status, ok := DB.SelectProcess("select * from "+CONSTANT.NotificationsTable+" where user_id = ? and notification_status='2' and created_at >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by created_at desc limit "+strconv.Itoa(CONSTANT.NotificationsPerPage)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.NotificationsPerPage), r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return

@@ -2,6 +2,7 @@ package admin
 
 import (
 	"net/http"
+	"path/filepath"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
 	"strconv"
@@ -15,7 +16,7 @@ import (
 func TherapistGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -25,7 +26,7 @@ func TherapistGet(w http.ResponseWriter, r *http.Request) {
 
 	// get therapists
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "name":
@@ -41,6 +42,10 @@ func TherapistGet(w http.ResponseWriter, r *http.Request) {
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " email = ? ")
 				queryArgs = append(queryArgs, val[0])
+			}
+		case "location":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " location like '%%"+val[0]+"%%' ")
 			}
 		case "status":
 			if len(val[0]) > 0 {
@@ -70,9 +75,15 @@ func TherapistGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, therapist := range therapists {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, therapist["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	therapist["photo"] = endPointURL
+	// }
+
 	response["therapists"] = therapists
 	response["therapists_count"] = therapistsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(therapistsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -81,7 +92,13 @@ func TherapistGet(w http.ResponseWriter, r *http.Request) {
 func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -89,6 +106,9 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
 	}
+
+	endPointURLVideoContent := UTIL.GetEndpointFromURL(body["video"])
+	body["video"] = endPointURLVideoContent
 
 	// add therapist
 	therapist := map[string]string{}
@@ -100,9 +120,15 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 	therapist["price"] = body["price"]
 	therapist["price_3"] = body["price_3"]
 	therapist["price_5"] = body["price_5"]
+	therapist["corporate_price"] = body["corporate_price"]
 	therapist["education"] = body["education"]
 	therapist["experience"] = body["experience"]
 	therapist["about"] = body["about"]
+	therapist["start_date"] = body["start_date"]
+	therapist["gap_years"] = body["gap_years"]
+	therapist["gap_months"] = body["gap_months"]
+	therapist["location"] = body["location"]
+	therapist["video"] = body["video"]
 	therapist["payout_percentage"] = body["payout_percentage"]
 	therapist["payee_name"] = body["payee_name"]
 	therapist["bank_account_no"] = body["bank_account_no"]
@@ -111,6 +137,7 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 	therapist["bank_name"] = body["bank_name"]
 	therapist["bank_account_type"] = body["bank_account_type"]
 	therapist["pan"] = body["pan"]
+	therapist["corporate_therpist"] = body["corporate_therpist"]
 	therapist["status"] = body["status"]
 	therapist["modified_by"] = body["modified_by"]
 	therapist["modified_at"] = UTIL.GetCurrentTime().String()
@@ -120,5 +147,35 @@ func TherapistUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PreSignedS3URLToUploadContent(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	s3Path := CONSTANT.MiscellaneousS3Path
+	switch r.FormValue("type") {
+	case CONSTANT.CounsellorType:
+		s3Path = CONSTANT.CounsellorS3Path
+	case CONSTANT.ListenerType:
+		s3Path = CONSTANT.ListenerS3Path
+	case CONSTANT.ClientType:
+		s3Path = CONSTANT.ClientS3Path
+	case CONSTANT.TherapistType:
+		s3Path = CONSTANT.TherapistS3Path
+	}
+
+	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
+
+	response["file_name"] = fileName
+	response["url"] = url
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

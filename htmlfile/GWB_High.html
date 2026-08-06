@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>Higher General Wellbeing Report</title>
+      <style>
+        body{
+				  min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>General Wellbeing (GWB) Report</b></p>
+          <p style="font-size:large;text-align: end;">- Derived from Quality Of Work Life (QoWL)</p>
+          <p style="font-size:large;text-align: end;">University of Portsmouth, Portsmouth UK</p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p> Quality Of Work Life (QoWL) is that part of your overall quality of life that is concerned with work. It is more than just job satisfaction or happiness at work, but the widest context in which an employee could evaluate the influence of work on their life.</p>
+          <p>The <b>General Wellbeing (GWB)</b> survey is based on 6 questions which assess respondent’s general feelings of happiness and life satisfaction. General well-being both influences, and is influenced by, work.</p>
+          <p>The questions include psychological wellbeing and general physical health.</p>
+          <p> Psychological well-being can affect an individual’s performance at work for better or for worse. When people feel good, they may be more likely to work well and enjoy being at work more. However, when people feel low, anxious, or ill at ease, regardless of whether that distress springs from their work or from difficulties at    home, their work is likely to be adversely affected. </p>
+          <p> When people are affected by physical ill health, their performance at work can be affected, and, in turn, their sense of psychological well-being can be reduced.</p>
+          <p> Thus, it can be argued that general wellbeing of people at work needs to be positively addressed, with attention being paid to prevention and promotion of well-being, rather than simply responding with provision of help when problems arise. </p>
+          <p> Quality Of Work Life (QoWL) contains 6 sub-scales. In an endeavour to maximise response rate and maintain focus, only GWB was selected for this survey. Your data will be kept confidential in accordance with our Privacy Policy and no information will be released that might identify any individual.</p>
+          <p>Below; you can find your GWB scores and comments based on these for each of the questions. All questions were responded to on a 5-point Likert scale comprising of: Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree.</p>
+        </div> 
+        <div style="text-align: center; font-size: x-large;">
+          <p><b>Questionnaire</b></p>
+        </div>
+        <div>
+          <p><b>Likert scale</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Strongly Disagree</th> 
+              <th style="border: 1px solid black;">Disagree</th>
+              <th style="border: 1px solid black;">Neutral</th>
+              <th style="border: 1px solid black;">Agree</th>
+              <th style="border: 1px solid black;">Strongly Agree</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">1</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">4</td>
+              <td style="border: 1px solid black;">5</td>
+            </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. I feel well at the moment</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. Recently, I have been feeling unhappy and depressed</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. I am satisfied with my life</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. In most ways my life is close to ideal</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. Generally, things work out well for me</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. Recently, I have been feeling reasonably happy all things considered	</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table>
+        </div>
+        <p><b>Score Interpretation:</b></p> 
+        <table style="border: 1px solid black; width: 50%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">Percentiles </th> 
+            <th style="border: 1px solid black;">GWB Scale</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">Below Average</td>
+            <td style="border: 1px solid black;">6-20</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">Average</td>
+            <td style="border: 1px solid black;">21-23</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">Above average</td>
+            <td style="border: 1px solid black;">24-30</td>
+          </tr>
+        </table>
+        <p>Your overall QoWL score is in the high range based on the assessment. You are doing good in managing your wellbeing. Keep at it!</p>
+        <p><b>Suggested Action Plan: </b></p>
+        <p>Let us look at ways to maintain this state of well-being. Find if there is anything you can do today, to be kind or helpful to someone else. You could try:</p>
+        <ul>
+            <li>Offering help to a colleague with something they are stuck on,</li>
+            <li>Introducing yourself to a new joiner, to help them feel more at ease,</li>
+            <li>Seeing if there are any volunteering initiatives open at work.</li>
+        </ul>
+      </div>
+    </body>
+</html>

@@ -56,6 +56,12 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, image := range CONSTANT.EventImages {
+		urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, image, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+		image = endPointURL
+	}
+
 	response["event_images"] = CONSTANT.EventImages
 	response["topics"] = topics
 	response["languages"] = languages
@@ -63,6 +69,6 @@ func ListMeta(w http.ResponseWriter, r *http.Request) {
 	response["rating_types"] = ratingTypes
 	response["moods"] = moods
 	response["urls"] = CONSTANT.URLs
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

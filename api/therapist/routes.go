@@ -18,19 +18,44 @@ func LoadTherapistRoutes(router *mux.Router) {
 	therapistRoutes.HandleFunc("/appointment/upcoming", AppointmentsUpcoming).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
+
+	therapistRoutes.HandleFunc("/inperson_appointment/upcoming", InPersonAppointmentsUpcoming).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
 	therapistRoutes.HandleFunc("/appointment/past", AppointmentsPast).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
+	therapistRoutes.HandleFunc("/inperson_appointment/past", InPersonAppointmentsPast).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 	therapistRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+	therapistRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
 	therapistRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",
 	).Methods("PUT")
+
+	therapistRoutes.HandleFunc("/inperson_appointment/start", AppointmentInPersonStart).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
 	therapistRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",
+	).Methods("PUT")
+
+	therapistRoutes.HandleFunc("/inperson_appointment/noshow", AppointmentInPersonNoShow).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
+	therapistRoutes.HandleFunc("/inperson_appointment/end", AppointmentInPersonEnd).Queries(
+		"appointment_id", "{appointment_id}",
 	).Methods("PUT")
 
 	// assessment
@@ -59,6 +84,25 @@ func LoadTherapistRoutes(router *mux.Router) {
 	therapistRoutes.HandleFunc("/event/block", EventsBlocked).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson/start", EventInPersonStart).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson/end", EventInPersonEnd).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson/upcoming", UpcomingEventsInPerson).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson/past", PastEventsInPerson).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson/person_list", InPersonEventsPersonList).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson", EventInPersonDetail).Queries(
+		"order_id", "{order_id}",
+	).Methods("GET")
+	therapistRoutes.HandleFunc("/event_inperson/attended", InPersonEventsPersonAttended).Methods("PUT")
 	therapistRoutes.HandleFunc("/event", EventUpdate).Queries(
 		"order_id", "{order_id}",
 		"therapist_id", "{therapist_id}",
@@ -82,6 +126,10 @@ func LoadTherapistRoutes(router *mux.Router) {
 
 	// payment
 	therapistRoutes.HandleFunc("/payment", PaymentsGet).Queries(
+		"therapist_id", "{therapist_id}",
+	).Methods("GET")
+
+	therapistRoutes.HandleFunc("/payment/download", PaymentsDownload).Queries(
 		"therapist_id", "{therapist_id}",
 	).Methods("GET")
 

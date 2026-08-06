@@ -15,7 +15,7 @@ import (
 func ClientGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -25,7 +25,7 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 
 	// get clients
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "name":
@@ -35,6 +35,11 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 		case "phone":
 			if len(val[0]) > 0 {
 				wheres = append(wheres, " phone = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "emp_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " emp_id = ? ")
 				queryArgs = append(queryArgs, val[0])
 			}
 		case "email":
@@ -48,8 +53,10 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 				queryArgs = append(queryArgs, val[0])
 			}
 		case "client_id":
-			wheres = append(wheres, " client_id = ? ")
-			queryArgs = append(queryArgs, val[0])
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " client_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
 		}
 	}
 
@@ -70,9 +77,15 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, client := range clients {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	client["photo"] = endPointURL
+	// }
+
 	response["clients"] = clients
 	response["clients_count"] = clientsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(clientsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -81,7 +94,13 @@ func ClientGet(w http.ResponseWriter, r *http.Request) {
 func ClientUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)

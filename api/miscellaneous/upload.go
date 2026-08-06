@@ -29,16 +29,12 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	switch r.FormValue("type") {
 	case CONSTANT.CounsellorType:
 		s3Path = CONSTANT.CounsellorS3Path
-		break
 	case CONSTANT.ListenerType:
 		s3Path = CONSTANT.ListenerS3Path
-		break
 	case CONSTANT.ClientType:
 		s3Path = CONSTANT.ClientS3Path
-		break
 	case CONSTANT.TherapistType:
 		s3Path = CONSTANT.TherapistS3Path
-		break
 	}
 
 	var fileName string
@@ -62,7 +58,36 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		fileName = name
 	}
 
+	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	fileName = endPointURL
+
 	response["file"] = fileName
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PreSignedS3URLToUpload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	s3Path := CONSTANT.MiscellaneousS3Path
+	switch r.FormValue("type") {
+	case CONSTANT.CounsellorType:
+		s3Path = CONSTANT.CounsellorS3Path
+	case CONSTANT.ListenerType:
+		s3Path = CONSTANT.ListenerS3Path
+	case CONSTANT.ClientType:
+		s3Path = CONSTANT.ClientS3Path
+	case CONSTANT.TherapistType:
+		s3Path = CONSTANT.TherapistS3Path
+	}
+
+	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, s3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
+
+	response["file_name"] = fileName
+	response["url"] = url
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

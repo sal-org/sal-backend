@@ -13,17 +13,17 @@ import (
 func CouponGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get coupons
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "active":
@@ -67,7 +67,7 @@ func CouponGet(w http.ResponseWriter, r *http.Request) {
 func CouponAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -86,6 +86,7 @@ func CouponAdd(w http.ResponseWriter, r *http.Request) {
 	// add coupon
 	coupon := map[string]string{}
 	coupon["coupon_code"] = body["coupon_code"]
+	coupon["description"] = body["description"]
 	coupon["client_id"] = body["client_id"]
 	coupon["counsellor_id"] = body["counsellor_id"]
 	coupon["therapist_id"] = body["therapist_id"]
@@ -112,7 +113,7 @@ func CouponAdd(w http.ResponseWriter, r *http.Request) {
 func CouponUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -124,6 +125,7 @@ func CouponUpdate(w http.ResponseWriter, r *http.Request) {
 	// update coupon
 	coupon := map[string]string{}
 	coupon["coupon_code"] = body["coupon_code"]
+	coupon["description"] = body["description"]
 	coupon["client_id"] = body["client_id"]
 	coupon["counsellor_id"] = body["counsellor_id"]
 	coupon["therapist_id"] = body["therapist_id"]

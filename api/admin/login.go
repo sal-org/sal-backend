@@ -13,7 +13,7 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// get admin details
 	admin, status, ok := DB.SelectSQL(CONSTANT.AdminsTable, []string{"*"}, map[string]string{"username": r.FormValue("username"), "password": UTIL.GetStringMD5Hash(r.FormValue("password"))})
@@ -35,12 +35,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// access token - jwt token with short expiry added in header for authorization
 	// refresh token - jwt token with long expiry to get new access token if expired
 	// if refresh token expired, need to login
-	accessToken, ok := UTIL.CreateAccessToken(admin[0]["admin_id"])
+	accessToken, ok := UTIL.CreateAccessTokenForWeb(admin[0]["admin_id"])
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	refreshToken, ok := UTIL.CreateRefreshToken(admin[0]["admin_id"])
+	refreshToken, ok := UTIL.CreateRefreshTokenForWeb(admin[0]["admin_id"])
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
 		return
@@ -57,7 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	fmt.Println("RefreshToken", r.Header, r.URL.Query())
 	// check if refresh token is valid, not expired and token user id is same as user id given
@@ -74,7 +74,7 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// generate new access token
-	accessToken, ok := UTIL.CreateAccessToken(r.FormValue("admin_id"))
+	accessToken, ok := UTIL.CreateAccessTokenForWeb(r.FormValue("admin_id"))
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return

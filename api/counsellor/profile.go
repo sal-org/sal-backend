@@ -8,6 +8,7 @@ import (
 	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strings"
+	"time"
 )
 
 // ProfileGet godoc
@@ -84,12 +85,16 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// counsellor[0]["photo"] = endPointURL
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["languages"] = languages
 		response["topics"] = topics
 		response["counsellor"] = counsellor[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -133,20 +138,49 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var typeOfService string
+
+	switch body["corporate_therpist"] {
+	case "Individual Clients":
+		typeOfService = "0"
+	case "Corporate Clients":
+		typeOfService = "2"
+	case "Both":
+		typeOfService = "1"
+	}
+
+	joinDate := body["start_date"]
+
+	currentTime := time.Now()
+
+	nowDate := currentTime.Format("2006-01-02")
+
+	gapYears := body["gap_years"]
+
+	gapMonths := body["gap_months"]
+
+	experience := UTIL.CalculateExperience(joinDate, nowDate, gapYears, gapMonths)
+
 	// add counsellor details
 	counsellor := map[string]string{}
 	counsellor["first_name"] = body["first_name"]
 	counsellor["last_name"] = body["last_name"]
+	counsellor["pronoun"] = body["pronoun"]
 	counsellor["gender"] = body["gender"]
 	counsellor["phone"] = body["phone"]
 	counsellor["photo"] = body["photo"]
 	counsellor["email"] = body["email"]
+	counsellor["location"] = body["location"]
 	counsellor["price"] = body["price"]
 	counsellor["multiple_sessions"] = body["multiple_sessions"]
 	counsellor["price_3"] = body["price_3"]
 	counsellor["price_5"] = body["price_5"]
 	counsellor["education"] = body["education"]
-	counsellor["experience"] = body["experience"]
+	counsellor["experience"] = experience
+	counsellor["start_date"] = joinDate
+	counsellor["gap_years"] = gapYears
+	counsellor["gap_months"] = gapMonths
+	counsellor["therapeutic_approach"] = body["therapeutic_approach"]
 	counsellor["about"] = body["about"]
 	counsellor["timezone"] = body["timezone"]
 	counsellor["resume"] = body["resume"]
@@ -163,6 +197,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	counsellor["pan"] = body["pan"]
 	counsellor["device_id"] = body["device_id"]
 	counsellor["status"] = CONSTANT.CounsellorNotApproved
+	counsellor["corporate_therpist"] = typeOfService
 	counsellor["notification_status"] = CONSTANT.NotificationActive
 	counsellor["last_login_time"] = UTIL.GetCurrentTime().String()
 	counsellor["created_at"] = UTIL.GetCurrentTime().String()
@@ -200,7 +235,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send account signup notification, message to counsellor
-	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, counsellorID)
+	UTIL.SendNotification(CONSTANT.CounsellorAccountSignupCounsellorHeading, CONSTANT.CounsellorAccountSignupCounsellorContent, counsellorID, CONSTANT.CounsellorType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, counsellorID, "")
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.CounsellorAccountSignupTextMessage,
@@ -218,39 +253,28 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	// Counsellor details Send with SAL Team
 	counsellor_details, _, _ := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": counsellorID})
 
-	// use this future
-	// filepath_text := "htmlfile/emailmessagebody.html"
-
-	// emaildata := Model.EmailBodyMessageModel{
-	// 	Name:    counsellor_details[0]["first_name"],
-	// 	Message: CONSTANT.CounsellorAccountSignupCounsellorEmailBody,
-	// }
-
-	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// // email for counsellor
-	// UTIL.SendEmail(
-	// 	CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-	// 	emailBody,
-	// 	counsellor_details[0]["email"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
-
 	data := Model.EmailDataForCounsellorProfile{
-		First_Name:  counsellor_details[0]["first_name"],
-		Last_Name:   counsellor_details[0]["last_name"],
-		Gender:      counsellor_details[0]["gender"],
-		Type:        "Counsellor",
-		Phone:       counsellor_details[0]["phone"],
-		Photo:       counsellor_details[0]["photo"],
-		Email:       counsellor_details[0]["email"],
-		Education:   counsellor_details[0]["education"],
-		Experience:  counsellor_details[0]["experience"],
-		About:       counsellor_details[0]["about"],
-		Resume:      counsellor_details[0]["resume"],
-		Certificate: counsellor_details[0]["certificate"],
-		Aadhar:      counsellor_details[0]["aadhar"],
-		Linkedin:    counsellor_details[0]["linkedin"],
-		Status:      counsellor_details[0]["status"],
+		Media_URL:            CONFIG.MediaURLInCLOUDFRONT,
+		First_Name:           counsellor_details[0]["first_name"],
+		Last_Name:            counsellor_details[0]["last_name"],
+		Pronoun:              counsellor_details[0]["pronoun"],
+		Gender:               counsellor_details[0]["gender"],
+		Location:             counsellor_details[0]["location"],
+		Type:                 "Counsellor",
+		Phone:                counsellor_details[0]["phone"],
+		Photo:                counsellor_details[0]["photo"],
+		Email:                counsellor_details[0]["email"],
+		Education:            counsellor_details[0]["education"],
+		CounsellingStartDate: UTIL.BuildOnlyDate(counsellor_details[0]["start_date"]),
+		CounsellingGap:       counsellor_details[0]["gap_years"] + "Y" + " " + counsellor_details[0]["gap_months"] + "M",
+		Experience:           counsellor_details[0]["experience"],
+		TherapeuticApproach:  counsellor_details[0]["therapeutic_approach"],
+		About:                counsellor_details[0]["about"],
+		Resume:               counsellor_details[0]["resume"],
+		Certificate:          counsellor_details[0]["certificate"],
+		Aadhar:               counsellor_details[0]["aadhar"],
+		Linkedin:             counsellor_details[0]["linkedin"],
+		Status:               counsellor_details[0]["status"],
 	}
 
 	filepath := "htmlfile/CounsellorProfile.html"
@@ -260,40 +284,19 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.AnandEmailID,
+		CONFIG.OnboardingEmailID, // prod : CONSTANT.AkshayEmailID , dev : CONSTANT.ShivamEmailID
 		CONSTANT.InstantSendEmailMessage,
 	)
 
-	/*UTIL.SendEmail(
-		CONSTANT.CounsellorProfileWaitingForApprovalTitle,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.CounsellorProfileHtml,
-			map[string]string{
-				"###First_Name###":  counsellor[0]["first_name"],
-				"###Last_Name###":   orderdetails[0]["last_name"],
-				"###Gender###":      orderdetails[0]["gender"],
-				"###Phone###":       orderdetails[0]["phone"],
-				"###Photo###":       orderdetails[0]["photo"],
-				"###Email###":       orderdetails[0]["email"],
-				"###Education###":   orderdetails[0]["education"],
-				"###Experience###":  orderdetails[0]["experience"],
-				"###About###":       orderdetails[0]["about"],
-				"###Resume###":      orderdetails[0]["resume"],
-				"###Certificate###": orderdetails[0]["certificate"],
-				"###Aadhar###":      orderdetails[0]["aadhar"],
-				"###Linkedin###":    orderdetails[0]["linkedin"],
-				"###Status###":      orderdetails[0]["status"],
-			},
-		),
-		CONSTANT.AnandEmailID,
-		CONSTANT.InstantSendEmailMessage,
-	)*/
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor_details[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// counsellor_details[0]["photo"] = endPointURL
 
 	response["access_token"] = accessToken
 	response["refresh_token"] = refreshToken
 
 	response["counsellor"] = counsellor_details[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -333,6 +336,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body["last_name"]) > 0 {
 		counsellor["last_name"] = body["last_name"]
 	}
+	if len(body["pronoun"]) > 0 {
+		counsellor["pronoun"] = body["pronoun"]
+	}
 	if len(body["gender"]) > 0 {
 		counsellor["gender"] = body["gender"]
 	}
@@ -359,6 +365,9 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body["about"]) > 0 {
 		counsellor["about"] = body["about"]
+	}
+	if len(body["therapeutic_approach"]) > 0 {
+		counsellor["therapeutic_approach"] = body["therapeutic_approach"]
 	}
 	if len(body["resume"]) > 0 {
 		counsellor["resume"] = body["resume"]

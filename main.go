@@ -1,10 +1,8 @@
 package main
 
 import (
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	API "salbackend/api"
 	CONFIG "salbackend/config"
@@ -17,7 +15,7 @@ import (
 // @version 1.0
 // @description This is a api for SAL client/listener/counsellor APIs
 // @schemes https
-// @host yvsdncrpod.execute-api.ap-south-1.amazonaws.com
+// @host btkbtwnsw0.execute-api.ap-south-1.amazonaws.com
 // @BasePath /prod
 // @securityDefinitions.apikey JWTAuth
 // @in header
@@ -25,7 +23,7 @@ import (
 
 func main() {
 
-	rand.Seed(time.Now().UnixNano()) // seed for random generator
+	// rand.Seed(time.Now().UnixNano()) // seed for random generator
 
 	CONFIG.LoadConfig()
 	DATABASE.ConnectDatabase()

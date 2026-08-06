@@ -49,7 +49,7 @@ func NotificationInactiveORActive(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"]})
+		status, ok := DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"], "push_notification_status": body["push_notification_status"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -61,7 +61,7 @@ func NotificationInactiveORActive(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok := DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"]})
+		status, ok := DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"], "push_notification_status": body["push_notification_status"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -73,7 +73,7 @@ func NotificationInactiveORActive(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"]})
+		status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"], "push_notification_status": body["push_notification_status"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -85,7 +85,7 @@ func NotificationInactiveORActive(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok := DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"]})
+		status, ok := DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("user_id")}, map[string]string{"notification_status": body["status"], "push_notification_status": body["push_notification_status"]})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return

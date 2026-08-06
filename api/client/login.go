@@ -5,6 +5,7 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 
 	UTIL "salbackend/util"
 	"strings"
@@ -20,7 +21,7 @@ import (
 func SendOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	if len(r.FormValue("phone")) < 8 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
@@ -33,8 +34,13 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientDeleted {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -65,6 +71,77 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func SendOTPForForFamilyRegister(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	if len(r.FormValue("family_phone_no")) < 8 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ValidPhoneRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"phone": r.FormValue("family_phone_no")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientDeleted {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// using phone verified table to check if phone has been really verified by OTP
+	// currently deleting if phone number is already present
+	DB.DeleteSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": r.FormValue("family_phone_no")})
+
+	// get client details
+	mainClient, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(mainClient) > 0 && !strings.EqualFold(mainClient[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send otp
+	otp, ok := UTIL.GenerateOTP(r.FormValue("family_phone_no"))
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	email := UTIL.EncodeEmailID(r.FormValue("family_email_id"))
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientSendOTPToRegisterFamilyMemeberMessage,
+			map[string]string{
+				"###otp###":        otp,
+				"###clientName###": mainClient[0]["first_name"],
+				"###emailId###":    email,
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		r.FormValue("family_phone_no"),
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.MessageSent,
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 // VerifyOTP godoc
 // @Tags Client Login
 // @Summary Verify OTP sent to specified phone
@@ -77,7 +154,7 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if otp is correct
 	// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
@@ -85,15 +162,37 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	if len(r.FormValue("device_id")) < 0 {
+	if len(r.FormValue("device_id")) == 0 {
 		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// if strings.EqualFold("915757575757", r.FormValue("phone")) {
+	// 	if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// } else if strings.EqualFold("914747474747", r.FormValue("phone")) {
+	// 	if !strings.EqualFold("4848", r.FormValue("otp")) {
+	// 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// } else {
+		// if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+	// }
+
+	if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get client details
 	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone")})
@@ -115,7 +214,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"device_id": r.FormValue("device_id")})
+		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -142,11 +241,101 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// client[0]["photo"] = endPointURL
+
 		response["access_token"] = accessToken
 		response["refresh_token"] = refreshToken
 		response["topic"] = topics
 		response["client"] = client[0]
-		response["media_url"] = CONFIG.MediaURL
+		response["access_control"] = givenAccess[0]
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func VerifyOTPForRegisterFamilyMember(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	//check if otp is correct
+	if !UTIL.VerifyOTP(r.FormValue("family_phone_no"), r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("family_phone_no")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(client) == 0 {
+		// client is first time signing up
+
+		// using phone verified table to check if phone has been really verified by OTP
+		// currently inserting after phone is really verified
+		DB.InsertSQL(CONSTANT.PhoneOTPVerifiedTable, map[string]string{"phone": r.FormValue("family_phone_no"), "created_at": UTIL.GetCurrentTime().String()})
+	} else {
+		// client already signed up
+		// check if client is active
+		if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("family_phone_no")}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// generate access and refresh token
+		// access token - jwt token with short expiry added in header for authorization
+		// refresh token - jwt token with long expiry to get new access token if expired
+		// if refresh token expired, need to login
+		accessToken, ok := UTIL.CreateAccessToken(client[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		refreshToken, ok := UTIL.CreateRefreshToken(client[0]["client_id"])
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		topics, status, ok := DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		// givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.ClientAccessControlTable + " where status = '1'")
+		// if !ok {
+		// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+		// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+		// client[0]["photo"] = endPointURL
+
+		response["access_token"] = accessToken
+		response["refresh_token"] = refreshToken
+		response["topic"] = topics
+		response["client"] = client[0]
+		// response["access_control"] = givenAccess[0]
+		response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	}
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -163,7 +352,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if refresh token is valid, not expired and token user id is same as user id given
 	id, ok, access := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
@@ -188,4 +377,714 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	response["access_token"] = accessToken
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func SendOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	is_valid_email := UTIL.IsValidEmail(r.FormValue("cor_email"))
+	if is_valid_email == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	domainName := strings.Split(r.FormValue("cor_email"), "@")
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// // get client details
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+		return
+	}
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"email": r.FormValue("cor_email")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && client[0]["status"] == CONSTANT.ClientDeleted {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountBlockedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send otp
+	otp, ok := UTIL.GenerateOTPWithCorporateEmail(r.FormValue("cor_email"))
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: "",
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorLoginOTPBody,
+			map[string]string{
+				"###otp###": otp,
+			},
+		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorLoginOTPTitle,
+			map[string]string{
+				"###otp###": otp,
+			},
+		),
+		emailBody1,
+		r.FormValue("cor_email"),
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func SendOTPWithCorporateEmailForRegister(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	is_valid_email := UTIL.IsValidEmail(r.FormValue("cor_email"))
+	if is_valid_email == "" {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pls enter correct email id", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	domainName := strings.Split(r.FormValue("cor_email"), "@")
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	ok = DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+	if ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfRegister, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// // get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"status"}, map[string]string{"email": r.FormValue("cor_email")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// if len(client) > 0 && !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// send otp
+	otp, ok := UTIL.GenerateOTPWithCorporateEmail(r.FormValue("cor_email"))
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: "",
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorLoginOTPBody,
+			map[string]string{
+				"###otp###": otp,
+			},
+		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorLoginOTPTitle,
+			map[string]string{
+				"###otp###": otp,
+			},
+		),
+		emailBody1,
+		r.FormValue("cor_email"),
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func CheckAccessCode(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"access_code": r.FormValue("access_code"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientAccessCode, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	title, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersTable, []string{"partner_name", "domain"}, map[string]string{"access_code": r.FormValue("access_code"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	address, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersAddressTable, []string{"address"}, map[string]string{"domain": title[0]["domain"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["address"] = address
+
+	response["title"] = title[0]
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func GetAddressForCorporateClient(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientAccessCode, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	domainName := strings.Split(client[0]["email"], "@")
+
+	address, status, ok := DB.SelectSQL(CONSTANT.CorporatePartnersAddressTable, []string{"address"}, map[string]string{"domain": domainName[1], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["address"] = address
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func GetDenpendantClientOTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientDependantInvaildPhoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(client[0]["asscoiate_id"]) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientNotDependant, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	mainClient, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": client[0]["asscoiate_id"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send otp
+	otp, ok := UTIL.GenerateOTPWithCorporateEmail(mainClient[0]["email"])
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send email to client
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	// send appointment booking notification to therapist
+	UTIL.SendNotification(
+		CONSTANT.ClientCorFamilyMemberLoginToClientOTPHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorFamilyMemberLoginToClientOTPContent,
+			map[string]string{
+				"###familymembername###": client[0]["first_name"],
+			},
+		),
+		mainClient[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		mainClient[0]["client_id"],
+		"",
+	)
+
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: mainClient[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorFamilyMemberLoginOTPBody,
+			map[string]string{
+				"###otp###":              otp,
+				"###familymembername###": client[0]["first_name"] + " " + client[0]["last_name"],
+			},
+		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientCorFamilyMemberLoginOTPTitle,
+			map[string]string{
+				"###familymembername###": client[0]["first_name"] + " " + client[0]["last_name"],
+				"###otp###":              otp,
+			},
+		),
+		emailBody1,
+		mainClient[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	response["corporate_client_email"] = mainClient[0]["email"]
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func VerifyOTPWithDependantClientEmail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CorporateClientDependantInvaildPhoneNumber, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	mainClient, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": client[0]["asscoiate_id"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	//check if otp is correct
+	if !UTIL.VerifyOTPWithCorporateEmail(mainClient[0]["email"], r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// // get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("cor_email")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// client already signed up
+	// check if client is active
+	// if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"last_login_time": UTIL.GetCurrentTime().String(), "device_id": r.FormValue("device_id"), "platform": r.FormValue("platform"), "version": r.FormValue("version"), "timezone": r.FormValue("timezone")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"device_id": r.FormValue("device_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(client[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(client[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	var topics []map[string]string
+
+	if len(client[0]["topic_ids"]) != 0 {
+		topics, status, ok = DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	domainName := strings.Split(mainClient[0]["email"], "@")
+
+	givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.CorporateClientFamilyAccessControlTable + " where domain = '" + domainName[1] + "'")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// client[0]["photo"] = endPointURL
+
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+	response["topic"] = topics
+	response["client"] = client[0]
+	response["access_control"] = givenAccess[0]
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func DeleteAccountForFamilyMember(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// get client details
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+		return
+	}
+	status, ok := DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": r.FormValue("client_id")}, map[string]string{"asscoiate_id": "", "modified_at": UTIL.GetCurrentTime().String()})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func CheckEmailANDPhone(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	if len(r.FormValue("cor_email")) == 0 && len(r.FormValue("phone")) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientEmptyBodyPass, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(r.FormValue("phone")) > 0 {
+		// check client details
+		ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")})
+		if ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	if len(r.FormValue("cor_email")) > 0 {
+
+		domainName := strings.Split(r.FormValue("cor_email"), "@")
+
+		// get client details
+		ok := DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+		if !ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorEmailInvalid, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(r.FormValue("login")) > 0 {
+			ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+			if !ok {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+				return
+			}
+		} else {
+			ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+			if ok {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+	} else if len(r.FormValue("email")) > 0 {
+		ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("email")})
+		if ok {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EmailExistsMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func VerifyOTPWithCorporateEmail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	//check if otp is correct
+	if !UTIL.VerifyOTPWithCorporateEmail(r.FormValue("cor_email"), r.FormValue("otp")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	ok := DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")})
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("cor_email")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// client already signed up
+	// check if client is active
+	if !strings.EqualFold(client[0]["status"], CONSTANT.ClientActive) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"email": r.FormValue("cor_email")}, map[string]string{"last_login_time": UTIL.GetCurrentTime().String(), "device_id": r.FormValue("device_id"), "platform": r.FormValue("platform"), "version": r.FormValue("version"), "timezone": r.FormValue("timezone")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"phone": r.FormValue("phone")}, map[string]string{"device_id": r.FormValue("device_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// generate access and refresh token
+	// access token - jwt token with short expiry added in header for authorization
+	// refresh token - jwt token with long expiry to get new access token if expired
+	// if refresh token expired, need to login
+	accessToken, ok := UTIL.CreateAccessToken(client[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	refreshToken, ok := UTIL.CreateRefreshToken(client[0]["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	topics := []map[string]string{}
+
+	if len(client[0]["topic_ids"]) > 0 && !strings.Contains(client[0]["topic_ids"], ",,") {
+		// if topic_ids is not empty or not just two commas
+		// then get topics
+		topics, status, ok = DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+
+	// topics, status, ok := DB.SelectProcess("select topic from " + CONSTANT.TopicsTable + " where id in (" + client[0]["topic_ids"] + ")")
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	domainName := strings.Split(r.FormValue("cor_email"), "@")
+
+	givenAccess, status, ok := DB.SelectProcess("select * from " + CONSTANT.CompanyAccessControlTable + " where domain = '" + domainName[1] + "'")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, client[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// client[0]["photo"] = endPointURL
+
+	response["access_token"] = accessToken
+	response["refresh_token"] = refreshToken
+	response["topic"] = topics
+	response["client"] = client[0]
+	response["access_control"] = givenAccess[0]
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func RestoreUserProfile(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if len(r.FormValue("phone")) == 0 {
+		userType := "3"
+		userID := ""
+		user, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"email": r.FormValue("email")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(user) == 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if userType == CONSTANT.ClientType {
+
+			userID = user[0]["client_id"]
+			// get counsellor details
+			client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": user[0]["client_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(client) == 0 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+
+			status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": user[0]["client_id"]}, map[string]string{"status": CONSTANT.ClientActive, "deletion_reason": "", "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		UTIL.SendNotification(
+			CONSTANT.ClientRestoreAccountClientHeading,
+			CONSTANT.ClientRestoreAccountClientContent,
+			userID,
+			userType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationInProgress,
+			userID,
+			"",
+		)
+
+	} else {
+		userType := "3"
+
+		userID := ""
+
+		user, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"phone": r.FormValue("phone")})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(user) == 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if userType == CONSTANT.ClientType {
+
+			userID = user[0]["client_id"]
+			// get counsellor details
+			client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": user[0]["client_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+
+			if len(client) == 0 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+
+			status, ok = DB.UpdateSQL(CONSTANT.ClientsTable, map[string]string{"client_id": user[0]["client_id"]}, map[string]string{"status": CONSTANT.ClientActive, "deletion_reason": "", "last_login_time": UTIL.GetCurrentTime().String(), "modified_at": UTIL.GetCurrentTime().String()})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		UTIL.SendNotification(
+			CONSTANT.ClientRestoreAccountClientHeading,
+			CONSTANT.ClientRestoreAccountClientContent,
+			userID,
+			userType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationInProgress,
+			userID,
+			"",
+		)
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

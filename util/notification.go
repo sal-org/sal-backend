@@ -19,7 +19,7 @@ func RemoveNotification(tagID, userID string) {
 }
 
 // SendNotification - send notification using onesignal
-func SendNotification(heading, content, userID, personType, sendAt, status, tagID string) {
+func SendNotification(heading, content, userID, personType, sendAt, status, tagID, image string) {
 	if strings.Contains(content, "###") { // check if notification variables are replaced
 		return
 	}
@@ -29,6 +29,7 @@ func SendNotification(heading, content, userID, personType, sendAt, status, tagI
 	notification["user_id"] = userID
 	notification["title"] = heading
 	notification["body"] = content
+	notification["image"] = image
 	notification["send_at"] = sendAt
 	notification["tag_id"] = tagID
 	notification["type"] = personType
@@ -44,7 +45,7 @@ func SendNotification(heading, content, userID, personType, sendAt, status, tagI
 	} else {
 		// set notification sent status as sent if no onesignal id is available
 		notification["notification_status"] = CONSTANT.NotificationSent
-		sendNotification(heading, content, notification["onesignal_id"], sendAt, personType)
+		sendNotification(heading, content, notification["onesignal_id"], sendAt, personType, image)
 
 	}
 	notification["created_at"] = GetCurrentTime().String()
@@ -81,28 +82,70 @@ func CheckNotificationEnableORDisable(id, idType string) string {
 	return ""
 }
 
-func sendNotification(heading, content, notificationID, sentAt, usertype string) {
+func sendNotification(heading, content, notificationID, sentAt, usertype, image string) {
 	// sent to onesignal
-	var app_id string
+	var app_id, apiKey string
+	var byteData []byte
 
 	if usertype == "3" {
 		app_id = CONFIG.OneSignalAppIDForClient
+		apiKey = CONFIG.OneSignalApiKeyForClient
+
+		// data := MODEL.OneSignalNotificationData{
+		// 	AppID:            app_id,
+		// 	Headings:         map[string]string{"en": heading},
+		// 	Contents:         map[string]string{"en": content},
+		// 	IncludePlayerIDs: []string{notificationID},
+		// 	Data:             map[string]string{},
+		// }
+		// byteData, _ = json.Marshal(data)
 	} else {
 		app_id = CONFIG.OneSignalAppIDForTherapist
+		apiKey = CONFIG.OneSignalApiKeyForTherapist
+
 	}
 
-	data := MODEL.OneSignalNotificationData{
-		AppID:            app_id,
-		Headings:         map[string]string{"en": heading},
-		Contents:         map[string]string{"en": content},
-		IncludePlayerIDs: []string{notificationID},
-		Data:             map[string]string{},
+	if image == "" {
+		data := MODEL.OneSignalNotification{
+			AppID:          app_id,
+			Headings:       map[string]string{"en": heading},
+			Contents:       map[string]string{"en": content},
+			IncludeAliases: MODEL.IncludeAliase{ExternalID: []string{notificationID}},
+			Channels:       []string{"push"},
+			Data:           map[string]string{},
+		}
+		byteData, _ = json.Marshal(data)
+	} else {
+		// if image is provided, then send notification with image
+		image = CONFIG.MediaURL + image // prepend media url to image path
+
+		data := MODEL.OneSignalNotificationWithImage{
+			AppID:          app_id,
+			Headings:       map[string]string{"en": heading},
+			Contents:       map[string]string{"en": content},
+			IncludeAliases: MODEL.IncludeAliase{ExternalID: []string{notificationID}},
+			Channels:       []string{"push"},
+			Data:           map[string]string{},
+			BigPicture:     image,
+			IosAttachments: MODEL.IosAttachmentsModel{
+				ID1: image,
+			},	
+		}
+		byteData, _ = json.Marshal(data)
 	}
-	byteData, _ := json.Marshal(data)
-	resp, err := http.Post("https://onesignal.com/api/v1/notifications", "application/json", bytes.NewBuffer(byteData))
+
+	// resp, err := http.Post("https://onesignal.com/api/v1/notifications", "application/json", bytes.NewBuffer(byteData))
+	// if err != nil {
+	// 	fmt.Println("sendNotification", err)
+	// 	return
+	// }
+	req, _ := http.NewRequest("POST", "https://onesignal.com/api/v1/notifications", bytes.NewBuffer(byteData))
+	req.Header.Add("Authorization", "Basic "+apiKey)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println("sendNotification", err)
-		return
+		fmt.Println("error", err)
 	}
 
 	defer resp.Body.Close()
@@ -112,5 +155,40 @@ func sendNotification(heading, content, notificationID, sentAt, usertype string)
 		return
 	}
 
-	fmt.Println(data, string(body))
+	fmt.Println(string(body))
+}
+
+func SendBulkNotification(heading, content string, userType string) {
+
+	appID, apiKey := "", ""
+	if userType == "3" {
+		appID = CONFIG.OneSignalAppIDForClient
+		apiKey = CONFIG.OneSignalApiKeyForClient
+	} else {
+		appID = CONFIG.OneSignalAppIDForTherapist
+		apiKey = CONFIG.OneSignalApiKeyForTherapist
+	}
+
+	data := MODEL.OneSignalNotificationBulkData{
+		AppID:            appID, // change according to client : OneSignalAppIDForClient , therpists : OneSignalAppIDForTherapist required
+		Headings:         map[string]string{"en": heading},
+		Contents:         map[string]string{"en": content},
+		IncludedSegments: []string{"Active Users", "Inactive Users"},
+		Data:             map[string]string{},
+	}
+
+	byteData, _ := json.Marshal(data)
+	req, _ := http.NewRequest("POST", "https://onesignal.com/api/v1/notifications", bytes.NewBuffer(byteData))
+	req.Header.Add("Authorization", "Basic "+apiKey) // change according to client : ZDMxNGU3NTYtM2RkNS00NmMzLWJhMjMtYWUwYTAzYzg3Nzdk , therpists: N2RmZGRlNTMtYTM1MC00YmZmLTg3MjEtNzNkMDViMGZlNGEz required
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println("error", err)
+	}
+
+	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body)
+
+	fmt.Println(string(body))
 }

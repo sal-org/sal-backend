@@ -15,7 +15,7 @@ import (
 func ListenerGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -25,7 +25,7 @@ func ListenerGet(w http.ResponseWriter, r *http.Request) {
 
 	// get listeners
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "name":
@@ -72,7 +72,7 @@ func ListenerGet(w http.ResponseWriter, r *http.Request) {
 
 	response["listeners"] = listeners
 	response["listeners_count"] = listenersCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(listenersCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -81,7 +81,7 @@ func ListenerGet(w http.ResponseWriter, r *http.Request) {
 func ListenerUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -98,7 +98,7 @@ func ListenerUpdate(w http.ResponseWriter, r *http.Request) {
 	listener["email"] = body["email"]
 	listener["gender"] = body["gender"]
 	listener["occupation"] = body["occupation"]
-	listener["experience"] = body["experience"]
+	listener["age_group"] = body["age_group"]
 	listener["about"] = body["about"]
 	listener["status"] = body["status"]
 	listener["modified_by"] = body["modified_by"]

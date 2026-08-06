@@ -10,6 +10,7 @@ import (
 	DB "salbackend/database"
 	Model "salbackend/model"
 	UTIL "salbackend/util"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -26,25 +27,92 @@ import (
 func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
-	// var localTime int
-	// timeNow := UTIL.GetCurrentTime().Local()
-	// if timeNow.Minute() >= 30 {
-	// 	localTime = timeNow.Hour()*2 - 1
-	// } else {
-	// 	localTime = timeNow.Hour() * 2
-	// }
-	// fmt.Println(localTime)
-	// local := strconv.Itoa(localTime)
 
 	// get upcoming appointments both to be started and started
-	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Add(330*time.Minute).Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor ids to get details
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+	// get counsellor/listener/therapist details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, photo, " + CONSTANT.TherapistType + " as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// Time Zone Conversion
+
+	// for i := 0; i < len(appointments); i++ {
+
+	// 	// dateInTimeZone, timeInTimeZone := UTIL.ConvertTimeZoneSystemToClient(appointments[i]["date"],appointments[i]["time"])
+
+	// 	counsellorTimeZone := "330" // IST
+
+	// 	clientTimeZone := "-300" // IST
+
+	// 	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+
+	// 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	// 	counsellorTimeInInt = counsellorTimeInInt / 30
+	// 	clientTimeInInt = clientTimeInInt / 30
+
+	// 	index, _ := strconv.Atoi(appointments[i]["time"])
+	// 	index = index - counsellorTimeInInt
+	// 	index = index + clientTimeInInt
+	// 	if index < 0 {
+	// 		index = index + 47
+	// 		date, _ := time.Parse("2006-01-02", appointments[i]["date"])
+
+	// 		previousDate := date.AddDate(0, 0, -1)
+
+	// 		// Format the resulting date back to a string
+	// 		previousDateStr := previousDate.Format("2006-01-02")
+	// 		appointments[i]["date"] = previousDateStr
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	} else {
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	}
+
+	// }
+
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
+
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
+	response["appointments"] = appointments
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonAppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming appointments both to be started and started
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("client_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -59,9 +127,22 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slots, status, ok := DB.SelectProcess("select * from " + CONSTANT.InPersonSLotsScheduleTable + " where status = '1' and date >= '" + UTIL.GetCurrentTime().Format("2006-01-02") + "' and date < '" + UTIL.GetCurrentTime().AddDate(0, 0, 15).Format("2006-01-02") + "' order by date asc")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
+
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["slots"] = slots
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -76,7 +157,7 @@ func AppointmentsUpcoming(w http.ResponseWriter, r *http.Request) {
 func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -107,10 +188,16 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
+
 	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointment_slots"] = appointmentSlots
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -125,7 +212,7 @@ func AppointmentSlotsUnused(w http.ResponseWriter, r *http.Request) {
 func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -149,9 +236,152 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Time Zone Conversion
+
+	// for i := 0; i < len(appointments); i++ {
+	// 	counsellorTimeZone := "330" // IST
+
+	// 	clientTimeZone := "-300" // IST
+
+	// 	counsellorTimeInInt, _ := strconv.Atoi(counsellorTimeZone)
+
+	// 	clientTimeInInt, _ := strconv.Atoi(clientTimeZone) // IST
+
+	// 	counsellorTimeInInt = counsellorTimeInInt / 30
+	// 	clientTimeInInt = clientTimeInInt / 30
+
+	// 	index, _ := strconv.Atoi(appointments[i]["time"])
+	// 	index = index - counsellorTimeInInt
+	// 	index = index + clientTimeInInt
+	// 	if index < 0 {
+	// 		index = index + 47
+	// 		date, _ := time.Parse("2006-01-02", appointments[i]["date"])
+
+	// 		previousDate := date.AddDate(0, 0, -1)
+
+	// 		// Format the resulting date back to a string
+	// 		previousDateStr := previousDate.Format("2006-01-02")
+	// 		appointments[i]["date"] = previousDateStr
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	} else {
+	// 		appointments[i]["time"] = strconv.Itoa(index)
+	// 	}
+
+	// }
+
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
+
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"email", "location"}, map[string]string{"client_id": r.FormValue("client_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	checkClientRecordForm, status, ok := DB.SelectProcess("select taken_sessions, total_session_needed, mental_health, counsellor_id from "+CONSTANT.CounsellorRecordsFormLastestVersionTable+" where client_id = ? and no_show = 0 and incomplete_session = 0 and status = '2' order by modified_at desc limit 5", r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientAddress, status, ok := DB.SelectProcess("select * from "+CONSTANT.CorporatePartnersAddressTable+" where address = ? and status = 1 order by created_at desc", client[0]["location"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellorID := []string{}
+
+	if len(clientAddress) > 0 {
+
+		counsellorConnectWithCompanyLocation, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonCounsellorConnectWithCorporateTable+" where partner_name = ? and partner_location = ? and status = '1' order by created_at desc", clientAddress[0]["partner_name"], clientAddress[0]["address"])
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		for _, value := range counsellorConnectWithCompanyLocation {
+
+			if len(checkClientRecordForm) > 0 {
+
+				if value["counsellor_id"] == checkClientRecordForm[0]["counsellor_id"] {
+					mentalHealthScore, _ := strconv.Atoi(checkClientRecordForm[0]["mental_health"])
+
+					if mentalHealthScore < 8 {
+						counsellorID = append(counsellorID, value["counsellor_id"])
+					}
+				} else {
+					counsellorID = append(counsellorID, value["counsellor_id"])
+				}
+
+			} else {
+				counsellorID = append(counsellorID, value["counsellor_id"])
+			}
+		}
+
+	}
+
+	for _, appointment := range appointments {
+
+		if !slices.Contains(counsellorID, appointment["counsellor_id"]) {
+			appointment["book_again"] = "Yes"
+		} else {
+			appointment["book_again"] = "No"
+		}
+
+	}
+
 	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
 	response["appointments"] = appointments
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonAppointmentsPast(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get past completed appointments
+	// appointments, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": CONSTANT.AppointmentCompleted})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.InPersonAppointmentsTable+" where client_id = ? and status in ("+CONSTANT.AppointmentCompleted+", "+CONSTANT.AppointmentNoShowClient+") order by date desc", r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor ids to get details
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+	// get counsellor/listener/therapist details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name, photo, " + CONSTANT.CounsellorType + " as type from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name, photo, " + CONSTANT.ListenerType + " as type from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name, photo, " + CONSTANT.TherapistType + " as type from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
+
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
+	response["appointments"] = appointments
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -166,13 +396,15 @@ func AppointmentsPast(w http.ResponseWriter, r *http.Request) {
 func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	var invoice, order []map[string]string
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -185,32 +417,104 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get appointment slots details
-	appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// get appointment order details
+	order, status, ok = DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment details
+	client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(client) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if it is emp or family
+	domainName := strings.Split(client[0]["email"], "@")
+
+	ok = DB.CheckIfExists(CONSTANT.CorporatePartnersTable, map[string]string{"domain": domainName[1]})
+
+	if !ok {
+		if client[0]["asscoiate_id"] != "" {
+			ok = true
+		}
+	}
+
+	if !(appointment[0]["type"] == "2" || ok) {
+
+		// get appointment slots details
+		appointmentSlots, status, ok := DB.SelectSQL(CONSTANT.AppointmentSlotsTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
+		invoice, status, ok = DB.SelectProcess("select order_id as id, payment_id, user_type, paid_amount, created_at, payment_method  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
+		response["appointment_slots"] = appointmentSlots[0]
+	}
+
+	response["appointment"] = appointment[0]
+	response["order"] = order[0]
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonAppointmentDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	var order []map[string]string
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// get appointment order details
-	order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	order, status, ok = DB.SelectSQL(CONSTANT.InPersonOrderClientAppointmentTable, []string{"*"}, map[string]string{"order_id": appointment[0]["order_id"]})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	orderIDs := UTIL.ExtractValuesFromArrayMap(appointmentSlots, "order_id")
-	invoice, status, ok := DB.SelectProcess("select order_id as id, payment_id, user_type, paid_amount, created_at, payment_method  from " + CONSTANT.InvoicesTable + " where order_id in ('" + strings.Join(orderIDs, "','") + "')")
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// get appointment details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// if len(client) == 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	response["order_details"] = UTIL.ConvertMapToKeyMap(invoice, "id")
 	response["appointment"] = appointment[0]
-	response["appointment_slots"] = appointmentSlots[0]
 	response["order"] = order[0]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -225,7 +529,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -307,13 +611,13 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"counsellor_id": appointmentSlot[0]["counsellor_id"]})
-		break
+		// break
 	case CONSTANT.ListenerType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": appointmentSlot[0]["counsellor_id"]})
-		break
+		// break
 	case CONSTANT.TherapistType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"therapist_id": appointmentSlot[0]["counsellor_id"]})
-		break
+		// break
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": appointmentSlot[0]["client_id"]})
 
@@ -332,6 +636,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
 	// // send appointment reminder notification to therapist before 15 min
@@ -365,6 +670,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -382,6 +688,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -399,6 +706,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -463,7 +771,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 	// )
 
 	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
+	filepath_text := "htmlfile/b2cAppointmentConfirmation.html"
 
 	emaildata1 := Model.EmailBodyMessageModel{
 		Name: client[0]["first_name"],
@@ -537,7 +845,7 @@ func AppointmentBook(w http.ResponseWriter, r *http.Request) {
 func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -582,10 +890,20 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check if appointment is alteast after 4 hours
-	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() < 4 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now().Add(330*time.Minute).UTC()).Hours() < 4 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// // get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// check if slots available
 	if !UTIL.CheckIfAppointmentSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
@@ -640,6 +958,20 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// update rescheduled times
 	DB.ExecuteSQL("update "+CONSTANT.AppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
 
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"date":        body["date"],
+	// 			"time":        body["time"],
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
+
 	// send notifications
 	// get counsellor name
 	var counsellor []map[string]string
@@ -647,13 +979,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		break
+		// break
 	case CONSTANT.ListenerType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		break
+		// break
 	case CONSTANT.TherapistType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		break
+		// break
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
 
@@ -681,6 +1013,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// send appointment reminder notification to client before 15 min
@@ -698,6 +1031,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// Send to appointment Reminder SMS to client
@@ -750,15 +1084,13 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	// send appointment reschedule notification to counsellor
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentRescheduleCounsellorHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRescheduleCounsellorContent,
-			map[string]string{},
-		),
+		CONSTANT.ClientAppointmentRescheduleCounsellorContent,
 		appointment[0]["counsellor_id"],
 		counsellorType,
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// send appointment reminder notification to counsellor before 15 min
@@ -776,6 +1108,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		r.FormValue("appointment_id"),
+		CONSTANT.VirtualAppointmentImage,
 	)
 
 	// Send to appointment Reminder SMS to counsellor
@@ -863,6 +1196,339 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func InPersonAppointmentReschedule(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRescheduleRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment rescheduled times exceeded
+	reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
+	if reschedules >= CONSTANT.MaximumAppointmentReschedule {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantRescheduleMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is alteast after 4 hours
+	// if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now().Add(330*time.Minute).UTC()).Hours() < 4 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.Reschedule4HoursMinimumMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// check if slots available
+	if !UTIL.CheckIfAppointmentzInPersonSlotAvailable(appointment[0]["counsellor_id"], body["date"], body["time"]) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.RescheduleSlotNotAvailableMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update counsellor slots
+	// remove previous slot
+	// date, _ := time.Parse("2006-01-02", appointment[0]["date"])
+	// // get schedules for a weekday
+	// schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// sometimes there will be no schedules. situation will be automatically taken care of below
+
+	// update counsellor availability
+	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
+		map[string]string{
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             appointment[0]["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
+		},
+		map[string]string{
+			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
+			appointment[0]["time"]: CONSTANT.SlotAvailable, // update availability to the latest one
+		},
+	)
+
+	// update slot
+	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
+		map[string]string{
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             body["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
+		},
+		map[string]string{
+			body["time"]: CONSTANT.SlotBooked,
+		},
+	)
+
+	// update appointment date and time
+	DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"date":        body["date"],
+			"time":        body["time"],
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+	// update rescheduled times
+	DB.ExecuteSQL("update "+CONSTANT.InPersonAppointmentsTable+" set times_rescheduled = times_rescheduled + 1 where appointment_id = ?", r.FormValue("appointment_id"))
+
+	// send notifications
+	// get counsellor name
+	var counsellor []map[string]string
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+		// break
+	case CONSTANT.ListenerType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+		// break
+	case CONSTANT.TherapistType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+		// break
+	}
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"client_id": appointment[0]["client_id"]})
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+
+	// remove all previous message for client
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+
+	// remove all previous message for therpist
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+
+	// send appointment reschedule notification to client
+	UTIL.SendNotification(
+		CONSTANT.ClientInPersonAppointmentRescheduleClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRescheduleClientContent,
+			map[string]string{
+				"###therapistName###": counsellor[0]["first_name"],
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		CONSTANT.InPersonAppointmentImage,
+	)
+
+	// send appointment reminder notification to client before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderClientHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRemainderClientContent,
+			map[string]string{
+				"###thearpistName###": counsellor[0]["first_name"],
+				"###location###":      appointment[0]["counselling_room"] + ", " + appointment[0]["counselling_address"],
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
+		r.FormValue("appointment_id"),
+		CONSTANT.InPersonAppointmentImage,
+	)
+
+	// Send to appointment Reminder SMS to client
+	// send at 15 min before of appointment
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentReminderTextMessage,
+	// 		map[string]string{
+	// 			"###user_name###": client[0]["first_name"],
+	// 			"###userName###":  counsellor[0]["first_name"],
+	// 			"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+	// 	r.FormValue("appointment_id"),
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
+
+	// send email
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	// send client email body
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRescheduleClientBody,
+			map[string]string{
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###date###":          UTIL.BuildOnlyDate(body["date"]),
+				"###therapistName###": counsellor[0]["first_name"],
+			},
+		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for counsellor
+	UTIL.SendEmail(
+		CONSTANT.ClientInPersonAppointmentRescheduleClientTitle,
+		emailBody1,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
+	// send appointment reschedule notification to counsellor
+	UTIL.SendNotification(
+		CONSTANT.ClientInPersonAppointmentRescheduleTherapistHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRescheduleTherapistContent,
+			map[string]string{
+				"###clientName###": client[0]["first_name"],
+			},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		CONSTANT.InPersonAppointmentImage,
+	)
+
+	// send appointment reminder notification to counsellor before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRemainderTherapistContent,
+			map[string]string{
+				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+				"###clientName###": client[0]["first_name"],
+			},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+		UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
+		r.FormValue("appointment_id"),
+		CONSTANT.InPersonAppointmentImage,
+	)
+
+	// Send to appointment Reminder SMS to counsellor
+	// send at 15 min before of appointment
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentReminderTextMessage,
+	// 		map[string]string{
+	// 			"###user_name###": counsellor[0]["first_name"],
+	// 			"###userName###":  client[0]["first_name"],
+	// 			"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	UTIL.BuildDateTime(body["date"], body["time"]).Add(-15*time.Minute).UTC().String(),
+	// 	r.FormValue("appointment_id"),
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
+
+	// emaildata := Model.EmailBodyMessageModel{
+	// 	Name:    counsellor[0]["first_name"],
+	// 	Message: CONSTANT.ClientAppointmentRescheduleCounsellorEmailBody,
+	// }
+
+	// send counsellor email body
+	emaildata := Model.EmailBodyMessageModel{
+		Name: counsellor[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRescheduleTherapistBody,
+			map[string]string{
+				"###clientName###": client[0]["first_name"],
+				"###date###":       UTIL.BuildOnlyDate(body["date"]),
+				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(body["time"]),
+			},
+		),
+	}
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for counsellor
+	UTIL.SendEmail(
+		CONSTANT.ClientAppointmentRescheduleClientTitle,
+		emailBody,
+		counsellor[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	//Send to Client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRescheduleClientTextMeassage,
+			map[string]string{
+				"###clientName###": client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	//send to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentRescheduleTherapistTextMeassage,
+			map[string]string{
+				"###therapistName###": counsellor[0]["first_name"],
+				"###clientName###":    client[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.BuildDateTime(body["date"], body["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 // AppointmentCancel godoc
 // @Tags Client Appointment
 // @Summary Cancel an appointment
@@ -874,7 +1540,7 @@ func AppointmentReschedule(w http.ResponseWriter, r *http.Request) {
 func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -893,11 +1559,33 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	// check if appointment is to be started
+	if strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentUserCancelled) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancelByUserMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// check if appointment is to be started
 	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
+
+	if time.Until(UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Add(-time.Minute*330)).Hours() <= 1 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancellationAllowedWithIn1Hour, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
 	// // appointment can cancelled only after min reschedules
 	// reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
 	// if reschedules < CONSTANT.MaximumAppointmentReschedule {
@@ -939,47 +1627,142 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
+	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentUserCancelled,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status":      CONSTANT.AppointmentUserCancelled,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
+
 	// refund amount
 	// check if appointment is alteast after 4 hours
 	// if below 4 hours, charges are 100% that means dont refund anything
-	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() >= 4 {
-		charges := CONSTANT.ClientAppointmentCancellationCharges
-		// get invoice details
-		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
-		if !ok {
-			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-			return
-		}
-		if len(invoice) > 0 {
-			// invoice is available => amount is paid, order is not free
-			// get order details
-			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
-			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-			// discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
-			// amountAfterDiscount := paidAmount - discount
-			if paidAmount > 0 { // refund only if amount paid
-				paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
-				refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
-				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
-				cancellationCharges := (paidAmount / slotsBought) * charges
-				refundAmount := (paidAmount / slotsBought) - cancellationCharges // remove from paid amount only, not from amount after discount, as discussed
-				if refundAmount+refundedAmount <= paidAmount {
-					// refunded amount will be less than paid amount
-					DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
-						"invoice_id":      invoice[0]["invoice_id"],
-						"payment_id":      invoice[0]["payment_id"],
-						"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
-						"status":          CONSTANT.RefundInProgress,
-						"created_at":      UTIL.GetCurrentTime().String(),
-					}, "refund_id")
-				}
-			}
-		}
-	}
+	// if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours() >= 4 {
+	// 	charges := CONSTANT.ClientAppointmentCancellationCharges
+	// 	// get invoice details
+	// 	invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount", "payment_id", "invoice_id"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 	if !ok {
+	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// 	if len(invoice) > 0 {
+	// 		// invoice is available => amount is paid, order is not free
+	// 		// get order details
+	// 		order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+	// 		paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	// 		// discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+	// 		// amountAfterDiscount := paidAmount - discount
+	// 		if paidAmount > 0 { // refund only if amount paid
+	// 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	// 			refundedAmount, _ := strconv.ParseFloat(DB.QueryRowSQL("select sum(refunded_amount) from "+CONSTANT.RefundsTable+" where invoice_id = '"+invoice[0]["invoice_id"]+"'"), 64)
+	// 			slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+	// 			cancellationCharges := (paidAmount / slotsBought) * charges
+	// 			refundAmount := (paidAmount / slotsBought) - cancellationCharges // remove from paid amount only, not from amount after discount, as discussed
+	// 			if refundAmount+refundedAmount <= paidAmount {
+	// 				// refunded amount will be less than paid amount
+	// 				DB.InsertWithUniqueID(CONSTANT.RefundsTable, CONSTANT.RefundDigits, map[string]string{
+	// 					"invoice_id":      invoice[0]["invoice_id"],
+	// 					"payment_id":      invoice[0]["payment_id"],
+	// 					"refunded_amount": strconv.FormatFloat(refundAmount, 'f', 2, 64),
+	// 					"status":          CONSTANT.RefundInProgress,
+	// 					"created_at":      UTIL.GetCurrentTime().String(),
+	// 				}, "refund_id")
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	// add penalty for counsellor for cancelling
+	// add to counsellor payments
+	// get invoice details
+
+	// if appointment[0]["type"] != "2" {
+	// 	if UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(UTIL.ConvertTimezone(UTIL.GetCurrentTime(), "330")).Hours() <= 4 {
+	// 		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+	// 		if len(invoice) > 0 {
+	// 			// get order details
+	// 			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 			if !ok {
+	// 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 				return
+	// 			}
+	// 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	// 			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+	// 			amountBeforeDiscount := paidAmount + discount
+	// 			if amountBeforeDiscount > 0 { // add only if amount paid
+	// 				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+	// 				amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
+	// 				cancellationCharges := amountFor1Session * CONSTANT.CounsellorCancellationCharges
+
+	// 				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+	// 					"counsellor_id": appointment[0]["counsellor_id"],
+	// 					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+	// 					"description":   "Cancellation",
+	// 					"amount":        strconv.FormatFloat(cancellationCharges, 'f', 2, 64),
+	// 					"status":        CONSTANT.PaymentActive,
+	// 					"created_at":    UTIL.GetCurrentTime().String(),
+	// 				}, "payment_id")
+	// 			}
+	// 		} else {
+
+	// 			//UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours()
+
+	// 			// get counsellor details
+	// 			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+	// 			if !ok {
+	// 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 				return
+	// 			}
+
+	// 			if len(counsellor) == 0 {
+	// 				counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"corporate_price"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+	// 				if !ok {
+	// 					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 					return
+	// 				}
+	// 			}
+
+	// 			amount, _ := strconv.ParseFloat(counsellor[0]["corporate_price"], 64)
+
+	// 			cancellationCharges := amount * CONSTANT.CounsellorCancellationCharges
+
+	// 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+	// 				"counsellor_id": appointment[0]["counsellor_id"],
+	// 				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+	// 				"description":   "Client Cancellation",
+	// 				"amount":        strconv.FormatFloat(cancellationCharges, 'f', 2, 64),
+	// 				"status":        CONSTANT.PaymentActive,
+	// 				"created_at":    UTIL.GetCurrentTime().String(),
+	// 			}, "payment_id")
+
+	// 		}
+	// 	}
+	// }
 
 	// send notifications
 	// get counsellor name
@@ -988,13 +1771,10 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		break
 	case CONSTANT.ListenerType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		break
 	case CONSTANT.TherapistType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		break
 
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
@@ -1023,6 +1803,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send email
@@ -1035,7 +1816,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelClientBody,
 			map[string]string{
 				"###therapist_name###": counsellor[0]["first_name"],
-				"###date###":           appointment[0]["date"],
+				"###date###":           UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":           UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1068,6 +1849,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
 
 	// send email for therapist
@@ -1077,7 +1859,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			CONSTANT.ClientAppointmentCancelCounsellorEmailBody,
 			map[string]string{
 				"###client_name###": client[0]["first_name"],
-				"###date###":        appointment[0]["date"],
+				"###date###":        UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":        UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1099,7 +1881,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  counsellor[0]["first_name"],
 				"###user_Name###": client[0]["first_name"],
-				"###date###":      appointment[0]["date"],
+				"###date###":      UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
 			},
 		),
@@ -1116,8 +1898,215 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 			map[string]string{
 				"###userName###":  client[0]["first_name"],
 				"###user_Name###": counsellor[0]["first_name"],
-				"###date###":      appointment[0]["date"],
+				"###date###":      UTIL.BuildOnlyDate(appointment[0]["date"]),
 				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
+	// fmt.Println("Status:" + CONSTANT.StatusCodeOk)
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonAppointmentCancel(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if appointment is to be started
+	if strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentUserCancelled) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancelByUserMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update counsellor availability
+	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
+		map[string]string{
+			"counsellor_id":    appointment[0]["counsellor_id"],
+			"date":             appointment[0]["date"],
+			"company_name":     appointment[0]["company_name"],
+			"company_location": appointment[0]["company_location"],
+		},
+		map[string]string{
+			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
+			appointment[0]["time"]: CONSTANT.SlotAvailable, // update availability to the latest one
+		},
+	)
+
+	// update appointment date and time
+	DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.AppointmentUserCancelled,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	// send notifications
+	// get counsellor name
+	var counsellor []map[string]string
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", r.FormValue("appointment_id"))
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+	case CONSTANT.ListenerType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+	case CONSTANT.TherapistType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "timezone", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+
+	}
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "timezone", "email", "phone"}, map[string]string{"client_id": appointment[0]["client_id"]})
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["client_id"])
+
+	// remove all previous message for client
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), client[0]["phone"])
+
+	// remove all previous message for therpist
+	UTIL.RemoveMessage(r.FormValue("appointment_id"), counsellor[0]["phone"])
+
+	// send appointment cancel notification, email to client
+	UTIL.SendNotification(
+		CONSTANT.ClientInPersonAppointmentCancellationHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentCancellationClientContent,
+			map[string]string{
+				"###datetime###":      UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###therapistName###": counsellor[0]["first_name"],
+			},
+		),
+		appointment[0]["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		"",
+	)
+
+	// send email
+	filepath_text := "htmlfile/emailmessagebody.html"
+
+	// send client email body
+	emaildata1 := Model.EmailBodyMessageModel{
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentCancellationClientBody,
+			map[string]string{
+				"###therapistName###": counsellor[0]["first_name"],
+				"###date###":          UTIL.BuildOnlyDate(appointment[0]["date"]),
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+				"###location###":      appointment[0]["counselling_room"] + ", " + appointment[0]["counselling_address"],
+			},
+		),
+	}
+
+	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientInPersonAppointmentCancellationClientTitle,
+		emailBody1,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// remove all previous notifications
+	UTIL.RemoveNotification(r.FormValue("appointment_id"), appointment[0]["counsellor_id"])
+
+	// send appointment cancel notification to counsellor
+	UTIL.SendNotification(
+		CONSTANT.ClientInPersonAppointmentCancellationHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentCancellationTherapistContent,
+			map[string]string{
+				"###clientName###": client[0]["first_name"],
+				"###timedate###":   UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
+				"###location###":   appointment[0]["counselling_room"] + ", " + appointment[0]["counselling_address"],
+			},
+		),
+		appointment[0]["counsellor_id"],
+		counsellorType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		"",
+	)
+
+	// send email for therapist
+	emaildata := Model.EmailBodyMessageModel{
+		Name: counsellor[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentCancellationTherapistBody,
+			map[string]string{
+				"###clientName###": client[0]["first_name"],
+				"###date###":       appointment[0]["date"],
+				"###time###":       UTIL.GetTimeFromTimeSlotIN12Hour(appointment[0]["time"]),
+				"###location###":   appointment[0]["counselling_room"] + ", " + appointment[0]["counselling_address"],
+			},
+		),
+	}
+
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for therapist
+	UTIL.SendEmail(
+		CONSTANT.ClientInPersonAppointmentCancellationTherapistTitle,
+		emailBody,
+		counsellor[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// Client Cancel the Appointment to send text message to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentCancellationClientTextMeassage,
+			map[string]string{
+				"###clientName###":    client[0]["first_name"],
+				"###therapistName###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).UTC().String(),
+		r.FormValue("appointment_id"),
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientInPersonAppointmentCancellationTherapistTextMeassage,
+			map[string]string{
+				"###date###":       appointment[0]["date"],
+				"###clientName###": client[0]["first_name"],
 			},
 		),
 		CONSTANT.TransactionalRouteTextMessage,
@@ -1126,7 +2115,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 		r.FormValue("appointment_id"),
 		CONSTANT.InstantSendTextMessage,
 	)
-
+	// fmt.Println("Status:" + CONSTANT.StatusCodeOk)
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -1141,7 +2130,7 @@ func AppointmentCancel(w http.ResponseWriter, r *http.Request) {
 func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1217,13 +2206,13 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone"}, map[string]string{"counsellor_id": appointmentSlots[0]["counsellor_id"]})
-		break
+		// break
 	case CONSTANT.ListenerType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone"}, map[string]string{"listener_id": appointmentSlots[0]["counsellor_id"]})
-		break
+		// break
 	case CONSTANT.TherapistType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone"}, map[string]string{"therapist_id": appointmentSlots[0]["counsellor_id"]})
-		break
+		// break
 	}
 	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone"}, map[string]string{"client_id": appointmentSlots[0]["client_id"]})
 
@@ -1241,6 +2230,7 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_slot_id"),
+		"",
 	)
 
 	// send email to client
@@ -1304,9 +2294,9 @@ func AppointmentBulkCancel(w http.ResponseWriter, r *http.Request) {
 func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
-	// check if access token is valid, not expired
+	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
 		return
@@ -1345,19 +2335,25 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get counsellor type and update their ratings
 	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.OrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.AppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
+
+	// get counsellor type and update their ratings
+	counsellorRating, _, _ := DB.SelectProcess("select rating from "+CONSTANT.AppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
+
+	counsellorCount, _, _ := DB.SelectProcess("select count(rating) as cnt from "+CONSTANT.AppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
+
+	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"], "rating")
 
 	switch counsellorType {
 	case CONSTANT.CounsellorType:
-		DB.ExecuteSQL("update "+CONSTANT.CounsellorsTable+" set total_rating = total_rating + 1, average_rating = (average_rating + ?)/2 where counsellor_id = ?", body["rating"], body["counsellor_id"])
-		break
+		DB.ExecuteSQL("update "+CONSTANT.CounsellorsTable+" set total_rating = total_rating + 1, average_rating = ? where counsellor_id = ?", avg, body["counsellor_id"])
+		// break
 	case CONSTANT.ListenerType:
-		DB.ExecuteSQL("update "+CONSTANT.ListenersTable+" set total_rating = total_rating + 1, average_rating = (average_rating + ?)/2 where listener_id = ?", body["rating"], body["counsellor_id"])
-		break
+		DB.ExecuteSQL("update "+CONSTANT.ListenersTable+" set total_rating = total_rating + 1, average_rating = ? where listener_id = ?", avg, body["counsellor_id"])
+		// break
 	case CONSTANT.TherapistType:
-		DB.ExecuteSQL("update "+CONSTANT.TherapistsTable+" set total_rating = total_rating + 1, average_rating = (average_rating + ?)/2 where therapist_id = ?", body["rating"], body["counsellor_id"])
-		break
+		DB.ExecuteSQL("update "+CONSTANT.TherapistsTable+" set total_rating = total_rating + 1, average_rating = ? where therapist_id = ?", avg, body["counsellor_id"])
+		// break
 	}
 
 	UTIL.SendNotification(
@@ -1368,7 +2364,234 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		r.FormValue("appointment_id"),
+		"",
 	)
+
+	rate, _ := strconv.Atoi(body["rating"])
+	if rate <= 3 {
+
+		// get past completed appointments
+		appointts, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		var counsellorName, comment string
+
+		switch counsellorType {
+		case CONSTANT.CounsellorType:
+			counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", body["counsellor_id"])
+			// break
+		case CONSTANT.ListenerType:
+			counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", body["counsellor_id"])
+			// break
+		case CONSTANT.TherapistType:
+			counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", body["counsellor_id"])
+			// break
+		}
+		// send email to client
+		filepath_text := "htmlfile/emailmessagebody.html"
+
+		appointDate := UTIL.BuildOnlyDate(appointts[0]["date"])
+		appointTime := UTIL.GetTimeFromTimeSlotIN12Hour(appointts[0]["time"])
+
+		if len(body["rating_comment"]) == 0 {
+			comment = "Empty comment"
+		} else {
+			comment = body["rating_comment"]
+		}
+
+		emaildata1 := Model.EmailBodyMessageModel{
+			Name: "",
+			Message: UTIL.ReplaceNotificationContentInString(
+				CONSTANT.RatingTitleForInternalReviewBody,
+				map[string]string{
+					"###therapistname###": counsellorName,
+					"###rating###":        body["rating"],
+					"###date###":          appointDate,
+					"###time###":          appointTime,
+					"###content###":       comment,
+				},
+			),
+		}
+
+		emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+
+		// email for client
+		UTIL.SendEmail(
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.RatingTitleForInternalReviewTitle,
+				map[string]string{
+					"###therapistName###": counsellorName,
+					"###sessionDate###":   UTIL.BuildOnlyDate(appointts[0]["date"]),
+				},
+			),
+			emailBody1,
+			CONFIG.OnboardingEmailID,
+			CONSTANT.InstantSendEmailMessage,
+		)
+	}
+
+	// UTIL.SendNotification(
+	// 	CONSTANT.ClientAppointmentGivenFeedbackHeading,
+	// 	CONSTANT.ClientAppointmentFeedbackGivenContent,
+	// 	body["client_id"],
+	// 	CONSTANT.ClientType,
+	// 	UTIL.GetCurrentTime().String(),
+	// 	CONSTANT.NotificationSent,
+	// 	r.FormValue("appointment_id"),
+	// )
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func InPersonAppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	//check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRatingAddRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if client exists
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["client_id"]}) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update rating to appointment
+	status, ok := DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": body["appointment_id"], "client_id": body["client_id"], "counsellor_id": body["counsellor_id"]}, map[string]string{"rating": body["rating"], "rating_types": body["rating_types"], "rating_comment": body["rating_comment"], "modified_at": UTIL.GetCurrentTime().String()})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	counsellorType := DB.QueryRowSQL("select type from "+CONSTANT.InPersonOrderClientAppointmentTable+" where order_id in (select order_id from "+CONSTANT.InPersonAppointmentsTable+" where appointment_id = ?)", body["appointment_id"])
+
+	// get counsellor type and update their ratings
+	counsellorRating, _, _ := DB.SelectProcess("select rating from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
+
+	counsellorCount, _, _ := DB.SelectProcess("select count(rating) as cnt from "+CONSTANT.InPersonAppointmentsTable+" where counsellor_id = ?", body["counsellor_id"])
+
+	avg := UTIL.AvgRatingFromula(counsellorRating, counsellorCount[0]["cnt"], "rating")
+
+	switch counsellorType {
+	case CONSTANT.CounsellorType:
+		DB.ExecuteSQL("update "+CONSTANT.CounsellorsTable+" set total_rating = total_rating + 1, average_rating = ? where counsellor_id = ?", avg, body["counsellor_id"])
+		// break
+	case CONSTANT.ListenerType:
+		DB.ExecuteSQL("update "+CONSTANT.ListenersTable+" set total_rating = total_rating + 1, average_rating = ? where listener_id = ?", avg, body["counsellor_id"])
+		// break
+	case CONSTANT.TherapistType:
+		DB.ExecuteSQL("update "+CONSTANT.TherapistsTable+" set total_rating = total_rating + 1, average_rating = ? where therapist_id = ?", avg, body["counsellor_id"])
+		// break
+	}
+
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentGivenFeedbackHeading,
+		CONSTANT.ClientAppointmentFeedbackGivenContent,
+		body["client_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		"",
+	)
+
+	rate, _ := strconv.Atoi(body["rating"])
+	if rate <= 3 {
+
+		// get past completed appointments
+		appointts, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentsTable, []string{"*"}, map[string]string{"appointment_id": body["appointment_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		var counsellorName, comment string
+
+		switch counsellorType {
+		case CONSTANT.CounsellorType:
+			counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", body["counsellor_id"])
+			// break
+		case CONSTANT.ListenerType:
+			counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", body["counsellor_id"])
+			// break
+		case CONSTANT.TherapistType:
+			counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", body["counsellor_id"])
+			// break
+		}
+		// send email to client
+		filepath_text := "htmlfile/emailmessagebody.html"
+
+		appointDate := UTIL.BuildOnlyDate(appointts[0]["date"])
+		appointTime := UTIL.GetTimeFromTimeSlotIN12Hour(appointts[0]["time"])
+
+		if len(body["rating_comment"]) == 0 {
+			comment = "Empty comment"
+		} else {
+			comment = body["rating_comment"]
+		}
+
+		emaildata1 := Model.EmailBodyMessageModel{
+			Name: "",
+			Message: UTIL.ReplaceNotificationContentInString(
+				CONSTANT.RatingTitleForInternalReviewBody,
+				map[string]string{
+					"###therapistname###": counsellorName,
+					"###rating###":        body["rating"],
+					"###date###":          appointDate,
+					"###time###":          appointTime,
+					"###content###":       comment,
+				},
+			),
+		}
+
+		emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
+
+		// email for client
+		UTIL.SendEmail(
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.RatingTitleForInternalReviewTitle,
+				map[string]string{
+					"###therapistName###": counsellorName,
+					"###sessionDate###":   UTIL.BuildOnlyDate(appointts[0]["date"]),
+				},
+			),
+			emailBody1,
+			CONFIG.OnboardingEmailID,
+			CONSTANT.InstantSendEmailMessage,
+		)
+	}
+
+	// UTIL.SendNotification(
+	// 	CONSTANT.ClientAppointmentGivenFeedbackHeading,
+	// 	CONSTANT.ClientAppointmentFeedbackGivenContent,
+	// 	body["client_id"],
+	// 	CONSTANT.ClientType,
+	// 	UTIL.GetCurrentTime().String(),
+	// 	CONSTANT.NotificationSent,
+	// 	r.FormValue("appointment_id"),
+	// )
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 
@@ -1385,7 +2608,7 @@ func AppointmentRatingAdd(w http.ResponseWriter, r *http.Request) {
 func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1488,10 +2711,11 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("html body not create ")
 		}
 
-		created, ok := UTIL.GeneratePdf(emailbody, "pdffile/example1.pdf") // name created,
+		created := UTIL.HtmlToPDFInvoice(emailbody) // name created,
 
-		if !ok {
-			fmt.Println("Pdf is not created")
+		if created == nil {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Pdf is not created", CONSTANT.ShowDialog, response)
+			return
 		}
 
 		s3Path := "receipt"
@@ -1518,8 +2742,13 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// fileName = endPointURL
+
 	response["file"] = fileName
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -1536,7 +2765,7 @@ func DownloadReceipt(w http.ResponseWriter, r *http.Request) {
 func CancellationReason(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1585,6 +2814,140 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func InPersonCancellationReason(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.CancellationUpdateRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if strings.EqualFold(r.FormValue("sessions"), CONSTANT.EventStarted) {
+		exists := DB.CheckIfExists(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+		if !exists {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		status, ok := DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable, map[string]string{"appointment_id": r.FormValue("appointment_id")}, map[string]string{"cancellation_reason": body["cancellation_reason"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	}
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonAppointmentNoShow(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointment details
+	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// check if appointment is valid
+	if len(appointment) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if strings.EqualFold(appointment[0]["status"], CONSTANT.InPersonAppointmentNoShowForCounsellor) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCancelByUserMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if appointment is to be started
+	if !strings.EqualFold(appointment[0]["status"], CONSTANT.AppointmentToBeStarted) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyStartedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	// // appointment can cancelled only after min reschedules
+	// reschedules, _ := strconv.Atoi(appointment[0]["times_rescheduled"])
+	// if reschedules < CONSTANT.MaximumAppointmentReschedule {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentCantCancelMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// update counsellor slots
+	// remove previous slot
+	// date, _ := time.Parse("2006-01-02", appointment[0]["date"])
+	// get schedules for a weekday
+	// schedules, status, ok := DB.SelectProcess("select `"+appointment[0]["time"]+"` from "+CONSTANT.SchedulesTable+" where counsellor_id = ? and weekday = ?", appointment[0]["counsellor_id"], strconv.Itoa(int(date.Weekday())))
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// sometimes there will be no schedules. situation will be automatically taken care of below
+
+	// update counsellor availability
+	DB.UpdateSQL(CONSTANT.InPersonSLotsTable,
+		map[string]string{
+			"counsellor_id": appointment[0]["counsellor_id"],
+			"date":          appointment[0]["date"],
+		},
+		map[string]string{
+			// this is for cancel slot menthod  UTIL.CheckIfScheduleAvailable(schedules, appointment[0]["time"])
+			appointment[0]["time"]: CONSTANT.SlotAvailable, // update availability to the latest one
+		},
+	)
+
+	// update appointment date and time
+	DB.UpdateSQL(CONSTANT.InPersonAppointmentsTable,
+		map[string]string{
+			"appointment_id": r.FormValue("appointment_id"),
+		},
+		map[string]string{
+			"status":      CONSTANT.InPersonAppointmentNoShowForCounsellor,
+			"modified_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	// send appointment join the call notification to Therapists
+	// UTIL.SendNotification(
+	// 	CONSTANT.CounsellorAppointmentHasBeenStartedHeading,
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		CONSTANT.CounsellorAppointmentHasBeenStartedContent,
+	// 		map[string]string{
+	// 			"###therapistname###": counsellorName,
+	// 			"###clientname###":    DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+	// 		},
+	// 	),
+	// 	appointment[0]["counsellor_id"],
+	// 	appointment[0]["type"],
+	// 	UTIL.GetCurrentTime().String(),
+	// 	CONSTANT.NotificationSent,
+	// 	r.FormValue("appointment_id"),
+	// )
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 // Generate Agora Token godoc
 // @Tags Client Appointment
 // @Summary Get Agora Token
@@ -1598,15 +2961,15 @@ func CancellationReason(w http.ResponseWriter, r *http.Request) {
 // @Success 200
 func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var roleStr, agora_token, uidStr, channelName string
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	uidStr = generateRandomID()
 
@@ -1671,73 +3034,107 @@ func GenerateAgoraToken(w http.ResponseWriter, r *http.Request) {
 		agora_token = token
 	}
 
-	resourceid, err := UTIL.BasicAuthorization(channelName, uidStr)
-	if err != nil {
-		fmt.Println("resource id not generated for recording file")
-		return
-	}
+	// agora := map[string]string{}
 
-	agora := map[string]string{}
+	// exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// if !exists {
 
-	if r.FormValue("user_type") == "1" {
-		exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
-		if exists {
-			DB.UpdateSQL(CONSTANT.AgoraTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"uid":         uidStr,
-					"token":       agora_token,
-					"resource_id": resourceid,
-					"status":      CONSTANT.AgoraResourceID2,
-					"modified_at": UTIL.GetCurrentTime().String(),
-				},
-			)
-		} else {
-			agora["appointment_id"] = channelName
-			agora["uid"] = uidStr
-			agora["token"] = agora_token
-			agora["resource_id"] = resourceid
-			agora["status"] = CONSTANT.AgoraResourceID
-			agora["created_at"] = UTIL.GetCurrentTime().String()
-			_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
+	// 	expireTimeInSeconds := uint32(7200)
+	// 	// Get current timestamp.
+	// 	currentTimestamp := uint32(time.Now().UTC().Unix())
+	// 	// Timestamp when the token expires.
+	// 	expireTimestmp := currentTimestamp + expireTimeInSeconds
 
-		}
-	} else if r.FormValue("user_type") == "2" {
-		exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
-		if exists {
-			DB.UpdateSQL(CONSTANT.AgoraTable,
-				map[string]string{
-					"appointment_id": r.FormValue("appointment_id"),
-				},
-				map[string]string{
-					"uid1":         uidStr,
-					"token1":       agora_token,
-					"resource_id1": resourceid,
-					"status":       CONSTANT.AgoraResourceID2,
-					"modified_at":  UTIL.GetCurrentTime().String(),
-				},
-			)
-		} else {
-			agora["appointment_id"] = channelName
-			agora["uid1"] = uidStr
-			agora["token1"] = agora_token
-			agora["resource_id1"] = resourceid
-			agora["status"] = CONSTANT.AgoraResourceID
-			agora["created_at"] = UTIL.GetCurrentTime().String()
-			_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
-			if !ok {
-				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-				return
-			}
+	// 	uidSt := generateRandomID()
+	// 	channelNa := r.FormValue("appointment_id")
 
-		}
-	}
+	// 	tokenForResource, err := UTIL.GenerateAgoraRTCToken(channelNa, roleStr, uidSt, expireTimestmp)
+	// 	if err != nil {
+	// 		fmt.Println("Ressource Token not generated")
+	// 	}
+
+	// 	resourceid, err := UTIL.BasicAuthorization(channelNa, uidSt)
+	// 	if err != nil {
+	// 		fmt.Println("resource id not generated for recording file")
+	// 	}
+
+	// 	agora["appointment_id"] = channelNa
+	// 	agora["uid"] = uidSt
+	// 	agora["token"] = tokenForResource
+	// 	agora["resource_id"] = resourceid
+	// 	agora["status"] = CONSTANT.AgoraResourceID
+	// 	agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 	if !ok {
+	// 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 		return
+	// 	}
+	// }
+
+	// if r.FormValue("user_type") == "1" {
+	// 	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// 	if exists {
+	// 		DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 			map[string]string{
+	// 				"appointment_id": r.FormValue("appointment_id"),
+	// 			},
+	// 			map[string]string{
+	// 				"uid":         uidStr,
+	// 				"token":       agora_token,
+	// 				"resource_id": "",
+	// 				"status":      CONSTANT.AgoraResourceID2,
+	// 				"modified_at": UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	} else {
+	// 		agora["appointment_id"] = channelName
+	// 		agora["uid"] = uidStr
+	// 		agora["token"] = agora_token
+	// 		agora["resource_id"] = ""
+	// 		agora["status"] = CONSTANT.AgoraResourceID
+	// 		agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 	}
+	// } else if r.FormValue("user_type") == "2" {
+	// 	resourceid, err := UTIL.BasicAuthorization(channelName, uidStr)
+	// 	if err != nil {
+	// 		fmt.Println("resource id not generated for recording file")
+	// 		return
+	// 	}
+	// 	exists := DB.CheckIfExists(CONSTANT.AgoraTable, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// 	if exists {
+	// 		DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 			map[string]string{
+	// 				"appointment_id": r.FormValue("appointment_id"),
+	// 			},
+	// 			map[string]string{
+	// 				"uid1":         uidStr,
+	// 				"token1":       agora_token,
+	// 				"resource_id1": resourceid,
+	// 				"status":       CONSTANT.AgoraResourceID2,
+	// 				"modified_at":  UTIL.GetCurrentTime().String(),
+	// 			},
+	// 		)
+	// 	} else {
+	// 		agora["appointment_id"] = channelName
+	// 		agora["uid1"] = uidStr
+	// 		agora["token1"] = agora_token
+	// 		agora["resource_id1"] = resourceid
+	// 		agora["status"] = CONSTANT.AgoraResourceID
+	// 		agora["created_at"] = UTIL.GetCurrentTime().String()
+	// 		_, status, ok := DB.InsertWithUniqueID(CONSTANT.AgoraTable, CONSTANT.AgoraDigits, agora, "agora_id")
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+
+	// 	}
+	// }
 
 	response["token"] = agora_token
 	response["UID"] = uidStr
@@ -1767,13 +3164,13 @@ func generateRandomID() string {
 func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get appointment details
 	appointment, status, ok := DB.SelectSQL(CONSTANT.AppointmentsTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
@@ -1787,48 +3184,121 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	if len(agora) == 0 {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
-		return
-	}
+	// domainName := strings.Split(client[0]["email"], "@")
 
-	// update appointment as started
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":            CONSTANT.AppointmentStarted,
-			"client_started_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": r.FormValue("appointment_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	if agora[0]["uid1"] == r.FormValue("uid") {
+	// if len(agora) == 0 {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentNotExistMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-		sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid1"], agora[0]["appointment_id"], agora[0]["token1"], agora[0]["resource_id1"])
-		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
-		}
-
-		DB.UpdateSQL(CONSTANT.AgoraTable,
+	if len(appointment[0]["client_started_at"]) == 0 {
+		// update appointment as started
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
 			map[string]string{
-				"agora_id": agora[0]["agora_id"],
+				"appointment_id": r.FormValue("appointment_id"),
 			},
 			map[string]string{
-				"sid1":        sid,
-				"status":      CONSTANT.AgoraCallStart2,
-				"modified_at": UTIL.GetCurrentTime().String(),
+				"status":            CONSTANT.AppointmentStarted,
+				"client_started_at": UTIL.GetCurrentTime().String(),
 			},
 		)
+	}
+
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status": CONSTANT.AppointmentStarted,
+	// 		},
+	// 	)
+	// }
+
+	// if len(agora[0]["sid"]) == 0 {
+
+	// 	sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+	// 	if err != nil {
+	// 		fmt.Println("cloud recording not started")
+	// 	}
+
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"agora_id": agora[0]["agora_id"],
+	// 		},
+	// 		map[string]string{
+	// 			"sid":         sid,
+	// 			"status":      CONSTANT.AgoraCallStart1,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+
+	// }
+
+	// if len(agora[0]["sid"]) == 0 {
+
+	// 	sid, err := UTIL.AgoraRecordingCallStart(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["token"], agora[0]["resource_id"])
+	// 	if err != nil {
+	// 		fmt.Println("cloud recording not start")
+	// 	}
+
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"agora_id": agora[0]["agora_id"],
+	// 		},
+	// 		map[string]string{
+	// 			"sid":         sid,
+	// 			"status":      CONSTANT.AgoraCallStart2,
+	// 			"modified_at": UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
+
+	var counsellorName string
+
+	switch appointment[0]["type"] {
+	case "1":
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.CounsellorsTable+" where counsellor_id = ?", appointment[0]["counsellor_id"])
+
+	case "2":
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.ListenersTable+" where listener_id = ?", appointment[0]["counsellor_id"])
+
+	case "4":
+		counsellorName = DB.QueryRowSQL("select first_name from "+CONSTANT.TherapistsTable+" where therapist_id = ?", appointment[0]["counsellor_id"])
 
 	}
+
+	// send appointment join the call notification to Therapists
+	UTIL.SendNotification(
+		CONSTANT.CounsellorAppointmentHasBeenStartedHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.CounsellorAppointmentHasBeenStartedContent,
+			map[string]string{
+				"###therapistname###": counsellorName,
+				"###clientname###":    DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+			},
+		),
+		appointment[0]["counsellor_id"],
+		appointment[0]["type"],
+		UTIL.GetCurrentTime().String(),
+		CONSTANT.NotificationSent,
+		r.FormValue("appointment_id"),
+		"",
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
@@ -1845,7 +3315,7 @@ func AppointmentStart(w http.ResponseWriter, r *http.Request) {
 func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	//check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -1865,22 +3335,175 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
-	if !ok {
-		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
-		return
+	// get client details
+	// client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": appointment[0]["client_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// domainName := strings.Split(client[0]["email"], "@")
+
+	// agora, status, ok := DB.SelectSQL(CONSTANT.AgoraTable, []string{"*"}, map[string]string{"appointment_id": appointment[0]["appointment_id"]})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	if len(r.FormValue("waiting")) > 0 {
+		// update appointment as waiting
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"client_ended_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+	} else {
+		// update appointment as completed
+		DB.UpdateSQL(CONSTANT.AppointmentsTable,
+			map[string]string{
+				"appointment_id": r.FormValue("appointment_id"),
+			},
+			map[string]string{
+				"status":          CONSTANT.AppointmentCompleted,
+				"client_ended_at": UTIL.GetCurrentTime().String(),
+			},
+		)
+
+		var counsellor []map[string]string
+		switch appointment[0]["type"] {
+		case CONSTANT.CounsellorType:
+			counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+			// break
+		case CONSTANT.ListenerType:
+			counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
+			// break
+		case CONSTANT.TherapistType:
+			counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
+			// break
+		}
+
+		// send appointment ended notification and rating to client
+		UTIL.SendNotification(
+			CONSTANT.ClientAppointmentFeedbackHeading,
+			UTIL.ReplaceNotificationContentInString(
+				CONSTANT.ClientAppointmentFeedbackContent,
+				map[string]string{
+					"###counsellor_name###": counsellor[0]["first_name"],
+				},
+			),
+			appointment[0]["client_id"],
+			CONSTANT.ClientType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationSent,
+			r.FormValue("appointment_id"),
+			"",
+		)
 	}
 
-	// update appointment as completed
-	DB.UpdateSQL(CONSTANT.AppointmentsTable,
-		map[string]string{
-			"appointment_id": r.FormValue("appointment_id"),
-		},
-		map[string]string{
-			"status":          CONSTANT.AppointmentCompleted,
-			"client_ended_at": UTIL.GetCurrentTime().String(),
-		},
-	)
+	// if domainName[1] == "clovemind.com" {
+
+	// 	DB.UpdateSQL(CONSTANT.ClientCounsellingLimitTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"status": CONSTANT.AppointmentCompleted,
+	// 		},
+	// 	)
+	// }
+
+	// if appointment[0]["client_ended_at"] != "" {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyCompletedMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
+	// 	UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"fileNameInMp4":  "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+	// 			"fileNameInM3U8": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + ".m3u8",
+	// 			"status":         CONSTANT.AgoraCallStop1,
+	// 			"modified_at":    UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+
+	// 	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"counsellor_mp4": "recordingfile/" + agora[0]["sid"] + "_" + agora[0]["appointment_id"] + "_0.mp4",
+	// 			"status":         CONSTANT.QualityCheckLinkInsert,
+	// 			"modified_at":    UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+
+	// }
+
+	// type 2 is listerner
+	// if appointment[0]["type"] != "2" {
+	// 	if appointment[0]["started_at"] == "" && appointment[0]["ended_at"] == "" {
+	// 		invoice, status, ok := DB.SelectSQL(CONSTANT.InvoicesTable, []string{"actual_amount", "discount", "paid_amount"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 		if !ok {
+	// 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 			return
+	// 		}
+	// 		if len(invoice) > 0 {
+	// 			// get order details
+	// 			order, status, ok := DB.SelectSQL(CONSTANT.OrderClientAppointmentTable, []string{"slots_bought"}, map[string]string{"order_id": appointment[0]["order_id"]})
+	// 			if !ok {
+	// 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 				return
+	// 			}
+	// 			paidAmount, _ := strconv.ParseFloat(invoice[0]["paid_amount"], 64)
+	// 			discount, _ := strconv.ParseFloat(invoice[0]["discount"], 64)
+	// 			amountBeforeDiscount := paidAmount + discount
+	// 			if amountBeforeDiscount > 0 { // add only if amount paid
+	// 				slotsBought, _ := strconv.ParseFloat(order[0]["slots_bought"], 64)
+
+	// 				amountFor1Session := amountBeforeDiscount / slotsBought // for 1 counselling session
+	// 				cancellationCharges := amountFor1Session
+
+	// 				DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+	// 					"counsellor_id": appointment[0]["counsellor_id"],
+	// 					"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+	// 					"description":   "Therapist No Show",
+	// 					"amount":        strconv.FormatFloat(-cancellationCharges, 'f', 2, 64),
+	// 					"status":        CONSTANT.PaymentActive,
+	// 					"created_at":    UTIL.GetCurrentTime().String(),
+	// 				}, "payment_id")
+	// 			}
+	// 		} else {
+
+	// 			//UTIL.BuildDateTime(appointment[0]["date"], appointment[0]["time"]).Sub(time.Now()).Hours()
+
+	// 			// get counsellor details
+	// 			counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"corporate_price"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
+	// 			if !ok {
+	// 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 				return
+	// 			}
+
+	// 			DB.InsertWithUniqueID(CONSTANT.PaymentsTable, CONSTANT.PaymentsDigits, map[string]string{
+	// 				"counsellor_id": appointment[0]["counsellor_id"],
+	// 				"heading":       DB.QueryRowSQL("select first_name from "+CONSTANT.ClientsTable+" where client_id = ?", appointment[0]["client_id"]),
+	// 				"description":   "Therapist No Show",
+	// 				"amount":        "-" + counsellor[0]["corporate_price"],
+	// 				"status":        CONSTANT.PaymentActive,
+	// 				"created_at":    UTIL.GetCurrentTime().String(),
+	// 			}, "payment_id")
+
+	// 		}
+	// 	}
+	// }
 
 	// codeStatus, err := UTIL.CallStatus(agora[0]["resource_id1"], agora[0]["sid1"])
 	// if err != nil {
@@ -1890,64 +3513,406 @@ func AppointmentEnd(w http.ResponseWriter, r *http.Request) {
 
 	// fmt.Println(codeStatus)
 
-	if agora[0]["uid1"] == r.FormValue("uid") {
-		fileNameInMP4, fileNameInM3U8, err := UTIL.AgoraRecordingCallStop(agora[0]["uid1"], agora[0]["appointment_id"], agora[0]["resource_id1"], agora[0]["sid1"])
-		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
-			return
-		}
-		DB.UpdateSQL(CONSTANT.AgoraTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"fileNameInMp4Two":  fileNameInMP4,
-				"fileNameInM3U8Two": fileNameInM3U8,
-				"status":            CONSTANT.AgoraCallStop2,
-				"modified_at":       UTIL.GetCurrentTime().String(),
-			},
-		)
+	// if len(agora[0]["fileNameInMp4"]) == 0 && len(agora[0]["fileNameInM3U8"]) == 0 {
+	// 	fileNameInMP4, fileNameInM3U8, _ := UTIL.AgoraRecordingCallStop(agora[0]["uid"], agora[0]["appointment_id"], agora[0]["resource_id"], agora[0]["sid"])
+	// 	// if err != nil {
+	// 	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeServerError, CONSTANT.AgoraCallMessage, CONSTANT.ShowDialog, response)
+	// 	// 	return
+	// 	// }
+	// 	DB.UpdateSQL(CONSTANT.AgoraTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"fileNameInMp4":  fileNameInMP4,
+	// 			"fileNameInM3U8": fileNameInM3U8,
+	// 			"status":         CONSTANT.AgoraCallStop2,
+	// 			"modified_at":    UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
 
-		DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
-			map[string]string{
-				"appointment_id": r.FormValue("appointment_id"),
-			},
-			map[string]string{
-				"client_mp4":  fileNameInMP4,
-				"status":      CONSTANT.QualityCheckLinkInsert,
-				"modified_at": UTIL.GetCurrentTime().String(),
-			},
-		)
-	}
-
-	var counsellor []map[string]string
-	switch appointment[0]["type"] {
-	case CONSTANT.CounsellorType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "phone", "email"}, map[string]string{"counsellor_id": appointment[0]["counsellor_id"]})
-		break
-	case CONSTANT.ListenerType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email"}, map[string]string{"listener_id": appointment[0]["counsellor_id"]})
-		break
-	case CONSTANT.TherapistType:
-		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "phone", "email"}, map[string]string{"therapist_id": appointment[0]["counsellor_id"]})
-		break
-	}
-
-	// send appointment ended notification and rating to client
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentFeedbackHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentFeedbackContent,
-			map[string]string{
-				"###counsellor_name###": counsellor[0]["first_name"],
-			},
-		),
-		appointment[0]["client_id"],
-		CONSTANT.ClientType,
-		UTIL.GetCurrentTime().String(),
-		CONSTANT.NotificationSent,
-		r.FormValue("appointment_id"),
-	)
+	// 	DB.UpdateSQL(CONSTANT.QualityCheckDetailsTable,
+	// 		map[string]string{
+	// 			"appointment_id": r.FormValue("appointment_id"),
+	// 		},
+	// 		map[string]string{
+	// 			"counsellor_mp4": fileNameInMP4,
+	// 			"status":         CONSTANT.QualityCheckLinkInsert,
+	// 			"modified_at":    UTIL.GetCurrentTime().String(),
+	// 		},
+	// 	)
+	// }
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func CouponGet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// get counsellor details
+	couponsCode, status, ok := DB.SelectProcess("select *  from "+CONSTANT.CouponsTable+" where client_id = ? or client_id = '' and status = '1' and start_by < '"+UTIL.GetCurrentTime().String()+"' and '"+UTIL.GetCurrentTime().String()+"' < end_by ", r.FormValue("client_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["coupons"] = couponsCode
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func AppointmentRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+	var counsellor []map[string]string
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.AppointmentRequestRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clients, status, ok := DB.SelectProcess("select first_name, last_name, phone from "+CONSTANT.ClientsTable+" where client_id = ?", body["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	getAppointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "counsellor_id": body["counsellor_id"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(getAppointmentRequest) != 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentAlreadyExits, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	switch body["type"] {
+	case CONSTANT.CounsellorType:
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, phone"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	case CONSTANT.ListenerType:
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, phone"}, map[string]string{"listener_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	case CONSTANT.TherapistType:
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, phone"}, map[string]string{"therapist_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	}
+
+	appointmentRequest := map[string]string{}
+	appointmentRequest["counsellor_id"] = body["counsellor_id"]
+	appointmentRequest["type"] = body["type"]
+	appointmentRequest["client_id"] = body["client_id"]
+	appointmentRequest["status"] = CONSTANT.AppointmentRequestProgress
+	appointmentRequest["created_at"] = UTIL.GetCurrentTime().String()
+
+	requestID, status, ok := DB.InsertWithUniqueID(CONSTANT.AppointmentRequestTable, CONSTANT.AppointmentRequestDigits, appointmentRequest, "request_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send to counsellor
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentRequestSMSToCounsellorTextMessage,
+			map[string]string{
+				"###counsellorName###": counsellor[0]["first_name"],
+				"###clientName###":     clients[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		counsellor[0]["phone"],
+		UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.InstantSendEmailMessage,
+	)
+
+	// send into client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentRequestSMSToClientTextMessage,
+			map[string]string{
+				"###clientName###":     clients[0]["first_name"],
+				"###counsellorName###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		clients[0]["phone"],
+		UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	// send into client with 24 hours
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentRequestSMSToNotAcceptedClientTextMessage,
+			map[string]string{
+				"###counsellorName###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		clients[0]["phone"],
+		UTIL.GetCurrentTime().Add(1770*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.LaterSendEmailMessage,
+	)
+
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentReminderTextMessage,
+	// 		map[string]string{
+	// 			"###user_name###": client[0]["first_name"],
+	// 			"###userName###":  counsellor[0]["first_name"],
+	// 			"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(+24*time.Hour).UTC().String(),
+	// 	appointmentID,
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func InPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+	var counsellor []map[string]string
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.InPersonAppointmentRequestRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clients, status, ok := DB.SelectProcess("select first_name, last_name, phone from "+CONSTANT.ClientsTable+" where client_id = ?", body["client_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	getAppointmentRequest, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentRequestTable, []string{"*"}, map[string]string{"client_id": body["client_id"], "counsellor_id": body["counsellor_id"], "company_name": body["companyName"], "company_location": body["companyLocation"], "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(getAppointmentRequest) != 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientAppointmentAlreadyExits, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	switch body["type"] {
+	case CONSTANT.CounsellorType:
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, phone"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+	case CONSTANT.ListenerType:
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name, phone"}, map[string]string{"listener_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	case CONSTANT.TherapistType:
+		counsellor, status, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name, phone"}, map[string]string{"therapist_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+	}
+
+	appointmentRequest := map[string]string{}
+	appointmentRequest["counsellor_id"] = body["counsellor_id"]
+	appointmentRequest["type"] = body["type"]
+	appointmentRequest["client_id"] = body["client_id"]
+	appointmentRequest["company_name"] = body["companyName"]
+	appointmentRequest["company_location"] = body["companyLocation"]
+	appointmentRequest["status"] = CONSTANT.AppointmentRequestProgress
+	appointmentRequest["created_at"] = UTIL.GetCurrentTime().String()
+
+	requestID, status, ok := DB.InsertWithUniqueID(CONSTANT.InPersonAppointmentRequestTable, CONSTANT.AppointmentRequestDigits, appointmentRequest, "request_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// // send to counsellor
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentRequestSMSToCounsellorTextMessage,
+	// 		map[string]string{
+	// 			"###counsellorName###": counsellor[0]["first_name"],
+	// 			"###clientName###":     clients[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	counsellor[0]["phone"],
+	// 	UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+	// 	requestID,
+	// 	CONSTANT.InstantSendEmailMessage,
+	// )
+
+	// send into client
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientInPersonRequestSMSToClientTextMessage,
+			map[string]string{
+				"###clientName###":     clients[0]["first_name"],
+				"###counsellorName###": counsellor[0]["first_name"],
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		clients[0]["phone"],
+		UTIL.GetCurrentTime().Add(330*time.Minute).UTC().String(),
+		requestID,
+		CONSTANT.InstantSendTextMessage,
+	)
+
+	// // send into client with 24 hours
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentRequestSMSToNotAcceptedClientTextMessage,
+	// 		map[string]string{
+	// 			"###counsellorName###": counsellor[0]["first_name"],
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	clients[0]["phone"],
+	// 	UTIL.GetCurrentTime().Add(1770*time.Minute).UTC().String(),
+	// 	requestID,
+	// 	CONSTANT.LaterSendEmailMessage,
+	// )
+
+	// UTIL.SendMessage(
+	// 	UTIL.ReplaceNotificationContentInString(
+	// 		// need to change
+	// 		CONSTANT.ClientAppointmentReminderTextMessage,
+	// 		map[string]string{
+	// 			"###user_name###": client[0]["first_name"],
+	// 			"###userName###":  counsellor[0]["first_name"],
+	// 			"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+	// 		},
+	// 	),
+	// 	CONSTANT.TransactionalRouteTextMessage,
+	// 	client[0]["phone"],
+	// 	UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(+24*time.Hour).UTC().String(),
+	// 	appointmentID,
+	// 	CONSTANT.LaterSendTextMessage,
+	// )
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func GetAppointmentRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	//check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.AppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["appointment_request"] = appointmentRequest
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
+}
+
+func GetInPersonAppointmentRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	//check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	appointmentRequest, status, ok := DB.SelectSQL(CONSTANT.InPersonAppointmentRequestTable, []string{"*"}, map[string]string{"client_id": r.FormValue("client_id"), "status": "1"})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["appointment_request"] = appointmentRequest
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+
 }

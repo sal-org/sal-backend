@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>Emotional Awareness Scale</title>
+      <style>
+        body{
+				  min-width:300px;        /* Suppose you want minimum width of 1000px */
+				  width: auto !important;  /* Firefox will set width as auto */
+				  width:300px;            /* As IE6 ignores !important it will set width as 1000px; */
+          font-family: 'Open Sans';
+          page-break-inside: avoid !important;
+				}
+      </style>
+    </head>
+    <body>
+      <div style="padding: 2%;">
+        <div>
+          <p style="text-align: center; font-size: x-large;"><b>Emotional Awareness Scale</b></p>
+          <p style="text-align: center;">This assessment has been extracted from a book on Emotional Intelligence by Daniel Goleman</p>
+          <p style="font-size:large;text-align: end;">Source: <a href="www.bantamdell.com">www.bantamdell.com</a></p>
+          <p style="font-size: large;text-align: end;">Date: {{.Date}}</p>
+          <p style="height: 30px; width: 100%;  border: 2px solid black;background:coral ;"><b>Personal Details:</b></p>
+        </div><br>
+        <div>
+          <p><b>Name: {{.Name}}</b></p>
+        </div>
+        <div>
+          <div style="float: left;">
+            <p><b>Age: {{.Age}}</b></p>
+          </div>
+          <div style="float: right;">
+            <p><b>Gender: {{.Gender}}</b></p>
+          </div> 
+        </div><br><br><br>
+        <div>
+          <p><b>About the Report:</b></p>
+          <p>Emotional Intelligence (referred to as EQ) is your ability to be aware of, understand, and manage your emotions. Emotional Intelligence (EI) is the ability to manage both your own emotions and understand the emotions of people around you. There are five key elements to EI: self-awareness, self-regulation, motivation, empathy, and social skills.</p><br>
+          <p><b>What's your Emotional Awareness score?</b></p>
+          <p>Below, you can find your Emotional Awareness scores and comments for the 10 questions you have answered. Emotional Awareness is being able to manage both personal and professional relationships by helping not only ourselves but others too in identifying and managing emotions. You may discuss this with your therapist in greater detail.</p>
+        </div><br><br><br> 
+        <div style="text-align: center; font-size: x-large;">
+          <p><b>Questionnaire</b></p>
+        </div>
+        <div>
+          <p><b>Scale</b></p>
+          <table style="border: 1px solid black; width: 100%;border-collapse: collapse; ">
+            <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+              <th style="border: 1px solid black;">Never</th> 
+              <th style="border: 1px solid black;">Rarely</th>
+              <th style="border: 1px solid black;">Sometimes</th>
+              <th style="border: 1px solid black;">Often</th>
+              <th style="border: 1px solid black;">Always</th>
+            </tr>
+            <tr style="text-align: center;">
+              <td style="border: 1px solid black;">0</td>
+              <td style="border: 1px solid black;">1</td>
+              <td style="border: 1px solid black;">2</td>
+              <td style="border: 1px solid black;">3</td>
+              <td style="border: 1px solid black;">4</td>
+            </tr>
+          </table>
+        </div>
+        <p><b>Recorded Responses:</b></p>  
+        <div style="padding: 2%;">
+          <table style="width:100% ; text-align: left;">
+            <tr>
+              <td style=" padding: 10px;">1. My feelings are clear to me at any given moment</td>
+              <td style="text-align: center;">{{.Answer1}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">2. Emotions play an important part in my life</td>
+              <td style="text-align: center;">{{.Answer2}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">3. My moods impact the people around me</td>
+              <td style="text-align: center;">{{.Answer3}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">4. I find it easy to put words to my feelings</td>
+              <td style="text-align: center;">{{.Answer4}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">5. My moods are easily affected by external events</td>
+              <td style="text-align: center;">{{.Answer5}}</td>
+            </tr>
+            <tr>
+              <td style=" padding: 10px; ">6. I can easily sense when I’m going to be angry</td>
+              <td style="text-align: center;">{{.Answer6}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">7. I readily tell others my true feelings</td>
+                <td style="text-align: center;">{{.Answer7}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">8. I find it easy to describe my feelings</td>
+                <td style="text-align: center;">{{.Answer8}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">9. Even when I’m upset, I’m aware of what’s happening to me</td>
+                <td style="text-align: center;">{{.Answer9}}</td>
+            </tr>
+            <tr>
+                <td style=" padding: 10px; ">10. I am able to stand apart from my thoughts and feelings and examine them</td>
+                <td style="text-align: center;">{{.Answer10}}</td>
+            </tr>
+            <tr>
+              <th style=" padding: 10px; font-weight: 545;">Total Score:</th>
+              <th style="text-align: center; font-weight: 545;">{{.Score}}</th>
+            </tr>
+          </table>
+        </div><br><br><br><br>
+        <p><b>Score Interpretation:</b></p>
+        <table style="border: 1px solid black; width: 60%; border-collapse: collapse;">
+          <tr style="border: 1px solid black; background-color: coral; padding: 5px;">
+            <th style="border: 1px solid black;">Score Range </th> 
+            <th style="border: 1px solid black;">Emotional Awareness</th>  
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">0 – 24</td>
+            <td style="border: 1px solid black;">Area for Enrichment</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">25 – 34</td>
+            <td style="border: 1px solid black;">Effective Functioning</td>
+          </tr>
+          <tr style="text-align: center;"> 
+            <td style="border: 1px solid black;">35 – 40</td>
+            <td style="border: 1px solid black;">Enhanced Skills</td>
+          </tr>
+        </table>
+        <p>Your overall score is in the <b>Enhanced Skills (35 – 40)</b> range based on the assessment. The score suggests that Emotional Awareness can be used as a leverage to develop weaker areas.</p>
+        <p><b>Interpretation:</b></p>
+        <p>Scoring in this range indicates a high level of emotional awareness. You have a strong ability to recognize and understand both your own emotions and those of others, which allows you to navigate complex social situations with ease. You excel at interpreting emotional cues and maintaining emotional stability, even under significant stress. Your emotional intelligence is well-developed, contributing to effective communication, empathy, and strong relationships.</p><br>
+        <p><b>Action Steps:</b></p>
+        <ul>
+          <li>Engage in advanced empathy exercises, such as active listening and perspective-taking in diverse settings.</li>
+          <li>Regularly engage in reflective practice sessions to continuously refine your emotional awareness skills.</li>
+          <li>Lead or participate in collaborative projects that require high levels of emotional intelligence and teamwork.</li>
+        </ul>
+      </div>
+    </body>
+</html>

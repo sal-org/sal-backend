@@ -15,7 +15,7 @@ import (
 func CounsellorGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -25,7 +25,7 @@ func CounsellorGet(w http.ResponseWriter, r *http.Request) {
 
 	// get counsellors
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "name":
@@ -70,9 +70,15 @@ func CounsellorGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, counsellor := range counsellors {
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	counsellor["photo"] = endPointURL
+	// }
+
 	response["counsellors"] = counsellors
 	response["counsellors_count"] = counsellorsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(counsellorsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -81,7 +87,7 @@ func CounsellorGet(w http.ResponseWriter, r *http.Request) {
 func CounsellorUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -100,6 +106,7 @@ func CounsellorUpdate(w http.ResponseWriter, r *http.Request) {
 	counsellor["price"] = body["price"]
 	counsellor["price_3"] = body["price_3"]
 	counsellor["price_5"] = body["price_5"]
+	counsellor["corporate_price"] = body["corporate_price"]
 	counsellor["education"] = body["education"]
 	counsellor["experience"] = body["experience"]
 	counsellor["about"] = body["about"]
@@ -111,6 +118,7 @@ func CounsellorUpdate(w http.ResponseWriter, r *http.Request) {
 	counsellor["bank_name"] = body["bank_name"]
 	counsellor["bank_account_type"] = body["bank_account_type"]
 	counsellor["pan"] = body["pan"]
+	counsellor["corporate_therpist"] = body["corporate_therpist"]
 	counsellor["status"] = body["status"]
 	counsellor["modified_by"] = body["modified_by"]
 	counsellor["modified_at"] = UTIL.GetCurrentTime().String()

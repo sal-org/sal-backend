@@ -1,7 +1,9 @@
 package therapist
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"net/http"
 	CONFIG "salbackend/config"
@@ -38,6 +40,7 @@ func EventsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response["events"] = events
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -83,10 +86,8 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 	switch event[0]["type"] {
 	case CONSTANT.CounsellorType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about"}, map[string]string{"counsellor_id": event[0]["counsellor_id"]})
-		break
 	case CONSTANT.TherapistType:
 		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about"}, map[string]string{"therapist_id": event[0]["counsellor_id"]})
-		break
 	}
 	if len(counsellor) == 0 {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
@@ -98,7 +99,7 @@ func EventDetail(w http.ResponseWriter, r *http.Request) {
 	if len(topics) > 0 && len(topics[0]) > 0 {
 		response["topic"] = topics[0]["topic"]
 	}
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -334,15 +335,15 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
-	if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
-		return
-	}
+	// razorPayTransaction := UTIL.GetRazorpayPayment(body["payment_id"])
+	// if !strings.EqualFold(razorPayTransaction.Description, body["order_id"]) { // check if razorpay payment id is associated with correct order id
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
-	// capture razorpay payment
-	amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
-	UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
+	// // capture razorpay payment
+	// amountRazorpay, _ := strconv.ParseFloat(order[0]["paid_amount_razorpay"], 64)
+	// UTIL.CaptureRazorpayPayment(body["payment_id"], amountRazorpay)
 
 	// create invoice for the order
 	invoice := map[string]string{}
@@ -374,7 +375,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	orderUpdate["status"] = CONSTANT.OrderInProgress
 	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
 	orderUpdate["invoice_id"] = invoiceID
-	status, ok = DB.UpdateSQL(CONSTANT.OrderEventTable,
+	DB.UpdateSQL(CONSTANT.OrderEventTable,
 		map[string]string{
 			"order_id": body["order_id"],
 		},
@@ -402,6 +403,7 @@ func EventOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		order[0]["event_order_id"],
+		"",
 	)
 
 	receiptdata := UTIL.BuildDate(invoiceforemail[0]["created_at"])
@@ -533,6 +535,391 @@ func EventUpdate(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func EventInPersonStart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"status": "1", "counsellor_id": r.FormValue("therapist_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id = ? and status = "+CONSTANT.EventToBeStarted+"", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if event is valid
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as started
+	DB.UpdateSQL(CONSTANT.OrderCounsellorEventInPersonTable,
+		map[string]string{
+			"order_id": event[0]["order_id"],
+		},
+		map[string]string{
+			"status":     CONSTANT.AppointmentStarted,
+			"started_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func UpcomingEventsInPerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming booked events
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where counsellor_id = ? and status in ("+CONSTANT.EventToBeStarted+", "+CONSTANT.EventStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc, time asc", r.FormValue("therapist_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// for _, event := range events {
+
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	event["photo"] = endPointURL
+
+	// 	backgroundURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, backgroundPointURL := UTIL.GetBaseURLAndEndpointFromURL(backgroundURL)
+	// 	event["background_photo"] = backgroundPointURL
+
+	// 	documentsURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, documentsPointURL := UTIL.GetBaseURLAndEndpointFromURL(documentsURL)
+	// 	event["document"] = documentsPointURL
+	// }
+
+	response["upcoming_events"] = events
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonEventsPersonList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	eventsAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 1", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	eventsNotAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 0", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	userAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsAttended, "user_id")
+	userNotAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsNotAttended, "user_id")
+
+	clientsAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientsNotAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userNotAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["booked_clients_attended"] = clientsAttended
+	response["booked_clients_not_attended"] = clientsNotAttended
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func InPersonEventsPersonAttended(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	body := Model.CafeAttendedAddRequest{}
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	defer r.Body.Close()
+	err = json.Unmarshal(b, &body)
+	if err != nil {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	for _, clientID := range body.ClientIDs {
+		DB.UpdateSQL(CONSTANT.OrderEventInPersonTable,
+			map[string]string{
+				"event_order_id": body.OrderID,
+				"user_id":        clientID.UserID,
+				"status":         "1",
+			},
+			map[string]string{
+				"attended": "1",
+			},
+		)
+	}
+
+	eventsAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 1", body.OrderID)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	eventsNotAttended, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = "+CONSTANT.EventToBeStarted+" and attended = 0", body.OrderID)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	userAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsAttended, "user_id")
+	userNotAttendedIDs := UTIL.ExtractValuesFromArrayMap(eventsNotAttended, "user_id")
+
+	clientsAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	clientsNotAttended, status, ok := DB.SelectProcess("select client_id, first_name, last_name from " + CONSTANT.ClientsTable + " where client_id in ('" + strings.Join(userNotAttendedIDs, "','") + "')")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["booked_clients_attended"] = clientsAttended
+	response["booked_clients_not_attended"] = clientsNotAttended
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func EventInPersonDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get event details
+	event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"order_id": r.FormValue("order_id")})
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// // get event topics
+	// topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id = ?", event[0]["topic_id"])
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// get event counsellor details
+	var counsellor []map[string]string
+	switch event[0]["type"] {
+	case CONSTANT.CounsellorType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about"}, map[string]string{"counsellor_id": event[0]["counsellor_id"]})
+
+	case CONSTANT.TherapistType:
+		counsellor, _, _ = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "price", "education", "experience", "about"}, map[string]string{"therapist_id": event[0]["counsellor_id"]})
+
+	}
+	if len(counsellor) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", event[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get counsellor topics
+	topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", event[0]["counsellor_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// event[0]["photo"] = endPointURL
+
+	// backgroundURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, backgroundPointURL := UTIL.GetBaseURLAndEndpointFromURL(backgroundURL)
+	// event[0]["background_photo"] = backgroundPointURL
+
+	// documentsURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event[0]["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, documentsPointURL := UTIL.GetBaseURLAndEndpointFromURL(documentsURL)
+	// event[0]["document"] = documentsPointURL
+
+	// counsellorURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, counsellorEndPointURL := UTIL.GetBaseURLAndEndpointFromURL(counsellorURL)
+	// event[0]["photo"] = counsellorEndPointURL
+
+	response["event"] = event[0]
+	response["counsellor"] = counsellor[0]
+	response["languages"] = languages
+	response["topics"] = topics
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PastEventsInPerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming booked events
+	events, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where counsellor_id = ? and status = 3 order by date desc, time desc", r.FormValue("therapist_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// for _, event := range events {
+
+	// 	url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// 	event["photo"] = endPointURL
+
+	// 	backgroundURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, backgroundPointURL := UTIL.GetBaseURLAndEndpointFromURL(backgroundURL)
+	// 	event["background_photo"] = backgroundPointURL
+
+	// 	documentsURL := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, event["document"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, documentsPointURL := UTIL.GetBaseURLAndEndpointFromURL(documentsURL)
+	// 	event["document"] = documentsPointURL
+	// }
+
+	response["past_events"] = events
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+
+	// // get past booked events (get all booked event orders other than in progress, which is status > 1 (inprogress))
+	// events, status, ok = DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id in (select event_order_id from "+CONSTANT.OrderEventInPersonTable+" where user_id = ? and status > "+CONSTANT.OrderWaiting+") and status = "+CONSTANT.EventCompleted+" order by date desc, time desc", r.FormValue("client_id"))
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+	// response["past_events"] = events
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func EventInPersonEnd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	//check if access token is valid, not expired
+	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	// event, status, ok := DB.SelectSQL(CONSTANT.OrderCounsellorEventInPersonTable, []string{"*"}, map[string]string{"status": "2", "counsellor_id": r.FormValue("therapist_id")})
+	// if !ok {
+	// 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+	// 	return
+	// }
+
+	event, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderCounsellorEventInPersonTable+" where order_id = ? and status = "+CONSTANT.EventStarted+"", r.FormValue("order_id"))
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if appointment is valid
+	if len(event) == 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.EventNotExistMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get upcoming booked events
+	orderClientEvent, status, ok := DB.SelectProcess("select * from "+CONSTANT.OrderEventInPersonTable+" where event_order_id = ? and status = '1' ", event[0]["order_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// update appointment as completed
+	DB.UpdateSQL(CONSTANT.OrderCounsellorEventInPersonTable,
+		map[string]string{
+			"order_id": event[0]["order_id"],
+		},
+		map[string]string{
+			"status":   CONSTANT.AppointmentCompleted,
+			"ended_at": UTIL.GetCurrentTime().String(),
+		},
+	)
+
+	for _, value := range orderClientEvent {
+		UTIL.SendNotification(
+			CONSTANT.TherapistEndSessionAskRatingHeading,
+			CONSTANT.TherapistEndSessionAskRatingContent,
+			value["user_id"],
+			CONSTANT.ClientType,
+			UTIL.GetCurrentTime().String(),
+			CONSTANT.NotificationSent,
+			value["order_id"],
+			"",
+		)
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 // EventBlockOrderCreate godoc
 // @Tags Therapist Event
 // @Summary Block a slot for an event
@@ -642,7 +1029,7 @@ func EventBlockOrderCreate(w http.ResponseWriter, r *http.Request) {
 	UTIL.SendEmail(
 		CONSTANT.NewEventWaitingForApprovalTitle,
 		emailbody,
-		CONSTANT.SameerEmailID,
+		CONFIG.EventEmailID,
 		CONSTANT.InstantSendEmailMessage,
 	)
 

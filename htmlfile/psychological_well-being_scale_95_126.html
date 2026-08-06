@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSYCHOLOGICAL WELL-BEING SCALE</title>
+    <style>
+      body {
+        min-width: 300px; /* Suppose you want minimum width of 1000px */
+        width: auto !important; /* Firefox will set width as auto */
+        width: 300px; /* As IE6 ignores !important it will set width as 1000px; */
+        font-family: "Open Sans";
+        page-break-inside: avoid !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="padding: 2%">
+      <div>
+        <p style="text-align: center; font-size: x-large">
+          <b>PSYCHOLOGICAL WELL-BEING SCALE</b>
+        </p>
+        <p style="text-align: center; font-size: large">
+          <b>A Screening Tool for General Well-Being</b>
+        </p>
+        <p style="text-align: center">
+          This assessment is a well-being indicator, not a diagnosis. Use this
+          as a gentle check-in, not a judgment about who you are.
+        </p>
+        <p style="font-size: large; text-align: end">
+          Source: Ryff, C. D. (1989). Psychological Well-Being Scales (18-Item
+          Version).
+        </p>
+        <p style="font-size: large; text-align: end">Date: {{.Date}}</p>
+        <p
+          style="
+            height: 30px;
+            width: 100%;
+            border: 2px solid black;
+            background: coral;
+          "
+        >
+          <b>Personal Details:</b>
+        </p>
+      </div>
+      <br />
+      <div>
+        <p><b>Name: {{.Name}}</b></p>
+      </div>
+      <div>
+        <div style="float: left">
+          <p><b>Age: {{.Age}}</b></p>
+        </div>
+        <div style="float: right">
+          <p><b>Gender: {{.Gender}}</b></p>
+        </div>
+      </div>
+      <br /><br /><br />
+      <div>
+        <p><b>About the Report:</b></p>
+        <p>
+          The Psychological Well-Being Scale (PWB-18), developed by Carol Ryff,
+          measures the core aspects of positive functioning and emotional
+          wellness. It is designed to give a broad, holistic picture of an
+          individual’s psychological well-being. It helps users understand how
+          they are doing overall and identify areas where they may benefit from
+          support, reflection, or self-care.
+        </p>
+        <p>
+          Ryff operationalized psychological wellbeing as a six-dimensional
+          model of human characteristics: self-acceptance, positive relations
+          with others, environmental mastery, personal growth, autonomy, and
+          purpose in life.
+        </p>
+        <br />
+        <p><b>What's your Psychological Well-Being score?</b></p>
+        <p>
+          Your PWB score offers a broad picture of how you’re doing emotionally
+          and psychologically right now. It is completely normal for your
+          Well-Being Level to shift depending on what’s happening in your life.
+          If you feel distressed or overwhelmed at any point, consider seeking
+          professional support.
+        </p>
+
+        <br />
+      </div>
+      <br /><br />
+      <div style="text-align: center; font-size: x-large">
+        <p><b>Questionnaire</b></p>
+      </div>
+      <div>
+        <p><b>SCALE</b></p>
+        <table
+          style="
+            border: 1px solid black;
+            width: 100%;
+            border-collapse: collapse;
+          "
+        >
+          <tr
+            style="
+              border: 1px solid black;
+              background-color: coral;
+              padding: 5px;
+            "
+          >
+            <th style="border: 1px solid black">Strongly Agree</th>
+            <th style="border: 1px solid black">Somewhat Agree</th>
+            <th style="border: 1px solid black">A Little Agree</th>
+            <th style="border: 1px solid black">Neither Agree nor Disagree</th>
+            <th style="border: 1px solid black">A Little Disagree</th>
+            <th style="border: 1px solid black">Somewhat Disagree</th>
+            <th style="border: 1px solid black">Strongly Disagree</th>
+          </tr>
+          <tr style="text-align: center">
+            <td style="border: 1px solid black">1</td>
+            <td style="border: 1px solid black">2</td>
+            <td style="border: 1px solid black">3</td>
+            <td style="border: 1px solid black">4</td>
+            <td style="border: 1px solid black">5</td>
+            <td style="border: 1px solid black">6</td>
+            <td style="border: 1px solid black">7</td>
+          </tr>
+        </table>
+      </div>
+      <p><b>SCALE</b></p>
+      <p><b>Recorded Responses:</b></p>
+      <div style="padding: 2%">
+        <table style="width: 100%; text-align: left">
+          <tr>
+            <td style="padding: 10px">
+              1. I am not afraid to voice my opinions, even when they are in
+              opposition to most people
+            </td>
+            <td style="text-align: center">{{.Answer1}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              2. I have confidence in my opinions, even if they are contrary to
+              the general consensus
+            </td>
+            <td style="text-align: center">{{.Answer2}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              3. I tend to be influenced by people with strong opinions
+            </td>
+            <td style="text-align: center">{{.Answer3}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              4. In general, I feel I am in charge of the situation in which I
+              live
+            </td>
+            <td style="text-align: center">{{.Answer4}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              5. I am quite good at managing the responsibilities of my daily
+              life
+            </td>
+            <td style="text-align: center">{{.Answer5}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              6. I often feel overwhelmed by my responsibilities
+            </td>
+            <td style="text-align: center">{{.Answer6}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              7. I think it is important to have new experiences that challenge
+              how I think about myself and the world
+            </td>
+            <td style="text-align: center">{{.Answer7}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              8. For me, life has been a continuous process of learning,
+              changing, and growth
+            </td>
+            <td style="text-align: center">{{.Answer8}}</td>
+          </tr>
+          <br />
+          <tr>
+            <td style="padding: 10px">
+              9. I have stopped trying to make big improvements in my life
+            </td>
+            <td style="text-align: center">{{.Answer9}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              10. People would describe me as a giving person, willing to share
+              my time with others.
+            </td>
+            <td style="text-align: center">{{.Answer10}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              11. I have not experienced many warm and trusting relationships
+              with others
+            </td>
+            <td style="text-align: center">{{.Answer11}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              12. I know that I can trust my friends, and they know they can
+              trust me
+            </td>
+            <td style="text-align: center">{{.Answer12}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              13. I enjoy making plans for the future and working to make them a
+              reality
+            </td>
+            <td style="text-align: center">{{.Answer13}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              14. Some people wander aimlessly through life, but I am not one of
+              them
+            </td>
+            <td style="text-align: center">{{.Answer14}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              15. I sometimes feel as if I’ve done all there is to do in life
+            </td>
+            <td style="text-align: center">{{.Answer15}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              16. When I look at the story of my life, I am pleased with how
+              things have turned out
+            </td>
+            <td style="text-align: center">{{.Answer16}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              17. In general, I feel confident and positive about myself
+            </td>
+            <td style="text-align: center">{{.Answer17}}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px">
+              18. I feel like many of the people I know have better lives than
+              me
+            </td>
+            <td style="text-align: center">{{.Answer18}}</td>
+          </tr>
+          <tr>
+            <th style="padding: 10px; font-weight: 545">Total Score:</th>
+            <th style="text-align: center; font-weight: 545">{{.Score}}</th>
+          </tr>
+        </table>
+      </div>
+      <br />
+      <br />
+      <p><b>Score Interpretation:</b></p>
+      <table
+        style="border: 1px solid black; width: 60%; border-collapse: collapse"
+      >
+        <tr
+          style="border: 1px solid black; background-color: coral; padding: 5px"
+        >
+          <th style="border: 1px solid black">Score Range</th>
+          <th style="border: 1px solid black">
+            PSYCHOLOGICAL WELL-BEING SCALE
+          </th>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">18-69</td>
+          <td style="border: 1px solid black">Low Well-being</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">70-94</td>
+          <td style="border: 1px solid black">Moderate Well-being</td>
+        </tr>
+        <tr style="text-align: center">
+          <td style="border: 1px solid black">95-126</td>
+          <td style="border: 1px solid black">High Well-being</td>
+        </tr>
+      </table>
+      <p><b>Inference:</b></p>
+      <p>
+        Your overall score range is between is 91-126 based on assessment. Your
+        score indicates high well-being, and you appear to be functioning well
+        emotionally and psychologically. You likely manage challenges with
+        resilience, feel connected to others, and experience a sense of purpose
+        and self-confidence.
+      </p>
+      <p><b>Focus:</b> Nurture strengths and continue healthy routines.</p>
+      <p><b>Reflection:</b></p>
+      <p>
+        What helps you stay grounded and well? How can you keep honouring these
+        habits?
+      </p>
+      <br /><br />
+      <br />
+      <br />
+    </div>
+  </body>
+</html>

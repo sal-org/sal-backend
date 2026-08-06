@@ -44,6 +44,7 @@ const (
 	ListenerType   = "2"
 	ClientType     = "3"
 	TherapistType  = "4"
+	CompanyType    = "5"
 )
 
 // counsellor status
@@ -57,15 +58,21 @@ const (
 const (
 	CounsellorNotApproved = "0"
 	CounsellorActive      = "1"
-	CounsellorInactive    = "2"
+	CounsellorDeleted     = "2"
 	CounsellorBlocked     = "3"
+)
+
+// counsellor status
+const (
+	CounsellorRecordFormActive    = "1"
+	CounsellorRecordFormCompleted = "2"
 )
 
 // listener status
 const (
 	ListenerNotApproved = "0"
 	ListenerActive      = "1"
-	ListenerInactive    = "2"
+	ListenerDeleted     = "2"
 	ListenerBlocked     = "3"
 )
 
@@ -73,8 +80,15 @@ const (
 const (
 	TherapistNotApproved = "0"
 	TherapistActive      = "1"
-	TherapistInactive    = "2"
+	TherapistDeleted     = "2"
 	TherapistBlocked     = "3"
+)
+
+// appointment status
+const (
+	AppointmentTransitionActive    = "1"
+	AppointmentTransitionBooked    = "2"
+	AppointmentTransitionCompleted = "3"
 )
 
 // admin status
@@ -121,25 +135,55 @@ const (
 	OrderWaiting    = "0"
 	OrderInProgress = "1"
 	OrderCompleted  = "2"
+	OrderCancel     = "4"
+)
+
+// webinar status
+const (
+	WebinarWaiting          = "0"
+	WebinarBooked           = "1"
+	WebinarCompleted        = "2"
+	WebinarCancel           = "4"
+	WebinarCancelledByAdmin = "5"
+)
+
+// order inperson event status
+const (
+	InPersonEventOrderCompleted        = "1"
+	InPersonEventOrderCancel           = "4"
+	InPersonEventOrderCancelledByAdmin = "5"
 )
 
 // appointment status
 const (
-	AppointmentToBeStarted         = "1"
-	AppointmentStarted             = "2"
-	AppointmentCompleted           = "3"
-	AppointmentUserCancelled       = "4"
-	AppointmentCounsellorCancelled = "5"
-	AppointmentAdminCancelled      = "6"
-	AppointmentNoShowClient        = "7"
-	AppointmentNoShowCounsellor    = "8"
-	AppointmentNoShowBoth          = "9"
-	AppointmentAdminRefunds        = "10"
+	AppointmentToBeDuplicate                   = "0"
+	AppointmentToBeStarted                     = "1"
+	AppointmentStarted                         = "2"
+	AppointmentCompleted                       = "3"
+	AppointmentUserCancelled                   = "4"
+	InPersonAppointmentNoShowForCounsellor     = "17"
+	InPersonAppointmentNoShowForClient         = "18"
+	AppointmentUserCancelledWithin4Hour        = "12"
+	AppointmentCounsellorCancelledWithin4Hour  = "13"
+	AppointmentInTheReview                     = "14"
+	AppointmentCounsellorCancelled             = "5"
+	AppointmentAdminCancelled                  = "6"
+	AppointmentNoShowClient                    = "7"
+	AppointmentNoShowCounsellor                = "8"
+	AppointmentNoShowBoth                      = "9"
+	AppointmentAdminRefunds                    = "10"
+	AppointmentIncompleteSession               = "19"
+	AppointmentIncompleteSessionDueToTechIssue = "20"
 )
 
 // appointment slots status
 const (
 	AppointmentSlotsActive = "1"
+)
+
+// in person slots status
+const (
+	InPersonSlotsInProgress = "1"
 )
 
 // invoice status
@@ -174,6 +218,18 @@ const (
 	CouponActive   = "1"
 )
 
+// partner status
+const (
+	PartnerInactive = "0"
+	PartnerActive   = "1"
+)
+
+// partner address status
+const (
+	PartnerAddressInactive = "0"
+	PartnerAddressActive   = "1"
+)
+
 // appointment slots types
 const (
 	SlotUnavailable = "0"
@@ -206,6 +262,12 @@ const (
 const (
 	AssessmentQuestionOptionInactive = "0"
 	AssessmentQuestionOptionActive   = "1"
+)
+
+// Appointment Request Option status
+const (
+	AppointmentRequestProgress  = "1"
+	AppointmentRequestCompleted = "2"
 )
 
 // assessment result status

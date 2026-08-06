@@ -6,6 +6,7 @@ import (
 	DB "salbackend/database"
 	"strings"
 
+	CONFIG "salbackend/config"
 	UTIL "salbackend/util"
 )
 
@@ -20,7 +21,7 @@ import (
 func MoodAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -43,7 +44,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// add mood result
-	moodResultID, status, ok := DB.InsertWithUniqueID(CONSTANT.MoodResultsTable, CONSTANT.MoodResultsDigits, map[string]string{
+	moodResultID, _, ok := DB.InsertWithUniqueID(CONSTANT.MoodResultsTable, CONSTANT.MoodResultsDigits, map[string]string{
 		"client_id":  body["client_id"],
 		"name":       body["name"],
 		"age":        body["age"],
@@ -56,11 +57,20 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 		"created_at": UTIL.GetCurrentTime().UTC().String(),
 	}, "mood_result_id")
 	if !ok {
-		UTIL.SetReponse(w, status, CONSTANT.MoodAlreadyAddedMessage, CONSTANT.ShowDialog, response)
-		return
+		status, ok := DB.UpdateSQL(CONSTANT.MoodResultsTable, map[string]string{"client_id": body["client_id"], "date": body["date"]}, map[string]string{
+			"mood_id":     body["mood_id"],
+			"notes":       body["notes"],
+			"modified_at": UTIL.GetCurrentTime().UTC().String(),
+		})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		// UTIL.SetReponse(w, status, CONSTANT.MoodAlreadyAddedMessage, CONSTANT.ShowDialog, response)
+		// return
 	}
 
-	if !(body["mood_id"] == "1") {
+	if !(body["mood_id"] == "1" || body["mood_id"] == "7" || body["mood_id"] == "8") {
 
 		moodTitle, status, ok := DB.SelectProcess("select title from "+CONSTANT.MoodsTable+" where id = ?", body["mood_id"])
 		if !ok {
@@ -81,6 +91,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 			UTIL.GetCurrentTime().String(),
 			CONSTANT.NotificationSent,
 			moodResultID,
+			"",
 		)
 
 	}
@@ -101,7 +112,7 @@ func MoodAdd(w http.ResponseWriter, r *http.Request) {
 func MoodHistory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -137,7 +148,7 @@ func MoodHistory(w http.ResponseWriter, r *http.Request) {
 func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -151,7 +162,7 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsTable+" where mood_id = ? and training = 0 and status = 1 order by created_at desc limit 20", mood_id[0]["mood_id"])
+	contents, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentsTable + " where mood_id like '%" + mood_id[0]["mood_id"] + "%' and training = 0 and status = 1 order by created_at desc limit 20")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -164,7 +175,36 @@ func ListMoodContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, content := range contents {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
+
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
+
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType || content["type"] == CONSTANT.ArticleContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
+
+	// 	if len(content["counsellor_photo"]) > 0 {
+	// 		urlCounsellorPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["counsellor_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLCounsellorPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlCounsellorPhoto)
+	// 		content["counsellor_photo"] = endPointURLCounsellorPhoto
+	// 	}
+
+	// 	if content["type"] != "3" {
+	// 		urlContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLContent := UTIL.GetBaseURLAndEndpointFromURL(urlContent)
+	// 		content["content"] = endPointURLContent
+	// 	}
+	// }
+
 	response["mood_content"] = contents
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["liked_content_ids"] = UTIL.ExtractValuesFromArrayMap(contentLiked, "content_id")
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)

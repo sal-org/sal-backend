@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	Model "salbackend/model"
 	"strconv"
 	"strings"
 
@@ -17,7 +18,7 @@ import (
 func ContentGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -27,7 +28,7 @@ func ContentGet(w http.ResponseWriter, r *http.Request) {
 
 	// get contents
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 	for key, val := range r.URL.Query() {
 		switch key {
 		case "mood_id":
@@ -83,9 +84,25 @@ func ContentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for _, content := range contents {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
+
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
+
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
+	// }
+
 	response["contents"] = contents
 	response["contents_count"] = contentsCount[0]["ctn"]
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(contentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
@@ -94,7 +111,13 @@ func ContentGet(w http.ResponseWriter, r *http.Request) {
 func ContentAdd(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
@@ -110,6 +133,39 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var counsellor []map[string]string
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	counsellorPhoto := ""
+
+	if len(counsellor) != 0 {
+		counsellorPhoto = counsellor[0]["photo"]
+	}
+
 	// add content
 	content := map[string]string{}
 	content["counsellor_id"] = body["counsellor_id"]
@@ -117,12 +173,15 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 	content["description"] = body["description"]
 	content["photo"] = body["photo"]
 	content["background_photo"] = body["background_photo"]
+	content["share_content"] = body["share_content"]
 	content["content"] = body["content"]
 	content["type"] = body["type"]
 	content["redirection"] = body["redirection"]
 	content["category_id"] = body["category_id"]
 	content["training"] = body["training"]
 	content["mood_id"] = body["mood_id"]
+	content["duration"] = body["duration"]
+	content["counsellor_photo"] = counsellorPhoto
 	content["status"] = CONSTANT.ContentActive
 	content["created_by"] = body["created_by"]
 	content["created_at"] = UTIL.GetCurrentTime().String()
@@ -132,19 +191,99 @@ func ContentAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(counsellor) != 0 {
+
+		filepath_text := "htmlfile/emailmessagebody.html"
+		// send email for therapist
+		emaildata := Model.EmailBodyMessageModel{
+			Name: counsellor[0]["first_name"],
+			Message: UTIL.ReplaceNotificationContentInString(
+				CONSTANT.CounsellorApprovedContentBody,
+				map[string]string{
+					"###content_name###": body["title"],
+				},
+			),
+		}
+
+		emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+		// email for therapist
+		UTIL.SendEmail(
+			CONSTANT.CounsellorApprovedContentTitle,
+			emailBody,
+			counsellor[0]["email"],
+			CONSTANT.InstantSendEmailMessage,
+		)
+	}
+
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
 func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// read request body
 	body, ok := UTIL.ReadRequestBody(r)
 	if !ok {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
 		return
+	}
+
+	var counsellor []map[string]string
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name, email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	counsellorPhoto := ""
+
+	if len(counsellor) != 0 {
+		counsellorPhoto = counsellor[0]["photo"]
+	}
+
+	endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+
+	body["photo"] = endPointURLPhoto
+
+	endPointURLBackgroundPhoto := UTIL.GetEndpointFromURL(body["background_photo"])
+	body["background_photo"] = endPointURLBackgroundPhoto
+
+	if len(body["share_content"]) != 0 {
+		endPointURLShareContent := UTIL.GetEndpointFromURL(body["share_content"])
+		body["share_content"] = endPointURLShareContent
+	}
+
+	if body["type"] == CONSTANT.VideoContentType || body["type"] == CONSTANT.AudioContentType {
+		endPointURLContent := UTIL.GetEndpointFromURL(body["content"])
+		body["content"] = endPointURLContent
 	}
 
 	// add content
@@ -154,13 +293,16 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 	content["description"] = body["description"]
 	content["photo"] = body["photo"]
 	content["background_photo"] = body["background_photo"]
+	content["share_content"] = body["share_content"]
 	content["content"] = body["content"]
 	content["type"] = body["type"]
 	content["redirection"] = body["redirection"]
 	content["category_id"] = body["category_id"]
 	content["training"] = body["training"]
+	content["counsellor_photo"] = counsellorPhoto
 	content["mood_id"] = body["mood_id"]
 	content["created_by"] = body["created_by"]
+	content["duration"] = body["duration"]
 	content["status"] = body["status"]
 	content["modified_by"] = body["modified_by"]
 	content["modified_at"] = UTIL.GetCurrentTime().String()
@@ -173,10 +315,341 @@ func ContentUpdate(w http.ResponseWriter, r *http.Request) {
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
+func GetResourceCategoryForWeb(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	contentCategories, status, ok := DB.SelectProcess("select * from " + CONSTANT.ContentCategoriesInWebTable)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	contentResource, status, ok := DB.SelectProcess("select * from " + CONSTANT.ResourceCategoriesInWebTable)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["categories"] = contentCategories
+	response["resources"] = contentResource
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func ContentGetForWeb(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get contents
+	wheres := []string{}
+	queryArgs := []any{}
+	for key, val := range r.URL.Query() {
+		switch key {
+		case "mood_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " mood_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "category_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " category_id like ? ")
+				queryArgs = append(queryArgs, "%"+val[0]+"%")
+			}
+		case "type":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " type = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "counsellor_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " counsellor_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "resource_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " resource_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "status":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " status = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		case "content_id":
+			if len(val[0]) > 0 {
+				wheres = append(wheres, " content_id = ? ")
+				queryArgs = append(queryArgs, val[0])
+			}
+		}
+	}
+
+	where := ""
+	if len(wheres) > 0 {
+		where = " where " + strings.Join(wheres, " and ")
+	}
+	contents, status, ok := DB.SelectProcess("select * from "+CONSTANT.ContentsInWebTable+where+" order by created_at desc limit "+strconv.Itoa(CONSTANT.ResultsPerPageAdmin)+" offset "+strconv.Itoa((UTIL.GetPageNumber(r.FormValue("page"))-1)*CONSTANT.ResultsPerPageAdmin), queryArgs...)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get total number of contents
+	contentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from "+CONSTANT.ContentsInWebTable+where, queryArgs...)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// for _, content := range contents {
+	// 	urlPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(urlPhoto)
+	// 	content["photo"] = endPointURL
+
+	// 	urlBackgroundPhoto := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["background_photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 	_, endPointURLBackgroundPhoto := UTIL.GetBaseURLAndEndpointFromURL(urlBackgroundPhoto)
+	// 	content["background_photo"] = endPointURLBackgroundPhoto
+
+	// 	if content["type"] == CONSTANT.VideoContentType || content["type"] == CONSTANT.AudioContentType {
+	// 		urlShareContent := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, content["share_content"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// 		_, endPointURLShareContent := UTIL.GetBaseURLAndEndpointFromURL(urlShareContent)
+	// 		content["share_content"] = endPointURLShareContent
+	// 	}
+	// }
+
+	response["contents"] = contents
+	response["contents_count"] = contentsCount[0]["ctn"]
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	response["no_pages"] = strconv.Itoa(UTIL.GetNumberOfPages(contentsCount[0]["ctn"], CONSTANT.ResultsPerPageAdmin))
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ContentInWebAddRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	var counsellor []map[string]string
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	counsellorPhoto := ""
+
+	if len(counsellor) != 0 {
+		counsellorPhoto = counsellor[0]["photo"]
+	}
+
+	// add content
+	content := map[string]string{}
+	content["counsellor_id"] = body["counsellor_id"]
+	content["title"] = body["title"]
+	content["subtitle"] = body["subtitle"]
+	content["description"] = body["description"]
+	content["photo"] = body["photo"]
+	content["background_photo"] = body["background_photo"]
+	content["share_content"] = body["share_content"]
+	content["counsellor_photo"] = counsellorPhoto
+	content["content"] = body["content"]
+	content["duration"] = body["duration"]
+	content["type"] = body["type"]
+	content["redirection"] = body["redirection"]
+	content["category_id"] = body["category_id"]
+	content["resource_id"] = body["resource_id"]
+	content["content_mode"] = body["content_mode"]
+	content["status"] = CONSTANT.ContentActive
+	content["created_by"] = body["created_by"]
+	content["created_at"] = UTIL.GetCurrentTime().String()
+	_, status, ok := DB.InsertWithUniqueID(CONSTANT.ContentsInWebTable, CONSTANT.ContentDigits, content, "content_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(counsellor) != 0 {
+
+		filepath_text := "htmlfile/emailmessagebody.html"
+		// send email for therapist
+		emaildata := Model.EmailBodyMessageModel{
+			Name: counsellor[0]["first_name"],
+			Message: UTIL.ReplaceNotificationContentInString(
+				CONSTANT.CounsellorApprovedContentBody,
+				map[string]string{
+					"###content_name###": body["title"],
+				},
+			),
+		}
+
+		emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+		// email for therapist
+		UTIL.SendEmail(
+			CONSTANT.CounsellorApprovedContentTitle,
+			emailBody,
+			counsellor[0]["email"],
+			CONSTANT.InstantSendEmailMessage,
+		)
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	var counsellor []map[string]string
+
+	if len(body["counsellor_id"]) != 0 {
+		// get client details
+		counsellor, _, ok = DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"first_name", "email", "photo"}, map[string]string{"counsellor_id": body["counsellor_id"]})
+		if !ok {
+			UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "email", "photo"}, map[string]string{"listener_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+
+		if len(counsellor) == 0 {
+			counsellor, _, ok = DB.SelectSQL(CONSTANT.TherapistsTable, []string{"first_name", "email", "photo"}, map[string]string{"therapist_id": body["counsellor_id"]})
+			if !ok {
+				UTIL.SetReponse(w, "400", "", CONSTANT.ShowDialog, response)
+				return
+			}
+		}
+	}
+
+	counsellorPhoto := ""
+
+	if len(counsellor) != 0 {
+		counsellorPhoto = counsellor[0]["photo"]
+	}
+
+	endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
+	body["photo"] = endPointURLPhoto
+
+	endPointURLBackgroundPhoto := UTIL.GetEndpointFromURL(body["background_photo"])
+	body["background_photo"] = endPointURLBackgroundPhoto
+
+	if len(body["share_content"]) != 0 {
+		endPointURLShareContent := UTIL.GetEndpointFromURL(body["share_content"])
+		body["share_content"] = endPointURLShareContent
+	}
+
+	if body["type"] == CONSTANT.VideoContentType || body["type"] == CONSTANT.AudioContentType {
+		endPointURLContent := UTIL.GetEndpointFromURL(body["content"])
+		body["content"] = endPointURLContent
+	}
+
+	// add content
+	content := map[string]string{}
+	content["counsellor_id"] = body["counsellor_id"]
+	content["title"] = body["title"]
+	content["subtitle"] = body["subtitle"]
+	content["description"] = body["description"]
+	content["photo"] = body["photo"]
+	content["background_photo"] = body["background_photo"]
+	content["share_content"] = body["share_content"]
+	content["counsellor_photo"] = counsellorPhoto
+	content["content"] = body["content"]
+	content["duration"] = body["duration"]
+	content["type"] = body["type"]
+	content["redirection"] = body["redirection"]
+	content["category_id"] = body["category_id"]
+	content["resource_id"] = body["resource_id"]
+	content["content_mode"] = body["content_mode"]
+	content["status"] = body["status"]
+	content["modified_by"] = body["modified_by"]
+	content["modified_at"] = UTIL.GetCurrentTime().String()
+	status, ok := DB.UpdateSQL(CONSTANT.ContentsInWebTable, map[string]string{"content_id": r.FormValue("content_id")}, content)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
 func UploadContentFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	var fileName string
 	// file upload
@@ -199,7 +672,29 @@ func UploadContentFile(w http.ResponseWriter, r *http.Request) {
 		fileName = name
 	}
 
+	// url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, fileName, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+	// _, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+	// fileName = endPointURL
+
 	response["file"] = fileName
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func PreSignedS3URLToUpload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]any)
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	url, fileName := UTIL.PreSignedS3URLToUploadPut(CONFIG.S3Bucket, CONSTANT.ContentS3Path, CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion, filepath.Ext(r.FormValue("fileName")))
+
+	response["file_name"] = fileName
+	response["url"] = url
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

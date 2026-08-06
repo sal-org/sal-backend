@@ -34,7 +34,7 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 
 	// get appointment details
 	wheres := []string{}
-	queryArgs := []interface{}{}
+	queryArgs := []any{}
 
 	if len(body["name"]) > 0 { // get counsellors with specified topic
 		wheres = append(wheres, " counsellor_name like '%%"+body["name"]+"%%' ")
@@ -56,20 +56,20 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 
 	if len(body["start_by"]) > 0 {
 		startBy, _ := time.Parse("2006-01-02", body["start_by"])
-		wheres = append(wheres, "created_at > ?")
-		queryArgs = append(queryArgs, startBy.UTC().String())
+		wheres = append(wheres, "`date` >= ?")
+		queryArgs = append(queryArgs, startBy.String())
 	}
 
 	if len(body["end_by"]) > 0 {
 		endBy, _ := time.Parse("2006-01-02", body["end_by"])
-		wheres = append(wheres, "created_at < ?")
-		queryArgs = append(queryArgs, endBy.UTC().String())
+		wheres = append(wheres, "`date` <= ?")
+		queryArgs = append(queryArgs, endBy.String())
 
 	}
 
 	where := ""
 	if len(wheres) > 0 {
-		where = " where " + strings.Join(wheres, " and ")
+		where = " where status in ('1','2') and " + strings.Join(wheres, " and ")
 	}
 
 	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.QualityCheckDetailsTable+where+" order by created_at desc ", queryArgs...)
@@ -91,6 +91,147 @@ func GetAppointmentdetails(w http.ResponseWriter, r *http.Request) {
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 
+}
+
+func GetCounsellorRecord(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointments
+	wheres := []string{}
+	queryArgs := []interface{}{}
+
+	if len(body["name"]) > 0 {
+		wheres = append(wheres, " (client_first_name like '%%"+body["name"]+"%%' or client_last_name like '%%"+body["name"]+"%%') ")
+	}
+
+	if len(body["counsellor_id"]) > 0 {
+		wheres = append(wheres, " counsellor_id = ? ")
+		queryArgs = append(queryArgs, body["counsellor_id"])
+	}
+
+	if len(body["start_by"]) > 0 {
+		startBy, _ := time.Parse("2006-01-02", body["start_by"])
+		wheres = append(wheres, "`session_date` >= ?")
+		queryArgs = append(queryArgs, startBy.String())
+	}
+
+	if len(body["end_by"]) > 0 {
+		endBy, _ := time.Parse("2006-01-02", body["end_by"])
+		wheres = append(wheres, "`session_date` <= ?")
+		queryArgs = append(queryArgs, endBy.String())
+
+	}
+
+	where := ""
+	if len(wheres) > 0 {
+		where = " where " + strings.Join(wheres, " and ")
+	}
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorRecordsTable+where+" order by created_at desc ", queryArgs...)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// get counsellor, client, order ids to get details
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+	// get counsellor details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+
+	response["appointments"] = appointments
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+
+func GetCounsellorTimeSheet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// get appointments
+	wheres := []string{}
+	queryArgs := []interface{}{}
+
+	if len(body["name"]) > 0 {
+		wheres = append(wheres, " partner_name like '%%"+body["name"]+"%%' ")
+	}
+
+	if len(body["counsellor_id"]) > 0 {
+		wheres = append(wheres, " counsellor_id = ? ")
+		queryArgs = append(queryArgs, body["counsellor_id"])
+	}
+
+	if len(body["start_by"]) > 0 {
+		startBy, _ := time.Parse("2006-01-02", body["start_by"])
+		wheres = append(wheres, "`created_at` >= ?")
+		queryArgs = append(queryArgs, startBy.String())
+	}
+
+	if len(body["end_by"]) > 0 {
+		endBy, _ := time.Parse("2006-01-02", body["end_by"])
+		wheres = append(wheres, "`created_at` <= ?")
+		queryArgs = append(queryArgs, endBy.String())
+
+	}
+
+	where := ""
+	if len(wheres) > 0 {
+		where = " where " + strings.Join(wheres, " and ")
+	}
+	appointments, status, ok := DB.SelectProcess("select * from "+CONSTANT.CounsellorMyTimeSheetTable+where+" order by created_at desc ", queryArgs...)
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+	// get counsellor, client, order ids to get details
+	counsellorIDs := UTIL.ExtractValuesFromArrayMap(appointments, "counsellor_id")
+
+	// get counsellor details
+	counsellors, status, ok := DB.SelectProcess("(select counsellor_id as id, first_name, last_name from " + CONSTANT.CounsellorsTable + " where counsellor_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select listener_id as id, first_name, last_name from " + CONSTANT.ListenersTable + " where listener_id in ('" + strings.Join(counsellorIDs, "','") + "')) union (select therapist_id as id, first_name, last_name from " + CONSTANT.TherapistsTable + " where therapist_id in ('" + strings.Join(counsellorIDs, "','") + "'))")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+
+	response["timesheet"] = appointments
+	response["counsellors"] = UTIL.ConvertMapToKeyMap(counsellors, "id")
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
 func SendEmail(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +308,7 @@ func SendEmail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	UTIL.SendEmailForQuality(
+	UTIL.SendEmailWithCcRefrence(
 		body["title"],
 		body["body"],
 		body["email_from"],

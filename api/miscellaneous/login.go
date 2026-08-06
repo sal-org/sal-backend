@@ -5,7 +5,9 @@ import (
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
 	DB "salbackend/database"
+	"time"
 
+	Model "salbackend/model"
 	UTIL "salbackend/util"
 	"strings"
 )
@@ -35,8 +37,19 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
-	if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorNotApproved) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorDeleted) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
@@ -47,8 +60,19 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerActive) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerNotApproved) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerDeleted) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerBlocked) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 	}
@@ -60,8 +84,17 @@ func SendOTP(w http.ResponseWriter, r *http.Request) {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
-		if len(counsellor) > 0 && !strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistActive) {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistNotApproved) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistDeleted) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		if len(counsellor) > 0 && strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistBlocked) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 	}
@@ -113,16 +146,33 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	if len(r.FormValue("device_id")) < 0 {
+	if len(r.FormValue("device_id")) == 0 {
 		UTIL.SetReponse(w, "400", "device_id is required", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// this for testing
-	if !strings.EqualFold("4444", r.FormValue("otp")) {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
-		return
+	if strings.EqualFold("917575757575", r.FormValue("phone")) {
+		if !strings.EqualFold("4444", r.FormValue("otp")) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+	} else if strings.EqualFold("914848484848", r.FormValue("phone")) {
+		if !strings.EqualFold("4747", r.FormValue("otp")) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+	} else {
+		if !UTIL.VerifyOTP(r.FormValue("phone"), r.FormValue("otp")) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+			return
+		}
 	}
+
+	// this for testing
+	// if !strings.EqualFold("4444", r.FormValue("otp")) {
+	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.IncorrectOTPRequiredMessage, CONSTANT.ShowDialog, response)
+	// 	return
+	// }
 
 	// get counsellor details
 	var counsellorType string
@@ -136,8 +186,16 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	if len(counsellor) > 0 {
 		// counsellor already signed up
 		// check if counsellor is active
-		if !strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorActive) {
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorNotApproved) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorDeleted) {
 			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountDeletedMessage, CONSTANT.ShowDialog, response)
+			return
+		}
+		if strings.EqualFold(counsellor[0]["status"], CONSTANT.CounsellorBlocked) {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.CounsellorAccountBlockedMessage, CONSTANT.ShowDialog, response)
 			return
 		}
 		counsellorType = CONSTANT.CounsellorType
@@ -153,8 +211,16 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		if len(counsellor) > 0 {
 			// listener already signed up
 			// check if listener is active
-			if !strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerActive) {
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerNotApproved) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerDeleted) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountDeletedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.ListenerBlocked) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ListenerAccountBlockedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
 			counsellorType = CONSTANT.ListenerType
@@ -171,8 +237,16 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		if len(counsellor) > 0 {
 			// therapist already signed up
 			// check if therapist is active
-			if !strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistActive) {
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistNotApproved) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountNotApprovedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistDeleted) {
 				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountDeletedMessage, CONSTANT.ShowDialog, response)
+				return
+			}
+			if strings.EqualFold(counsellor[0]["status"], CONSTANT.TherapistBlocked) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.TherapistAccountBlockedMessage, CONSTANT.ShowDialog, response)
 				return
 			}
 			counsellorType = CONSTANT.TherapistType
@@ -221,7 +295,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellor[0]["counsellor_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": counsellor[0]["counsellor_id"]}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -254,7 +328,7 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": counsellor[0]["listener_id"]}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.ListenersTable, map[string]string{"listener_id": counsellor[0]["listener_id"]}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
@@ -285,11 +359,16 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
-			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"email": r.FormValue("email")}, map[string]string{"device_id": r.FormValue("device_id")})
+			status, ok = DB.UpdateSQL(CONSTANT.TherapistsTable, map[string]string{"therapist_id": counsellor[0]["therapist_id"]}, map[string]string{"device_id": r.FormValue("device_id"), "last_login_time": UTIL.GetCurrentTime().String(), "platform": r.FormValue("platform"), "version": r.FormValue("version")})
 			if !ok {
 				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 				return
 			}
+
+			url := UTIL.PreSignedS3URLToGetTheData(CONFIG.S3Bucket, counsellor[0]["photo"], CONFIG.AWSAccesKey, CONFIG.AWSSecretKey, CONFIG.AWSRegion)
+			_, endPointURL := UTIL.GetBaseURLAndEndpointFromURL(url)
+			counsellor[0]["photo"] = endPointURL
+
 			response["languages"] = languages
 			response["topics"] = topics
 			response["therapist"] = counsellor[0]
@@ -300,6 +379,190 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 		response["media_url"] = CONFIG.MediaURL
 	}
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func AppInfo(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	appInfo, status, ok := DB.SelectProcess("select * from " + CONSTANT.AppInfoTable + " where status = 1 ")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	response["app_info"] = appInfo[0]
+
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func CheckIfAccessTokenExpired(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	// check if access token is valid, not expired
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
+	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
+}
+
+func AppFeedback(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var response = make(map[string]interface{})
+
+	var firstName, lastName, email string
+
+	// read request body
+	body, ok := UTIL.ReadRequestBody(r)
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check for required fields
+	fieldCheck := UTIL.RequiredFiledsCheck(body, CONSTANT.ClientAppFeedbackRequiredFields)
+	if len(fieldCheck) > 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, fieldCheck+" required", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// check if user already signed up with specified email
+	if !DB.CheckIfExists(CONSTANT.ClientsTable, map[string]string{"client_id": body["user_id"]}) {
+		if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": body["user_id"]}) {
+			if !DB.CheckIfExists(CONSTANT.ListenersTable, map[string]string{"listener_id": body["user_id"]}) {
+				if !DB.CheckIfExists(CONSTANT.CounsellorsTable, map[string]string{"counsellor_id": body["user_id"]}) {
+					UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+					return
+				} else {
+					// get counsellor details
+					counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": body["user_id"]})
+					if !ok {
+						UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+						return
+					}
+					if len(counsellor) == 0 {
+						UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+						return
+					}
+					firstName = counsellor[0]["first_name"]
+					lastName = counsellor[0]["last_name"]
+					email = counsellor[0]["email"]
+				}
+
+			} else {
+				// get listener details
+				listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"*"}, map[string]string{"listener_id": body["user_id"]})
+				if !ok {
+					UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+					return
+				}
+				if len(listener) == 0 {
+					UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+					return
+				}
+				firstName = listener[0]["first_name"]
+				lastName = listener[0]["last_name"]
+				email = listener[0]["email"]
+			}
+		} else {
+			// get therapist details
+			therapist, status, ok := DB.SelectSQL(CONSTANT.TherapistsTable, []string{"*"}, map[string]string{"therapist_id": body["user_id"]})
+			if !ok {
+				UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+				return
+			}
+			if len(therapist) == 0 {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+				return
+			}
+			firstName = therapist[0]["first_name"]
+			lastName = therapist[0]["last_name"]
+			email = therapist[0]["email"]
+		}
+	} else {
+		// get client details
+		client, status, ok := DB.SelectSQL(CONSTANT.ClientsTable, []string{"*"}, map[string]string{"client_id": body["user_id"]})
+		if !ok {
+			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+			return
+		}
+		if len(client) == 0 {
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.ClientCorLoginIfNotRegister, CONSTANT.ShowDialog, response)
+			return
+		}
+
+		firstName = client[0]["first_name"]
+		lastName = client[0]["last_name"]
+		email = client[0]["email"]
+	}
+
+	// add client details
+	user := map[string]string{}
+	user["user_id"] = body["user_id"]
+	user["type"] = body["type"]
+	user["concern_area"] = body["concern_area"]
+	user["details"] = body["details"]
+	user["attach_1"] = body["attach_1"]
+	user["attach_2"] = body["attach_2"]
+	user["attach_3"] = body["attach_3"]
+	user["platform"] = "Mobile"
+	user["status"] = CONSTANT.ClientActive
+	user["created_at"] = UTIL.GetCurrentTime().String()
+	feedbackID, status, ok := DB.InsertWithUniqueID(CONSTANT.FeedbackTable, CONSTANT.FeedbackDigits, user, "feedback_id")
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	// send appointment reminder notification to counsellor before 30 min
+	UTIL.SendNotification(
+		CONSTANT.ClientFeedBackHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientFeedBackContent,
+			map[string]string{
+				"###type###": body["type"],
+			},
+		),
+		body["user_id"],
+		CONSTANT.ClientType,
+		UTIL.GetCurrentTime().Add(330*time.Minute).String(),
+		CONSTANT.NotificationSent,
+		feedbackID,
+		"",
+	)
+
+	data := Model.EmailDataForFeedback{
+		MediaURL:        CONFIG.MediaURL,
+		ClientFirstName: firstName,
+		ClientLastName:  lastName,
+		ClientEmail:     email,
+		ConcernsType:    body["type"],
+		ConcernArea:     body["concern_area"],
+		Details:         body["details"],
+		Attach1:         body["attach_1"],
+		Attach2:         body["attach_2"],
+		Attach3:         body["attach_3"],
+	}
+
+	filepath := "htmlfile/FeedBackForApp.html"
+
+	emailbody := UTIL.GetHTMLTemplateForAppFeedBack(data, filepath)
+
+	// email for client
+	UTIL.SendEmail(
+		body["type"],
+		emailbody,
+		CONFIG.CustomerCareEmailID,
+		CONSTANT.InstantSendEmailMessage,
+	)
 
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }

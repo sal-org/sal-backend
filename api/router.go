@@ -12,6 +12,8 @@ import (
 	MiscellaneousAPI "salbackend/api/miscellaneous"
 	QualityCheckAPI "salbackend/api/qualitycheck"
 	TherapistAPI "salbackend/api/therapist"
+	WebClientAPI "salbackend/api/b2b"
+	WebB2CAPI "salbackend/api/b2c"
 
 	"github.com/gorilla/mux"
 )
@@ -34,12 +36,14 @@ func LoadRouter() *mux.Router {
 	CronAPI.LoadCronRoutes(router)
 	AdminAPI.LoadAdminRoutes(router)
 	QualityCheckAPI.LoadQualityCheckRoutes(router)
+	WebClientAPI.LoadWebClientRoutes(router)
+	WebB2CAPI.LoadWebB2CRoutes(router)
 
 	// Swagger
 	sh := http.StripPrefix("/documentaion/swagger/", http.FileServer(http.Dir("./docs/")))
 	router.PathPrefix("/documentaion/swagger/").Handler(sh)
 
-	router.Path("/").HandlerFunc(HealthCheck).Methods("GET")
+	router.Path("/healthcheck").HandlerFunc(HealthCheck).Methods("GET")
 
 	return router
 }

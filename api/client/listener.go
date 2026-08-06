@@ -23,16 +23,16 @@ import (
 func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
-	// if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
-	// 	UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
-	// 	return
-	// }
+	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeSessionExpired, CONSTANT.SessionExpiredMessage, CONSTANT.ShowDialog, response)
+		return
+	}
 
 	// get listener details
-	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "total_rating", "average_rating", "photo", "slot_type", "age_group"}, map[string]string{"listener_id": r.FormValue("listener_id")})
+	listener, status, ok := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "last_name", "pronoun", "total_rating", "average_rating", "photo", "slot_type", "age_group", "about"}, map[string]string{"listener_id": r.FormValue("listener_id")})
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -56,8 +56,8 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get last 10 listener apppointment reviews
-	reviews, status, ok := DB.SelectProcess("select a.comment, a.rating, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and a.comment != '' order by a.modified_at desc limit 10 ", r.FormValue("listener_id"))
+	// get last 20 listener apppointment reviews
+	reviews, status, ok := DB.SelectProcess("select a.rating_comment, a.rating, a.rating_types, a.modified_at, c.first_name, c.last_name from "+CONSTANT.AppointmentsTable+" a, "+CONSTANT.ClientsTable+" c where a.client_id = c.client_id and a.counsellor_id = ? and a.status = "+CONSTANT.AppointmentCompleted+" and rating !='' order by a.modified_at desc limit 20 ", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -75,7 +75,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 	response["topics"] = topics
 	response["reviews"] = reviews
 	response["contents"] = contents
-	response["media_url"] = CONFIG.MediaURL
+	response["media_url"] = CONFIG.MediaURLInCLOUDFRONT
 	UTIL.SetReponse(w, CONSTANT.StatusCodeOk, "", CONSTANT.ShowDialog, response)
 }
 
@@ -90,7 +90,7 @@ func ListenerProfile(w http.ResponseWriter, r *http.Request) {
 func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -99,7 +99,7 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get listener slots
-	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
+	slots, status, ok := DB.SelectProcess("select * from "+CONSTANT.SlotsTable+" where counsellor_id = ? and available = '1' and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' and date < '"+UTIL.GetCurrentTime().AddDate(0,0,15).Format("2006-01-02")+"' order by date asc", r.FormValue("listener_id"))
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -121,7 +121,7 @@ func ListenerSlots(w http.ResponseWriter, r *http.Request) {
 func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -183,6 +183,18 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check 2nd appoimtent with the same listener
+	appointment2nd, status, ok := DB.SelectProcess("select * from "+CONSTANT.AppointmentsTable+" where client_id = ? and counsellor_id = ? and status in ("+CONSTANT.AppointmentToBeStarted+", "+CONSTANT.AppointmentStarted+") and date >= '"+UTIL.GetCurrentTime().Format("2006-01-02")+"' order by date asc", body["client_id"], body["listener_id"])
+	if !ok {
+		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
+		return
+	}
+
+	if len(appointment2nd) != 0 {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	// order object to be inserted
 	order := map[string]string{}
 	order["client_id"] = body["client_id"]
@@ -215,7 +227,7 @@ func ListenerOrderCreate(w http.ResponseWriter, r *http.Request) {
 func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var response = make(map[string]interface{})
+	var response = make(map[string]any)
 
 	// check if access token is valid, not expired
 	if !UTIL.CheckIfAccessTokenExpired(r.Header.Get("Authorization")) {
@@ -301,24 +313,32 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 	qualitycheck_details["time"] = order[0]["time"]
 	qualitycheck_details["status"] = CONSTANT.AppointmentToBeStarted
 	qualitycheck_details["created_at"] = UTIL.GetCurrentTime().String()
+
+	// change order status
+	orderUpdate := map[string]string{}
+	orderUpdate["status"] = CONSTANT.OrderInProgress
+	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
+
+	// sent notitifications
+	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
+	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+
+	// send email to client
+	filepath_text := "htmlfile/appointmentConfirmation.html"
+
 	_, status, ok = DB.InsertWithUniqueID(CONSTANT.QualityCheckDetailsTable, CONSTANT.AppointmentDigits, qualitycheck_details, "qualitycheck_details_id")
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
 	}
 
-	// change order status
-	orderUpdate := map[string]string{}
-	orderUpdate["status"] = CONSTANT.OrderInProgress
-	orderUpdate["modified_at"] = UTIL.GetCurrentTime().String()
-	status, ok = DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
+	DB.UpdateSQL(CONSTANT.OrderClientAppointmentTable,
 		map[string]string{
 			"order_id": body["order_id"],
 		},
 		orderUpdate,
 	)
 
-	// update listener slots
 	DB.UpdateSQL(CONSTANT.SlotsTable,
 		map[string]string{
 			"counsellor_id": order[0]["counsellor_id"],
@@ -329,16 +349,14 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	// sent notitifications
-	listener, _, _ := DB.SelectSQL(CONSTANT.ListenersTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"listener_id": order[0]["counsellor_id"]})
-	client, _, _ := DB.SelectSQL(CONSTANT.ClientsTable, []string{"first_name", "phone", "email", "timezone"}, map[string]string{"client_id": order[0]["client_id"]})
+	// client notification
 
-	// send appointment booking notification to client
+	// Booking confirmation
 	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,
+		CONSTANT.ClientAppointmentScheduleClientHeading, CONSTANT.ClientAppointmentScheduleClientContent, order[0]["client_id"], CONSTANT.ClientType, UTIL.GetCurrentTime().String(), CONSTANT.NotificationSent, appointmentID,"",
 	)
 
-	// send appointment reminder notification to client before 15 min
+	// 15 min push notification before appointment start
 	UTIL.SendNotification(
 		CONSTANT.ClientAppointmentReminderClientHeading,
 		UTIL.ReplaceNotificationContentInString(
@@ -353,31 +371,10 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
 		CONSTANT.NotificationInProgress,
 		appointmentID,
+		"",
 	)
 
-	// send email to client
-	filepath_text := "htmlfile/emailmessagebody.html"
-
-	emaildata1 := Model.EmailBodyMessageModel{
-		Name: client[0]["first_name"],
-		Message: UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentBookClientEmailBody,
-			map[string]string{
-				"###therpist_name###": listener[0]["first_name"],
-				"###date###":          order[0]["date"],
-				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-	}
-
-	emailBody1 := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata1, filepath_text)
-	// email for client
-	UTIL.SendEmail(
-		CONSTANT.ClientAppointmentBookClientTitle,
-		emailBody1,
-		client[0]["email"],
-		CONSTANT.InstantSendEmailMessage,
-	)
+	// Listerner Notification
 
 	// send appointment booking notification, message to listener
 	UTIL.SendNotification(
@@ -394,9 +391,30 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		UTIL.GetCurrentTime().String(),
 		CONSTANT.NotificationSent,
 		appointmentID,
+		"",
 	)
 
-	// confirmation for client message
+	// send appointment reminder notification to listener before 15 min
+	UTIL.SendNotification(
+		CONSTANT.ClientAppointmentReminderCounsellorHeading,
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentRemiderClientContent,
+			map[string]string{
+				"###user_name###": listener[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		order[0]["counsellor_id"],
+		CONSTANT.ListenerType,
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
+		CONSTANT.NotificationInProgress,
+		appointmentID,
+		"",
+	)
+
+	// Client SMS
+
+	// Client Booking Confirmation
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			CONSTANT.ClientAppointmentConfirmationTextMessage,
@@ -414,8 +432,25 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.InstantSendTextMessage,
 	)
 
-	// Send to appointment Reminder SMS to client
-	// send at 15 min before of appointment
+	// 30 min reminder sms notification
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			// need to change
+			CONSTANT.ClientAppointmentReminderTextMessage,
+			map[string]string{
+				"###user_name###": client[0]["first_name"],
+				"###userName###":  listener[0]["first_name"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		client[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-30*time.Minute).UTC().String(),
+		appointmentID,
+		CONSTANT.LaterSendTextMessage,
+	)
+
+	// 15 min reminder sms notification
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
 			// need to change
@@ -433,7 +468,26 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
-	// Send to appointment Reminder SMS to counsellor
+	// Listener SMS
+
+	// confirmation for listener message
+	UTIL.SendMessage(
+		UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentConfirmationTextMessage,
+			map[string]string{
+				"###userName###":  listener[0]["first_name"],
+				"###user_Name###": client[0]["first_name"],
+				"###date###":      order[0]["date"],
+				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+			},
+		),
+		CONSTANT.TransactionalRouteTextMessage,
+		listener[0]["phone"],
+		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
+		appointmentID,
+		CONSTANT.InstantSendTextMessage,
+	)
+
 	// send at 15 min before of appointment
 	UTIL.SendMessage(
 		UTIL.ReplaceNotificationContentInString(
@@ -452,58 +506,28 @@ func ListenerOrderPaymentComplete(w http.ResponseWriter, r *http.Request) {
 		CONSTANT.LaterSendTextMessage,
 	)
 
-	// send appointment reminder notification to listener before 15 min
-	UTIL.SendNotification(
-		CONSTANT.ClientAppointmentReminderCounsellorHeading,
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentRemiderClientContent,
+	// Client Email
+
+	// Payment receipt
+	emaildata := Model.EmailBodyMessageModel{
+		Name: client[0]["first_name"],
+		Message: UTIL.ReplaceNotificationContentInString(
+			CONSTANT.ClientAppointmentBookClientEmailBody,
 			map[string]string{
-				"###user_name###": listener[0]["first_name"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
+				"###therpist_name###": listener[0]["first_name"],
+				"###date###":          order[0]["date"],
+				"###time###":          UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
 			},
 		),
-		order[0]["counsellor_id"],
-		CONSTANT.ListenerType,
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Add(-15*time.Minute).UTC().String(),
-		CONSTANT.NotificationSent,
-		appointmentID,
-	)
+	}
 
-	// emaildata := Model.EmailBodyMessageModel{
-	// 	Name: listener[0]["first_name"],
-	// 	Message: UTIL.ReplaceNotificationContentInString(
-	// 		CONSTANT.ClientAppointmentBookCounsellorEmailBody,
-	// 		map[string]string{
-	// 			"###client_name###": client[0]["first_name"],
-	// 			"###date_time###":   UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).Format(CONSTANT.ReadbleDateTimeFormat),
-	// 		},
-	// 	),
-	// }
-
-	// emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
-	// // email for counsellor
-	// UTIL.SendEmail(
-	// 	CONSTANT.ClientAppointmentBookCounsellorTitle,
-	// 	emailBody,
-	// 	listener[0]["email"],
-	// 	CONSTANT.InstantSendEmailMessage,
-	// )
-	// confirmation for listener message
-	UTIL.SendMessage(
-		UTIL.ReplaceNotificationContentInString(
-			CONSTANT.ClientAppointmentConfirmationTextMessage,
-			map[string]string{
-				"###userName###":  listener[0]["first_name"],
-				"###user_Name###": client[0]["first_name"],
-				"###date###":      order[0]["date"],
-				"###time###":      UTIL.GetTimeFromTimeSlotIN12Hour(order[0]["time"]),
-			},
-		),
-		CONSTANT.TransactionalRouteTextMessage,
-		listener[0]["phone"],
-		UTIL.BuildDateTime(order[0]["date"], order[0]["time"]).UTC().String(),
-		appointmentID,
-		CONSTANT.InstantSendTextMessage,
+	emailBody := UTIL.GetHTMLTemplateForCounsellorProfileText(emaildata, filepath_text)
+	// email for client
+	UTIL.SendEmail(
+		CONSTANT.ClientAppointmentBookClientTitle,
+		emailBody,
+		client[0]["email"],
+		CONSTANT.InstantSendEmailMessage,
 	)
 
 	UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)

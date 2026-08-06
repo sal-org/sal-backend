@@ -15,7 +15,7 @@ func StartServer(lambda bool) {
 		algnhsa.ListenAndServe(&WithCORS{LoadRouter()}, nil)
 	} else {
 		// ec2 router
-		fmt.Println(http.ListenAndServe(":5000", &WithCORS{LoadRouter()}))
+		fmt.Println(http.ListenAndServe(":50000", &WithCORS{LoadRouter()}))
 	}
 }
 

@@ -27,6 +27,46 @@ func GenerateOTP(phone string) (string, bool) {
 	return otp, true
 }
 
+// GenerateOTP - generate otp for a corporate email
+func GenerateOTPWithCorporateEmail(phone string) (string, bool) {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "sal.foundation",
+		AccountName: "sal@foundation",
+		Secret:      []byte(phone),
+	})
+	if err != nil {
+		fmt.Println("GenerateOTP", err)
+		return "", false
+	}
+	otp, err := totp.GenerateCodeCustom(key.Secret(), time.Now().UTC(), totp.ValidateOpts{Period: 300, Digits: 4, Skew: 1})
+	if err != nil {
+		fmt.Println("GenerateOTP", err)
+		return "", false
+	}
+
+	return otp, true
+}
+
+// VerifyOTP - verfity given otp for a corporate email
+func VerifyOTPWithCorporateEmail(phone, otp string) bool {
+	key, err := totp.Generate(totp.GenerateOpts{
+		Issuer:      "sal.foundation",
+		AccountName: "sal@foundation",
+		Secret:      []byte(phone),
+	})
+	if err != nil {
+		fmt.Println("VerifyOTP", err)
+		return false
+	}
+	valid, err := totp.ValidateCustom(otp, key.Secret(), time.Now().UTC(), totp.ValidateOpts{Period: 300, Digits: 4, Skew: 1})
+	if err != nil {
+		fmt.Println("VerifyOTP", err)
+		return false
+	}
+
+	return valid
+}
+
 // VerifyOTP - verfity given otp for a phone number
 func VerifyOTP(phone, otp string) bool {
 	key, err := totp.Generate(totp.GenerateOpts{

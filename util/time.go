@@ -10,6 +10,59 @@ func GetCurrentTime() time.Time {
 	return time.Now().UTC()
 }
 
+func GetIndiaCurrentTime() string {
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	now := time.Now().In(loc)
+
+	// Format as HH:MM (24-hour clock)
+	timeStr := now.Format("15:04")
+	return timeStr
+}
+
+func FirstDayOfMonth(t time.Time) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		1,
+		0, 0, 0, 0,
+		t.Location(),
+	)
+}
+
+
+func LastDayOfMonth(t time.Time) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month()+1,
+		0,
+		0, 0, 0, 0,
+		t.Location(),
+	)
+}
+
+func IsCurrentOrFutureDate(dateStr string) (bool, error) {
+	// Define your expected format
+	layout := "2006-01-02" // YYYY-MM-DD
+
+	// Parse the input string
+	inputDate, err := time.Parse(layout, dateStr)
+	if err != nil {
+		return false, err
+	}
+
+	// Get current date (truncate time part)
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	now := time.Now().In(loc)
+	currentDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	// Compare
+	if inputDate.Before(currentDate) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // BuildDateTime - build UTC time from given inputs
 func BuildDateTime(date string, timeSlot string) time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", date+" "+GetTimeFromTimeSlot(timeSlot))
@@ -26,6 +79,23 @@ func BuildOnlyDate(date string) string {
 	t, _ := time.Parse("2006-01-02", date)
 	a := t.Format("02-Jan-2006")
 	return a
+}
+
+func BuildOnlyDateInYYYYMMDD(date string) string {
+	t, _ := time.Parse("2006-01-02", date)
+	a := t.Format("2006-01-02")
+	return a
+}
+
+func BuildOnlyDateInDDMMYYYY(date string) string {
+	t, _ := time.Parse("2006-01-02", date)
+	a := t.Format("02-01-2006")
+	return a
+}
+
+func BuildToDteTime(timedate string) time.Time {
+	t, _ := time.Parse("2006-01-02 15:04:05", timedate)
+	return t
 }
 
 func ConvertToTime(date string) time.Time {
@@ -232,7 +302,7 @@ func GetTimeFromTimeSlotIN12Hour(timeSlot string) string {
 	case 38:
 		return "07:00 PM"
 	case 39:
-		return "08:30 PM"
+		return "07:30 PM"
 	case 40:
 		return "08:00 PM"
 	case 41:

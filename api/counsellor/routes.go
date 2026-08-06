@@ -18,21 +18,51 @@ func LoadCounsellorRoutes(router *mux.Router) {
 	counsellorRoutes.HandleFunc("/appointment/upcoming", AppointmentsUpcoming).Queries(
 		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
+
+	counsellorRoutes.HandleFunc("/inperson_appointment/upcoming", InPersonAppointmentsUpcoming).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+
 	counsellorRoutes.HandleFunc("/appointment/past", AppointmentsPast).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+
+	counsellorRoutes.HandleFunc("/inperson_appointment/past", InPersonAppointmentsPast).Queries(
 		"counsellor_id", "{counsellor_id}",
 	).Methods("GET")
 	counsellorRoutes.HandleFunc("/appointment", AppointmentCancel).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("DELETE")
+	counsellorRoutes.HandleFunc("/appointment/agoratoken", GenerateAgoraToken).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("GET")
 	counsellorRoutes.HandleFunc("/appointment/start", AppointmentStart).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",
 	).Methods("PUT")
+
+	counsellorRoutes.HandleFunc("/inperson_appointment/start", AppointmentInPersonStart).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
 	counsellorRoutes.HandleFunc("/appointment/end", AppointmentEnd).Queries(
 		"appointment_id", "{appointment_id}",
 		"uid", "{uid}",
 	).Methods("PUT")
+
+	counsellorRoutes.HandleFunc("/inperson_appointment/noshow", AppointmentInPersonNoShow).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
+	counsellorRoutes.HandleFunc("/inperson_appointment/end", AppointmentInPersonEnd).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
 	counsellorRoutes.HandleFunc("/appointment/comment", CounsellorComment).Queries(
+		"appointment_id", "{appointment_id}",
+	).Methods("PUT")
+
+	counsellorRoutes.HandleFunc("/inperson_appointment/comment", InPersonCounsellorComment).Queries(
 		"appointment_id", "{appointment_id}",
 	).Methods("PUT")
 
@@ -102,4 +132,25 @@ func LoadCounsellorRoutes(router *mux.Router) {
 
 	// training
 	counsellorRoutes.HandleFunc("/training", Training).Methods("GET")
+
+	// get partner name
+	counsellorRoutes.HandleFunc("/get-partner", PartnerGet).Methods("GET")
+
+	// GetPartnerAddress
+	counsellorRoutes.HandleFunc("/get-address", GetPartnerAddress).Queries(
+		"client_name", "{client_name}",
+	).Methods("GET")
+
+	// add my time sheet
+	counsellorRoutes.HandleFunc("/my-time-sheet", AddMyTimeSheet).Methods("POST")
+
+	// get my time sheet
+	counsellorRoutes.HandleFunc("/my-time-sheet", MyTimeSheet).Queries(
+		"counsellor_id", "{counsellor_id}",
+	).Methods("GET")
+
+	// update my time sheet
+	counsellorRoutes.HandleFunc("/my-time-sheet", UpdateMyTimeSheet).Queries(
+		"sheet_id", "{sheet_id}",
+	).Methods("PUT")
 }

@@ -16,9 +16,10 @@ func SetReponse(w http.ResponseWriter, status string, msg string, msgType string
 
 func setMeta(status string, msg string, msgType string) map[string]string {
 	if len(msg) == 0 {
-		if status == CONSTANT.StatusCodeBadRequest {
+		switch status {
+		case CONSTANT.StatusCodeBadRequest:
 			msg = "Bad Request"
-		} else if status == CONSTANT.StatusCodeServerError {
+		case CONSTANT.StatusCodeServerError:
 			msg = "Server Error"
 		}
 	}
