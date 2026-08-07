@@ -101,14 +101,14 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 		if content["type"] == CONSTANT.ArticleContentType {
 			if len(content["article_page_id"]) != 0 {
 				id, _ := strconv.Atoi(content["article_page_id"])
-				articlePage, err := UTIL.GetWordPressPageByID(CONFIG.WordPressURL, id)
+				articlePage, err := UTIL.GetWordPressPageByID(CONFIG.WordPressURL, CONFIG.WordPressUsername, CONFIG.WordPressApplicationPassword, id)
 				if err != nil {
 					content["content"] = ""
 				} else {
 					content["content"] = articlePage.Content.Rendered
 				}
 			} else {
-				articlePage, err := UTIL.GetWordPressPageBySlug(CONFIG.WordPressURL, content["content"])
+				articlePage, err := UTIL.GetWordPressPageBySlug(CONFIG.WordPressURL, CONFIG.WordPressUsername, CONFIG.WordPressApplicationPassword, content["content"])
 				if err != nil {
 					content["content"] = ""
 				} else {
@@ -117,6 +117,8 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 					DB.UpdateSQL(CONSTANT.ContentsInWebTable, map[string]string{"content_id": content["content_id"]}, map[string]string{"article_page_id": strconv.Itoa(articlePage.ID)})
 				}
 			}
+
+			// println("content[\"content\"]", content["content"])
 		}
 	}
 

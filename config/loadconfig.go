@@ -51,4 +51,6 @@ func LoadConfig() {
 	OnboardingEmailID = os.Getenv("ONBOARDING_EMAIL_ID")
 	EventEmailID = os.Getenv("EVENT_EMAIL_ID")
 	CustomerCareEmailID = os.Getenv("CUSTOMER_CARE_EMAIL_ID")
+	WordPressUsername = os.Getenv("WORDPRESS_USERNAME")
+	WordPressApplicationPassword = os.Getenv("WORDPRESS_APPLICATION_PASSWORD")
 }
