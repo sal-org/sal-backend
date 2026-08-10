@@ -662,12 +662,6 @@ func UpcomingEventsInPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID, ok := UTIL.Required(r.FormValue("order_id"), "Order ID")
-	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, orderID, CONSTANT.ShowDialog, response)
-		return
-	}
-
 	// check if therapist_id exists
 	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": therapistID}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid id", CONSTANT.ShowDialog, response)

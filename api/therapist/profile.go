@@ -408,7 +408,7 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	body := Model.AddTherapistProfileRequest{}
+	body := Model.UpdateTherapistProfileRequest{}
 
 	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 
@@ -428,28 +428,13 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if user already signed up with specified phone
-	if DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"phone": body.Phone}) {
+	if !DB.CheckIfExists(CONSTANT.TherapistsTable, map[string]string{"therapist_id": r.FormValue("therapist_id")}) {
 		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.PhoneExistsMessage, CONSTANT.ShowDialog, response)
 		return
 	}
 
 	// update therapist details
 	therapist := map[string]string{}
-	if len(body.FirstName) > 0 {
-		therapist["first_name"] = body.FirstName
-	}
-	if len(body.LastName) > 0 {
-		therapist["last_name"] = body.LastName
-	}
-	if len(body.Pronoun) > 0 {
-		therapist["pronoun"] = body.Pronoun
-	}
-	if len(body.Gender) > 0 {
-		therapist["gender"] = body.Gender
-	}
-	if len(body.Location) > 0 {
-		therapist["location"] = body.Location
-	}
 	if len(body.Photo) > 0 {
 		therapist["photo"] = body.Photo
 	}
@@ -465,58 +450,11 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	if len(body.Price5) > 0 {
 		therapist["price_5"] = body.Price5
 	}
-	if len(body.Education) > 0 {
-		therapist["education"] = body.Education
-	}
-	if len(body.Experience) > 0 {
-		therapist["experience"] = body.Experience
-	}
 	if len(body.TherapeuticApproach) > 0 {
 		therapist["therapeutic_approach"] = body.TherapeuticApproach
 	}
 	if len(body.About) > 0 {
 		therapist["about"] = body.About
-	}
-	if len(body.Resume) > 0 {
-		therapist["resume"] = body.Resume
-	}
-	if len(body.Certificate) > 0 {
-		therapist["certificate"] = body.Certificate
-	}
-	if len(body.Aadhar) > 0 {
-		therapist["aadhar"] = body.Aadhar
-	}
-	if len(body.Linkedin) > 0 {
-		therapist["linkedin"] = body.Linkedin
-	}
-	if len(body.DeviceID) > 0 {
-		therapist["device_id"] = body.DeviceID
-	}
-	if len(body.Timezone) > 0 {
-		therapist["timezone"] = body.Timezone
-	}
-	if len(body.PayoutPercentage) > 0 {
-		therapist["payout_percentage"] = body.PayoutPercentage
-	}
-	if len(body.BankAccountNo) > 0 {
-		therapist["bank_account_no"] = body.BankAccountNo
-	}
-	if len(body.IFSC) > 0 {
-		therapist["ifsc"] = body.IFSC
-	}
-
-	if len(body.PayeeName) > 0 {
-		therapist["payee_name"] = body.PayeeName
-	}
-
-	if len(body.BranchName) > 0 {
-		therapist["branch_name"] = body.BranchName
-	}
-	if len(body.BankAccountType) > 0 {
-		therapist["bank_account_type"] = body.BankAccountType
-	}
-	if len(body.PAN) > 0 {
-		therapist["pan"] = body.PAN
 	}
 
 	if len(therapist) == 0 {

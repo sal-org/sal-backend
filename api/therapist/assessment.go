@@ -35,9 +35,9 @@ func AssessmentsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	appointmentID, ok := UTIL.Required(r.FormValue("appointment_id"), "Appointment ID")
+	therapistID, ok := UTIL.Required(r.FormValue("therapist_id"), "Therapist ID")
 	if !ok {
-		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, appointmentID, CONSTANT.ShowDialog, response)
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, therapistID, CONSTANT.ShowDialog, response)
 		return
 	}
 

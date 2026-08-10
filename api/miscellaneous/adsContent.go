@@ -979,7 +979,7 @@ func CounsellorClientRecordForNewestVersion(w http.ResponseWriter, r *http.Reque
 					Message:  message,
 					Message1: "Your therapist has suggested the following guidelines:",
 					Message2: "Notes not provided.",
-					Message3: body.Links,
+					Message3: "",
 					Message4: message1,
 				}
 			}

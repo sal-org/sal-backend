@@ -512,43 +512,15 @@ type AddTherapistProfileRequest struct {
 }
 
 type UpdateTherapistProfileRequest struct {
-	FirstName           string `json:"first_name" validate:"omitempty,min=2,max=50"`
-	LastName            string `json:"last_name" validate:"omitempty,min=2,max=50"`
-	Pronoun             string `json:"pronoun" validate:"omitempty,min=2,max=50"`
-	Gender              string `json:"gender" validate:"omitempty,oneof=Male Female Other"`
-	Location            string `json:"location" validate:"omitempty,max=200"`
-	Phone               string `json:"phone" validate:"omitempty,len=12,numeric"`
 	Photo               string `json:"photo" validate:"omitempty"`
-	Email               string `json:"email" validate:"omitempty,email,max=100"`
 	Price               string `json:"price" validate:"omitempty,numeric"`
 	MultipleSessions    string `json:"multiple_sessions" validate:"omitempty,numeric"`
 	Price3              string `json:"price_3" validate:"omitempty,numeric"`
 	Price5              string `json:"price_5" validate:"omitempty,numeric"`
-	Education           string `json:"education" validate:"omitempty,max=500"`
-	Experience          string `json:"experience" validate:"omitempty,max=500"`
 	About               string `json:"about" validate:"omitempty,max=5000"`
 	TherapeuticApproach string `json:"therapeutic_approach" validate:"omitempty,max=5000"`
-	StartDate           string `json:"start_date" validate:"omitempty,datetime=2006-01-02"`
-	GapYears            string `json:"gap_years" validate:"omitempty,numeric"`
-	GapMonths           string `json:"gap_months" validate:"omitempty,numeric"`
-	PayoutPercentage    string `json:"payout_percentage" validate:"omitempty,numeric"`
-	PayeeName           string `json:"payee_name" validate:"omitempty,max=100"`
-	BankAccountNo       string `json:"bank_account_no" validate:"omitempty,numeric,min=9,max=18"`
-	IFSC                string `json:"ifsc" validate:"omitempty,len=11,alphanum"`
-	BranchName          string `json:"branch_name" validate:"omitempty,max=100"`
-	BankName            string `json:"bank_name" validate:"omitempty,max=100"`
-	BankAccountType     string `json:"bank_account_type" validate:"omitempty,oneof=Savings Current"`
-	PAN                 string `json:"pan" validate:"omitempty,len=10,alphanum"`
-	Resume              string `json:"resume"`
-	Aadhar              string `json:"aadhar"`
-	Linkedin            string `json:"linkedin"`
-	DeviceID            string `json:"device_id"`
 	TopicIDs            string `json:"topic_ids" validate:"omitempty"`
 	LanguageIDs         string `json:"language_ids" validate:"omitempty"`
-	Certificate         string `json:"certificate" validate:"omitempty"`
-	CorporateTherapist  string `json:"corporate_therpist" validate:"omitempty,oneof=0 1 2 3"`
-	Timezone            string `json:"timezone" validate:"omitempty"`
-	Status              string `json:"status" validate:"omitempty,oneof=0 1 2 3"`
 }
 
 type AddWebinarSessionInAdminPanel struct {
@@ -804,7 +776,6 @@ type NewVersionOfCounsellorRecordFormRequest struct {
 	ClientNotes                           string `json:"client_notes" validate:"omitempty"`
 	SelfWorkMaterial                      string `json:"self_work_material" validate:"omitempty"`
 	Assessment                            string `json:"assessment" validate:"omitempty"`
-	Links                                 string `json:"links" validate:"omitempty"`
 }
 
 type AppFeedbackRequest struct {
