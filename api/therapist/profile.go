@@ -73,14 +73,14 @@ func ProfileGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		languages, status, ok := DB.SelectProcess("select language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", therapist[0]["therapist_id"])
+		languages, status, ok := DB.SelectProcess("select id, language from "+CONSTANT.LanguagesTable+" where id in (select language_id from "+CONSTANT.CounsellorLanguagesTable+" where counsellor_id = ?)", therapist[0]["therapist_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
 		}
 
 		// get counsellor topics
-		topics, status, ok := DB.SelectProcess("select topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", therapist[0]["therapist_id"])
+		topics, status, ok := DB.SelectProcess("select id, topic from "+CONSTANT.TopicsTable+" where id in (select topic_id from "+CONSTANT.CounsellorTopicsTable+" where counsellor_id = ?)", therapist[0]["therapist_id"])
 		if !ok {
 			UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 			return
@@ -203,10 +203,6 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["phone"] = body.Phone
 	therapist["photo"] = body.Photo
 	therapist["email"] = body.Email
-	therapist["price"] = body.Price
-	therapist["multiple_sessions"] = body.MultipleSessions
-	therapist["price_3"] = body.Price3
-	therapist["price_5"] = body.Price5
 	therapist["education"] = body.Education
 	therapist["experience"] = experience
 	therapist["start_date"] = joinDate
@@ -221,13 +217,6 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["linkedin"] = body.Linkedin
 	therapist["device_id"] = body.DeviceID
 	therapist["payout_percentage"] = CONSTANT.CounsellorPayoutPercentageColumns
-	therapist["payee_name"] = body.PayeeName
-	therapist["bank_account_no"] = body.BankAccountNo
-	therapist["ifsc"] = body.IFSC
-	therapist["branch_name"] = body.BranchName
-	therapist["bank_name"] = body.BankName
-	therapist["bank_account_type"] = body.BankAccountType
-	therapist["pan"] = body.PAN
 	therapist["corporate_therpist"] = typeOfService
 	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["notification_status"] = CONSTANT.NotificationActive

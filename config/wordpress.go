@@ -1,3 +1,3 @@
 package config
 
-var WordPressURL string
+var WordPressURL, WordPressUsername, WordPressApplicationPassword string

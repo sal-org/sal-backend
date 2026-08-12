@@ -28,6 +28,18 @@ func DeleteUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	typeID, ok := UTIL.Required(r.FormValue("type"), "Type")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, typeID, CONSTANT.ShowDialog, response)
+		return
+	}
+
+	userID, ok := UTIL.Required(r.FormValue("user_id"), "User ID")
+	if !ok {
+		UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, userID, CONSTANT.ShowDialog, response)
+		return
+	}
+
 	if r.FormValue("type") == CONSTANT.CounsellorType {
 		// get counsellor details
 		counsellor, status, ok := DB.SelectSQL(CONSTANT.CounsellorsTable, []string{"*"}, map[string]string{"counsellor_id": r.FormValue("user_id")})

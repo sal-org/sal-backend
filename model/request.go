@@ -326,6 +326,7 @@ type ContentInWebAddRequestInAdminPanel struct {
 	ResourceID      string `json:"resource_id" validate:"required,numeric"`
 	ContentMood     string `json:"content_mode" validate:"required,oneof=0 1 2 3 4 5"`
 	Duration        string `json:"duration" validate:"required"`
+	CreatedBy       string `json:"created_by" validate:"omitempty,min=2,max=200"`
 }
 
 type ContentInWebUpdateRequestInAdminPanel struct {
@@ -343,6 +344,7 @@ type ContentInWebUpdateRequestInAdminPanel struct {
 	ResourceID      string `json:"resource_id" validate:"required,numeric"`
 	ContentMood     string `json:"content_mode" validate:"required,oneof=0 1 2 3 4"`
 	Duration        string `json:"duration" validate:"required"`
+	CreatedBy       string `json:"created_by" validate:"omitempty,min=2,max=200"`
 	Status          string `json:"status" validate:"required"`
 }
 
@@ -480,10 +482,6 @@ type AddTherapistProfileRequest struct {
 	Phone               string `json:"phone" validate:"required,len=12,numeric"`
 	Photo               string `json:"photo" validate:"required"`
 	Email               string `json:"email" validate:"required,email,max=100"`
-	Price               string `json:"price" validate:"required,numeric"`
-	MultipleSessions    string `json:"multiple_sessions" validate:"required,numeric"`
-	Price3              string `json:"price_3" validate:"omitempty,numeric"`
-	Price5              string `json:"price_5" validate:"omitempty,numeric"`
 	Education           string `json:"education" validate:"required,max=500"`
 	Experience          string `json:"experience" validate:"required,max=500"`
 	About               string `json:"about" validate:"required,max=5000"`
@@ -491,14 +489,6 @@ type AddTherapistProfileRequest struct {
 	StartDate           string `json:"start_date" validate:"required,datetime=2006-01-02"`
 	GapYears            string `json:"gap_years" validate:"required,numeric"`
 	GapMonths           string `json:"gap_months" validate:"required,numeric"`
-	PayoutPercentage    string `json:"payout_percentage" validate:"required,numeric"`
-	PayeeName           string `json:"payee_name" validate:"required,max=100"`
-	BankAccountNo       string `json:"bank_account_no" validate:"required,numeric,min=9,max=18"`
-	IFSC                string `json:"ifsc" validate:"required,len=11,alphanum"`
-	BranchName          string `json:"branch_name" validate:"required,max=100"`
-	BankName            string `json:"bank_name" validate:"required,max=100"`
-	BankAccountType     string `json:"bank_account_type" validate:"required,oneof=Savings Current"`
-	PAN                 string `json:"pan" validate:"required,len=10,alphanum"`
 	Resume              string `json:"resume"`
 	Aadhar              string `json:"aadhar"`
 	Linkedin            string `json:"linkedin"`
@@ -519,6 +509,13 @@ type UpdateTherapistProfileRequest struct {
 	Price5              string `json:"price_5" validate:"omitempty,numeric"`
 	About               string `json:"about" validate:"omitempty,max=5000"`
 	TherapeuticApproach string `json:"therapeutic_approach" validate:"omitempty,max=5000"`
+	PayeeName           string `json:"payee_name" validate:"omitempty,max=100"`
+	BankAccountNo       string `json:"bank_account_no" validate:"omitempty,numeric,min=9,max=18"`
+	IFSC                string `json:"ifsc" validate:"omitempty,len=11,alphanum"`
+	BranchName          string `json:"branch_name" validate:"omitempty,max=100"`
+	BankName            string `json:"bank_name" validate:"omitempty,max=100"`
+	BankAccountType     string `json:"bank_account_type" validate:"omitempty,oneof=Savings Current"`
+	PAN                 string `json:"pan" validate:"omitempty,len=10,alphanum"`
 	TopicIDs            string `json:"topic_ids" validate:"omitempty"`
 	LanguageIDs         string `json:"language_ids" validate:"omitempty"`
 }
@@ -750,13 +747,13 @@ type NewVersionOfCounsellorRecordFormRequest struct {
 	AppointmentID                         string `json:"appointment_id" validate:"omitempty,min=4,max=45"`
 	SessionFor                            string `json:"session_for" validate:"omitempty,oneof=Self Couple Family"`
 	SessionType                           string `json:"session_type" validate:"required,oneof=Self Couple"`
-	SessionMood                           string `json:"session_mood" validate:"omitempty,oneof=In-Person Virtual"`
+	SessionMood                           string `json:"session_mode" validate:"omitempty,oneof=In-Person Virtual"`
 	SessionDate                           string `json:"session_date" validate:"omitempty,datetime=2006-01-02"`
-	FamilyRelation                        string `json:"family_relation" validate:"required"`
+	FamilyRelation                        string `json:"family_relation" validate:"omitempty"`
 	InTime                                string `json:"in_time" validate:"omitempty,datetime=15:04"`
 	OutTime                               string `json:"out_time" validate:"required,datetime=15:04"`
 	NoShow                                string `json:"noshow" validate:"required,oneof=0 1"`
-	IncompleteSession                     string `json:"incomplete_session" validate:"omitempty,oneof=0 1"`
+	IncompleteSession                     string `json:"incomplete_session" validate:"required,oneof=0 1"`
 	PresentingConcerns                    string `json:"presenting_concers" validate:"omitempty"`
 	MentalHealth                          string `json:"mental_health" validate:"omitempty,numeric"`
 	MentalHealthCheck                     string `json:"mental_health_check" validate:"omitempty"`
@@ -1208,7 +1205,7 @@ type InPersonCounsellorConnectWithCorporateUpdateRequest struct {
 }
 
 type CafeAttendedAddRequest struct {
-	OrderID   string `json:"order_id" validate:"required,min=9,max=25"`
+	OrderID   string `json:"order_id" validate:"required,min=4,max=25"`
 	ClientIDs []struct {
 		UserID string `json:"user_id" validate:"required"`
 	} `json:"clientids" validate:"required,dive"`

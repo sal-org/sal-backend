@@ -558,7 +558,7 @@ func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+	// id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	policy := bluemonday.NewPolicy()
 
@@ -601,7 +601,7 @@ func ContentAddForWeb(w http.ResponseWriter, r *http.Request) {
 	content["resource_id"] = body.ResourceID
 	content["content_mode"] = body.ContentMood
 	content["status"] = CONSTANT.ContentActive
-	content["created_by"] = id
+	content["created_by"] = body.CreatedBy
 	content["created_at"] = UTIL.GetCurrentTime().String()
 	_, status, ok := DB.InsertWithUniqueID(CONSTANT.ContentsInWebTable, CONSTANT.ContentDigits, content, "content_id")
 	if !ok {
@@ -707,7 +707,7 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
+	// id, _, _ := UTIL.ParseJWTAccessToken(r.Header.Get("Authorization"))
 
 	// endPointURLPhoto := UTIL.GetEndpointFromURL(body["photo"])
 	// body["photo"] = endPointURLPhoto
@@ -743,7 +743,7 @@ func ContentUpdateForWeb(w http.ResponseWriter, r *http.Request) {
 	content["resource_id"] = body.ResourceID
 	content["content_mode"] = body.ContentMood
 	content["status"] = body.Status
-	content["modified_by"] = id
+	content["created_by"] = body.CreatedBy
 	content["modified_at"] = UTIL.GetCurrentTime().String()
 	status, ok := DB.UpdateSQL(CONSTANT.ContentsInWebTable, map[string]string{"content_id": r.FormValue("content_id")}, content)
 	if !ok {

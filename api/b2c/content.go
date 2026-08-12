@@ -1,6 +1,7 @@
 package b2c
 
 import (
+	"fmt"
 	"net/http"
 	CONFIG "salbackend/config"
 	CONSTANT "salbackend/constant"
@@ -72,7 +73,7 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 	wheres = append(wheres, " status = "+CONSTANT.ContentActive+" ") // only active therapists
 	contentSQLQuery += " where " + strings.Join(wheres, " and ")
 
-	SQLQuery = "select * from " + CONSTANT.ContentsInWebTable + contentSQLQuery + " "
+	SQLQuery = "select content_id, title, subtitle, description, photo, background_photo, share_content, content, duration, type, redirection, category_id, resource_id, content_mode, article_page_id, created_by from " + CONSTANT.ContentsInWebTable + contentSQLQuery + " "
 	args = append(args, contentArgs...)
 
 	sortBy := " created_at " // default ordering by
@@ -86,7 +87,7 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contentsCount, status, ok := DB.SelectProcess("select count(*) as ctn from ("+SQLQuery+") as a", args...)
+	contentsCount, status, ok := DB.SelectProcess("select count(content_id) as ctn from ("+SQLQuery+") as a", args...)
 	if !ok {
 		UTIL.SetReponse(w, status, "", CONSTANT.ShowDialog, response)
 		return
@@ -116,22 +117,26 @@ func GetWebsiteContent(w http.ResponseWriter, r *http.Request) {
 		if content["type"] == CONSTANT.ArticleContentType {
 			if len(content["article_page_id"]) != 0 {
 				id, _ := strconv.Atoi(content["article_page_id"])
-				articlePage, err := UTIL.GetWordPressPageByID(CONFIG.WordPressURL, id)
+				articlePage, err := UTIL.GetWordPressPageByID(CONFIG.WordPressURL, CONFIG.WordPressUsername, CONFIG.WordPressApplicationPassword, id)
 				if err != nil {
 					content["content"] = ""
+					fmt.Println("Error fetching WordPress page by id:", err)
 				} else {
 					content["content"] = articlePage.Content.Rendered
 				}
 			} else {
-				articlePage, err := UTIL.GetWordPressPageBySlug(CONFIG.WordPressURL, content["content"])
+				articlePage, err := UTIL.GetWordPressPageBySlug(CONFIG.WordPressURL, CONFIG.WordPressUsername, CONFIG.WordPressApplicationPassword, content["content"])
 				if err != nil {
 					content["content"] = ""
+					fmt.Println("Error fetching WordPress page by slug:", err)
 				} else {
 					content["content"] = articlePage.Content.Rendered
 
 					DB.UpdateSQL(CONSTANT.ContentsInWebTable, map[string]string{"content_id": content["content_id"]}, map[string]string{"article_page_id": strconv.Itoa(articlePage.ID)})
 				}
 			}
+
+			// println("content[\"content\"]", content["content"])
 		}
 	}
 

@@ -11,11 +11,17 @@ import (
 	"time"
 )
 
-func GetWordPressPageBySlug(baseURL, slug string) (*Model.WordPressPage, error) {
+func GetWordPressPageBySlug(baseURL string, username string, applicationPassword string, slug string) (*Model.WordPressPage, error) {
+
+	// apiURL := fmt.Sprintf(
+	// 	"%s/wp-json/wp/v2/pages?slug=%s&status=private",
+	// 	baseURL,
+	// 	url.QueryEscape(slug),
+	// )
 
 	apiURL := fmt.Sprintf(
 		"%s/wp-json/wp/v2/pages?slug=%s",
-		baseURL,
+		strings.TrimRight(baseURL, "/"),
 		url.QueryEscape(slug),
 	)
 
@@ -30,6 +36,10 @@ func GetWordPressPageBySlug(baseURL, slug string) (*Model.WordPressPage, error) 
 
 	req.Header.Set("User-Agent", "MentalHealthCMS/1.0")
 	req.Header.Set("Accept", "application/json")
+
+	if username != "" && applicationPassword != "" {
+		req.SetBasicAuth(username, applicationPassword)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -61,7 +71,7 @@ func GetWordPressPageBySlug(baseURL, slug string) (*Model.WordPressPage, error) 
 	return &pages[0], nil
 }
 
-func GetWordPressPageByID(baseURL string, pageID int) (*Model.WordPressPage, error) {
+func GetWordPressPageByID(baseURL string, username string, applicationPassword string, pageID int) (*Model.WordPressPage, error) {
 
 	apiURL := fmt.Sprintf(
 		"%s/wp-json/wp/v2/pages/%d",
@@ -80,6 +90,10 @@ func GetWordPressPageByID(baseURL string, pageID int) (*Model.WordPressPage, err
 
 	req.Header.Set("User-Agent", "MentalHealthCMS/1.0")
 	req.Header.Set("Accept", "application/json")
+
+	if username != "" && applicationPassword != "" {
+		req.SetBasicAuth(username, applicationPassword)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
