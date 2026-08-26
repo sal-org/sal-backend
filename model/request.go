@@ -295,6 +295,34 @@ type ClientUpdateProfileRequestInAdminPanel struct {
 	ModifiedBy  string `json:"modified_by"`
 }
 
+type NextAvailable struct {
+	Date string `json:"date"`
+	Slot string `json:"slot"`
+}
+
+type TherapistResponse struct {
+	ID                  string         `json:"id"`
+	FirstName           string         `json:"first_name"`
+	LastName            string         `json:"last_name"`
+	Pronoun             string         `json:"pronoun"`
+	TotalRating         string         `json:"total_rating"`
+	AverageRating       string         `json:"average_rating"`
+	Photo               string         `json:"photo"`
+	Video               string         `json:"video"`
+	Type                string         `json:"type"`
+	SlotType            string         `json:"slot_type"`
+	Price               string         `json:"price"`
+	MultipleSessions    string         `json:"multiple_sessions"`
+	Education           string         `json:"education"`
+	Experience          string         `json:"experience"`
+	TherapeuticApproach string         `json:"therapeutic_approach"`
+	About               string         `json:"about"`
+	CorporateTherapist  string         `json:"corporate_therapist"`
+	InHouseTherapist    string         `json:"in_house_therapist"`
+	Available           string         `json:"available"`
+	NextAvailable       *NextAvailable `json:"next_available"`
+}
+
 type ContentAddRequestInAdminPanel struct {
 	CounsellorID    string `json:"counsellor_id"`
 	Title           string `json:"title" validate:"required,min=3,max=200"`
@@ -483,7 +511,6 @@ type AddTherapistProfileRequest struct {
 	Photo               string `json:"photo" validate:"required"`
 	Email               string `json:"email" validate:"required,email,max=100"`
 	Education           string `json:"education" validate:"required,max=500"`
-	Experience          string `json:"experience" validate:"required,max=500"`
 	About               string `json:"about" validate:"required,max=5000"`
 	TherapeuticApproach string `json:"therapeutic_approach" validate:"required,max=5000"`
 	StartDate           string `json:"start_date" validate:"required,datetime=2006-01-02"`
@@ -498,7 +525,6 @@ type AddTherapistProfileRequest struct {
 	Certificate         string `json:"certificate" validate:"required"`
 	CorporateTherapist  string `json:"corporate_therpist" validate:"required,oneof=0 1 2 3"`
 	Timezone            string `json:"timezone" validate:"required"`
-	Status              string `json:"status" validate:"required,oneof=0 1 2 3"`
 }
 
 type UpdateTherapistProfileRequest struct {
@@ -558,7 +584,7 @@ type AddAppointmentRatingRequest struct {
 	CounsellorID  string `json:"counsellor_id" validate:"required,min=3,max=22"`
 	Rating        string `json:"rating" validate:"required,oneof=1 2 3 4 5"`
 	RatingTypes   string `json:"rating_types" validate:"required,min=3,max=50"`
-	RatingComment string `json:"rating_comment" validate:"required,min=1"`
+	RatingComment string `json:"rating_comment" validate:"omitempty,min=2"`
 }
 
 type CancellationReasonAppointmentRequest struct {
@@ -660,8 +686,8 @@ type AddMoodInClientRequest struct {
 }
 
 type ClientProfileAddRequest struct {
-	FirstName          string `json:"first_name" validate:"required,min=2,max=100"`
-	LastName           string `json:"last_name" validate:"required,min=2,max=100"`
+	FirstName          string `json:"first_name" validate:"required,min=1,max=100"`
+	LastName           string `json:"last_name" validate:"required,min=1,max=100"`
 	Phone              string `json:"phone" validate:"required,len=12,numeric"`
 	Email              string `json:"email" validate:"required,email"`
 	DateOfBirth        string `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
@@ -678,8 +704,8 @@ type ClientProfileAddRequest struct {
 
 type ClientB2BProfileAddRequest struct {
 	EmpID              string `json:"emp_id" validate:"required,numeric"`
-	FirstName          string `json:"first_name" validate:"required,min=2,max=100"`
-	LastName           string `json:"last_name" validate:"required,min=2,max=100"`
+	FirstName          string `json:"first_name" validate:"required,min=1,max=100"`
+	LastName           string `json:"last_name" validate:"required,min=1,max=100"`
 	Phone              string `json:"phone" validate:"required,len=12,numeric"`
 	Email              string `json:"email" validate:"required,email"`
 	OTP                string `json:"otp" validate:"required,min=4,max=6"`
@@ -699,8 +725,8 @@ type ClientB2BProfileAddRequest struct {
 type ClientB2BFamilyProfileAddRequest struct {
 	ClientID    string `json:"client_id" validate:"required,min=4,max=45"`
 	Relation    string `json:"relation" validate:"required"`
-	FirstName   string `json:"first_name" validate:"required,min=2,max=100"`
-	LastName    string `json:"last_name" validate:"required,min=2,max=100"`
+	FirstName   string `json:"first_name" validate:"required,min=1,max=100"`
+	LastName    string `json:"last_name" validate:"required,min=1,max=100"`
 	Phone       string `json:"phone" validate:"required,len=12,numeric"`
 	Email       string `json:"email" validate:"required,email"`
 	DateOfBirth string `json:"date_of_birth" validate:"required,datetime=2006-01-02"`
@@ -925,8 +951,8 @@ type CouponAddRequestInAdminPanel struct {
 	MaximumDiscountValue string `json:"maximum_discount_value" validate:"required,numeric"`
 	ValidForOrder        string `json:"valid_for_order" validate:"required,numeric"`
 
-	Type      string `json:"type" validate:"required,oneof=1 2"`
-	OrderType string `json:"order_type" validate:"required,oneof=0 1 2"`
+	Type      string `json:"type" validate:"required,oneof=1 2 3"`
+	OrderType string `json:"order_type" validate:"required,oneof=0 1 2 3"`
 
 	StartBy string `json:"start_by" validate:"required,datetime=2006-01-02 15:04:05"`
 	EndBy   string `json:"end_by" validate:"required,datetime=2006-01-02 15:04:05"`
@@ -970,6 +996,23 @@ type InPersonEventAddRequestInAdminPanel struct {
 	Title           string `json:"title" validate:"required,min=3,max=100"`
 	Description     string `json:"description" validate:"required,min=10,max=1000"`
 	TotalSeat       string `json:"total_seat" validate:"required,numeric"`
+	Document        string `json:"document"`
+	CarryThings     string `json:"carry_things" validate:"required,max=500"`
+	CompanyName     string `json:"company_name" validate:"required,min=2,max=100"`
+	CompanyLocation string `json:"company_location" validate:"required,min=2,max=255"`
+	Address         string `json:"address" validate:"required,min=5,max=500"`
+	Photo           string `json:"photo" validate:"required"`
+	BackgroundPhoto string `json:"background_photo" validate:"required"`
+	Date            string `json:"date" validate:"required,datetime=2006-01-02"`
+	Time            string `json:"time" validate:"required,required"`
+	Duration        string `json:"duration" validate:"required,numeric"`
+	Status          string `json:"status" validate:"required,oneof=0 1 2 3 4"`
+}
+
+type InPersonEventUpdateRequestInAdminPanel struct {
+	CounsellorID    string `json:"counsellor_id" validate:"required"`
+	Title           string `json:"title" validate:"required,min=3,max=100"`
+	Description     string `json:"description" validate:"required,min=10,max=1000"`
 	Document        string `json:"document"`
 	CarryThings     string `json:"carry_things" validate:"required,max=500"`
 	CompanyName     string `json:"company_name" validate:"required,min=2,max=100"`

@@ -407,7 +407,7 @@ func EventInPersonUpdate(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	body := MODEL.InPersonEventAddRequestInAdminPanel{}
+	body := MODEL.InPersonEventUpdateRequestInAdminPanel{}
 
 	if err := UTIL.DecodeAndValidate(w, r, http.MethodPut, &body); err != nil {
 

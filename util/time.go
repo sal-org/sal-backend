@@ -10,6 +10,11 @@ func GetCurrentTime() time.Time {
 	return time.Now().UTC()
 }
 
+func GetCurrentTimeInIndia() time.Time {
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	return time.Now().In(loc)
+}
+
 func GetIndiaCurrentTime() string {
 	loc, _ := time.LoadLocation("Asia/Kolkata")
 	now := time.Now().In(loc)
@@ -27,6 +32,33 @@ func FirstDayOfMonth(t time.Time) time.Time {
 		0, 0, 0, 0,
 		t.Location(),
 	)
+}
+
+func GetWeekIndex() int {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		return 0
+	}
+
+	now := time.Now().In(loc)
+
+	// Fixed Monday: January 5, 2026
+	start := time.Date(
+		2026,
+		time.January,
+		5,
+		0, 0, 0, 0,
+		loc,
+	)
+
+	// If current date is before the start date
+	if now.Before(start) {
+		return 0
+	}
+
+	days := int(now.Sub(start).Hours() / 24)
+
+	return days / 7
 }
 
 

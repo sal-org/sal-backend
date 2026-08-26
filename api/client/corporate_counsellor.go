@@ -200,30 +200,80 @@ func CorporateCounsellorOrderCreate(w http.ResponseWriter, r *http.Request) {
 	if len(appointment2nd) >= 1 {
 
 		loc, _ := time.LoadLocation("Asia/Kolkata")
+
 		now := time.Now().In(loc)
 
-		if appointment2nd[0]["date"] != now.Format("2006-01-02") {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-			return
+		for _, appointment := range appointment2nd {
+			appointmentDate := appointment["date"]
+
+			slot, err := strconv.Atoi(appointment["time"])
+			if err != nil {
+				continue
+			}
+
+			// Convert slot number to hour/minute.
+			hour := slot / 2
+			minute := (slot % 2) * 30
+
+			appointmentTime := time.Date(
+				now.Year(),
+				now.Month(),
+				now.Day(),
+				hour,
+				minute,
+				0,
+				0,
+				loc,
+			)
+
+			// Use appointment's actual date.
+			date, err := time.ParseInLocation("2006-01-02", appointmentDate, loc)
+			if err != nil {
+				continue
+			}
+
+			appointmentTime = time.Date(
+				date.Year(),
+				date.Month(),
+				date.Day(),
+				hour,
+				minute,
+				0,
+				0,
+				loc,
+			)
+
+			if appointmentTime.After(now) {
+				UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+				return
+			}
 		}
 
-		// Calculate current 30-min slot
-		currentSlot := now.Hour() * 2
-		if now.Minute() >= 30 {
-			currentSlot++
-		}
+		// loc, _ := time.LoadLocation("Asia/Kolkata")
+		// now := time.Now().In(loc)
 
-		appointmentSlot, err := strconv.Atoi(appointment2nd[0]["time"])
-		if err != nil {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid appointment time", CONSTANT.ShowDialog, response)
-			return
-		}
+		// if appointment2nd[0]["date"] != now.Format("2006-01-02") {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 	return
+		// }
 
-		// Slot already passed OR duplicate booking
-		if appointmentSlot >= currentSlot {
-			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
-			return
-		}
+		// // Calculate current 30-min slot
+		// currentSlot := now.Hour() * 2
+		// if now.Minute() >= 30 {
+		// 	currentSlot++
+		// }
+
+		// appointmentSlot, err := strconv.Atoi(appointment2nd[0]["time"])
+		// if err != nil {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Invalid appointment time", CONSTANT.ShowDialog, response)
+		// 	return
+		// }
+
+		// // Slot already passed OR duplicate booking
+		// if appointmentSlot >= currentSlot {
+		// 	UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, CONSTANT.AppointmentAlreadyBooked, CONSTANT.ShowDialog, response)
+		// 	return
+		// }
 
 		// if appointment2nd[0]["date"] == UTIL.GetCurrentTime().Format("2006-01-02") {
 		// 	// check if appointment time is already booked

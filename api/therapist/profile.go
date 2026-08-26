@@ -170,16 +170,16 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var typeOfService string
+	// var typeOfService string
 
-	switch body.CorporateTherapist {
-	case "Individual Clients":
-		typeOfService = "0"
-	case "Corporate Clients":
-		typeOfService = "2"
-	case "Both":
-		typeOfService = "1"
-	}
+	// switch body.CorporateTherapist {
+	// case "Individual Clients":
+	// 	typeOfService = "0"
+	// case "Corporate Clients":
+	// 	typeOfService = "2"
+	// case "Both":
+	// 	typeOfService = "1"
+	// }
 
 	joinDate := body.StartDate
 
@@ -217,7 +217,7 @@ func ProfileAdd(w http.ResponseWriter, r *http.Request) {
 	therapist["linkedin"] = body.Linkedin
 	therapist["device_id"] = body.DeviceID
 	therapist["payout_percentage"] = CONSTANT.CounsellorPayoutPercentageColumns
-	therapist["corporate_therpist"] = typeOfService
+	therapist["corporate_therpist"] = body.CorporateTherapist
 	therapist["status"] = CONSTANT.TherapistNotApproved
 	therapist["notification_status"] = CONSTANT.NotificationActive
 	therapist["last_login_time"] = UTIL.GetCurrentTime().String()
@@ -444,6 +444,16 @@ func ProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(body.About) > 0 {
 		therapist["about"] = body.About
+	}
+
+	if len(body.BankAccountNo) > 0 {
+		therapist["bank_account_no"] = body.BankAccountNo
+		therapist["payee_name"] = body.PayeeName
+		therapist["ifsc"] = body.IFSC
+		therapist["bank_name"] = body.BankName
+		therapist["branch_name"] = body.BranchName
+		therapist["bank_account_type"] = body.BankAccountType
+		therapist["pan"] = body.PAN
 	}
 
 	if len(therapist) == 0 {

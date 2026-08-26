@@ -291,9 +291,11 @@ func LoadClientRoutes(router *mux.Router) {
 	// corporate search
 	clientRoutes.HandleFunc("/corporate_search", ListSearchForCorporate).Methods("GET")
 
+	// corporate search
+	clientRoutes.HandleFunc("/corporate/available-slots", ListSearchForCorporateForAvailableSlots).Methods("GET")
+
 	// corporate in person search
 	clientRoutes.HandleFunc("/corporate_inperson_search", ListSearchForCorporateInPerson).Methods("GET")
-
 
 	// therapist
 	clientRoutes.HandleFunc("/therapist", TherapistProfile).Queries(
@@ -313,7 +315,6 @@ func LoadClientRoutes(router *mux.Router) {
 	clientRoutes.HandleFunc("/therapist/getHashData", GenerateHashForPayment).Queries(
 		"hashData", "{hashData}",
 	).Methods("GET")
-
 
 	clientRoutes.HandleFunc("/restore-user-account", RestoreUserProfile).Methods("PUT")
 

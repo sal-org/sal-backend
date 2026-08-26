@@ -93,7 +93,7 @@ func AvailabilityUpdate(w http.ResponseWriter, r *http.Request) {
 
 	if counsellor[0]["corporate_therpist"] != "2" {
 		if counsellor[0]["price"] == "0" || counsellor[0]["multiple_sessions"] == "0" {
-			UTIL.SetReponse(w, status, "Please update your price per sessions in 'My Profile' first.", CONSTANT.ShowDialog, response)
+			UTIL.SetReponse(w, CONSTANT.StatusCodeBadRequest, "Please update your price per sessions in 'My Profile' first.", CONSTANT.ShowDialog, response)
 			return
 		}
 	}
